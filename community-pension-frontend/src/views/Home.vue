@@ -57,7 +57,7 @@
                     <template #header>
                       <div class="card-header">
                         <span><i class="el-icon-date"></i> 服务预约</span>
-                        <el-button type="link" class="more-btn" @click="activeIndex = 'service'">
+                        <el-button type="text" class="more-btn" @click="activeIndex = 'service'">
                           更多 <i class="el-icon-arrow-right"></i>
                         </el-button>
                       </div>
@@ -82,7 +82,7 @@
                     <template #header>
                       <div class="card-header">
                         <span><i class="el-icon-first-aid-kit"></i> 健康档案</span>
-                        <el-button type="link" class="more-btn" @click="activeIndex = 'health'">
+                        <el-button type="text" class="more-btn" @click="activeIndex = 'health'">
                           更多 <i class="el-icon-arrow-right"></i>
                         </el-button>
                       </div>
@@ -107,7 +107,7 @@
                     <template #header>
                       <div class="card-header">
                         <span><i class="el-icon-s-flag"></i> 社区活动</span>
-                        <el-button type="link" class="more-btn" @click="activeIndex = 'activity'">
+                        <el-button type="text" class="more-btn" @click="activeIndex = 'activity'">
                           更多 <i class="el-icon-arrow-right"></i>
                         </el-button>
                       </div>
@@ -132,7 +132,7 @@
                     <template #header>
                       <div class="card-header">
                         <span><i class="el-icon-bell"></i> 通知公告</span>
-                        <el-button type="link" class="more-btn" @click="activeIndex = 'notice'">
+                        <el-button type="text" class="more-btn" @click="activeIndex = 'notice'">
                           更多 <i class="el-icon-arrow-right"></i>
                         </el-button>
                       </div>
@@ -525,12 +525,7 @@ const handleCommand = (command) => {
       activeIndex.value = 'profile';
     }
   } else if (command === 'changePassword') {
-    if (!isAuthenticated.value) {
-      ElMessage.warning('请先登录');
-      router.push('/login');
-    } else {
-      showChangePasswordDialog.value = true; // 打开修改密码组件
-    }
+    showChangePasswordDialog.value = true; // 显示修改密码对话框
   } else if (command === 'logout') {
     ElMessage.success('退出登录');
     localStorage.removeItem('token');
