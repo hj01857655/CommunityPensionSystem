@@ -1,7 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import Home from '../views/Home.vue';
 import Login from '../views/Login.vue';
-import ChangePassword from '../views/Auth/ChangePassword.vue';
 import Dashboard from '../views/admin/Dashboard.vue';
 
 const routes = [
@@ -15,12 +14,6 @@ const routes = [
     path: '/login',
     name: 'Login',
     component: Login,
-  },
-  {
-    path: '/changePassword',
-    name: 'ChangePassword',
-    component: ChangePassword,
-    meta: { requiresAuth: true },
   },
   {
     path: '/admin',
@@ -69,4 +62,4 @@ router.beforeEach((to, from, next) => {
   next();
 });
 
-export default router; 
+export default router;

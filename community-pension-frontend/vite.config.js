@@ -1,9 +1,12 @@
 import { defineConfig } from 'vite'
-import { resolve } from 'path'
 import vue from '@vitejs/plugin-vue'
+import path from 'path'
 
 export default defineConfig({
   plugins: [vue()],
+  define: {
+    __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: false,
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -14,8 +17,12 @@ export default defineConfig({
       '@utils': path.resolve(__dirname, './src/utils'),
       '@store': path.resolve(__dirname, './src/store'),
       '@api': path.resolve(__dirname, './src/api'),
-      
     },
+  },
+  server: {
+    host: '0.0.0.0',
+    port: 8081,
+    open: true
   },
 })
 
