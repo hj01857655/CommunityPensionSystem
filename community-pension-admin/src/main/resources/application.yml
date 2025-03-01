@@ -1,0 +1,58 @@
+server:
+  port: 8080
+spring:
+  application:
+    name: community-pension-admin
+    version: 1.0.0
+
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/community_pension?useUnicode=true&characterEncoding=utf8&useSSL=false
+    username: root
+    password: root
+    hikari:
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      connection-timeout: 30000
+      maximum-pool-size: 10
+      minimum-idle: 5
+      idle-timeout: 30000
+      max-lifetime: 1800000
+      pool-name: HikariCP
+      connection-test-query: SELECT 1
+      validation-timeout: 5000
+      leak-detection-threshold: 30000
+      data-source-properties:
+        cachePrepStmts: true
+        prepStmtCacheSize: 250
+        prepStmtCacheSqlLimit: 2048
+        useServerPrepStmts: true
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+  devtools:
+    livereload:
+      enabled: true
+      port: 35729
+    restart:
+      enabled: true
+      additional-paths: src/main/java
+      exclude: static/**,public/**
+jwt:
+
+  expiration: 86400000
+mybatis-plus:
+  global-config:
+    db-config:
+      id-type: auto
+      logic-not-delete-value: 1
+      logic-delete-value: 0
+      logic-delete-field: deleted
+  type-aliases-package: com.communitypension.communitypensionadmin.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    auto-mapping-behavior: full

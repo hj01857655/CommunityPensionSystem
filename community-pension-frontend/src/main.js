@@ -1,14 +1,28 @@
-import { createApp } from 'vue'
-import App from './App.vue'
-import router from './router'
-import ElementPlus from 'element-plus'
-import 'element-plus/dist/index.css'
-import { createPinia } from 'pinia'
+import { createApp } from 'vue';
+import { createPinia } from 'pinia';
+import ElementPlus from 'element-plus';
+import 'element-plus/dist/index.css';
+import * as ElementPlusIconsVue from '@element-plus/icons-vue';
+import axios from 'axios';
+import zhCn from 'element-plus/dist/locale/zh-cn.mjs';
 
-const app = createApp(App)
+import App from '@/App.vue';
+import router from '@/router';
 
+const app = createApp(App);
+
+// 使用插件
 app.use(router)
-app.use(ElementPlus)
-app.use(createPinia())
+   .use(ElementPlus, { locale: zhCn })
+   .use(createPinia());
 
-app.mount('#app')
+// 注册ElementPlus图标组件
+Object.entries(ElementPlusIconsVue).forEach(([key, component]) => {
+    app.component(key, component);
+});
+
+// 设置axios默认配置
+axios.defaults.baseURL = 'http://localhost:8080/';
+
+// 挂载应用
+app.mount('#app');

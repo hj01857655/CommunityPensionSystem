@@ -1,6 +1,7 @@
 const webpack = require('webpack');
 
 module.exports = {
+  mode:process.env.NODE_ENV,
   // 其他配置
   plugins: [
     new webpack.DefinePlugin({
@@ -8,6 +9,7 @@ module.exports = {
       // 其他特性标志可以在这里定义
       __VUE_OPTIONS_API__: JSON.stringify(true),
       __VUE_PROD_DEVTOOLS__: JSON.stringify(false),
+
     }),
   ],
 }; 
