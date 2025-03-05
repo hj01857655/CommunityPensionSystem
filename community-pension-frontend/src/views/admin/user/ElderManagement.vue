@@ -246,9 +246,6 @@ const fetchElders = async () => {
         // 处理日期格式
         elders.value = RecordsData.map(elder => ({
           ...elder,
-          birthday: elder.birthday ? elder.birthday.split('T')[0] : '',
-          createTime: elder.createTime ? elder.createTime.split('T')[0] : '',
-          updateTime: elder.updateTime ? elder.updateTime.split('T')[0] : ''
         }))
       } else {
         elders.value = []
