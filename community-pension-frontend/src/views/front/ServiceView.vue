@@ -46,7 +46,7 @@
   <script setup>
   import { ref, onMounted, onBeforeUnmount } from 'vue'
   import { ElMessage } from 'element-plus'
-  import { debounce } from 'lodash-es'
+  import { debounce } from '@utils/debounce'
   
   const activeTab = ref('list')
   
@@ -86,7 +86,7 @@
   
   
   const handleLayout = debounce(() => {
-    // 你的布局调整逻辑
+    
   }, 100)
   
   

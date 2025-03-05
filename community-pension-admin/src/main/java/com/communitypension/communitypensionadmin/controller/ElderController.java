@@ -58,7 +58,6 @@ public class ElderController {
 
         boolean saved = elderService.save(elder);
         if (saved) {
-            elderService.calculateAge(elder);
             return Result.success("创建成功", elder.getId());
         } else {
             return Result.error(500, "创建失败");
@@ -74,7 +73,6 @@ public class ElderController {
 
         boolean updated = elderService.updateById(elder);
         if (updated) {
-            elderService.calculateAge(elder);
             return Result.success("更新成功");
         } else {
             return Result.error(500, "更新失败");

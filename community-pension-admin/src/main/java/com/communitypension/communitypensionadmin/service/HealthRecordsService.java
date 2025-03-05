@@ -1,5 +1,9 @@
 package com.communitypension.communitypensionadmin.service;
 
 
-public interface HealthRecordsService {
+import com.baomidou.mybatisplus.extension.service.IService;
+import com.communitypension.communitypensionadmin.entity.HealthRecords;
+
+public interface HealthRecordsService extends IService<HealthRecords> {
+    HealthRecords getHealthRecordsWithElderInfoByElderId(Long elderId);
 }

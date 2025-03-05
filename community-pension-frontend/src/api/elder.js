@@ -61,7 +61,7 @@ export const updateElder = async (elder) => {
   try {
     const token = localStorage.getItem('token');
     //@PutMapping("/{id}")
-    const response = await axios.put(`/api/elders/${elder.id}`, {
+    const response = await axios.put(`/api/elders`, elder, {
       headers: {
         Authorization: `${token}`,
       },
