@@ -9,12 +9,12 @@
         @submit.prevent="submitForm"
         @keyup.enter="submitForm"
       >
-        <el-form-item prop="roleId">
+        <!--隐藏字段-->
+        
+        <el-form-item prop="roleId" style="display: none;">
           <el-select v-model="loginForm.roleId" placeholder="请选择角色" class="full-width" @change="onRoleChange">
             <el-option label="老人" :value="1" />
-            <el-option label="老人家属" :value="2" />
-            <el-option label="社区工作人员" :value="3" />
-            <el-option label="管理员" :value="4" />
+            
           </el-select>
         </el-form-item>
         <el-form-item prop="username">
@@ -64,15 +64,13 @@
 import { ref, watch, onMounted } from 'vue';
 import { ElMessage } from 'element-plus';
 import { useRouter } from 'vue-router';
-import axios from 'axios';
-import { useUserStore } from '@/stores/user';
+import { login } from '@/api/user';
 
-const userStore = useUserStore();
 const router = useRouter();
 
 // 表单数据
 const loginForm = ref({
-    roleId: '', 
+    roleId: 1, // 设置默认选择角色为老人
     username: '',
     password: ''
 });
@@ -113,24 +111,12 @@ const submitForm = async () => {
         if (valid) {
             loading.value = true;
             try {
-                const res = await axios.post('/api/user/login', loginForm.value);
-                if (res.data.code === 200) {
-                    const { password, ...userInfo } = res.data.data; // 解构出password
-                    // 把userInfo存到localStorage中
-                    localStorage.setItem("userInfo", JSON.stringify(userInfo));
-                    localStorage.setItem('roleId', userInfo.roleId);
-                    localStorage.setItem('username', userInfo.username);
-                    // 存储到pinia中
-                    userStore.setElderInfo(userInfo);
-                    ElMessage.success('登录成功');
-                    // 根据角色进行跳转
-                    if (userInfo.roleId === '1') {
-                        router.push('/');
-                    } else {
-                        router.push('/admin/dashboard');
-                    }
+                const response = await login(loginForm.value);
+                console.log(response);
+                if (response.success) {
+                    router.push('/home');
                 } else {
-                    ElMessage.error(res.data.message);
+                    ElMessage.error('登录失败，请重试');
                 }
             } catch (err) {
                 ElMessage.error('登录失败，请稍后重试');
@@ -164,75 +150,75 @@ initializeForm();
 
 <style scoped>
 .login-container {
-  height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: url('@/assets/login/login.png') no-repeat center center fixed;
-  background-size: cover;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: url('@/assets/login/login.png') no-repeat center center fixed;
+    background-size: cover;
 }
 
 .login-box {
-  width: 420px;
-  padding: 40px;
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 12px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    width: 420px;
+    padding: 40px;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
 }
 
 .title {
-  text-align: center;
-  font-size: 28px;
-  color: #2c3e50;
-  margin-bottom: 35px;
-  font-weight: 600;
+    text-align: center;
+    font-size: 28px;
+    color: #2c3e50;
+    margin-bottom: 35px;
+    font-weight: 600;
 }
 
 .full-width {
-  width: 100%;
+    width: 100%;
 }
 
 .el-form-item {
-  margin-bottom: 24px;
+    margin-bottom: 24px;
 }
 
 .extra-options {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  padding: 0 10px;
-  gap: 20px; /* 增加按钮之间的间距 */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 0 10px;
+    gap: 20px;
 }
 
 .forgot-password {
-  font-size: 14px;
-  color: #409eff;
-  text-decoration: none;
-  margin-left: 10px; /* 往右边调整一点 */
+    font-size: 14px;
+    color: #409eff;
+    text-decoration: none;
+    margin-left: 10px;
 }
 
 .forgot-password:hover {
-  text-decoration: underline;
+    text-decoration: underline;
 }
 
 .el-button {
-  height: 46px;
-  font-size: 16px;
-  border-radius: 8px;
-  transition: all 0.3s;
+    height: 46px;
+    font-size: 16px;
+    border-radius: 8px;
+    transition: opacity 0.3s;
 }
 
 .el-button:hover {
-  opacity: 0.9;
+    opacity: 0.9;
 }
 
 .el-input :deep(.el-input__wrapper) {
-  border-radius: 6px;
-  transition: all 0.3s;
+    border-radius: 6px;
+    transition: box-shadow 0.3s;
 }
 
 .el-input :deep(.el-input__wrapper:hover) {
-  box-shadow: 0 0 5px rgba(64, 158, 255, 0.5);
+    box-shadow: 0 0 5px rgba(64, 158, 255, 0.5);
 }
 </style>

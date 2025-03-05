@@ -1,5 +1,6 @@
 package com.communitypension.communitypensionadmin.utils;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -13,50 +14,60 @@ import java.util.Date;
 
 @Component
 public class JwtUtil {
-    private static Key secretKey;
 
-    static {
-        // 从配置文件中读取密钥
-        secretKey = Jwts.SIG.HS256.key().build();
-    }
-    public void setSecretKey(String secret) {
-        // 自动校验密钥长度并转换为 Key 对象
-        secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+    private Key secretKey;
+
+    private Long expiration;
+
+    public JwtUtil(@Value("${jwt.secret}") String secret, @Value("${jwt.expiration}") Long expiration) {
+        this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        this.expiration = expiration;
     }
 
-    /**
-     * token 过期时间，单位毫秒
-     */
-    @Value("${jwt.expiration}")
-    private static Long expiration;
     /**
      * 生成 token
      */
-    public static String generateToken(String username) {
+    public String generateToken(String username, String role) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expiration);
 
-        return Jwts.builder().subject(username).issuedAt(now).expiration(expiryDate).signWith(secretKey) // 使用新 API
+        Claims claims = Jwts.claims()
+                .subject(username)
+                .add("role", role)
+                .build();
+
+        return Jwts.builder()
+                .claims(claims)
+                .issuedAt(now)
+                .expiration(expiryDate)
+                .signWith(secretKey)
                 .compact();
     }
+
     /**
      * 从 token 中获取用户名
      */
-    public static String getUsernameFromToken(String token) {
-        return Jwts.parser().verifyWith((SecretKey) secretKey) // 同步使用新 API
-                .build().parseSignedClaims(token).getPayload().getSubject();
+    public String getUsernameFromToken(String token) {
+        return Jwts.parser().verifyWith((SecretKey) secretKey).build().parseSignedClaims(token).getPayload().getSubject();
     }
+
+    /**
+     * 从 token 中获取角色信息
+     */
+    public String getRoleFromToken(String token) {
+        return Jwts.parser().verifyWith((SecretKey) secretKey).build().parseSignedClaims(token).getPayload().get("role", String.class);
+    }
+
     /**
      * 验证 token 是否有效
      */
-    public static  boolean validateToken(String token) {
+    public boolean validateToken(String token) {
         try {
             Jwts.parser().verifyWith((SecretKey) secretKey).build().parseSignedClaims(token);
             return true;
         } catch (JwtException | IllegalArgumentException e) {
-
+            // 添加日志记录
             return false;
         }
     }
-
 }

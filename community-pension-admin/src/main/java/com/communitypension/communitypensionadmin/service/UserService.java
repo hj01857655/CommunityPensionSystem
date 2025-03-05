@@ -13,6 +13,7 @@ public interface UserService extends IService<User> {
      * @return 用户
      */
     User getUserByUsernameAndRole(String username, Long role);
+    User getUserByRoleId(Long roleId);
 
     /**
      * 修改密码
@@ -23,4 +24,7 @@ public interface UserService extends IService<User> {
      * @param role        角色
      */
     void changePassword(String username, String oldPassword, String newPassword, Long role);
+
+
+
 }

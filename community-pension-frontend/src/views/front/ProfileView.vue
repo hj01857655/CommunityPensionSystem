@@ -60,12 +60,11 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { ElMessage } from 'element-plus'
-import { useUserStore } from '@/stores/user'
 import axios from 'axios'
+import { getUserInfo } from '@/api/user'
 
-const userStore = useUserStore()
 const profileForm = ref({
   name: '',
   gender: '',   
@@ -81,14 +80,27 @@ const profileForm = ref({
   avatar: '',
   remark: ''
 })  
-
+onMounted(async()=>{
+  const userProfile=JSON.parse(localStorage.getItem('userInfo'));
+  const response=await getUserInfo(userProfile.roleId);
+  console.log(response);
+  if(response.code==200){
+    profileForm.value=response.data;
+  }else{
+    ElMessage.error(response.message);
+  }
+    
+})
+const formatDate = (date) => {
+  return dayjs(date).format('MM-DD');
+};
 const handleAvatarSuccess = (res, file) => {
   profileForm.value.avatar = URL.createObjectURL(file.raw)
 }
 
 const saveProfile = async () => {
   try {
-    const res = await axios.post('/api/updateProfile', profileForm.value)
+    const res = await axios.post('/api/user/update', profileForm.value)
     if (res.data.code === 1) {
       ElMessage.success('个人信息更新成功')
     } else {

@@ -5,13 +5,14 @@
     >
       <template #header>
         <div class="card-header">
-          <span>
+          <span class="card-title">
             <el-icon><component :is="icon" /></el-icon>
             {{ title }}
           </span>
           <el-button 
-            v-if="showMore" 
-            type="link" 
+            v-if="showMore"
+            link 
+            type="primary" 
             class="more-btn" 
             @click="emitMore"
           >
@@ -24,7 +25,6 @@
   </template>
   
   <script setup>
-  import { defineProps, defineEmits, computed } from 'vue';
   import { ArrowRight } from '@element-plus/icons-vue';
   
   const props = defineProps({
@@ -48,8 +48,6 @@
   
   const emit = defineEmits(['more'])
   
-  const iconClass = computed(() => `el-icon-${props.icon}`)
-  
   const emitMore = () => {
     emit('more')
   }
@@ -60,6 +58,10 @@
     min-height: 220px;
     border-radius: 8px;
     transition: all 0.3s ease;
+    background-color: #fff;
+    overflow: hidden;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   }
   
   .preview-card:hover {
@@ -74,6 +76,14 @@
     font-size: 16px;
     font-weight: bold;
     color: #2c3e50;
+    padding: 16px;
+    background-color: #f5f5f5;
+  }
+  
+  .card-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
   
   .more-btn {
@@ -83,6 +93,7 @@
     display: flex;
     align-items: center;
     gap: 4px;
+    transition: opacity 0.3s ease;
   }
   
   .more-btn:hover {

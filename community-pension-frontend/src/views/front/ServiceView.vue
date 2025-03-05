@@ -84,21 +84,14 @@
     service.status = '已预约'
   }
   
-  let resizeObserver = null
   
   const handleLayout = debounce(() => {
     // 你的布局调整逻辑
   }, 100)
   
-  onMounted(() => {
-    resizeObserver = new ResizeObserver(handleLayout)
-    resizeObserver.observe(document.getElementById('service-container'))
-  })
   
-  onBeforeUnmount(() => {
-    resizeObserver?.disconnect()
-    handleLayout.cancel()
-  })
+  
+  
   </script>
   
   <style scoped>

@@ -12,15 +12,15 @@
         - router # 路由文件
             - index.js # 路由配置
         - store # 状态管理文件
+        - utils # 工具函数文件
         - views # 视图文件
-            -admin # 管理员目录
-                - Dashboard.vue # 首页
-            - Auth # 认证目录
-            - Home.vue # 老人首页
-            - Login.vue # 登录页
+            <!-- -admin # 管理员目录 
+            - front # 老人目录
+                - Home.vue # 老人首页
+                - Auth # 认证目录
+                - Login.vue # 登录页
         - App.vue # 主组件
         - main.js # 主入口文件
-        - utils # 工具函数文件
     - .cursorrules # 项目配置文件
     - .gitignore # 忽略文件
     - babel.config.js # 配置babel

@@ -1,5 +1,9 @@
 package com.communitypension.communitypensionadmin.mapper;
 
 
-public interface KinMapper {
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.communitypension.communitypensionadmin.entity.Kin;
+
+
+public interface KinMapper extends BaseMapper<Kin> {
 }
