@@ -236,8 +236,8 @@ const fetchElders = async () => {
   loading.value = true
   try {
     getElders({
-      currentPage,
-      pageSize
+      currentPage: currentPage.value,
+      pageSize: pageSize.value
     }).then(result => {
       console.log(result)
       if (result.success && result.data && result.data.data.records) {

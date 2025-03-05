@@ -57,9 +57,7 @@ public class Elder implements Serializable {
     @Size(max = 500, message = "健康状况描述过长")
     private String healthCondition;
 
-    /** 过敏史 */
-    @Size(max = 500, message = "过敏史描述过长")
-    private String allergy;
+
 
     /** 老人头像URL */
     private String avatar;
@@ -75,8 +73,7 @@ public class Elder implements Serializable {
     /** 备注信息 */
     @Size(max = 1000, message = "备注信息过长")
     private String remark;
-
     public enum Gender {
-        M, F
+        male, female
     }
 }
