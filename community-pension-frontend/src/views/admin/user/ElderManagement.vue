@@ -27,7 +27,7 @@
             {{ scope.row.gender === 'male' ? '男' : '女' }}
           </template>
         </el-table-column>
-        <el-table-column prop="birthday" label="出生日期" width="80"/>
+        <el-table-column prop="birthday" label="出生日期" width="80" />
         <el-table-column prop="idCard" label="身份证号" width="180" />
         <el-table-column prop="phone" label="联系电话" width="120" />
         <el-table-column prop="address" label="住址" show-overflow-tooltip />
@@ -52,7 +52,7 @@
       <div class="pagination-container">
         <el-pagination v-model:current-page="currentPage" v-model:page-size="pageSize" :page-sizes="[10, 20, 50, 100]"
           layout="total, sizes, prev, pager, next, jumper" :total="totalElders" @size-change="handleSizeChange"
-          @current-change="handleCurrentChange" @update:current-page="handleCurrentChange" @update:page-size="handleSizeChange" />
+          @current-change="handleCurrentChange" />
       </div>
     </el-card>
 
@@ -205,143 +205,52 @@ import { ref, computed, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search } from '@element-plus/icons-vue'
 
-// 老人列表数据
-const elders = ref([
-  {
-    id: 1,
-    name: '张大爷',
-    gender: 'male',
-    age: 75,
-    birthday: '1950-05-15',
-    idCard: '110101195005150011',
-    phone: '13800138001',
-    address: '北京市朝阳区健康路1号',
-    emergencyContact: '张小明',
-    emergencyPhone: '13900139001',
-    healthStatus: '良好',
-    medicalHistory: '高血压史10年，糖尿病史5年',
-    allergies: '对青霉素过敏',
-    remarks: '性格开朗，喜欢下棋',
-
-  },
-  {
-    id: 2,
-    name: '李奶奶',
-    gender: 'female',
-    age: 80,
-    birthday: '1945-08-20',
-    idCard: '110101194508200024',
-    phone: '13800138002',
-    address: '北京市海淀区长寿路2号',
-    emergencyContact: '李小红',
-    emergencyPhone: '13900139002',
-    healthStatus: '一般',
-    medicalHistory: '冠心病史15年，高血压史20年',
-    allergies: '无',
-    remarks: '行动不便，需要定期上门服务'
-  },
-  {
-    id: 3,
-    name: '王大爷',
-    gender: 'male',
-    age: 68,
-    birthday: '1957-03-10',
-    idCard: '110101195703100033',
-    phone: '13800138003',
-    address: '北京市西城区福寿街3号',
-    emergencyContact: '王小刚',
-    emergencyPhone: '13900139003',
-    healthStatus: '良好',
-    medicalHistory: '无',
-    allergies: '无',
-    remarks: '退休教师，喜欢读书和写书法'
-  },
-  {
-    id: 4,
-    name: '赵奶奶',
-    gender: 'female',
-    age: 85,
-    birthday: '1940-12-05',
-    idCard: '110101194012050044',
-    phone: '13800138004',
-    address: '北京市东城区安康路4号',
-    emergencyContact: '赵小丽',
-    emergencyPhone: '13900139004',
-    healthStatus: '需要特别关注',
-    medicalHistory: '脑梗塞后遗症，高血压，糖尿病',
-    allergies: '对磺胺类药物过敏',
-    remarks: '需要专人照顾，每周需要康复治疗'
-  },
-  {
-    id: 5,
-    name: '孙大爷',
-    gender: 'male',
-    age: 70,
-    birthday: '1955-07-15',
-    idCard: '110101195507150055',
-    phone: '13800138005',
-    address: '北京市丰台区幸福街5号',
-    emergencyContact: '孙小明',
-    emergencyPhone: '13900139005',
-    healthStatus: '良好', 
-    medicalHistory: '无',
-    allergies: '无',
-    remarks: '喜欢打太极，喜欢看书'
-  },
-  {
-    id: 6,    
-    name: '周大爷',
-    gender: 'male',
-    age: 72,
-    birthday: '1953-09-25',
-    idCard: '110101195309250066',
-    phone: '13800138006',
-    address: '北京市海淀区科技路6号',
-    emergencyContact: '周小刚',
-    emergencyPhone: '13900139006',
-    healthStatus: '良好', 
-    medicalHistory: '无',
-    allergies: '无',
-    remarks: '喜欢打太极，喜欢看书'
-  },
-  {
-    id: 7,  
-    name: '吴大爷',
-    gender: 'male',
-    age: 73,
-    birthday: '1952-11-10',
-    idCard: '110101195211100077',
-    phone: '13800138007', 
-    address: '北京市海淀区科技路7号',
-    emergencyContact: '吴小明',
-    emergencyPhone: '13900139007',
-    healthStatus: '良好',
-    medicalHistory: '无',
-    allergies: '无',
-    remarks: '喜欢打太极，喜欢看书'
-  }
-])
-
+import { getElders, addElder, updateElder, deleteElder } from '@/api/elder'
+const filteredElders = computed(() => {
+  return elders.value
+})
+const totalElders = computed(() => {
+  console.log(elders.value)
+  return elders.value ? elders.value.length : 0;
+})
 // 分页和搜索
 const loading = ref(false)
 const currentPage = ref(1)
 const pageSize = ref(10)
 const searchQuery = ref('')
-const totalElders = computed(() => filteredElders.value.length)
 
-// 过滤后的老人列表
-const filteredElders = computed(() => {
-  if (!searchQuery.value) {
-    return elders.value
-  }
+// 老人列表数据
+const elders = ref([])
 
-  const query = searchQuery.value.toLowerCase()
-  return elders.value.filter(elder =>
-    elder.name.toLowerCase().includes(query) ||
-    elder.idCard.includes(query) ||
-    elder.phone.includes(query)
-  )
-})
+// 获取老人列表
+const fetchElders = async () => {
+  loading.value = true
+  try {
+    getElders({
+      page: currentPage.value,
+      size: pageSize.value
+    }).then(result => {
+      console.log(result)
+      if (result.success && result.data && result.data.data.records) {
+        console.log(result.data.data.records)
+        const RecordsData = result.data.data.records
+        // 处理日期格式
+        elders.value = RecordsData.map(elder => ({
+          ...elder,
+          birthday: elder.birthday ? elder.birthday.split('T')[0] : '',
+          createTime: elder.createTime ? elder.createTime.split('T')[0] : '',
+          updateTime: elder.updateTime ? elder.updateTime.split('T')[0] : ''
+        }))
+      } else {
+        elders.value = []
+      }
+    })
+} catch (error) {
+  ElMessage.error('获取老人列表失败')
+} finally {
+  loading.value = false
+}
+}
 
 // 对话框相关
 const dialogVisible = ref(false)
@@ -359,12 +268,13 @@ const elderForm = reactive({
   idCard: '',
   phone: '',
   address: '',
-  emergencyContact: '',
-  emergencyPhone: '',
-  healthStatus: '良好',
+  emergencyContactName: '',
+  emergencyContactPhone: '',
+  healthCondition: '',
   medicalHistory: '',
-  allergies: '',
-  remarks: ''
+  allergy: '',
+  avatar: '',
+  remark: ''
 })
 
 // 表单验证规则
@@ -389,23 +299,23 @@ const elderRules = {
   address: [
     { required: true, message: '请输入住址', trigger: 'blur' }
   ],
-  emergencyContact: [
+  emergencyContactName: [
     { required: true, message: '请输入紧急联系人', trigger: 'blur' }
   ],
-  emergencyPhone: [
+  emergencyContactPhone: [
     { required: true, message: '请输入紧急联系电话', trigger: 'blur' },
     { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号', trigger: 'blur' }
   ],
-  healthStatus: [
+  healthCondition: [
     { required: true, message: '请选择健康状况', trigger: 'change' }
   ],
   medicalHistory: [
     { required: true, message: '请输入病史信息', trigger: 'blur' }
   ],
-  allergies: [
+  allergy: [
     { required: true, message: '请输入过敏史信息', trigger: 'blur' }
   ],
-  remarks: [
+  remark: [
     { required: true, message: '请输入备注信息', trigger: 'blur' }
   ]
 }
@@ -443,10 +353,7 @@ const getHealthStatusType = (status) => {
   return typeMap[status] || 'info'
 }
 
-// 搜索老人
-const handleSearch = () => {
-  currentPage.value = 1
-}
+
 
 // 老人
 const handleAdd = () => {
@@ -459,11 +366,25 @@ const handleAdd = () => {
 const handleEdit = (row) => {
   dialogType.value = 'edit'
   Object.keys(elderForm).forEach(key => {
-    elderForm[key] = row[key]
+    if (key === 'healthCondition') {
+      elderForm[key] = row.healthCondition || ''
+    } else if (key === 'allergy') {
+      elderForm[key] = row.allergy || ''
+    } else {
+      elderForm[key] = row[key] || ''
+    }
   })
   dialogVisible.value = true
 }
-
+// 提交表单
+const handleSizeChange = (val) => {
+  pageSize.value = size
+  currentPage.value = 1
+}
+// 当前页变化
+const handleCurrentChange = (val) => {
+  currentPage.value = val
+}
 // 查看健康档案
 const handleViewHealth = (row) => {
   selectedElder.value = { ...row }
@@ -477,7 +398,7 @@ const handleViewHealth = (row) => {
 // 编辑健康档案
 const handleEditHealth = () => {
   healthDialogType.value = 'edit'
-  // 确保健康档案数据正确加载
+  // Ensure health data is correctly loaded from the selected elder
   healthData.height = selectedElder.value.height || ''
   healthData.weight = selectedElder.value.weight || ''
   healthData.bloodPressure = selectedElder.value.bloodPressure || ''
@@ -506,25 +427,20 @@ const handleDelete = (row) => {
       cancelButtonText: '取消',
       type: 'warning'
     }
-  ).then(() => {
-    // 这里应该调用删除API
-    elders.value = elders.value.filter(elder => elder.id !== row.id)
-    ElMessage.success('删除成功')
+  ).then(async () => {
+    try {
+      await deleteElder(row.id)
+      ElMessage.success('删除成功')
+      fetchElders() // 刷新列表
+    } catch (error) {
+      ElMessage.error('删除失败')
+    }
   }).catch(() => {
     // 取消删除
   })
 }
 
-// 分页大小变化
-const handleSizeChange = (val) => {
-  pageSize.value = val
-  currentPage.value = 1
-}
 
-// 当前页变化
-const handleCurrentChange = (val) => {
-  currentPage.value = val
-}
 
 // 重置表单
 const resetForm = () => {
@@ -559,35 +475,44 @@ const calculateAge = (birthday) => {
 
 // 提交表单
 const submitForm = () => {
-  elderFormRef.value.validate((valid) => {
+  elderFormRef.value.validate(async (valid) => {
     if (valid) {
       // 计算年龄
       elderForm.age = calculateAge(elderForm.birthday)
 
-      if (dialogType.value === 'add') {
-        // 添加老人
-        const newElder = {
-          id: elders.value.length + 1,
-          ...elderForm
+      try {
+        const formData = {
+          ...elderForm,
+          healthCondition: elderForm.healthCondition,
+          allergy: elderForm.allergy
         }
-        elders.value.push(newElder)
-        ElMessage.success('添加老人信息成功')
-      } else {
-        // 编辑老人
-        const index = elders.value.findIndex(elder => elder.id === elderForm.id)
-        if (index !== -1) {
-          elders.value[index] = { ...elderForm }
+
+        if (dialogType.value === 'add') {
+          await addElder(formData)
+          ElMessage.success('添加老人信息成功')
+        } else {
+          await updateElder(formData)
           ElMessage.success('更新老人信息成功')
         }
+        dialogVisible.value = false
+        fetchElders() // 刷新列表
+      } catch (error) {
+        ElMessage.error(dialogType.value === 'add' ? '添加老人信息失败' : '更新老人信息失败')
       }
-      dialogVisible.value = false
     } else {
       return false
     }
   })
 }
 
+// 搜索老人
+const handleSearch = () => {
+  currentPage.value = 1
+  fetchElders()
+}
+
 onMounted(() => {
+  fetchElders()
 })
 </script>
 

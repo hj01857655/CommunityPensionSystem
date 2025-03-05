@@ -1,8 +1,4 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import AdminLogin from '@/views/admin/AdminLogin.vue';
-import Home from '@/views/front/Home.vue';
-import Dashboard from '@/views/admin/Dashboard.vue';
-import axios from '@/utils/axios';
 
 const routes = [
   {
@@ -51,21 +47,8 @@ const routes = [
         path:'profile',
         name:'ProfileView',
         component:()=>import('@/views/front/ProfileView.vue'),
-        meta: { requiresAuth: true, roles: ['elder'] },
-        beforeEnter: async (to, from, next) => {
-          try {
-            const user=JSON.parse(localStorage.getItem('userInfo'));
-            const response= await axios.get('/api/user/getUserInfo',{
-              params:{
-                roleId:user.roleId
-              }
-            });
-            console.log(response.data);
-            next();
-          } catch (error) {
-            next({ name: 'Login' });
-          }
-        }
+        meta: { requiresAuth: true, roles: ['elder'] }
+        
       }
     ]
   },
@@ -81,14 +64,41 @@ const routes = [
     path: '/admin',
     name:'AdminLayout',
     component: () => import('@/views/admin/AdminLayout.vue'),
-    redirect:'/admin/dashboard',
+    redirect:'/admin/analysis/dashboard',
     meta: { requiresAuth: true, roles: ['admin', 'kin', 'staff'] },
     children: [
       {
-        path: 'dashboard',
-        name: 'Dashboard',
-        component: Dashboard,
-        meta: { title: '仪表盘', icon: 'odometer', roles: ['admin'] }
+        path: 'analysis',
+        name: 'DataAnalysis',
+        meta: { title: '数据分析看板', icon: 'odometer', roles: ['admin'] },
+        children:[
+          {
+            path:'dashboard',
+            name:'Dashboard',
+            component: () => import('@/views/admin/analysis/Dashboard.vue'),
+            meta: { title: '仪表盘', icon: 'odometer', roles: ['admin'] }
+          },
+          {
+            path:'activity',
+            name:'ActivityAnalysis',
+            component: () => import('@/views/admin/analysis/ActivityAnalysis.vue'),
+            meta: { title: '活动分析', icon: 'odometer', roles: ['admin'] }
+          },
+          {
+            path:'service',
+            name:'ServiceAnalysis',
+            component: () => import('@/views/admin/analysis/ServiceAnalysis.vue'),
+            meta: { title: '服务分析', icon: 'odometer', roles: ['admin'] }
+          },
+          {
+            path:'health',
+            name:'HealthAnalysis',
+            component: () => import('@/views/admin/analysis/HealthAnalysis.vue'),
+            meta: { title: '健康分析', icon: 'odometer', roles: ['admin'] }
+          }
+
+
+        ]
       },
       {
         path: 'activity',
@@ -105,13 +115,13 @@ const routes = [
           {
             path:'registration', 
             name:'ActivityRegistrationList',
-            component: () => import('@/views/admin/activity/registration.vue'),
+            component: () => import('@/views/admin/activity/ActivityRegistration.vue'),
             meta: { title: '活动报名管理', icon: 'calendar', roles: ['admin'] }
           },
           {
             path:'checkin',
             name:'ActivityCheckinList',
-            component: () => import('@/views/admin/activity/checkin.vue'),
+            component: () => import('@/views/admin/activity/ActivityCheckin.vue'),
             meta: { title: '活动签到管理', icon: 'calendar', roles: ['admin'] }
           }
         ]
@@ -203,35 +213,15 @@ const routes = [
           {
             path:'healthAssessment',
             name:'HealthAssessmentList',
-            component:()=>import('@/views/admin/health/HealthManagement.vue'),
+            component:()=>import('@/views/admin/health/HealthAssessment.vue'),
             meta: { title: '健康评估管理', icon: 'heart', roles: ['admin'] }
           },
           {
-            path:'healthIntervention',
-            name:'HealthInterventionList',
-            component:()=>import('@/views/admin/health/HealthManagement.vue'),
-            meta: { title: '健康干预管理', icon: 'heart', roles: ['admin'] }
-          }
-        ]
-      },
-      {
-        path: 'notice',
-        name: 'NoticeManagement',
-        component: () => import('@/views/admin/notice/index.vue'),
-        meta: { title: '通知公告管理', icon: 'bell', roles: ['admin'] },
-        children: [
-          {
-            path: 'list',
-            name: 'NoticeList',
-            component: () => import('@/views/admin/notice/NoticeManagement.vue'),
-            meta: { title: '通知公告列表', icon: 'document', roles: ['admin'] }
+            path:'healthMonitor',
+            name:'HealthMonitorList',
+            component:()=>import('@/views/admin/health/HealthMonitor.vue'),
+            meta: { title: '健康监测管理', icon: 'heart', roles: ['admin'] }
           },
-          {
-            path: 'publish',
-            name: 'NoticePublish',
-            component: () => import('@/views/admin/notice/NoticePublish.vue'),
-            meta: { title: '发布通知', icon: 'edit', roles: ['admin'] }
-          }
         ]
       },
       {
@@ -241,30 +231,23 @@ const routes = [
         meta: { title: '通知公告管理', icon: 'bell', roles: ['admin'] },
         children:[
           {
+            path:'type',
+            name:'NoticeType',
+            component:()=>import('@/views/admin/notice/NoticeType.vue'),
+            meta: { title: '通知公告类型管理', icon: 'bell', roles: ['admin'] }
+          },
+
+          {
             path:'list',
             name:'NoticeList',
-            component:()=>import('@/views/admin/notice/NoticeList.vue'),
-            meta: { title: '通知公告列表', icon: 'bell', roles: ['admin'] }
+            component:()=>import('@/views/admin/notice/NoticeManagement.vue'),
+            meta: { title: '通知公告管理', icon: 'bell', roles: ['admin'] }
           },
           {
             path:'publish',
             name:'NoticePublish',
             component:()=>import('@/views/admin/notice/NoticePublish.vue'),
             meta: { title: '通知公告发布', icon: 'bell', roles: ['admin'] }
-          }
-        ]
-      },
-      {
-        path: 'statistics',
-        name: 'StatisticsManagement',
-        component: () => import('@/views/admin/statistics/index.vue'),
-        meta: { title: '统计分析', icon: 'chart', roles: ['admin'] },
-        children: [
-          {
-            path: 'statistics',
-            name: 'Statistics',
-            component: () => import('@/views/admin/statistics/Statistics.vue'),
-            meta: { title: '数据统计', icon: 'chart', roles: ['admin'] }
           }
         ]
       },

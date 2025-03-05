@@ -9,17 +9,54 @@
             <p>管理后台</p>
           </template>
           <template v-else>
-            <el-icon class="logo-icon"><HomeFilled /></el-icon>
+            <el-icon class="logo-icon">
+              <HomeFilled />
+            </el-icon>
           </template>
         </div>
         <el-menu :default-active="activeMenu" class="el-menu-vertical" :collapse="isCollapse" background-color="#304156"
           text-color="#bfcbd9" active-text-color="#409EFF" router>
-          <el-menu-item index="/admin/dashboard">
-            <el-icon>
-              <Odometer />
-            </el-icon>
-            <span>仪表盘</span>
-          </el-menu-item>
+          <el-sub-menu index="dashboard">
+            <template #title>
+              <el-icon>
+                <Odometer />
+              </el-icon>
+              <span>数据分析看板</span>
+            </template>
+            <el-menu-item index="/admin/analysis/dashboard">
+              <template #title>
+                <el-icon>
+                  <Odometer />
+                </el-icon>
+                <span>仪表盘</span>
+              </template>
+            </el-menu-item>
+            <el-menu-item index="/admin/analysis/activity">
+              <template #title>
+                <el-icon>
+                  <User />
+                </el-icon>
+                <span>用户活跃度分析</span>
+              </template>
+            </el-menu-item>
+            <el-menu-item index="/admin/analysis/service">
+              <template #title>
+                <el-icon>
+                  <Service />
+                </el-icon>
+                <span>服务预约统计</span>
+              </template>
+            </el-menu-item>
+            <el-menu-item index="/admin/analysis/health">
+              <template #title>
+                <el-icon>
+                  <FirstAidKit />
+                </el-icon>
+                <span>健康数据趋势分析</span>
+              </template>
+            </el-menu-item>
+          </el-sub-menu>
+
 
           <el-sub-menu index="user">
             <template #title>
@@ -32,7 +69,6 @@
             <el-menu-item index="/admin/users/elder">老人管理</el-menu-item>
             <el-menu-item index="/admin/users/kin">亲属管理</el-menu-item>
             <el-menu-item index="/admin/users/staff">社区工作人员管理</el-menu-item>
-
           </el-sub-menu>
           <!-- 角色管理 -->
           <el-sub-menu index="roles">
@@ -64,9 +100,9 @@
               </el-icon>
               <span>健康监测管理</span>
             </template>
-            <el-menu-item index="/admin/health/appointment">健康档案管理</el-menu-item>
-            <el-menu-item index="/admin/health/health">健康评估管理</el-menu-item>
-            <el-menu-item index="/admin/health/activity">健康干预管理</el-menu-item>
+            <el-menu-item index="/admin/health/heal">健康监测管理</el-menu-item>
+            <el-menu-item index="/admin/health/healthAssessment">健康评估管理</el-menu-item>
+            <el-menu-item index="/admin/health/healthIntervention">健康干预管理</el-menu-item>
           </el-sub-menu>
           <!-- 社区活动管理 -->
           <el-sub-menu index="/admin/activity">
@@ -91,16 +127,7 @@
             <el-menu-item index="/admin/notice/list">通知公告列表</el-menu-item>
             <el-menu-item index="/admin/notice/publish">通知公告发布</el-menu-item>
           </el-sub-menu>
-          <!-- 数据分析看板管理 -->
-          <el-sub-menu index="/admin/statistics">
-            <template #title>
-              <el-icon>
-                <DataAnalysis />
-              </el-icon>
-              <span>数据分析看板管理</span>
-            </template>
-            <el-menu-item index="/admin/statistics/statistics">数据分析看板管理</el-menu-item>
-          </el-sub-menu>
+          
           <!-- 系统设置 -->
           <el-sub-menu index="/admin/settings">
             <template #title>
@@ -123,7 +150,7 @@
               <component :is="isCollapse ? 'Expand' : 'Fold'" />
             </el-icon>
             <el-breadcrumb separator="/">
-              <el-breadcrumb-item :to="{ path: '/admin/dashboard' }">首页</el-breadcrumb-item>
+              <el-breadcrumb-item :to="{ path: '/admin/analysis/dashboard' }">首页</el-breadcrumb-item>
               <el-breadcrumb-item>{{ currentRoute }}</el-breadcrumb-item>
             </el-breadcrumb>
           </div>
@@ -163,10 +190,10 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import { ElMessage, ElMessageBox } from 'element-plus';
+import { ElMessage, ElMessageBox, ElNotification } from 'element-plus';
 import {
   Odometer, User, Service, FirstAidKit, Calendar, Bell, DataAnalysis, Setting,
-  Fold, Expand, ArrowDown, UserFilled, HomeFilled
+  Fold, Expand, ArrowDown, HomeFilled
 } from '@element-plus/icons-vue';
 
 const router = useRouter()
@@ -175,6 +202,39 @@ const isCollapse = ref(false)
 const username = ref('管理员')
 const avatarUrl = ref('https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png')
 
+onMounted(() => {
+  // 从本地存储获取用户信息
+  try {
+    const userInfo = localStorage.getItem('userInfo');
+    const token = localStorage.getItem('token');
+
+    if (!userInfo || !token) {
+      ElMessage.error('请先登录');
+      return;
+    }
+
+    try {
+      const parsedUserInfo = JSON.parse(userInfo);
+      if (!parsedUserInfo || typeof parsedUserInfo !== 'object') {
+        throw new Error('无效的用户信息格式');
+      }
+      username.value = parsedUserInfo.username || '管理员';
+
+      ElNotification({
+        title: '登录成功',
+        message: '欢迎回来，' + username.value,
+        type: 'success',
+        duration: 2000
+      });
+    } catch (error) {
+      console.error('获取用户信息失败:', error);
+      ElMessage.error('获取用户信息失败，请重新登录');
+    }
+  }catch (error) {
+    console.error('获取用户信息失败:', error);
+    ElMessage.error('获取用户信息失败，请重新登录');
+  }
+})
 // 计算当前路由名称
 const currentRoute = computed(() => {
   const matched = route.matched
@@ -217,21 +277,7 @@ const handleCommand = (command) => {
   }
 }
 
-onMounted(() => {
-  // 从本地存储获取用户信息
-  const userInfo = localStorage.getItem('userInfo')
-  if (userInfo) {
-    try {
-      const user = JSON.parse(userInfo)
-      username.value = user.name || '管理员'
-      if (user.avatar) {
-        avatarUrl.value = user.avatar
-      }
-    } catch (error) {
-      console.error('解析用户信息失败', error)
-    }
-  }
-})
+
 </script>
 
 <style scoped>
@@ -290,6 +336,7 @@ onMounted(() => {
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }

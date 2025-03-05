@@ -116,8 +116,6 @@
               </el-table-column>
             </el-table>
           </el-tab-pane>
-        </el-tabs>
-        <el-tabs v-model="activeTab" @tab-click="handleTabClick">
           <el-tab-pane label="服务评价" name="serviceEvaluation">
             <el-table
               :data="filteredServiceEvaluations"
@@ -133,7 +131,7 @@
             </el-table>
           </el-tab-pane>
         </el-tabs>
-
+        
         <div class="pagination-container">
           <el-pagination
             v-model:current-page="currentPage"

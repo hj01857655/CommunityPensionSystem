@@ -20,7 +20,7 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 const goHome = () => {
   if(localStorage.getItem('role') === 'admin'){
-    router.push('/admin/dashboard')
+    router.push('/admin/analysis/dashboard')
   }else{
     router.push('/')
   }

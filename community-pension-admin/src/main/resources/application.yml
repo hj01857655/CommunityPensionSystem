@@ -1,3 +1,4 @@
+
 server:
   port: 8080
 spring:
@@ -6,34 +7,27 @@ spring:
     version: 1.0.0
 
   datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/community_pension?useUnicode=true&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=false&serverTimezone=GMT%2B8
-    username: root
-    password: root
     hikari:
       driver-class-name: com.mysql.cj.jdbc.Driver
-      connection-timeout: 30000
+      username: root
+      password: root
       maximum-pool-size: 10
       minimum-idle: 5
       idle-timeout: 30000
       max-lifetime: 1800000
       pool-name: HikariCP
-      connection-test-query: SELECT 1
       validation-timeout: 5000
-      leak-detection-threshold: 30000
       data-source-properties:
         cachePrepStmts: true
         prepStmtCacheSize: 250
         prepStmtCacheSqlLimit: 2048
         useServerPrepStmts: true
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
-    open-in-view: false
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.MySQLDialect
+      initialization-fail-timeout: 10000
+      connection-init-sql: SELECT 1
+      connection-timeout: 30000
+      auto-commit: on
+    type: com.zaxxer.hikari.HikariDataSource
+    url: jdbc:mysql://127.0.0.1:3306/community_pension?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
   devtools:
     livereload:
       enabled: true
@@ -42,9 +36,11 @@ spring:
       enabled: true
       additional-paths: src/main/java
       exclude: static/**,public/**
+  jpa:
+    open-in-view: true
 jwt:
   secret: "cB7ChF1y4Aegk+p9KNkFz0GQeY2e+ZgeIW6EVJbiR9Y="
-  expiration: 3600000 # 过期时间，单位毫秒 (1小时)
+  expiration: 86400000 # 过期时间：24小时
 mybatis-plus:
   global-config:
     db-config:
@@ -56,3 +52,12 @@ mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true
     auto-mapping-behavior: full
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+

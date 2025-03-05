@@ -11,6 +11,10 @@
     <groupId>com.communitypension</groupId>
     <artifactId>CommunityPensionSystem</artifactId>
     <version>0.0.1-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <modules>
+        <module>community-pension-admin</module>
+    </modules>
     <name>CommunityPensionSystem</name>
     <description>CommunityPensionSystem</description>
     <properties>

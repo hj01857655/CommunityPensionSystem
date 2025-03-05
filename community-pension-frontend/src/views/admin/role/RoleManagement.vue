@@ -51,10 +51,23 @@
                         </el-tooltip>
                     </template>
                 </el-table-column>
-                <el-table-column label="操作" width="180" fixed="right" align="center">
+                <el-table-column label="状态" width="100" align="center">
                     <template #default="scope">
-                        <el-button type="primary" size="small" @click.stop="handleEdit(scope.row)" :icon="Edit">编辑</el-button>
-                        <el-button type="danger" size="small" @click.stop="handleDelete(scope.row)" :icon="Delete">删除</el-button>
+                        <el-tag :type="scope.row.status ? 'success' : 'danger'">
+                            {{ scope.row.status ? '启用' : '禁用' }}
+                        </el-tag>
+                    </template>
+                </el-table-column>
+                <el-table-column label="操作" width="200" fixed="right" align="center">
+                    <template #default="scope">
+                        <el-button type="primary" size="small" @click.stop="handleEdit(scope.row)">
+                            <el-icon><Edit /></el-icon>
+                            编辑
+                        </el-button>
+                        <el-button type="danger" size="small" @click.stop="handleDelete(scope.row)">
+                            <el-icon><Delete /></el-icon>
+                            删除
+                        </el-button>
                     </template>
                 </el-table-column>
             </el-table>
@@ -129,6 +142,25 @@
                     <el-descriptions-item label="角色ID">{{ selectedRole.id }}</el-descriptions-item>
                     <el-descriptions-item label="角色名称">{{ selectedRole.role_name }}</el-descriptions-item>
                     <el-descriptions-item label="角色描述">{{ selectedRole.role_description }}</el-descriptions-item>
+                    <el-descriptions-item label="状态">
+                        <el-tag :type="selectedRole.status ? 'success' : 'danger'">
+                            {{ selectedRole.status ? '启用' : '禁用' }}
+                        </el-tag>
+                    </el-descriptions-item>
+                    <el-descriptions-item label="权限">
+                        <div class="permission-tags">
+                            <el-tag 
+                                v-for="permId in selectedRole.permissions" 
+                                :key="permId"
+                                type="info"
+                                class="permission-tag">
+                                {{ getPermissionName(permId) }}
+                            </el-tag>
+                            <span v-if="!selectedRole.permissions || selectedRole.permissions.length === 0">
+                                暂无权限
+                            </span>
+                        </div>
+                    </el-descriptions-item>
                     <el-descriptions-item label="创建时间">{{ formatDateDetail(selectedRole.create_time) }}</el-descriptions-item>
                     <el-descriptions-item label="更新时间">{{ formatDateDetail(selectedRole.update_time) }}</el-descriptions-item>
                 </el-descriptions>
@@ -145,38 +177,24 @@
 import { ref, computed, reactive, onMounted } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { Search, Edit, Delete, Plus } from '@element-plus/icons-vue';
-import { formatDate as formatDateUtil } from '@/utils/date';
+import { getRoleList, createRole, updateRole, deleteRole, getRoleDetail } from '@/api/role';
 
 // 角色列表数据
-const roles = ref([
-    { 
-        id: 1, 
-        role_name: '管理员', 
-        role_description: '管理员拥有最高权限，可以管理所有用户信息、角色信息、服务预约信息、健康监测信息、社区活动信息、通知公告信息、数据分析看板信息、系统设置信息',
-        create_time: '2024-01-01 08:00:00',
-        update_time: '2024-01-01 08:00:00',
-        status: true,
-        permissions: [1, 2, 3, 4, 5]
-    },
-    { 
-        id: 2, 
-        role_name: '社区工作人员', 
-        role_description: '社区工作人员拥有社区工作人员权限，包括老人管理、服务预约管理、健康监测管理、社区活动管理、通知公告管理、数据分析看板管理、系统设置管理',
-        create_time: '2024-01-01 08:00:00',
-        update_time: '2024-01-01 08:00:00',
-        status: true,
-        permissions: [1, 2, 3]
-    },
-    { 
-        id: 3, 
-        role_name: '老人家属', 
-        role_description: '老人家属拥有老人家属权限，包括老人管理、服务预约管理、健康监测管理、社区活动管理、通知公告管理、数据分析看板管理、系统设置管理',
-        create_time: '2024-01-01 08:00:00',
-        update_time: '2024-01-01 08:00:00',
-        status: true,
-        permissions: [1, 2]
-    }
-]);
+const roles = ref([]);
+const loading = ref(false);
+const currentPage = ref(1);
+const pageSize = ref(10);
+const searchQuery = ref('');
+const submitLoading = ref(false);
+const totalCount = ref(0); // 总记录数
+
+// 是否显示高级选项
+const showPermissions = ref(true); // 默认显示权限选择
+const showStatus = ref(true); // 默认显示状态开关
+
+// 抽屉相关
+const drawerVisible = ref(false);
+const selectedRole = ref(null);
 
 // 权限列表数据
 const permissions = ref([
@@ -187,42 +205,18 @@ const permissions = ref([
     { id: 5, name: '系统设置' }
 ]);
 
-// 分页和搜索
-const loading = ref(false);
-const currentPage = ref(1);
-const pageSize = ref(10);
-const searchQuery = ref('');
-const submitLoading = ref(false);
-
-// 是否显示高级选项
-const showPermissions = ref(false);
-const showStatus = ref(false);
-
-// 抽屉相关
-const drawerVisible = ref(false);
-const selectedRole = ref(null);
-
 // 过滤后的角色列表
 const filteredRoles = computed(() => {
-    if (!searchQuery.value) {
-        return roles.value;
-    }
-
-    const query = searchQuery.value.toLowerCase();
-    return roles.value.filter(role =>
-        role.role_name.toLowerCase().includes(query)
-    );
+    return roles.value;
 });
 
 // 分页后的角色列表
 const paginatedRoles = computed(() => {
-    const start = (currentPage.value - 1) * pageSize.value;
-    const end = start + pageSize.value;
-    return filteredRoles.value.slice(start, end);
+    return filteredRoles.value;
 });
 
 // 总角色数
-const totalRoles = computed(() => filteredRoles.value.length);
+const totalRoles = computed(() => totalCount.value);
 
 // 对话框相关
 const dialogVisible = ref(false);
@@ -265,6 +259,7 @@ const formatDateDetail = (dateString) => {
 // 搜索角色
 const handleSearch = () => {
     currentPage.value = 1;
+    fetchRoles();
 };
 
 // 添加角色
@@ -275,77 +270,114 @@ const handleAdd = () => {
 };
 
 // 编辑角色
-const handleEdit = (row) => {
+const handleEdit = async (row) => {
     dialogType.value = 'edit';
     resetForm();
     
-    // 使用延时确保表单已重置
-    setTimeout(() => {
-        // 复制角色数据到表单
-        roleForm.id = row.id;
-        roleForm.role_name = row.role_name;
-        roleForm.role_description = row.role_description;
-        roleForm.status = row.status || true;
-        roleForm.permissions = row.permissions || [];
-        
-        dialogVisible.value = true;
-        
-        // 如果抽屉是打开的，则关闭它
-        if (drawerVisible.value) {
-            drawerVisible.value = false;
+    try {
+        loading.value = true;
+        // 获取角色详情
+        const response = await getRoleDetail(row.id);
+        if (response.status && response.status !== 200) {
+            ElMessage.error(response.message || '获取角色详情失败');
+            return;
         }
+        const roleDetail = response.data;
         
-        console.log('编辑角色:', row);
-    }, 0);
+        // 使用延时确保表单已重置
+        setTimeout(() => {
+            // 复制角色数据到表单
+            roleForm.id = roleDetail.id;
+            roleForm.role_name = roleDetail.role_name;
+            roleForm.role_description = roleDetail.role_description;
+            roleForm.status = roleDetail.status !== undefined ? roleDetail.status : true;
+            roleForm.permissions = roleDetail.permissions || [];
+            
+            dialogVisible.value = true;
+            
+            // 如果抽屉是打开的，则关闭它
+            if (drawerVisible.value) {
+                drawerVisible.value = false;
+            }
+        }, 0);
+    } catch (error) {
+        console.error('获取角色详情失败:', error);
+        ElMessage.error('获取角色详情失败，请稍后重试');
+    } finally {
+        loading.value = false;
+    }
 };
 
 // 删除角色
-const handleDelete = (row) => {
-    ElMessageBox.confirm(
-        `确定要删除角色 "${row.role_name}" 吗？`,
-        '警告',
-        {
-            confirmButtonText: '确定',
-            cancelButtonText: '取消',
-            type: 'warning'
-        }
-    ).then(() => {
-        loading.value = true;
-        
-        // 模拟API调用
-        setTimeout(() => {
-            // 这里应该调用删除API
-            roles.value = roles.value.filter(role => role.id !== row.id);
-            ElMessage.success('删除成功');
-            
-            // 如果删除的是当前选中的角色，关闭抽屉
-            if (selectedRole.value && selectedRole.value.id === row.id) {
-                drawerVisible.value = false;
-                selectedRole.value = null;
+const handleDelete = async (row) => {
+    try {
+        await ElMessageBox.confirm(
+            `确定要删除角色 "${row.role_name}" 吗？`,
+            '警告',
+            {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
             }
-            
-            loading.value = false;
-        }, 500);
-    }).catch(() => {
-        // 取消删除
-    });
+        );
+        
+        loading.value = true;
+        const deleteResponse = await deleteRole(row.id);
+        if (deleteResponse.status && deleteResponse.status !== 200) {
+            ElMessage.error(deleteResponse.message || '删除角色失败');
+            return;
+        }
+        ElMessage.success('删除成功');
+        
+        // 如果删除的是当前选中的角色，关闭抽屉
+        if (selectedRole.value && selectedRole.value.id === row.id) {
+            drawerVisible.value = false;
+            selectedRole.value = null;
+        }
+        
+        // 重新获取角色列表
+        await fetchRoles();
+    } catch (error) {
+        if (error !== 'cancel') {
+            console.error('删除角色失败:', error);
+            ElMessage.error('删除角色失败，请稍后重试');
+        }
+    } finally {
+        loading.value = false;
+    }
 };
 
 // 处理行点击
-const handleRowClick = (row) => {
-    selectedRole.value = row;
-    drawerVisible.value = true;
+const handleRowClick = async (row) => {
+    try {
+        loading.value = true;
+        // 获取角色详情
+        const response = await getRoleDetail(row.id);
+        if (response.status && response.status !== 200) {
+            ElMessage.error(response.message || '获取角色详情失败');
+            return;
+        }
+        selectedRole.value = response.data;
+        drawerVisible.value = true;
+    } catch (error) {
+        console.error('获取角色详情失败:', error);
+        ElMessage.error('获取角色详情失败，请稍后重试');
+    } finally {
+        loading.value = false;
+    }
 };
 
 // 分页大小变化
 const handleSizeChange = (val) => {
     pageSize.value = val;
     currentPage.value = 1;
+    fetchRoles();
 };
 
 // 当前页变化
 const handleCurrentChange = (val) => {
     currentPage.value = val;
+    fetchRoles();
 };
 
 // 重置表单
@@ -363,86 +395,94 @@ const resetForm = () => {
 };
 
 // 提交表单
-const submitForm = () => {
+const submitForm = async () => {
     if (!roleFormRef.value) return;
     
-    roleFormRef.value.validate((valid) => {
-        if (valid) {
-            submitLoading.value = true;
-            
-            // 模拟API调用
-            setTimeout(() => {
-                if (dialogType.value === 'add') {
-                    // 添加角色
-                    const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
-                    const newRole = {
-                        id: Math.max(...roles.value.map(r => r.id), 0) + 1, // 确保ID唯一
-                        role_name: roleForm.role_name,
-                        role_description: roleForm.role_description,
-                        status: roleForm.status,
-                        permissions: [...roleForm.permissions],
-                        create_time: now,
-                        update_time: now
-                    };
-                    roles.value.push(newRole);
-                    ElMessage({
-                        message: '添加角色成功',
-                        type: 'success',
-                        duration: 2000
-                    });
-                    
-                    console.log('添加角色成功:', newRole);
-                } else {
-                    // 编辑角色
-                    const index = roles.value.findIndex(role => role.id === roleForm.id);
-                    if (index !== -1) {
-                        const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
-                        
-                        // 创建更新后的角色对象
-                        const updatedRole = { 
-                            ...roles.value[index],
-                            role_name: roleForm.role_name,
-                            role_description: roleForm.role_description,
-                            status: roleForm.status,
-                            permissions: [...roleForm.permissions],
-                            update_time: now
-                        };
-                        
-                        // 更新角色列表中的数据
-                        roles.value[index] = updatedRole;
-                        
-                        // 如果编辑的是当前选中的角色，更新选中角色
-                        if (selectedRole.value && selectedRole.value.id === updatedRole.id) {
-                            selectedRole.value = { ...updatedRole };
-                        }
-                        
-                        ElMessage({
-                            message: '更新角色成功',
-                            type: 'success',
-                            duration: 2000
-                        });
-                        
-                        console.log('更新角色成功:', updatedRole);
-                    }
-                }
-                submitLoading.value = false;
-                dialogVisible.value = false;
-            }, 600);
+    try {
+        await roleFormRef.value.validate();
+        submitLoading.value = true;
+        
+        const roleData = {
+            role_name: roleForm.role_name,
+            role_description: roleForm.role_description,
+            status: roleForm.status,
+            permissions: roleForm.permissions
+        };
+        
+        if (dialogType.value === 'add') {
+            // 添加角色
+            const createResponse = await createRole(roleData);
+            if (createResponse.status && createResponse.status !== 200) {
+                ElMessage.error(createResponse.message || '添加角色失败');
+                return;
+            }
+            ElMessage.success('添加角色成功');
         } else {
-            return false;
+            // 编辑角色
+            const updateResponse = await updateRole(roleForm.id, roleData);
+            if (updateResponse.status && updateResponse.status !== 200) {
+                ElMessage.error(updateResponse.message || '更新角色失败');
+                return;
+            }
+            ElMessage.success('更新角色成功');
         }
-    });
+        
+        dialogVisible.value = false;
+        // 重新获取角色列表
+        await fetchRoles();
+    } catch (error) {
+        console.error(dialogType.value === 'add' ? '添加角色失败:' : '更新角色失败:', error);
+        ElMessage.error(dialogType.value === 'add' ? '添加角色失败，请稍后重试' : '更新角色失败，请稍后重试');
+    } finally {
+        submitLoading.value = false;
+    }
 };
 
 // 获取角色列表
-const fetchRoles = () => {
+const fetchRoles = async () => {
     loading.value = true;
-    
-    // 模拟API调用
-    setTimeout(() => {
-        // 实际项目中，这里应该调用API获取角色列表
+    try {
+        const params = {
+            page: currentPage.value,
+            size: pageSize.value,
+            roleName: searchQuery.value || null
+        };
+        
+        const response = await getRoleList(params);
+        console.log('获取角色列表响应:', response);
+        if (!response || !response.data) {
+            ElMessage.error('获取角色列表失败1');
+            roles.value = [];
+            totalCount.value = 0;
+            return;
+        }
+        
+        // 处理返回的数据
+        if (Array.isArray(response.data)) {
+            roles.value = response.data;
+            totalCount.value = response.data.length;
+        } else if (response.data.list && Array.isArray(response.data.list)) {
+            roles.value = response.data.list;
+            totalCount.value = response.data.total || response.data.list.length;
+        } else {
+            roles.value = [];
+            totalCount.value = 0;
+            console.warn('返回的角色数据格式不符合预期', response.data);
+        }
+    } catch (error) {
+        console.error('获取角色列表失败:', error);
+        ElMessage.error('获取角色列表失败，请稍后重试');
+        roles.value = [];
+        totalCount.value = 0;
+    } finally {
         loading.value = false;
-    }, 500);
+    }
+};
+
+// 获取权限名称
+const getPermissionName = (permissionId) => {
+    const permission = permissions.value.find(p => p.id === permissionId);
+    return permission ? permission.name : '未知权限';
 };
 
 onMounted(() => {
@@ -541,6 +581,16 @@ onMounted(() => {
     border-top: 1px solid #e4e7ed;
 }
 
+.permission-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.permission-tag {
+    margin-right: 5px;
+}
+
 /* 响应式调整 */
 @media screen and (max-width: 768px) {
     .header-actions {
@@ -556,4 +606,4 @@ onMounted(() => {
         margin-top: 8px;
     }
 }
-</style> 
+</style>

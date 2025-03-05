@@ -4,10 +4,13 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-
+@AllArgsConstructor
+@NoArgsConstructor
 @Data
 @TableName("user")
 public class User {
@@ -20,6 +23,7 @@ public class User {
     private Long kinId;
     private Long staffId;
     private Long roleId;
+    private int status;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
 

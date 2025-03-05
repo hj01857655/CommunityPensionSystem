@@ -1,5 +1,8 @@
 package com.communitypension.communitypensionadmin.service;
 
 
-public interface StaffService {
+import com.baomidou.mybatisplus.extension.service.IService;
+import com.communitypension.communitypensionadmin.entity.Staff;
+
+public interface StaffService extends IService<Staff> {
 }

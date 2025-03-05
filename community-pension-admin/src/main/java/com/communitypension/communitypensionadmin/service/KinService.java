@@ -1,5 +1,9 @@
 package com.communitypension.communitypensionadmin.service;
 
 
-public interface KinService {
+import com.baomidou.mybatisplus.extension.service.IService;
+import com.communitypension.communitypensionadmin.entity.Kin;
+
+public interface KinService extends IService<Kin> {
+
 }

@@ -6,105 +6,58 @@
         <h1 class="title">社区养老系统</h1>
         <p class="subtitle">管理后台</p>
       </div>
-      
+
       <el-card class="login-card" shadow="hover">
         <template #header>
           <div class="card-header">
             <h2 class="form-title">后台管理登录</h2>
           </div>
         </template>
-        
-        <el-form 
-          ref="loginFormRef" 
-          :model="loginForm" 
-          :rules="loginRules" 
-          label-position="top"
-          @keyup.enter="handleLogin"
-        >
+
+        <el-form ref="loginFormRef" :model="loginForm" :rules="loginRules" label-position="top"
+          @keyup.enter="handleLogin">
           <el-form-item prop="username" label="用户名">
-            <el-input 
-              v-model="loginForm.username" 
-              placeholder="请输入用户名" 
-              :prefix-icon="User"
-              clearable
-              tabindex="1"
-              aria-label="用户名"
-            />
+            <el-input v-model="loginForm.username" placeholder="请输入用户名" :prefix-icon="User" clearable tabindex="1"
+              aria-label="用户名" />
           </el-form-item>
-          
+
           <el-form-item prop="password" label="密码">
-            <el-input 
-              v-model="loginForm.password" 
-              :type="passwordVisible ? 'text' : 'password'" 
-              placeholder="请输入密码" 
-              :prefix-icon="Lock"
-              tabindex="2"
-              aria-label="密码"
-              show-password
-            />
+            <el-input v-model="loginForm.password" :type="passwordVisible ? 'text' : 'password'" placeholder="请输入密码"
+              :prefix-icon="Lock" tabindex="2" aria-label="密码" show-password />
           </el-form-item>
-          
+
           <el-form-item prop="roleId" label="角色">
-            <el-select 
-              v-model="loginForm.roleId" 
-              placeholder="请选择角色" 
-              class="role-select"
-              tabindex="3"
-              aria-label="角色选择"
-            >
+            <el-select v-model="loginForm.roleId" placeholder="请选择角色" class="role-select" tabindex="3" 
+              aria-label="角色选择">
               <el-option label="老人家属" :value="2" />
               <el-option label="社区工作人员" :value="3" />
               <el-option label="管理员" :value="4" />
             </el-select>
           </el-form-item>
-          
+
           <div class="login-options">
-            <el-checkbox 
-              v-model="loginForm.remember" 
-              label="记住我" 
-              tabindex="4"
-              aria-label="记住我"
-            />
-            <el-link 
-              type="primary" 
-              :underline="false" 
-              @click="handleForgotPassword"
-              tabindex="5"
-              aria-label="忘记密码"
-            >
+            <el-checkbox v-model="loginForm.remember" label="记住我" tabindex="4" aria-label="记住我" />
+            <el-link type="primary" :underline="false" @click="handleForgotPassword" tabindex="5" aria-label="忘记密码">
               忘记密码?
             </el-link>
           </div>
-          
+
           <el-form-item>
-            <el-button 
-              type="primary" 
-              class="login-button" 
-              :loading="loading" 
-              @click="handleLogin"
-              tabindex="6"
-              aria-label="登录"
-            >
+            <el-button type="primary" class="login-button" :loading="loading" @click="handleLogin" tabindex="6"
+              aria-label="登录">
               {{ loading ? '登录中...' : '登录' }}
             </el-button>
           </el-form-item>
         </el-form>
       </el-card>
-      
+
       <div class="login-footer">
         <p>© {{ currentYear }} 社区养老系统 - 版权所有</p>
       </div>
     </div>
-    
+
     <!-- 忘记密码对话框 -->
-    <el-dialog
-      v-model="forgotPasswordVisible"
-      title="忘记密码"
-      width="400px"
-      center
-      append-to-body
-      destroy-on-close
-    >
+    <el-dialog v-model="forgotPasswordVisible" title="忘记密码" width="400px" center append-to-body destroy-on-close>
       <el-form :model="forgotForm" :rules="forgotRules" ref="forgotFormRef" label-position="top">
         <el-form-item prop="username" label="用户名">
           <el-input v-model="forgotForm.username" placeholder="请输入用户名" />
@@ -141,12 +94,16 @@ const passwordVisible = ref(false)
 const forgotPasswordVisible = ref(false)
 const currentYear = computed(() => new Date().getFullYear())
 
+//默认选择管理员角色
+const defaultRoleId = ref(4)
+
 // 登录表单
+
 const loginForm = reactive({
   username: '',
   password: '',
-  roleId: 4, // 默认选择管理员角色
-  remember: false
+  roleId: defaultRoleId.value,
+  remember: true
 })
 
 // 忘记密码表单
@@ -180,40 +137,34 @@ const forgotRules = {
     { type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur' }
   ]
 }
-
 // 处理登录
 const handleLogin = async () => {
   if (!loginFormRef.value) return
-  
+
   await loginFormRef.value.validate(async (valid) => {
     if (!valid) {
       return false
     }
     try {
       loading.value = true
-      // 使用@/api/user.js中的login方法
-      const response = await login(loginForm)
+      //删除密码
+      const { remember, ...loginFormData } = loginForm
+      
+      const response = await login(loginFormData)
+      console.log(response)
       if (response.success) {
         // 保存登录状态
-        localStorage.setItem('userInfo', JSON.stringify({
-          username: loginForm.username,
-          roleId: loginForm.roleId,
-          token: response.data.token
-        }))
-        
+        if (remember) {
+          localStorage.setItem('rememberedUsername', loginForm.username)
+          localStorage.setItem('rememberedRole', loginForm.roleId)
+        }
         loading.value = false
-        ElNotification({
-          title: '登录成功',
-          message: '欢迎回来，管理员',
-          type: 'success',
-          duration: 2000
-        })
         // 跳转到管理后台
-        router.push('/admin/dashboard')
+        router.push('/admin/analysis/dashboard')
       } else {
         ElMessage.error('用户名、密码或角色错误，请重试')
       }
-      
+
     } catch (error) {
       console.error('登录失败:', error)
       ElMessage.error('登录失败，请稍后重试')
@@ -231,18 +182,18 @@ const handleForgotPassword = () => {
 // 处理重置密码
 const handleResetPassword = async () => {
   if (!forgotFormRef.value) return
-  
+
   await forgotFormRef.value.validate(async (valid) => {
     if (!valid) {
       return false
     }
-    
+
     try {
       resetLoading.value = true
-      
+
       // 模拟API请求
       await new Promise(resolve => setTimeout(resolve, 1500))
-      
+
       ElMessage.success('重置密码链接已发送到您的邮箱，请查收')
       forgotPasswordVisible.value = false
     } catch (error) {
@@ -258,16 +209,17 @@ const handleResetPassword = async () => {
 onMounted(() => {
   const rememberedUsername = localStorage.getItem('rememberedUsername')
   const rememberedRole = localStorage.getItem('rememberedRole')
-  
+
   if (rememberedUsername) {
     loginForm.username = rememberedUsername
     loginForm.remember = true
   }
-  
+
   if (rememberedRole) {
     loginForm.roleId = rememberedRole
   }
-})</script>
+})
+</script>
 <style scoped>
 .admin-login-container {
   min-height: 100vh;
@@ -366,11 +318,11 @@ onMounted(() => {
   .login-content {
     max-width: 100%;
   }
-  
+
   .title {
     font-size: 24px;
   }
-  
+
   .subtitle {
     font-size: 14px;
   }
@@ -382,6 +334,7 @@ onMounted(() => {
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);

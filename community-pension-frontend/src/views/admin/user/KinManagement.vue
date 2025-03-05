@@ -65,8 +65,8 @@
         </el-table-column>
       </el-table>
       <!-- 分页 -->
-      <el-pagination v-model="currentPage" :page-size="pageSize" :total="total" @size-change="handlePageSizeChange"
-        @current-change="handleCurrentPageChange" />
+      <el-pagination v-model="currentPage" :page-size="pageSize" :total="total" @size-change="handleSizeChange"
+        @current-change="handleCurrentChange" />
       <!-- 添加亲属 -->
       <el-dialog v-model="addKinDialogVisible" title="添加亲属" width="50%">
         <el-form :model="addKinForm" :rules="addKinRules" ref="addKinFormRef" label-width="120px">
@@ -129,41 +129,34 @@
 import { ref, computed, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Plus, Edit, Delete, View } from '@element-plus/icons-vue'
+import { getAllKins, addKin, updateKin, deleteKin, getKinDetail } from '@/api/kin'
 
 // 亲属列表数据 
-const kins = ref([
-  {
-    id: 1,
-    name: '张三',
-    phone: '12345678901',
-    address: '北京市海淀区',
-    relationship: '父子',
-    elderName: '张大爷',
-    createTime: '2024-01-01 10:00:00',
-    updateTime: '2024-01-01 10:00:00',
-    remarks: '备注信息'
-  },
-  {
-    id: 2,
-    name: '李四',
-    phone: '12345678902',
-    address: '北京市海淀区',
-    relationship: '父子',
-    elderName: '李大爷',
-    createTime: '2024-01-02 10:00:00',
-    updateTime: '2024-01-02 10:00:00',
-    remarks: '备注信息'
-  },
-  {
-    id: 3,
-    name: '王五',
-    gender: 'male',
-    phone: '12345678903',
-    email: 'wangwu@example.com',
-    createTime: '2024-01-03 10:00:00',
-    updateTime: '2024-01-03 10:00:00'
+const kins = ref([])
+
+// 获取亲属列表数据
+const fetchKinList = async () => {
+  loading.value = true
+  try {
+    const res = await getAllKins()
+    if (res.success) {
+      kins.value = res.data
+      total.value = res.data.length
+    } else {
+      ElMessage.error('获取亲属列表失败')
+    }
+  } catch (error) {
+    ElMessage.error('获取亲属列表失败：' + error.message)
+  } finally {
+    loading.value = false
   }
-])
+}
+
+// 在组件挂载时获取数据
+onMounted(() => {
+  fetchKinList()
+})
+
 const elders = ref([
   {
     id: 1,
@@ -244,10 +237,20 @@ const handleDelete = (row) => {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     type: 'warning'
-  }).then(() => {
-    console.log('删除亲属', row)
+  }).then(async () => {
+    try {
+      const res = await deleteKin(row.id)
+      if (res.success) {
+        ElMessage.success('删除成功')
+        fetchKinList() // 刷新列表
+      } else {
+        ElMessage.error('删除失败')
+      }
+    } catch (error) {
+      ElMessage.error('删除失败：' + error.message)
+    }
   }).catch(() => {
-    console.log('取消删除')
+    ElMessage.info('已取消删除')
   })
 }
 
@@ -284,6 +287,98 @@ const handleCurrentPageChange = (page) => {
     return
   }
   currentPage.value = page
+}
+// 添加亲属表单
+const addKinForm = ref({
+  name: '',
+  phone: '',
+  address: '',
+  relationship: '',
+  elderName: '',
+  remarks: ''
+})
+
+// 编辑亲属表单
+const editKinForm = ref({
+  name: '',
+  phone: '',
+  address: '',
+  relationship: '',
+  elderName: '',
+  remarks: ''
+})
+
+// 表单验证规则
+const addKinRules = {
+  name: [
+    { required: true, message: '请输入姓名', trigger: 'blur' },
+    { min: 2, max: 20, message: '长度在 2 到 20 个字符', trigger: 'blur' }
+  ],
+  phone: [
+    { required: true, message: '请输入电话号码', trigger: 'blur' },
+    { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号码', trigger: 'blur' }
+  ],
+  address: [
+    { required: true, message: '请输入地址', trigger: 'blur' },
+    { min: 5, max: 100, message: '长度在 5 到 100 个字符', trigger: 'blur' }
+  ],
+  relationship: [
+    { required: true, message: '请输入与老人的关系', trigger: 'blur' }
+  ],
+  elderName: [
+    { required: true, message: '请输入老人姓名', trigger: 'blur' }
+  ]
+}
+
+// 编辑表单验证规则
+const editKinRules = {
+  ...addKinRules
+}
+
+// 添加亲属提交
+const handleAddKin = () => {
+  if (!addKinFormRef.value) return
+  addKinFormRef.value.validate(async (valid) => {
+    if (valid) {
+      try {
+        const res = await addKin(addKinForm.value)
+        if (res.success) {
+          ElMessage.success('添加成功')
+          addKinDialogVisible.value = false
+          fetchKinList() // 刷新列表
+        } else {
+          ElMessage.error('添加失败')
+        }
+      } catch (error) {
+        ElMessage.error('添加失败：' + error.message)
+      }
+    } else {
+      return false
+    }
+  })
+}
+
+// 编辑亲属提交
+const handleEditKin = () => {
+  if (!editKinFormRef.value) return
+  editKinFormRef.value.validate(async (valid) => {
+    if (valid) {
+      try {
+        const res = await updateKin(editKinForm.value)
+        if (res.success) {
+          ElMessage.success('更新成功')
+          editKinDialogVisible.value = false
+          fetchKinList() // 刷新列表
+        } else {
+          ElMessage.error('更新失败')
+        }
+      } catch (error) {
+        ElMessage.error('更新失败：' + error.message)
+      }
+    } else {
+      return false
+    }
+  })
 }
 </script>
 <style scoped>

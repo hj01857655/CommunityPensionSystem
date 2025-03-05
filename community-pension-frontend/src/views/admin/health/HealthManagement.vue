@@ -334,21 +334,43 @@
     ],
     bloodPressure: [
       { required: true, message: '请输入血压', trigger: 'blur' },
-      { pattern: /^\d{2,3}\/\d{2,3}$/, message: '请输入正确的血压格式，如120/80', trigger: 'blur' }
-    ],
-    heartRate: [
-      { required: true, message: '请输入心率', trigger: 'blur' }
-    ],
-    bloodSugar: [
-      { required: true, message: '请输入血糖', trigger: 'blur' }
-    ],
-    temperature: [
-      { required: true, message: '请输入体温', trigger: 'blur' }
-    ],
-    status: [
-      { required: true, message: '请选择状态', trigger: 'change' }
-    ]
-  }
+      { pattern: /^\d{2,3}\/\d{2,3}$/, message: '请输入正确的血压格式，如120/80', trigger: 'blur' },
+    { validator: (rule, value, callback) => {
+      if (value) {
+        const [systolic, diastolic] = value.split('/')
+        if (parseInt(systolic) < 60 || parseInt(systolic) > 200 || parseInt(diastolic) < 40 || parseInt(diastolic) > 120) {
+          callback(new Error('血压数值超出正常范围'))
+        } else {
+          callback()
+        }
+      } else {
+        callback()
+      }
+    }, trigger: 'blur' }
+  ],
+  heartRate: [
+    { required: true, message: '请输入心率', trigger: 'blur' },
+    { type: 'number', min: 40, max: 200, message: '心率应在40-200次/分钟之间', trigger: 'blur' }
+  ],
+  bloodSugar: [
+    { required: true, message: '请输入血糖', trigger: 'blur' },
+    { type: 'number', min: 2, max: 30, message: '血糖值应在2-30mmol/L之间', trigger: 'blur' }
+  ],
+  temperature: [
+    { required: true, message: '请输入体温', trigger: 'blur' },
+    { type: 'number', min: 35, max: 42, message: '体温应在35-42°C之间', trigger: 'blur' }
+  ],
+  weight: [
+    { required: true, message: '请输入体重', trigger: 'blur' },
+    { type: 'number', min: 30, max: 150, message: '体重应在30-150kg之间', trigger: 'blur' }
+  ],
+  status: [
+    { required: true, message: '请选择状态', trigger: 'change' }
+  ],
+  remark: [
+    { max: 500, message: '备注信息不能超过500个字符', trigger: 'blur' }
+  ]
+}
   
   // 获取状态标签类型
   const getStatusType = (status) => {

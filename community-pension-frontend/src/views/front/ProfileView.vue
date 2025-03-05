@@ -63,7 +63,6 @@
 import { onMounted, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import axios from 'axios'
-import { getUserInfo } from '@/api/user'
 
 const profileForm = ref({
   name: '',
@@ -81,14 +80,7 @@ const profileForm = ref({
   remark: ''
 })  
 onMounted(async()=>{
-  const userProfile=JSON.parse(localStorage.getItem('userInfo'));
-  const response=await getUserInfo(userProfile.roleId);
-  console.log(response);
-  if(response.code==200){
-    profileForm.value=response.data;
-  }else{
-    ElMessage.error(response.message);
-  }
+  
     
 })
 const formatDate = (date) => {
