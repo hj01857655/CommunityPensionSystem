@@ -51,8 +51,16 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="创建时间" prop="createdAt" width="180" />
-        <el-table-column label="更新时间" prop="updatedAt" width="180" />
+        <el-table-column label="创建时间" prop="createTime" width="180">
+          <template #default="scope">
+            {{ formatDate(scope.row.createTime) }}
+          </template>
+        </el-table-column>
+        <el-table-column label="更新时间" prop="updateTime" width="180">
+          <template #default="scope">
+            {{ formatDate(scope.row.updateTime) }}
+          </template>
+        </el-table-column>
         <el-table-column fixed="right" label="操作" width="220">
           <template #default="scope">
             <el-button size="small" type="primary" @click="handleEdit(scope.row)">编辑</el-button>
@@ -140,12 +148,12 @@
       <template v-if="healthDialogType === 'view'">
         <!-- 基本信息 -->
         <el-descriptions :column="2" :title-class-name="'health-title'" border title="基本信息">
-          <el-descriptions-item label="姓名">{{ selectedElder.name }}</el-descriptions-item>
-          <el-descriptions-item label="性别">{{ selectedElder.gender === 'male' ? '男' : '女' }}</el-descriptions-item>
-          <el-descriptions-item label="年龄">{{ selectedElder.age }}</el-descriptions-item>
+          <el-descriptions-item label="姓名">{{ elderForm.name }}</el-descriptions-item>
+          <el-descriptions-item label="性别">{{ elderForm.gender === 'male' ? '男' : '女' }}</el-descriptions-item>
+          <el-descriptions-item label="年龄">{{ elderForm.age }}</el-descriptions-item>
           <el-descriptions-item label="健康状况">
-            <el-tag :type="getHealthStatusType(selectedElder.healthCondition)">
-              {{ selectedElder.healthCondition }}
+            <el-tag :type="getHealthStatusType(elderForm.healthCondition)">
+              {{ elderForm.healthCondition }}
             </el-tag>
           </el-descriptions-item>
         </el-descriptions>
@@ -170,7 +178,7 @@
         </el-descriptions>
 
         <el-divider />
-
+        <!-- 健康记录 -->
         <h4 class="health-title">健康记录</h4>
         <el-timeline>
           <el-timeline-item v-for="(record, index) in healthRecords" :key="index" :timestamp="record.date"
@@ -245,6 +253,10 @@ import { Search } from '@element-plus/icons-vue'
 
 import { getElders, addElder, deleteElder, updateElder } from '@/api/elder';
 import { debounce } from '@/utils/util';
+import { formatDate } from '@/utils/date';
+onMounted(() => {
+  fetchElders()
+})
 // 定义响应式变量
 const searchQuery = ref('')
 const elders = ref([])
@@ -312,7 +324,26 @@ const selectedElder = ref({
   phone: '',
   address: '',
 })
-const healthData = ref({})
+const healthData = ref({
+  height: '',//身高
+  weight: '',//体重
+  bloodPressure: '',//血压
+  bloodSugar: '',//血糖
+  heartRate: '',//心率
+  temperature: '',//体温
+  medication: '',//用药情况
+  medicalHistory: '',//病史
+  allergies: '',//过敏史
+  symptoms: '',//症状
+  medication: '',//用药情况
+  recordTime: '',//记录时间
+  recordId: '',//记录id
+  recordType: '',//记录类型
+  createTime: '',//创建时间
+  updateTime: '',//更新时间
+
+})
+const healthRecords = ref([])
 
 
 const fetchElders = async () => {
@@ -417,6 +448,14 @@ const handleViewHealth = (row) => {
     medicalHistory: row.medicalHistory || '',
     allergies: row.allergies || ''
   }
+  // 初始化健康记录数据
+  healthRecords.value = [
+    {
+      date: row.lastCheckTime || '暂无检查记录',
+      type: 'primary',
+      content: `最近一次体检：${row.lastCheckResult || '暂无检查结果'}`
+    }
+  ]
   healthDialogVisible.value = true
   healthDialogType.value = 'view'
 }
@@ -483,17 +522,32 @@ const resetForm = () => {
   })
 }
 
-
+// 搜索老人
+const handleSearch = debounce(() => {
+  currentPage.value = 1;
+  fetchElders();
+}, 300);
 
 // 提交表单
 const submitForm = () => {
   elderFormRef.value.validate(async (valid) => {
     if (valid) {
       try {
+        // 创建一个普通JavaScript对象，避免循环引用
         const formData = {
-          ...elderForm,
-          healthCondition: elderForm.healthCondition,
-          allergy: elderForm.allergy
+          id: elderForm.value.id,
+          name: elderForm.value.name,
+          gender: elderForm.value.gender,
+          birthday: elderForm.value.birthday,
+          age: elderForm.value.age,
+          idCard: elderForm.value.idCard,
+          phone: elderForm.value.phone,
+          address: elderForm.value.address,
+          emergencyContactName: elderForm.value.emergencyContactName,
+          emergencyContactPhone: elderForm.value.emergencyContactPhone,
+          healthCondition: elderForm.value.healthCondition,
+          remarks: elderForm.value.remarks,
+
         }
 
         if (dialogType.value === 'add') {
@@ -506,6 +560,7 @@ const submitForm = () => {
         dialogVisible.value = false
         fetchElders() // 刷新列表
       } catch (error) {
+        console.error('提交表单错误:', error)
         ElMessage.error(dialogType.value === 'add' ? '添加老人信息失败' : '更新老人信息失败')
       }
     } else {
@@ -513,17 +568,6 @@ const submitForm = () => {
     }
   })
 }
-
-// 搜索老人
-const handleSearch = debounce(() => {
-  currentPage.value = 1;
-  fetchElders();
-}, 300);
-
-onMounted(() => {
-  fetchElders()
-})
-
 
 </script>
 

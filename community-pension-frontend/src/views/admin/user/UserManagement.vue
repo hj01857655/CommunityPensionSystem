@@ -568,7 +568,50 @@ const handleExportExcel = () => {
 // 打印功能
 const handlePrint = () => {
   ElMessage.success('正在准备打印...')
+  // 保存原始标题
+  const originalTitle = document.title
+  // 设置打印时的标题
+  document.title = '用户管理列表'
+  
+  // 创建打印样式
+  const style = document.createElement('style')
+  style.innerHTML = `
+    @media print {
+      /* 隐藏不需要打印的元素 */
+      .header-actions, .toolbar, .pagination-container, 
+      .el-table-column--selection, .el-table-column--fixed-right,
+      .el-button, .el-switch__core {
+        display: none !important;
+      }
+      /* 调整表格样式 */
+      .el-table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+      }
+      .el-table th, .el-table td {
+        border: 1px solid #dcdfe6 !important;
+      }
+      /* 确保内容完整显示 */
+      .el-table__body {
+        width: 100% !important;
+      }
+      /* 分页打印设置 */
+      @page {
+        size: A4 landscape;
+        margin: 2cm;
+      }
+    }
+  `
+  document.head.appendChild(style)
+
+  // 执行打印
   window.print()
+
+  // 打印完成后清理
+  setTimeout(() => {
+    document.head.removeChild(style)
+    document.title = originalTitle
+  }, 100)
 }
 
 const submitForm = () => {

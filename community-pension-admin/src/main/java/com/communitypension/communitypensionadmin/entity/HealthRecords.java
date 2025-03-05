@@ -63,6 +63,10 @@ public class HealthRecords {
     @DecimalMin(value = "0.0", inclusive = false, message = "身高必须是正数")
     private BigDecimal height;
 
+    //病史medical_history
+    private String medicalHistory;
+    //过敏史
+    private String allergy;
     /**
      * 症状描述
      */
