@@ -14,6 +14,6 @@ public interface UserMapper extends BaseMapper<User> {
     @Select("SELECT u.*, r.role_name FROM user u " +
             "LEFT JOIN role r ON u.role_id = r.id " +
             "WHERE u.username = #{username}")
-    Optional<User> getUserByUsernameAndRole(@Param("username") String username, @Param("roleId") Long roleId);
+    Optional<User> getUserByUsernameAndRoleId(@Param("username") String username, @Param("roleId") Long roleId);
 
 }

@@ -26,12 +26,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     private final UserMapper userMapper;
     private final RoleService roleService;
     private final JwtUtil jwtUtil;
-
+    // 登录
     @Override
     public Map<String, Object> login(String username, String password, Long roleId) {
         logger.info("User login attempt with username: {} and roleId: {}", username, roleId);
 
-        User user = userMapper.getUserByUsernameAndRole(username, roleId)
+        User user = userMapper.getUserByUsernameAndRoleId(username, roleId)
                 .orElseThrow(() -> new BusinessException(401, "用户不存在"));
 
         if (password.equals(user.getPassword())) {
@@ -39,7 +39,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
 
         Role role = roleService.getById(roleId);
-        String token = jwtUtil.generateToken(user.getUsername(), role.getRoleName());
+        String token = jwtUtil.generateToken(user.getUsername(), role.getId());
 
         Map<String, Object> data = new HashMap<>();
         data.put("user", user);
@@ -47,7 +47,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         return data;
     }
 
-
+    // 重置密码
     @Override
     public void resetPassword(Long userId, String oldPassword, String newPassword) {
         Optional<User> userOptional = Optional.ofNullable(userMapper.selectById(userId));

@@ -20,6 +20,7 @@ public class HealthRecords {
      * 老人ID
      */
     @NotNull(message = "老人ID不能为空")
+    @TableField("elder_id")
     private Long elderId;
 
     /**

@@ -29,13 +29,12 @@ public class JwtUtil {
         private final boolean shouldRefresh;
         @Getter
         private final String error;
-
-
         public boolean shouldRefresh() {
             return shouldRefresh;
         }
 
     }
+    // 构造方法
     public JwtUtil(@Value("${jwt.secret}") String secret, @Value("${jwt.expiration}") Long expiration) {
         this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.expiration = expiration;
@@ -51,11 +50,11 @@ public class JwtUtil {
     /**
      * 生成 token
      */
-    public String generateToken(String username, String role) {
+    public String generateToken(String username, Long roleId) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expiration*1000);
 
-        Claims claims = Jwts.claims().subject(username).add("role", role).build();
+        Claims claims = Jwts.claims().subject(username).add("roleId",roleId).build();
 
         return "Bearer " + Jwts.builder()  // 确保 Bearer 前缀后没有额外空格
                 .claims(claims).issuedAt(now).expiration(expiryDate).signWith(secretKey).compact();
@@ -72,7 +71,7 @@ public class JwtUtil {
     /**
      * 从 token 中获取角色信息
      */
-    public String getRoleFromToken(String token) {
+    public String getRoleIdFromToken(String token) {
         String cleanedToken = cleanToken(token);
         return Jwts.parser().verifyWith((SecretKey) secretKey).build().parseSignedClaims(cleanedToken).getPayload().get("role", String.class);
     }
@@ -117,7 +116,7 @@ public class JwtUtil {
     // 新增刷新方法
     public String refreshToken(String token) {
         Claims claims = parseClaims(cleanToken(token));
-        return generateToken(claims.getSubject(), claims.get("role", String.class));
+        return generateToken(claims.getSubject(), claims.get("roleId", Long.class));
     }
 
 

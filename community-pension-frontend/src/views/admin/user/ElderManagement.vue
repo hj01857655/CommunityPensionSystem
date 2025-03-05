@@ -4,6 +4,7 @@
       <template #header>
         <div class="card-header">
           <h3>老人管理</h3>
+          <!-- 搜索框 -->
           <div class="header-actions">
             <el-input v-model="searchQuery" class="search-input" clearable placeholder="搜索姓名/身份证号/电话"
               @input="handleSearch">
@@ -148,12 +149,12 @@
       <template v-if="healthDialogType === 'view'">
         <!-- 基本信息 -->
         <el-descriptions :column="2" :title-class-name="'health-title'" border title="基本信息">
-          <el-descriptions-item label="姓名">{{ elderForm.name }}</el-descriptions-item>
-          <el-descriptions-item label="性别">{{ elderForm.gender === 'male' ? '男' : '女' }}</el-descriptions-item>
-          <el-descriptions-item label="年龄">{{ elderForm.age }}</el-descriptions-item>
+          <el-descriptions-item label="姓名">{{ selectedElder.name }}</el-descriptions-item>
+          <el-descriptions-item label="性别">{{ selectedElder.gender === 'male' ? '男' : '女' }}</el-descriptions-item>
+          <el-descriptions-item label="年龄">{{ selectedElder.age }}</el-descriptions-item>
           <el-descriptions-item label="健康状况">
-            <el-tag :type="getHealthStatusType(elderForm.healthCondition)">
-              {{ elderForm.healthCondition }}
+            <el-tag :type="getHealthStatusType(selectedElder.healthCondition)">
+              {{ selectedElder.healthCondition }}
             </el-tag>
           </el-descriptions-item>
         </el-descriptions>
@@ -172,8 +173,8 @@
         <el-divider />
 
         <el-descriptions :column="1" :title-class-name="'health-title'" border title="病史信息">
-          <el-descriptions-item label="病史">{{ selectedElder.medicalHistory || '无' }}</el-descriptions-item>
-          <el-descriptions-item label="过敏史">{{ selectedElder.allergies || '无' }}</el-descriptions-item>
+          <el-descriptions-item label="病史">{{ healthData.medicalHistory || '无' }}</el-descriptions-item>
+          <el-descriptions-item label="过敏史">{{ healthData.allergies || '无' }}</el-descriptions-item>
           <el-descriptions-item label="用药情况">{{ healthData.medication || '无' }}</el-descriptions-item>
         </el-descriptions>
 
@@ -254,6 +255,7 @@ import { Search } from '@element-plus/icons-vue'
 import { getElders, addElder, deleteElder, updateElder } from '@/api/elder';
 import { debounce } from '@/utils/util';
 import { formatDate } from '@/utils/date';
+import { getHealthRecords, updateHealthRecords } from '@/api/healthRecords';
 onMounted(() => {
   fetchElders()
 })
@@ -311,10 +313,14 @@ const elderRules = ref({
   emergencyContactPhone: [
     { required: true, message: '请输入紧急联系电话', trigger: 'blur' },
     { pattern: /^1[3-9]\d{9}$/, message: '紧急联系电话格式不正确', trigger: 'blur' }
+  ],
+  healthCondition: [
+    { required: true, message: '请选择健康状况', trigger: 'change' }
   ]
 })
 const healthDialogVisible = ref(false)
 const healthDialogType = ref('view')
+// 健康档案
 const selectedElder = ref({
   id: '',
   name: '',
@@ -324,6 +330,7 @@ const selectedElder = ref({
   phone: '',
   address: '',
 })
+//健康档案
 const healthData = ref({
   height: '',//身高
   weight: '',//体重
@@ -341,11 +348,11 @@ const healthData = ref({
   recordType: '',//记录类型
   createTime: '',//创建时间
   updateTime: '',//更新时间
-
 })
+
 const healthRecords = ref([])
 
-
+//获取老人列表
 const fetchElders = async () => {
   loading.value = true
   try {
@@ -371,8 +378,9 @@ const filteredElders = computed(() => {
   if (!searchQuery.value) {
     return elders.value;
   }
-
+  //搜索框输入内容
   const query = searchQuery.value.toLowerCase();
+  //搜索框输入内容是否在老人信息中存在
   return elders.value.filter(elder =>
     elder.name?.toLowerCase().includes(query) ||
     elder.idCard?.includes(query) ||
@@ -384,9 +392,6 @@ const totalElders = computed(() => {
   return elders.value ? elders.value.length : 0;
 })
 
-
-
-
 // 获取健康状况标签类型
 const getHealthStatusType = (status) => {
   const typeMap = {
@@ -396,7 +401,6 @@ const getHealthStatusType = (status) => {
     '癌症': 'danger',
     '其他': 'info'
   }
-
   return typeMap[status] || 'info'
 }
 
@@ -434,19 +438,37 @@ const handleCurrentChange = (val) => {
   currentPage.value = val
   fetchElders()
 }
+
 // 查看健康档案
-const handleViewHealth = (row) => {
-  selectedElder.value = { ...row }
-  healthData.value = {
-    height: row.height || '',
-    weight: row.weight || '',
-    bloodPressure: row.bloodPressure || '',
-    bloodSugar: row.bloodSugar || '',
-    heartRate: row.heartRate || '',
-    temperature: row.temperature || '',
-    medication: row.medication || '',
-    medicalHistory: row.medicalHistory || '',
-    allergies: row.allergies || ''
+const handleViewHealth = async (row) => {
+  console.log(row.id)
+  selectedElder.value = {
+    ...row,
+    name: row.name,
+    gender: row.gender,
+    age: row.age,
+    healthCondition: row.healthCondition
+  }
+  //获取健康档案
+  try{
+    const response = await getHealthRecords(row.id)
+    if (response.success) {
+      console.log(response.data.data)
+      healthData.value = {
+        ...response.data.data,//健康档案数据
+        height: response.data.data.height || '',//身高
+        weight: response.data.data.weight || '',//体重
+        bloodPressure: response.data.data.bloodPressure || '',//血压
+        bloodSugar: response.data.data.bloodSugar || '',//血糖
+        heartRate: response.data.data.heartRate || '',//心率
+        temperature: response.data.data.temperature || '',//体温
+        medication: response.data.data.medication || '无',//用药情况
+        medicalHistory: response.data.data.medicalHistory || '无',//病史
+        allergies: response.data.data.allergies || '无'//过敏史
+      }
+    }
+  } catch (error) {
+    ElMessage.error('获取健康记录失败')
   }
   // 初始化健康记录数据
   healthRecords.value = [
@@ -463,23 +485,18 @@ const handleViewHealth = (row) => {
 // 编辑健康档案
 const handleEditHealth = () => {
   healthDialogType.value = 'edit'
-  // Ensure health data is correctly loaded from the selected elder
-  healthData.height = selectedElder.value.height || ''
-  healthData.weight = selectedElder.value.weight || ''
-  healthData.bloodPressure = selectedElder.value.bloodPressure || ''
-  healthData.bloodSugar = selectedElder.value.bloodSugar || ''
-  healthData.heartRate = selectedElder.value.heartRate || ''
-  healthData.temperature = selectedElder.value.temperature || ''
-  healthData.medication = selectedElder.value.medication || ''
-  healthData.medicalHistory = selectedElder.value.medicalHistory || ''
-  healthData.allergies = selectedElder.value.allergies || ''
+  healthData.value = { ...healthData.value }
 }
 
 // 提交健康档案表单
-const submitHealthForm = () => {
-  // 这里应该调用更新健康档案的API
-  ElMessage.success('健康档案更新成功')
-  healthDialogVisible.value = false
+const submitHealthForm = async () => {
+  try {
+    await updateHealthRecords(healthData.value)
+    ElMessage.success('健康档案更新成功')
+    healthDialogVisible.value = false
+  } catch (error) {
+    ElMessage.error('健康档案更新失败')
+  }
 }
 
 // 删除老人
@@ -547,7 +564,9 @@ const submitForm = () => {
           emergencyContactPhone: elderForm.value.emergencyContactPhone,
           healthCondition: elderForm.value.healthCondition,
           remarks: elderForm.value.remarks,
-
+          createTime: elderForm.value.createTime,
+          updateTime: elderForm.value.updateTime,
+          
         }
 
         if (dialogType.value === 'add') {

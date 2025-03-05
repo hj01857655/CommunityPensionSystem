@@ -1,11 +1,10 @@
-import axios from '@/utils/axios';
-import { ElMessage } from 'element-plus';
+import axios from '@/utils/axios'
 
 //获取老人健康档案
 export const getHealthRecords = async (elderId) => {
     try {
         const token = localStorage.getItem('token');
-        const response = await axios.get('/health-records', {
+        const response = await axios.get('/api/health-records/getHealthRecords', {
             headers: {
                 Authorization: `${token}`
             },
@@ -16,7 +15,6 @@ export const getHealthRecords = async (elderId) => {
         return { success: true, data: response.data };
     } catch (error) {
         console.error('获取健康记录失败:', error);
-        ElMessage.error('获取健康记录失败');
         return { success: false, error: error.message };
     }
 };
@@ -34,6 +32,8 @@ export const updateHealthRecords = async (healthRecords) => {
         return { success: true, data: response.data };
     } catch (error) {
         console.error('更新健康记录失败:', error);
-        ElMessage.error('更新健康记录失败');
+        return { success: false, error: error.message };
+    }
+};
 
 
