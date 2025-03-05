@@ -27,14 +27,23 @@
             {{ scope.row.gender === 'male' ? '男' : '女' }}
           </template>
         </el-table-column>
-        <el-table-column prop="birthday" label="出生日期" width="80" />
+        <el-table-column prop="birthday" label="出生日期" width="100">
+          <template #default="scope">
+            {{ scope.row.birthday }}
+          </template>
+        </el-table-column>
+        <el-table-column label="年龄" width="80">
+          <template #default="scope">
+            {{ calculateAge(scope.row.birthday) }}
+          </template>
+        </el-table-column>
         <el-table-column prop="idCard" label="身份证号" width="180" />
         <el-table-column prop="phone" label="联系电话" width="120" />
         <el-table-column prop="address" label="住址" show-overflow-tooltip />
-        <el-table-column prop="healthStatus" label="健康状况" width="100">
+        <el-table-column prop="healthCondition" label="健康状况" width="100">
           <template #default="scope">
-            <el-tag :type="getHealthStatusType(scope.row.healthStatus)">
-              {{ scope.row.healthStatus }}
+            <el-tag :type="getHealthStatusType(scope.row.healthCondition)">
+              {{ scope.row.healthCondition }}
             </el-tag>
           </template>
         </el-table-column>
@@ -86,8 +95,8 @@
         <el-form-item label="紧急电话" prop="emergencyPhone">
           <el-input v-model="elderForm.emergencyPhone" />
         </el-form-item>
-        <el-form-item label="健康状况" prop="healthStatus">
-          <el-select v-model="elderForm.healthStatus" placeholder="请选择健康状况">
+        <el-form-item label="健康状况" prop="healthCondition">
+          <el-select v-model="elderForm.healthCondition" placeholder="请选择健康状况">
             <el-option label="良好" value="良好" />
             <el-option label="一般" value="一般" />
             <el-option label="较差" value="较差" />
@@ -120,8 +129,8 @@
           <el-descriptions-item label="性别">{{ selectedElder.gender === 'male' ? '男' : '女' }}</el-descriptions-item>
           <el-descriptions-item label="年龄">{{ selectedElder.age }}</el-descriptions-item>
           <el-descriptions-item label="健康状况">
-            <el-tag :type="getHealthStatusType(selectedElder.healthStatus)">
-              {{ selectedElder.healthStatus }}
+            <el-tag :type="getHealthStatusType(selectedElder.healthCondition)">
+              {{ selectedElder.healthCondition }}
             </el-tag>
           </el-descriptions-item>
         </el-descriptions>
@@ -227,8 +236,8 @@ const fetchElders = async () => {
   loading.value = true
   try {
     getElders({
-      page: currentPage.value,
-      size: pageSize.value
+      currentPage,
+      pageSize
     }).then(result => {
       console.log(result)
       if (result.success && result.data && result.data.data.records) {
@@ -378,12 +387,14 @@ const handleEdit = (row) => {
 }
 // 提交表单
 const handleSizeChange = (val) => {
-  pageSize.value = size
+  pageSize.value = val
   currentPage.value = 1
+  fetchElders()
 }
 // 当前页变化
 const handleCurrentChange = (val) => {
   currentPage.value = val
+  fetchElders()
 }
 // 查看健康档案
 const handleViewHealth = (row) => {
@@ -450,7 +461,7 @@ const resetForm = () => {
   Object.keys(elderForm).forEach(key => {
     if (key === 'gender') {
       elderForm[key] = 'male'
-    } else if (key === 'healthStatus') {
+    } else if (key === 'healthCondition') {
       elderForm[key] = '良好'
     } else {
       elderForm[key] = ''

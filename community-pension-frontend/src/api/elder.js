@@ -6,8 +6,8 @@ export const getElders = async (params) => {
     const token = localStorage.getItem('token');
     const response = await axios.get('/api/elders', {
       params: {
-        page: params.page,
-        size: params.size
+        page: params.currentPage,
+        size: params.pageSize
       },
       headers: {
         Authorization: `${token}`,

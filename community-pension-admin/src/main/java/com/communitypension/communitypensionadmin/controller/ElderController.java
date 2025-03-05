@@ -5,6 +5,7 @@ import com.communitypension.communitypensionadmin.entity.Elder;
 import com.communitypension.communitypensionadmin.service.ElderService;
 import com.communitypension.communitypensionadmin.util.Result;
 import com.communitypension.communitypensionadmin.utils.JwtUtil;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,16 +28,6 @@ public class ElderController {
         if (!status.isValid()) {
             return Result.error(401, status.getError());
         }
-
-        if (status.shouldRefresh()) {
-            // 刷新 Token
-            String newToken = jwtUtil.refreshToken(token);
-            if (newToken != null) {
-                // 更新前端的 Token，例如通过响应头返回新的 Token
-                return Result.success("Token 已刷新", newToken);
-            }
-        }
-
         Page<Elder> page = elderService.page(new Page<>(current, size));
         return Result.success("查询成功", page);
     }
@@ -49,29 +40,45 @@ public class ElderController {
         }
 
         Elder elder = elderService.getById(id);
-        return elder != null ? Result.success("查询成功", elder) : Result.error(404, "老人信息不存在");
+        if (elder != null) {
+            String idCard = elder.getIdCard();
+            elder.setIdCard(idCard.substring(0, 4) + "********" + idCard.substring(idCard.length() - 4));
+            return Result.success("查询成功", elder);
+        } else {
+            return Result.error(404, "老人信息不存在");
+        }
     }
 
     @PostMapping
-    public Result<Object> createElder(@RequestHeader("Authorization") String token, @RequestBody Elder elder) {
+    public Result<Object> createElder(@RequestHeader("Authorization") String token, @Valid @RequestBody Elder elder) {
         JwtUtil.TokenStatus status = jwtUtil.validateToken(token);
         if (!status.isValid()) {
             return Result.error(401, status.getError());
         }
 
         boolean saved = elderService.save(elder);
-        return saved ? Result.success("创建成功", elder.getId()) : Result.error(500, "创建失败");
+        if (saved) {
+            elderService.calculateAge(elder);
+            return Result.success("创建成功", elder.getId());
+        } else {
+            return Result.error(500, "创建失败");
+        }
     }
 
     @PutMapping
-    public Result<Object> updateElder(@RequestHeader("Authorization") String token, @RequestBody Elder elder) {
+    public Result<Object> updateElder(@RequestHeader("Authorization") String token, @Valid @RequestBody Elder elder) {
         JwtUtil.TokenStatus status = jwtUtil.validateToken(token);
         if (!status.isValid()) {
             return Result.error(401, status.getError());
         }
 
         boolean updated = elderService.updateById(elder);
-        return updated ? Result.success("更新成功") : Result.error(500, "更新失败");
+        if (updated) {
+            elderService.calculateAge(elder);
+            return Result.success("更新成功");
+        } else {
+            return Result.error(500, "更新失败");
+        }
     }
 
     @DeleteMapping("/{id}")

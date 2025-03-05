@@ -35,6 +35,7 @@ public class UserController {
     @Autowired
     private JwtUtil jwtUtil;
 
+    // 构造函数
     @Autowired
     public UserController(UserService userService, RoleService roleService, ElderService elderService, KinService kinService, StaffService staffService) {
         this.userService = userService;
@@ -43,7 +44,7 @@ public class UserController {
         this.kinService = kinService;
         this.staffService = staffService;
     }
-
+    // 查询所有用户
     @GetMapping("")
     public Result<Object> getUserList(@RequestHeader("Authorization") String token) {
         JwtUtil.TokenStatus status = jwtUtil.validateToken(token);
@@ -120,7 +121,7 @@ public class UserController {
         }
     }
 
-    // 管理员登录
+    // 用户登录
     @PostMapping("/login")
     public ResponseEntity<Result<Map<String, Object>>> login(@RequestBody Map<String, Object> loginData) {
         String username = (String) loginData.get("username");
@@ -128,12 +129,17 @@ public class UserController {
         Long roleId = Long.parseLong(loginData.get("roleId").toString());
 
         try {
+            if(username == null || password == null) {
+                return ResponseEntity.badRequest().body(Result.error(400, "参数错误"));
+            }
             // 根据用户名、密码和角色id查询用户
-            User user = userService.getOne(new QueryWrapper<User>().eq("username", username).eq("password", password).eq("role_id", roleId));
+            User user = userService.getOne(new QueryWrapper<User>().eq("username", username).eq("role_id", roleId));
             if (user == null) {
                 return ResponseEntity.status(401).body(Result.error(401, "用户名或密码错误"));
             }
-
+            if(user.getStatus()!=1){
+                return ResponseEntity.status(401).body(Result.error(401, "用户已被禁用"));
+            }
             // 根据角色id查询角色
             Role role = roleService.getById(roleId);
             if (role == null) {

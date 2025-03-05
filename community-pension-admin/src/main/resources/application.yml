@@ -40,7 +40,8 @@ spring:
     open-in-view: true
 jwt:
   secret: "cB7ChF1y4Aegk+p9KNkFz0GQeY2e+ZgeIW6EVJbiR9Y="
-  expiration: 86400000 # 过期时间：24小时
+  expiration: 3600 # 过期时间：1小时
+
 mybatis-plus:
   global-config:
     db-config:
