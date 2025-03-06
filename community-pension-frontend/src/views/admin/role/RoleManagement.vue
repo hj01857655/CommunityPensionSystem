@@ -449,7 +449,7 @@ const fetchRoles = async () => {
         };
         
         const response = await getRoleList(params);
-        console.log('获取角色列表响应:', response);
+        console.log('获取角色列表响应:', response.data);
         if (!response || !response.data) {
             ElMessage.error('获取角色列表失败1');
             roles.value = [];
@@ -461,9 +461,12 @@ const fetchRoles = async () => {
         if (Array.isArray(response.data)) {
             roles.value = response.data;
             totalCount.value = response.data.length;
-        } else if (response.data.list && Array.isArray(response.data.list)) {
-            roles.value = response.data.list;
-            totalCount.value = response.data.total || response.data.list.length;
+        } else if (response.data && Array.isArray(response.data.records)) {
+            const RoleData=response.data.records
+            console.log(RoleData)
+            roles.value = RoleData;
+            console.log(roles.value)
+            totalCount.value = response.data.total || RoleData.length;
         } else {
             roles.value = [];
             totalCount.value = 0;
