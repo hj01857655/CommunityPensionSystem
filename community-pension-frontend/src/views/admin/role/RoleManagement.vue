@@ -5,7 +5,8 @@
                 <div class="card-header">
                     <h3>角色管理</h3>
                     <div class="header-actions">
-                        <el-input v-model="searchQuery" placeholder="搜索角色名称" class="search-input" clearable @clear="handleSearch">
+                        <el-input v-model="searchQuery" placeholder="搜索角色名称" class="search-input" clearable
+                            @clear="handleSearch">
                             <template #prefix>
                                 <el-icon>
                                     <Search />
@@ -13,11 +14,15 @@
                             </template>
                         </el-input>
                         <el-button type="primary" @click="handleSearch">
-                            <el-icon><Search /></el-icon>
+                            <el-icon>
+                                <Search />
+                            </el-icon>
                             搜索
                         </el-button>
                         <el-button type="success" @click="handleAdd">
-                            <el-icon><Plus /></el-icon>
+                            <el-icon>
+                                <Plus />
+                            </el-icon>
                             添加角色
                         </el-button>
                     </div>
@@ -25,15 +30,8 @@
             </template>
 
             <!-- 角色管理内容 -->
-            <el-table 
-                :data="paginatedRoles" 
-                style="width: 100%" 
-                v-loading="loading" 
-                border 
-                stripe
-                highlight-current-row
-                @row-click="handleRowClick"
-                class="role-table">
+            <el-table :data="paginatedRoles" style="width: 100%" v-loading="loading" border stripe highlight-current-row
+                @row-click="handleRowClick" class="role-table">
                 <el-table-column prop="id" label="ID" width="80" align="center" />
                 <el-table-column prop="role_name" label="角色名称" width="150" />
                 <el-table-column prop="role_description" label="角色描述" show-overflow-tooltip />
@@ -61,11 +59,15 @@
                 <el-table-column label="操作" width="200" fixed="right" align="center">
                     <template #default="scope">
                         <el-button type="primary" size="small" @click.stop="handleEdit(scope.row)">
-                            <el-icon><Edit /></el-icon>
+                            <el-icon>
+                                <Edit />
+                            </el-icon>
                             编辑
                         </el-button>
                         <el-button type="danger" size="small" @click.stop="handleDelete(scope.row)">
-                            <el-icon><Delete /></el-icon>
+                            <el-icon>
+                                <Delete />
+                            </el-icon>
                             删除
                         </el-button>
                     </template>
@@ -73,46 +75,22 @@
             </el-table>
 
             <div class="pagination-container">
-                <el-pagination 
-                    v-model:current-page="currentPage" 
-                    v-model:page-size="pageSize" 
-                    :page-sizes="[10, 20, 50, 100]"
-                    layout="total, sizes, prev, pager, next, jumper" 
-                    :total="totalRoles" 
-                    @size-change="handleSizeChange"
-                    @current-change="handleCurrentChange"
-                    background />
+                <el-pagination v-model:current-page="currentPage" v-model:page-size="pageSize"
+                    :page-sizes="[10, 20, 50, 100]" layout="total, sizes, prev, pager, next, jumper" :total="totalRoles"
+                    @size-change="handleSizeChange" @current-change="handleCurrentChange" background />
             </div>
         </el-card>
 
         <!-- 角色表单对话框 -->
-        <el-dialog 
-            v-model="dialogVisible" 
-            :title="dialogType === 'add' ? '添加角色' : '编辑角色'" 
-            width="500px"
-            destroy-on-close
-            :close-on-click-modal="false">
-            <el-form 
-                ref="roleFormRef" 
-                :model="roleForm" 
-                :rules="roleRules" 
-                label-width="100px"
-                status-icon>
+        <el-dialog v-model="dialogVisible" :title="dialogType === 'add' ? '添加角色' : '编辑角色'" width="500px"
+            destroy-on-close :close-on-click-modal="false">
+            <el-form ref="roleFormRef" :model="roleForm" :rules="roleRules" label-width="100px" status-icon>
                 <el-form-item label="角色名称" prop="role_name">
-                    <el-input 
-                        v-model="roleForm.role_name" 
-                        placeholder="请输入角色名称"
-                        maxlength="50"
-                        show-word-limit />
+                    <el-input v-model="roleForm.role_name" placeholder="请输入角色名称" maxlength="50" show-word-limit />
                 </el-form-item>
                 <el-form-item label="角色描述" prop="role_description">
-                    <el-input 
-                        v-model="roleForm.role_description" 
-                        type="textarea" 
-                        :rows="3"
-                        placeholder="请输入角色描述"
-                        maxlength="255"
-                        show-word-limit />
+                    <el-input v-model="roleForm.role_description" type="textarea" :rows="3" placeholder="请输入角色描述"
+                        maxlength="255" show-word-limit />
                 </el-form-item>
                 <el-form-item v-if="showPermissions" label="权限列表" prop="permissions">
                     <el-select v-model="roleForm.permissions" multiple placeholder="请选择权限">
@@ -132,11 +110,7 @@
         </el-dialog>
 
         <!-- 角色详情抽屉 -->
-        <el-drawer
-            v-model="drawerVisible"
-            title="角色详情"
-            direction="rtl"
-            size="30%">
+        <el-drawer v-model="drawerVisible" title="角色详情" direction="rtl" size="30%">
             <div v-if="selectedRole" class="role-detail">
                 <el-descriptions :column="1" border>
                     <el-descriptions-item label="角色ID">{{ selectedRole.id }}</el-descriptions-item>
@@ -149,10 +123,7 @@
                     </el-descriptions-item>
                     <el-descriptions-item label="权限">
                         <div class="permission-tags">
-                            <el-tag 
-                                v-for="permId in selectedRole.permissions" 
-                                :key="permId"
-                                type="info"
+                            <el-tag v-for="permId in selectedRole.permissions" :key="permId" type="info"
                                 class="permission-tag">
                                 {{ getPermissionName(permId) }}
                             </el-tag>
@@ -161,10 +132,12 @@
                             </span>
                         </div>
                     </el-descriptions-item>
-                    <el-descriptions-item label="创建时间">{{ formatDateDetail(selectedRole.create_time) }}</el-descriptions-item>
-                    <el-descriptions-item label="更新时间">{{ formatDateDetail(selectedRole.update_time) }}</el-descriptions-item>
+                    <el-descriptions-item label="创建时间">{{ formatDateDetail(selectedRole.create_time)
+                    }}</el-descriptions-item>
+                    <el-descriptions-item label="更新时间">{{ formatDateDetail(selectedRole.update_time)
+                    }}</el-descriptions-item>
                 </el-descriptions>
-                
+
                 <div class="drawer-footer">
                     <el-button type="primary" @click="handleEdit(selectedRole)">编辑角色</el-button>
                 </div>
@@ -181,12 +154,16 @@ import { getRoleList, createRole, updateRole, deleteRole, getRoleDetail } from '
 
 // 角色列表数据
 const roles = ref([]);
+// 加载状态
 const loading = ref(false);
+// 当前页
 const currentPage = ref(1);
+// 每页条数
 const pageSize = ref(10);
+// 搜索框输入内容
 const searchQuery = ref('');
+// 提交按钮loading状态
 const submitLoading = ref(false);
-const totalCount = ref(0); // 总记录数
 
 // 是否显示高级选项
 const showPermissions = ref(true); // 默认显示权限选择
@@ -216,18 +193,21 @@ const paginatedRoles = computed(() => {
 });
 
 // 总角色数
-const totalRoles = computed(() => totalCount.value);
+const totalRoles = computed(() => {
+    return roles.value ? roles.value.length : 0;
+});
 
 // 对话框相关
 const dialogVisible = ref(false);
 const dialogType = ref('add'); // 'add' 或 'edit'
 const roleFormRef = ref(null);
+// 角色表单
 const roleForm = reactive({
     id: '',
     role_name: '',
     role_description: '',
-    status: true,
-    permissions: []
+    create_time: '',
+    update_time: ''
 });
 
 // 表单验证规则
@@ -273,7 +253,7 @@ const handleAdd = () => {
 const handleEdit = async (row) => {
     dialogType.value = 'edit';
     resetForm();
-    
+
     try {
         loading.value = true;
         // 获取角色详情
@@ -283,18 +263,15 @@ const handleEdit = async (row) => {
             return;
         }
         const roleDetail = response.data;
-        
+
         // 使用延时确保表单已重置
         setTimeout(() => {
             // 复制角色数据到表单
             roleForm.id = roleDetail.id;
             roleForm.role_name = roleDetail.role_name;
             roleForm.role_description = roleDetail.role_description;
-            roleForm.status = roleDetail.status !== undefined ? roleDetail.status : true;
-            roleForm.permissions = roleDetail.permissions || [];
-            
             dialogVisible.value = true;
-            
+
             // 如果抽屉是打开的，则关闭它
             if (drawerVisible.value) {
                 drawerVisible.value = false;
@@ -320,7 +297,7 @@ const handleDelete = async (row) => {
                 type: 'warning'
             }
         );
-        
+
         loading.value = true;
         const deleteResponse = await deleteRole(row.id);
         if (deleteResponse.status && deleteResponse.status !== 200) {
@@ -328,13 +305,13 @@ const handleDelete = async (row) => {
             return;
         }
         ElMessage.success('删除成功');
-        
+
         // 如果删除的是当前选中的角色，关闭抽屉
         if (selectedRole.value && selectedRole.value.id === row.id) {
             drawerVisible.value = false;
             selectedRole.value = null;
         }
-        
+
         // 重新获取角色列表
         await fetchRoles();
     } catch (error) {
@@ -385,7 +362,7 @@ const resetForm = () => {
     if (roleFormRef.value) {
         roleFormRef.value.resetFields();
     }
-    
+
     // 重置表单数据
     roleForm.id = '';
     roleForm.role_name = '';
@@ -397,18 +374,18 @@ const resetForm = () => {
 // 提交表单
 const submitForm = async () => {
     if (!roleFormRef.value) return;
-    
+
     try {
         await roleFormRef.value.validate();
         submitLoading.value = true;
-        
+
         const roleData = {
             role_name: roleForm.role_name,
             role_description: roleForm.role_description,
             status: roleForm.status,
             permissions: roleForm.permissions
         };
-        
+
         if (dialogType.value === 'add') {
             // 添加角色
             const createResponse = await createRole(roleData);
@@ -426,7 +403,7 @@ const submitForm = async () => {
             }
             ElMessage.success('更新角色成功');
         }
-        
+
         dialogVisible.value = false;
         // 重新获取角色列表
         await fetchRoles();
@@ -447,26 +424,21 @@ const fetchRoles = async () => {
             size: pageSize.value,
             roleName: searchQuery.value || null
         };
-        
+
         const response = await getRoleList(params);
         console.log('获取角色列表响应:', response.data);
         if (!response || !response.data) {
             ElMessage.error('获取角色列表失败1');
             roles.value = [];
-            totalCount.value = 0;
             return;
         }
-        
+
         // 处理返回的数据
         if (Array.isArray(response.data)) {
             roles.value = response.data;
-            totalCount.value = response.data.length;
         } else if (response.data && Array.isArray(response.data.records)) {
-            const RoleData=response.data.records
-            console.log(RoleData)
-            roles.value = RoleData;
-            console.log(roles.value)
-            totalCount.value = response.data.total || RoleData.length;
+            const RoleData = response.data.records
+            roles.value = RoleData.map(item => ({ ...item, id: item.id }));
         } else {
             roles.value = [];
             totalCount.value = 0;
@@ -600,11 +572,11 @@ onMounted(() => {
         flex-direction: column;
         align-items: flex-start;
     }
-    
+
     .search-input {
         width: 100%;
     }
-    
+
     .header-actions .el-button {
         margin-top: 8px;
     }

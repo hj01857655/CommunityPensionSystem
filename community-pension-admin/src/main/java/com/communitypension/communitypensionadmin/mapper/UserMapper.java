@@ -1,6 +1,5 @@
 package com.communitypension.communitypensionadmin.mapper;
 
-
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.communitypension.communitypensionadmin.entity.User;
 import org.apache.ibatis.annotations.Param;
@@ -16,4 +15,9 @@ public interface UserMapper extends BaseMapper<User> {
             "WHERE u.username = #{username}")
     Optional<User> getUserByUsernameAndRoleId(@Param("username") String username, @Param("roleId") Long roleId);
 
+
+
+
+
+//
 }

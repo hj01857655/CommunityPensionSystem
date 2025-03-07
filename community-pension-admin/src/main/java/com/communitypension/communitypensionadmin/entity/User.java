@@ -12,17 +12,17 @@ import java.time.LocalDateTime;
 public class User {
 
     @TableId(type = IdType.AUTO)
-    private Long id;
+    private Long id;    // 用户ID
 
-    private String username;
-    private String password;
-    private Long elderId;
-    private Long kinId;
-    private Long staffId;
-    private Long roleId;
-    private int status;
-    private LocalDateTime createTime;
-    private LocalDateTime updateTime;
+    private String username;// 用户名
+    private String password;// 密码
+    private Long elderId;// 老人ID
+    private Long kinId; // 亲属ID
+    private Long staffId;   // 工作人员ID
+    private Long roleId;    // 角色ID
+    private int status; // 状态
+    private LocalDateTime createTime;    // 创建时间
+    private LocalDateTime updateTime;    // 更新时间
 
     @TableField(exist = false)
     private Elder elder;

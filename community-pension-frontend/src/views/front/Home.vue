@@ -59,22 +59,18 @@ import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import DashBoard from './DashBoard.vue'; // 引入DashBoard组件
 import { getHealthData } from '@/api/health';
-import HomeCard from '@components/front/HomeCard.vue';
-import dayjs from 'dayjs';
-import {
-  User,
-  Phone
-} from '@element-plus/icons-vue';
 
 const router = useRouter();
 
-const elderInfo = ref(null);
+const elderInfo = ref({
+  name: '',
+  avatar: '',
+});
 const isLoggedIn = ref(false);
 const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'; // Default avatar URL
 
 const loadUserInfo = () => {
   const userInfo = localStorage.getItem('userInfo');
-  console.log(JSON.parse(userInfo));
   if (userInfo) {
     elderInfo.value = JSON.parse(userInfo);
     isLoggedIn.value = true;
@@ -153,7 +149,6 @@ const handleCommand = async (command) => {
 
 const handleEmergencyCall = () => {
   ElMessage.success(`正在拨打紧急联系电话：${emergencyPhone.value}`);
-  // 实际的紧急呼叫逻辑
 };
 
 const getServiceStatusType = (status) => {

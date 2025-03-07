@@ -46,7 +46,7 @@
   <script setup>
   import { ref, onMounted, onBeforeUnmount } from 'vue'
   import { ElMessage } from 'element-plus'
-  import { debounce } from '@utils/debounce'
+  import { debounce } from '@/utils/util'
   
   const activeTab = ref('list')
   

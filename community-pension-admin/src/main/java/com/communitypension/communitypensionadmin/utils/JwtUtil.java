@@ -71,9 +71,9 @@ public class JwtUtil {
     /**
      * 从 token 中获取角色信息
      */
-    public String getRoleIdFromToken(String token) {
+    public Long getRoleIdFromToken(String token) {
         String cleanedToken = cleanToken(token);
-        return Jwts.parser().verifyWith((SecretKey) secretKey).build().parseSignedClaims(cleanedToken).getPayload().get("role", String.class);
+        return Jwts.parser().verifyWith((SecretKey) secretKey).build().parseSignedClaims(cleanedToken).getPayload().get("roleId", Long.class);
     }
 
     public boolean isTokenExpired(String token) {

@@ -76,4 +76,6 @@ public class Elder implements Serializable {
     public enum Gender {
         male, female
     }
+    @TableField(exist = false)
+    private HealthRecords healthRecords;
 }

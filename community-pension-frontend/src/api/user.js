@@ -147,3 +147,20 @@ export const updateUser = async (user) => {
         return { success: false, error: error.message };
     }
 };
+//获取用户信息
+export const getUserInfo = async (roleId) => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get('/api/users/userInfo', {
+            headers: {
+                Authorization: `${token}`,
+            }
+        });
+        return { success: true, data: response.data };
+    } catch (error) {
+        console.error('Get user info error:', error);
+        ElMessage.error('获取用户信息失败，请稍后重试');
+        return { success: false, error: error.message };
+    }
+};
+

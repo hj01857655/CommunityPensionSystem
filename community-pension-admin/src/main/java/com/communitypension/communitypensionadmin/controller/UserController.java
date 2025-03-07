@@ -6,6 +6,10 @@ import com.communitypension.communitypensionadmin.entity.User;
 import com.communitypension.communitypensionadmin.service.*;
 import com.communitypension.communitypensionadmin.util.Result;
 import com.communitypension.communitypensionadmin.utils.JwtUtil;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +22,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/users")
 @CrossOrigin(origins = "http://localhost:8081")
+@Tag(name = "用户管理")
 public class UserController {
     // 日志记录器
     private static final Logger logger = org.slf4j.LoggerFactory.getLogger(UserController.class);
@@ -51,6 +56,7 @@ public class UserController {
     }
 
     // 查询所有用户
+    @Operation(summary = "查询所有用户")
     @GetMapping("")
     public Result<Object> getUserList(@RequestHeader("Authorization") String token) {
         JwtUtil.TokenStatus status = jwtUtil.validateToken(token);
@@ -75,6 +81,7 @@ public class UserController {
     }
 
     // 查询单个用户
+    @Operation(summary = "查询单个用户")
     @GetMapping("/{id}")
     public Result<Object> getUser(@RequestHeader("Authorization") String token, @PathVariable Long id) {
         JwtUtil.TokenStatus status = jwtUtil.validateToken(token);
@@ -91,13 +98,14 @@ public class UserController {
             result.put("tokenExpire", true);  // 添加过期标志
             return Result.success("登录已过期，请重新登录", result);
         }
-        if(user == null){
+        if (user == null) {
             return Result.error(404, "用户不存在");
         }
         return Result.success("查询成功", user);
     }
 
     // 添加用户
+    @Operation(summary = "添加用户")
     @PostMapping("")
     public Result<Object> add(@RequestHeader("Authorization") String token, @RequestBody User user) {
         JwtUtil.TokenStatus status = jwtUtil.validateToken(token);
@@ -110,6 +118,7 @@ public class UserController {
     }
 
     // 更新用户
+    @Operation(summary = "更新用户")
     @PutMapping("")
     public Result<Object> update(@RequestHeader("Authorization") String token, @RequestBody User user) {
         JwtUtil.TokenStatus status = jwtUtil.validateToken(token);
@@ -122,6 +131,7 @@ public class UserController {
     }
 
     // 删除用户
+    @Operation(summary = "删除用户")
     @DeleteMapping("{id}")
     public Result<Object> delete(@RequestHeader("Authorization") String token, @PathVariable Long id) {
         JwtUtil.TokenStatus status = jwtUtil.validateToken(token);
@@ -139,6 +149,7 @@ public class UserController {
     }
 
     // 用户登录
+    @Operation(summary = "用户登录")
     @PostMapping("/login")
     public ResponseEntity<Result<Map<String, Object>>> login(@RequestBody Map<String, Object> loginData) {
         String username = (String) loginData.get("username");
@@ -147,7 +158,7 @@ public class UserController {
 
         try {
             //如果用户名或密码为空，返回参数错误
-            if(username == null || password == null) {
+            if (username == null || password == null) {
                 return ResponseEntity.badRequest().body(Result.error(400, "参数错误"));
             }
             // 根据用户名、密码和角色id查询用户，如果用户不存在，响应401：用户名或密码错误
@@ -157,7 +168,7 @@ public class UserController {
             if (user == null) {
                 return ResponseEntity.status(401).body(Result.error(401, "用户名或密码错误"));
             }
-            if(user.getStatus()!=1){
+            if (user.getStatus() != 1) {
                 return ResponseEntity.status(401).body(Result.error(401, "用户已被禁用"));
             }
             if (role == null) {
@@ -180,6 +191,7 @@ public class UserController {
     }
 
     // 管理员登录
+    @Operation(summary = "管理员登录")
     @PostMapping("/adminLogin")
     public ResponseEntity<Result<Map<String, Object>>> adminLogin(@RequestBody Map<String, Object> loginData) {
         String username = (String) loginData.get("username");
@@ -217,6 +229,7 @@ public class UserController {
     }
 
     // 重置密码为123456
+    @Operation(summary = "重置密码为123456")
     @PutMapping("/resetPassword")
     public ResponseEntity<Result<Object>> resetPassword(@RequestHeader("Authorization") String token, @RequestParam Long userId) {
         try {
@@ -249,48 +262,42 @@ public class UserController {
      * @param token：令牌
      * @return {message: 查询成功, data: 用户信息}
      */
-    @GetMapping("/getUserInfo")
-    public ResponseEntity<Result<Object>> getUserInfoByRoleId(@RequestHeader("Authorization") String token, @RequestParam Long roleId) {
+    @GetMapping("/userInfo")
+    @Operation(summary = "获取用户信息")
+    @Parameters(value = {@Parameter(name = "token", description = "令牌", required = true)})
+    public ResponseEntity<Result<User>> getInfoWithUser(@RequestHeader("Authorization") String token) {
         try {
             // 验证令牌
             JwtUtil.TokenStatus status = jwtUtil.validateToken(token);
-            if (!status.isValid()) {//
+            if (!status.isValid()) {
                 String errorMsg = status.getError().contains("expired") ?
                         "登录已过期，请重新登录" : "无效的令牌";
                 return ResponseEntity.status(401).body(Result.error(401, errorMsg));
             }
-
-            // 从 token 中获取用户名
             String username = jwtUtil.getUsernameFromToken(token);
-            if (username == null) {// 如果用户名是 null，则返回错误信息
-                return ResponseEntity.status(401).body(Result.error(401, "无效的令牌"));
-            }
-
+            logger.info("username: {}", username);
+            Long roleId = jwtUtil.getRoleIdFromToken(token);
             // 根据用户名查询用户
-            User user = userService.getOne(new QueryWrapper<User>().eq("username", username));
+            User user = userService.getOne(new QueryWrapper<User>().eq("username", username).eq("role_id", roleId));
             if (user == null) {
                 return ResponseEntity.ok(Result.error(404, "用户不存在"));
             }
 
-            // 根据角色id查询角色
-            Role role = roleService.getById(user.getRoleId());
-            if (role == null) {
+            // 从 token 中获取用户名
+            Role role=roleService.getById(roleId);
+            if(role==null){
                 return ResponseEntity.ok(Result.error(400, "角色不存在"));
             }
 
-            // 将用户信息和角色信息放入响应体
-            Map<String, Object> data = new HashMap<>();
-            data.put("user", user);
-            data.put("role", role);
-
-            // 如果 token 即将过期，生成新的 token
-            if (status.shouldRefresh()) {
-                String newToken = jwtUtil.refreshToken(token);
-                data.put("newToken", newToken);
-                data.put("tokenExpire", true);  // 添加过期标志
+            if (username == null) {// 如果用户名是 null，则返回错误信息
+                return ResponseEntity.status(401).body(Result.error(401, "无效的令牌"));
             }
 
-            return ResponseEntity.ok(Result.success("查询成功", data));
+
+
+            User user1=userService.getInfoWithUser(user);
+            return ResponseEntity.ok(Result.success("查询成功", user1));
+
         } catch (Exception e) {
             logger.error("获取用户信息失败", e);
             return ResponseEntity.status(500).body(Result.error(500, "获取用户信息失败，请稍后重试"));
