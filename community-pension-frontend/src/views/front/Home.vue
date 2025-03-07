@@ -131,13 +131,13 @@ const NoticeDetailView=defineAsyncComponent(() => import('@views/front/NoticeDet
 // 当前组件
 const currentComponent = computed(() => {
   const componentMap = {
-    home: DashBoard,
-    service: ServiceView,
-    health: HealthView,
-    activity: ActivityView,
-    notice: NoticeView,
-    profile: ProfileView,
-    noticeDetail: NoticeDetailView
+    home: DashBoard,//首页
+    service: ServiceView,//服务预约
+    health: HealthView,//健康档案
+    activity: ActivityView,//社区活动
+    notice: NoticeView,//通知公告
+    profile: ProfileView,//个人信息
+    noticeDetail: NoticeDetailView//通知详情
   };
   return componentMap[activeIndex.value];
 });
