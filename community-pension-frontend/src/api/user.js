@@ -148,7 +148,7 @@ export const updateUser = async (user) => {
     }
 };
 //获取用户信息
-export const getUserInfo = async (roleId) => {
+export const getUserInfo = async () => {
     try {
         const token = localStorage.getItem('token');
         const response = await axios.get('/api/users/userInfo', {
@@ -163,4 +163,5 @@ export const getUserInfo = async (roleId) => {
         return { success: false, error: error.message };
     }
 };
+
 

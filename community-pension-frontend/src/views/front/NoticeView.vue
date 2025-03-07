@@ -396,6 +396,9 @@ onMounted(() => {
 
 .filter-tags {
   margin: 16px 0;
+  width: 100%;
+  overflow-x: auto;
+  white-space: nowrap;
 }
 
 .section-title {
@@ -553,8 +556,6 @@ onMounted(() => {
   }
   
   .filter-tags {
-      overflow-x: auto;
-      white-space: nowrap;
       padding-bottom: 8px;
   }
   

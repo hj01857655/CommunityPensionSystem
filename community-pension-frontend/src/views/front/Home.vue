@@ -11,7 +11,7 @@
         </el-menu>
         <el-dropdown @command="handleCommand" class="user-dropdown">
           <span class="user-info">
-            <el-avatar :size="48" :src="elderInfo?.avatar || defaultAvatar" />
+            <el-avatar :size="48" :src="elderInfo.avatar" />
             <span class="username">{{ elderInfo?.name || '访客' }}</span>
           </span>
           <template #dropdown>
@@ -57,32 +57,46 @@
 import { ref, computed, onMounted, defineAsyncComponent } from 'vue';
 import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
-import DashBoard from './DashBoard.vue'; // 引入DashBoard组件
-import { getHealthData } from '@/api/health';
-
+import DashBoard from './DashBoard.vue';
+import { getUserInfo } from '@/api/user';
+import { env } from 'echarts';
 const router = useRouter();
 
 const elderInfo = ref({
   name: '',
   avatar: '',
 });
-const isLoggedIn = ref(false);
-const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'; // Default avatar URL
-
-const loadUserInfo = () => {
-  const userInfo = localStorage.getItem('userInfo');
-  if (userInfo) {
-    elderInfo.value = JSON.parse(userInfo);
-    isLoggedIn.value = true;
-  } else {
-    isLoggedIn.value = false;
-  }
-};
-
 onMounted(() => {
   loadUserInfo();
 });
+const isLoggedIn = ref(false);
+const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'; // Default avatar URL
 
+const loadUserInfo = async () => {
+  const userInfo = localStorage.getItem('userInfo');
+  if (userInfo) {
+    const response=await getUserInfo();
+    console.log(response.data.data.elder);
+    localStorage.setItem('elderInfo',JSON.stringify(response.data.data.elder));//将用户信息存储到本地存储中
+    elderInfo.value={
+      ...response.data.data.elder,
+      avatar: computed(() => {
+        if (response.data.data.elder.avatar) {
+          const avatarUrl = `http://localhost:8081/src/assets/${response.data.data.elder.avatar}`
+          return avatarUrl
+        }
+        return ''
+      })
+    }
+    console.log(elderInfo.value);
+    isLoggedIn.value = true;
+  } else {
+    isLoggedIn.value = false;
+    
+  }
+};
+// 紧急呼叫
+const emergencyPhone = ref('1234567890');
 const selectedNotice = ref(null);
 // 查看通知公告详情
 const viewNoticeDetail = (notice) => {
@@ -108,21 +122,27 @@ const menuItems = [
   { index: 'activity', label: '社区活动' },
   { index: 'notice', label: '通知公告' }
 ];
-
+const ServiceView=defineAsyncComponent(() => import('@views/front/ServiceView.vue'));
+const HealthView=defineAsyncComponent(() => import('@views/front/HealthView.vue'));
+const ActivityView=defineAsyncComponent(() => import('@views/front/ActivityView.vue'));
+const NoticeView=defineAsyncComponent(() => import('@views/front/NoticeView.vue'));
+const ProfileView=defineAsyncComponent(() => import('@views/front/ProfileView.vue'));
+const NoticeDetailView=defineAsyncComponent(() => import('@views/front/NoticeDetailView.vue'));
+// 当前组件
 const currentComponent = computed(() => {
   const componentMap = {
     home: DashBoard,
-    service: defineAsyncComponent(() => import('@views/front/ServiceView.vue')),
-    health: defineAsyncComponent(() => import('@views/front/HealthView.vue')),
-    activity: defineAsyncComponent(() => import('@views/front/ActivityView.vue')),
-    notice: defineAsyncComponent(() => import('@views/front/NoticeView.vue')),
-    profile: defineAsyncComponent(() => import('@views/front/ProfileView.vue')),
-    noticeDetail: defineAsyncComponent(() => import('@views/front/NoticeDetailView.vue'))
+    service: ServiceView,
+    health: HealthView,
+    activity: ActivityView,
+    notice: NoticeView,
+    profile: ProfileView,
+    noticeDetail: NoticeDetailView
   };
   return componentMap[activeIndex.value];
 });
 
-// Methods
+// 菜单选择
 const handleMenuSelect = (index) => {
   if (!isLoggedIn.value && index !== 'activity' && index !== 'notice') {
     ElMessage.warning('请先登录以访问此功能');
@@ -130,7 +150,7 @@ const handleMenuSelect = (index) => {
   }
   activeIndex.value = index;
 };
-
+// 用户操作
 const handleCommand = async (command) => {
   if (command === 'profile' || command === 'changePassword') {
     if (!isLoggedIn.value) {
@@ -146,11 +166,11 @@ const handleCommand = async (command) => {
     router.push('/login');
   }
 };
-
+// 紧急呼叫
 const handleEmergencyCall = () => {
   ElMessage.success(`正在拨打紧急联系电话：${emergencyPhone.value}`);
 };
-
+// 服务状态类型
 const getServiceStatusType = (status) => {
   const statusMap = {
     '已预约': 'success',
@@ -162,24 +182,7 @@ const getServiceStatusType = (status) => {
 
 
 
-// Lifecycle
-onMounted(async () => {
-  const fetchHealthData = async (roleId) => {
-    try {
-      const response = await getHealthData(roleId);
-      if (response.data.code === 200) {
-        return response.data.data;
-      } else {
-        ElMessage.error(response.data.message || '获取健康数据失败');
-        return null;
-      }
-    } catch (error) {
-      ElMessage.error(error.message || '获取健康数据失败');
-      return null;
-    }
-  };
-  await fetchHealthData();
-});
+
 </script>
 
 <style scoped>
