@@ -15,8 +15,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/api/users/adminLogin", "/api/users/userLogin").permitAll() // 允许访问 adminLogin 和 userLogin
-                        .anyRequest().authenticated() // 其他请求需要身份验证
+                        .anyRequest().permitAll()
                 )
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS) // 无状态会话
