@@ -73,6 +73,7 @@ export const getAllUsers = async () => {
                 Authorization: `${token}`,
             },
         });
+        console.log(response.data)
         return { success: true, data: response.data };
     } catch (error) {
         console.error('Get all users error:', error);

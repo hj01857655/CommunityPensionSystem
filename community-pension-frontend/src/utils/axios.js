@@ -28,7 +28,7 @@ async function refreshToken() {
       setToken(newToken);
       return newToken;
     } catch (error) {
-      ElMessage.error('刷新 Token 失败，请重新登录');
+      console.log('刷新 Token 失败，请重新登录');
       localStorage.clear();
       router.push("/admin/login")
       return null;
@@ -68,7 +68,7 @@ axiosInstance.interceptors.response.use((response) => {
       return axiosInstance(originalRequest);
     } else {
       // 处理刷新失败的情况，例如重新登录
-      ElMessage.error('刷新 Token 失败，请重新登录');
+      console.log('刷新 Token 失败，请重新登录');
       localStorage.clear();
       router.push("/admin/login")
     }
