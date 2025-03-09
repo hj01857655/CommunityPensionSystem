@@ -84,17 +84,20 @@ import { ElMessage, ElNotification } from 'element-plus'
 import { User, Lock } from '@element-plus/icons-vue'
 import { useAdminStore } from '@/stores/adminStore'
 const adminStore = useAdminStore()
-console.log(adminStore)
 const router = useRouter()
 const loginFormRef = ref(null)
 const forgotFormRef = ref(null)
 const loading = ref(false)
 // 重置密码加载中
+// 重置密码加载中
 const resetLoading = ref(false)
+// 密码是否可见
 // 密码是否可见
 const passwordVisible = ref(false)
 // 忘记密码对话框
+// 忘记密码对话框
 const forgotPasswordVisible = ref(false)
+// 当前年份
 // 当前年份
 const currentYear = computed(() => new Date().getFullYear())
 
@@ -141,7 +144,6 @@ const forgotRules = {
     { type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur' }
   ]
 }
-const remember = ref(false)
 // 处理登录
 const handleLogin = async () => {
   // 如果登录表单不存在，则返回
@@ -154,8 +156,8 @@ const handleLogin = async () => {
     // 如果验证通过，则进行登录
     try {
       loading.value = true
-      //管理员登录
       const response = await adminStore.adminLogins(loginForm)
+      console.log(response)
       /**
        * {
        *    token: "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsInJvbGVJZCI6NCwiaWF0IjoxNzQxNTM4NzEyLCJleHAiOjE3NDE1NDIzMTJ9.Q0nJ9tYzqsnow9006yCtu3NneX8EHwkUXx1Exm7zxVI",
@@ -173,8 +175,6 @@ const handleLogin = async () => {
       if (response) {
         // 保存登录状态
         if (adminStore.remember) {
-          localStorage.setItem('rememberedUsername', loginForm.username)
-          localStorage.setItem('rememberedRole', loginForm.roleId)
           adminStore.remember = true;
         }
         loading.value = false
@@ -240,6 +240,7 @@ onMounted(() => {
   }
 })
 </script>
+
 
 <style scoped>
 .admin-login-container {

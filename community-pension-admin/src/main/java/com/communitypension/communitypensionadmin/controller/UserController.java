@@ -31,24 +31,15 @@ public class UserController {
     private final UserService userService;
     // 角色服务
     private final RoleService roleService;
-    // 老人服务
-    private final ElderService elderService;
-    // 亲属服务
-    private final KinService kinService;
-    // 社区工作人员服务
-    private final StaffService staffService;
     // JWT工具类
     @Autowired
     private JwtUtil jwtUtil;
 
     // 构造函数
     @Autowired
-    public UserController(UserService userService, RoleService roleService, ElderService elderService, KinService kinService, StaffService staffService) {
+    public UserController(UserService userService, RoleService roleService) {
         this.userService = userService;
         this.roleService = roleService;
-        this.elderService = elderService;
-        this.kinService = kinService;
-        this.staffService = staffService;
     }
     @Operation(summary = "刷新token")
     @PostMapping("/refreshToken") //
@@ -172,15 +163,15 @@ public class UserController {
     // 用户登录
     @Operation(summary = "用户登录")
     @PostMapping("/userLogin")
-    public ResponseEntity<Result<Map<String, Object>>> userLogin(@RequestBody Map<String, Object> loginData) {
+    public ResponseEntity<Map<String, Object>> userLogin(@RequestBody Map<String, Object> loginData) {
         String username = (String) loginData.get("username");
         String password = (String) loginData.get("password");
         Long roleId = Long.parseLong(loginData.get("roleId").toString());
-
+        Map<String, Object> data = new HashMap<>();
         try {
             //如果用户名或密码为空，返回参数错误
             if (username == null || password == null) {
-                return ResponseEntity.badRequest().body(Result.error(400, "参数错误"));
+                return ResponseEntity.badRequest().body(null);
             }
 
             // 根据用户名、密码和角色id查询用户，如果用户不存在，响应401：用户名或密码错误
@@ -188,27 +179,24 @@ public class UserController {
             // 根据角色id查询角色
             Role role = roleService.getById(roleId);
             if (user == null) {
-                return ResponseEntity.status(401).body(Result.error(401, "用户名或密码错误"));
+                return ResponseEntity.badRequest().body(null);
             }
             if (user.getStatus() != 1) {
-                return ResponseEntity.status(401).body(Result.error(401, "用户已被禁用"));
+                return ResponseEntity.badRequest().body(null);
             }
             if (role == null) {
-                return ResponseEntity.ok(Result.error(400, "角色不存在"));
+                return ResponseEntity.badRequest().body(null);
             }
             // 生成令牌
             String token = jwtUtil.generateToken(user.getUsername(), role.getId());
-            Map<String, Object> data = new HashMap<>();
             data.put("user", user);
             data.put("token", token);
-            // 返回用户信息和令牌
-            return ResponseEntity.ok(Result.success("登录成功", data));
+            return ResponseEntity.ok(data);
         } catch (Exception e) {
             logger.error("登录失败", e);
-            Map<String, Object> data = new HashMap<>();
             data.put("user", null);
             data.put("token", null);
-            return ResponseEntity.status(500).body(Result.error(500, "登录失败，请稍后重试", data));
+            return ResponseEntity.badRequest().body(data);
         }
     }
 
@@ -321,4 +309,10 @@ public class UserController {
             return ResponseEntity.status(500).body(Result.error(500, "获取用户信息失败，请稍后重试"));
         }
     }
+
+
+
+
+
+
 }

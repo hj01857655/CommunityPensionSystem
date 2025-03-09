@@ -1,6 +1,8 @@
 import axios from '@/utils/axios';
 import { ElMessage } from 'element-plus';
-const getTokens = () => {
+
+// 获取token
+export const getTokens = () => {
     return localStorage.getItem('admin-token');
 }
 // 设置token
@@ -23,25 +25,51 @@ export const refreshToken = async () => {
         setTokens(response.data.token);
     }
 }
-// 后台登录
+
 export const adminLogin = async (loginData) => {
     try {
         const response = await axios.post('/api/users/adminLogin', loginData);
+        /**
+         *  {
+         *      config: {
+         *          headers: {
+         *              Authorization: "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsInJvbGVJZCI6NCwiaWF0IjoxNzQxNTM4NzEyLCJleHAiOjE3NDE1NDIzMTJ9.Q0nJ9tYzqsnow9006yCtu3NneX8EHwkUXx1Exm7zxVI"
+         *          }
+         *      },
+         *      data: {
+         *          token: "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsInJvbGVJZCI6NCwiaWF0IjoxNzQxNTM4NzEyLCJleHAiOjE3NDE1NDIzMTJ9.Q0nJ9tYzqsnow9006yCtu3NneX8EHwkUXx1Exm7zxVI",
+         *          user: {
+         *              id: 4,
+         *              username: "admin",
+         *              password: "123456",
+         *              roleId: 4,
+         *              status: 1,
+         *              createTime: "2025-03-09 10:00:00",
+         *              updateTime: "2025-03-09 10:00:00",
+         *          }
+         *      },
+         *      headers: {
+         *          Authorization: "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsInJvbGVJZCI6NCwiaWF0IjoxNzQxNTM4NzEyLCJleHAiOjE3NDE1NDIzMTJ9.Q0nJ9tYzqsnow9006yCtu3NneX8EHwkUXx1Exm7zxVI"
+         *      },
+         *      status: 200,
+         *      statusText: "OK"
+         *  }
+         */
         if(response.status === 200&&response.data){
-            return response.data;
+            const result = response.data;
+            return result;
+        }else{
+            console.log(response)
+            return {status:500,data:{},message:"登录失败，请稍后重试"};
         }
-        if(response.status === 401){
-            ElMessage.error("用户未登录")
-            return {code:401,message:"用户名或密码错误"}
-        }
-        return {code:500,message:"登录失败，请稍后重试"}
     } catch (error) {
         console.log(error)
         const status = error.response?.status;
         const message = status === 401 ? '用户名或密码错误' : '登录失败，请稍后重试';
         console.log(message)
-        return { success: false, error: message };
+        return { status:500,data:{},message:message };
     }
 }
+
 
 

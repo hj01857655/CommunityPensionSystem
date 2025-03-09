@@ -202,13 +202,16 @@ const router = useRouter()
 const isCollapse = ref(false)
 
 onMounted(async () => {
-  
+  const response=adminStore.adminInfo
+  if(response){
+    console.log(response)
   ElNotification({
     title: '登录成功',
     message: '欢迎回来，' + adminStore.adminInfo.username,
     type: 'success',
-    duration: 2000
-  });
+      duration: 2000
+    });
+  }
 })
 // 计算当前路由名称
 const route = useRoute();
@@ -239,9 +242,8 @@ const handleCommand = (command) => {
       type: 'warning'
     }).then(() => {
       adminStore.logout();
-      username.value = '管理员';
-      ElMessage.success('退出登录成功')
       router.push('/admin/login')
+      ElMessage.success('退出登录成功')
     }).catch(() => { })
   } else if (command === 'profile') {
     // 跳转到个人信息页面
