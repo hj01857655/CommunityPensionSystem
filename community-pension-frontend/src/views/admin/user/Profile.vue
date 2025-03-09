@@ -9,10 +9,8 @@
                 </div>
             </template>
             <div class="card-content">
-                <el-form :model="form" label-width="120px">
-                    <el-form-item label="管理员ID">
-                        <span>{{ form.id }}</span>
-                    </el-form-item>
+                <el-form :model="adminStore.adminInfo" label-width="120px">
+                    <!-- 不显示管理员ID -->
                     <el-form-item label="管理员名称">
                         <el-input v-model="form.username" disabled />
                     </el-form-item>

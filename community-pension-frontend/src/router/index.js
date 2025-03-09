@@ -2,15 +2,15 @@ import { createRouter, createWebHistory } from 'vue-router';
 
 const routes = [
   {
-    path:'/',
-    redirect:'/home'
+    path: '/',
+    redirect: '/home'
   },
   //用户登录
   {
     path: '/login',
     name: 'Login',
-    component: ()=>import('@/views/front/Login.vue'),
-    meta: { requiresAuth: false, roles: ['elder','kin','staff','admin','guest'] },
+    component: () => import('@/views/front/Login.vue'),
+    meta: { requiresAuth: false, roles: ['elder', 'kin', 'staff', 'admin', 'guest'] },
   },
   //前台首页
   {
@@ -20,35 +20,35 @@ const routes = [
     meta: { requiresAuth: true, roles: ['elder'] },
     children: [
       {
-        path:'health',
-        name:'HealthView',
-        component:()=>import('@/views/front/HealthView.vue'),
+        path: 'health',
+        name: 'HealthView',
+        component: () => import('@/views/front/HealthView.vue'),
         meta: { requiresAuth: true, roles: ['elder'] }
       },
       {
-        path:'service',
-        name:'ServiceView',
-        component:()=>import('@/views/front/ServiceView.vue'),
+        path: 'service',
+        name: 'ServiceView',
+        component: () => import('@/views/front/ServiceView.vue'),
         meta: { requiresAuth: true, roles: ['elder'] }
       },
       {
-        path:'notice',
-        name:'NoticeView',
-        component:()=>import('@/views/front/NoticeView.vue'),
+        path: 'notice',
+        name: 'NoticeView',
+        component: () => import('@/views/front/NoticeView.vue'),
         meta: { requiresAuth: true, roles: ['elder'] }
       },
       {
-        path:'activity',
-        name:'ActivityView',
-        component:()=>import('@/views/front/ActivityView.vue'),
+        path: 'activity',
+        name: 'ActivityView',
+        component: () => import('@/views/front/ActivityView.vue'),
         meta: { requiresAuth: true, roles: ['elder'] }
       },
       {
-        path:'profile',
-        name:'ProfileView',
-        component:()=>import('@/views/front/ProfileView.vue'),
+        path: 'profile',
+        name: 'ProfileView',
+        component: () => import('@/views/front/ProfileView.vue'),
         meta: { requiresAuth: true, roles: ['elder'] }
-        
+
       }
     ]
   },
@@ -62,37 +62,37 @@ const routes = [
   //管理员首页
   {
     path: '/admin',
-    name:'AdminLayout',
+    name: 'AdminLayout',
     component: () => import('@/views/admin/AdminLayout.vue'),
-    redirect:'/admin/analysis/dashboard',
+    redirect: '/admin/analysis/dashboard',
     meta: { requiresAuth: true, roles: ['admin', 'kin', 'staff'] },
     children: [
       {
         path: 'analysis',
         name: 'DataAnalysis',
         meta: { title: '数据分析看板', icon: 'odometer', roles: ['admin'] },
-        children:[
+        children: [
           {
-            path:'dashboard',
-            name:'Dashboard',
+            path: 'dashboard',
+            name: 'Dashboard',
             component: () => import('@/views/admin/analysis/Dashboard.vue'),
             meta: { title: '仪表盘', icon: 'odometer', roles: ['admin'] }
           },
           {
-            path:'activity',
-            name:'ActivityAnalysis',
+            path: 'activity',
+            name: 'ActivityAnalysis',
             component: () => import('@/views/admin/analysis/ActivityAnalysis.vue'),
             meta: { title: '活动分析', icon: 'odometer', roles: ['admin'] }
           },
           {
-            path:'service',
-            name:'ServiceAnalysis',
+            path: 'service',
+            name: 'ServiceAnalysis',
             component: () => import('@/views/admin/analysis/ServiceAnalysis.vue'),
             meta: { title: '服务分析', icon: 'odometer', roles: ['admin'] }
           },
           {
-            path:'health',
-            name:'HealthAnalysis',
+            path: 'health',
+            name: 'HealthAnalysis',
             component: () => import('@/views/admin/analysis/HealthAnalysis.vue'),
             meta: { title: '健康分析', icon: 'odometer', roles: ['admin'] }
           }
@@ -105,22 +105,22 @@ const routes = [
         name: 'ActivityManagement',
         component: () => import('@/views/admin/activity/ActivityLayout.vue'),
         meta: { title: '社区活动管理', icon: 'calendar', roles: ['admin'] },
-        children:[
+        children: [
           {
-            path:'type',
-            name:'ActivityTypeList',
+            path: 'type',
+            name: 'ActivityTypeList',
             component: () => import('@/views/admin/activity/type.vue'),
             meta: { title: '活动类型管理', icon: 'calendar', roles: ['admin'] }
           },
           {
-            path:'registration', 
-            name:'ActivityRegistrationList',
+            path: 'registration',
+            name: 'ActivityRegistrationList',
             component: () => import('@/views/admin/activity/ActivityRegistration.vue'),
-            meta: { title: '活动报名管理', icon: 'calendar', roles: ['admin'] }
+            meta: { title: '社区活动管理', icon: 'calendar', roles: ['admin'] }
           },
           {
-            path:'checkin',
-            name:'ActivityCheckinList',
+            path: 'checkin',
+            name: 'ActivityCheckinList',
             component: () => import('@/views/admin/activity/ActivityCheckin.vue'),
             meta: { title: '活动签到管理', icon: 'calendar', roles: ['admin'] }
           }

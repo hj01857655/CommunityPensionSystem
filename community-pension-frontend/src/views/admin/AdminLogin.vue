@@ -29,7 +29,6 @@
           <el-form-item prop="roleId" label="角色">
             <el-select v-model="loginForm.roleId" placeholder="请选择角色" class="role-select" tabindex="3" 
               aria-label="角色选择">
-              <el-option label="老人家属" :value="2" />
               <el-option label="社区工作人员" :value="3" />
               <el-option label="管理员" :value="4" />
             </el-select>
@@ -139,12 +138,14 @@ const forgotRules = {
 }
 // 处理登录
 const handleLogin = async () => {
+  // 如果登录表单不存在，则返回
   if (!loginFormRef.value) return
-
+  // 验证登录表单
   await loginFormRef.value.validate(async (valid) => {
     if (!valid) {
       return false
     }
+    // 如果验证通过，则进行登录
     try {
       loading.value = true
       //删除密码
@@ -198,7 +199,7 @@ const handleResetPassword = async () => {
       forgotPasswordVisible.value = false
     } catch (error) {
       console.error('重置密码失败:', error)
-      ElMessage.error('重置密码失败，请稍后重试')
+      console.error('重置密码失败，请稍后重试')
     } finally {
       resetLoading.value = false
     }
@@ -207,6 +208,11 @@ const handleResetPassword = async () => {
 
 // 检查是否有记住的用户名和角色
 onMounted(() => {
+  // 初始化adminStore
+  const adminStore = useAdminStore()
+  adminStore.getAdminInfos()
+  
+  // 仍然从localStorage获取记住的用户名和角色，因为这是登录页面特有的功能
   const rememberedUsername = localStorage.getItem('rememberedUsername')
   const rememberedRole = localStorage.getItem('rememberedRole')
 

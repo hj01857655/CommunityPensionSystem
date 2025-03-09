@@ -4,9 +4,10 @@
       <h2 class="title">社区养老系统登录</h2>
       <el-form ref="loginFormRef" :model="loginForm" :rules="loginRules" @submit.prevent="submitForm"
         @keyup.enter="submitForm">
-        <el-form-item prop="roleId" style="display: none;">
+        <el-form-item prop="roleId" >
           <el-select v-model="loginForm.roleId" placeholder="请选择角色" class="full-width" @change="onRoleChange">
             <el-option label="老人" :value="1" />
+            <el-option label="老人家属" :value="2" />
           </el-select>
         </el-form-item>
         <el-form-item prop="username">
@@ -77,7 +78,7 @@ const submitForm = async () => {
       try {
         const response = await login(loginForm.value);
         if (response.success) {
-          router.push('/home');
+        router.push('/home');
         } else {
           ElMessage.error('登录失败，请重试:',response.message);
         }

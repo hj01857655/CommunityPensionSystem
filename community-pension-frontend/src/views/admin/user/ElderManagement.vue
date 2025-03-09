@@ -365,10 +365,10 @@ const fetchElders = async () => {
       elders.value = recordsData.records
 
     } else {
-      ElMessage.error('获取老人列表失败')
+      console.error('获取老人列表失败')
     }
   } catch (error) {
-    ElMessage.error('获取老人列表失败')
+    console.error('获取老人列表失败')
   } finally {
     loading.value = false
   }
@@ -468,7 +468,7 @@ const handleViewHealth = async (row) => {
       }
     }
   } catch (error) {
-    ElMessage.error('获取健康记录失败')
+    console.error('获取健康记录失败')
   }
   // 初始化健康记录数据
   healthRecords.value = [
@@ -495,7 +495,7 @@ const submitHealthForm = async () => {
     ElMessage.success('健康档案更新成功')
     healthDialogVisible.value = false
   } catch (error) {
-    ElMessage.error('健康档案更新失败')
+    console.error('健康档案更新失败')
   }
 }
 
@@ -515,7 +515,7 @@ const handleDelete = (row) => {
       ElMessage.success('删除成功')
       fetchElders() // 刷新列表
     } catch (error) {
-      ElMessage.error('删除失败')
+      console.error('删除失败')
     }
   }).catch(() => {
     // 取消删除
@@ -580,7 +580,7 @@ const submitForm = () => {
         fetchElders() // 刷新列表
       } catch (error) {
         console.error('提交表单错误:', error)
-        ElMessage.error(dialogType.value === 'add' ? '添加老人信息失败' : '更新老人信息失败')
+        console.error(dialogType.value === 'add' ? '添加老人信息失败' : '更新老人信息失败')
       }
     } else {
       return false

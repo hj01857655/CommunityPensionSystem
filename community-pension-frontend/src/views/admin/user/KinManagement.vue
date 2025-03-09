@@ -143,10 +143,10 @@ const fetchKinList = async () => {
       kins.value = res.data
       total.value = res.data.length
     } else {
-      ElMessage.error('获取亲属列表失败')
+      console.error('获取亲属列表失败')
     }
   } catch (error) {
-    ElMessage.error('获取亲属列表失败：' + error.message)
+    console.error('获取亲属列表失败：' + error.message)
   } finally {
     loading.value = false
   }
@@ -156,7 +156,12 @@ const fetchKinList = async () => {
 onMounted(() => {
   fetchKinList()
 })
-
+const handleCurrentChange = (val) => {
+  currentPage.value = val
+}
+const handleSizeChange = (val) => {
+  pageSize.value = val
+}
 const elders = ref([
   {
     id: 1,
@@ -244,10 +249,10 @@ const handleDelete = (row) => {
         ElMessage.success('删除成功')
         fetchKinList() // 刷新列表
       } else {
-        ElMessage.error('删除失败')
+        console.error('删除失败')
       }
     } catch (error) {
-      ElMessage.error('删除失败：' + error.message)
+      console.error('删除失败：' + error.message)
     }
   }).catch(() => {
     ElMessage.info('已取消删除')
@@ -347,10 +352,10 @@ const handleAddKin = () => {
           addKinDialogVisible.value = false
           fetchKinList() // 刷新列表
         } else {
-          ElMessage.error('添加失败')
+          console.error('添加失败')
         }
       } catch (error) {
-        ElMessage.error('添加失败：' + error.message)
+        console.error('添加失败：' + error.message)
       }
     } else {
       return false
@@ -370,10 +375,10 @@ const handleEditKin = () => {
           editKinDialogVisible.value = false
           fetchKinList() // 刷新列表
         } else {
-          ElMessage.error('更新失败')
+          console.error('更新失败')
         }
       } catch (error) {
-        ElMessage.error('更新失败：' + error.message)
+        console.error('更新失败：' + error.message)
       }
     } else {
       return false

@@ -3,7 +3,7 @@
     <el-card shadow="hover" class="main-card">
       <template #header>
         <div class="card-header">
-          <h3>活动报名管理</h3>
+          <h3>社区活动管理</h3>
           <div class="header-actions">
             <el-input 
               v-model="searchQuery" 

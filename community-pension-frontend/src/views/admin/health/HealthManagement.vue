@@ -3,7 +3,7 @@
       <el-card shadow="hover" class="table-card">
         <template #header>
           <div class="card-header">
-            <h3>健康监测管理</h3>
+            <h3>健康档案管理</h3>
             <div class="header-actions">
               <el-input
                 v-model="searchQuery"

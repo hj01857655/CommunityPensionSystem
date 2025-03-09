@@ -11,7 +11,8 @@
         </el-menu>
         <el-dropdown @command="handleCommand" class="user-dropdown">
           <span class="user-info">
-            <el-avatar :size="48" :src="elderInfo.avatar" />
+            <el-avatar :size="48"
+              :src="elderInfo?.avatar || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'" />
             <span class="username">{{ elderInfo?.name || '访客' }}</span>
           </span>
           <template #dropdown>
@@ -122,12 +123,14 @@ const menuItems = [
   { index: 'activity', label: '社区活动' },
   { index: 'notice', label: '通知公告' }
 ];
-const ServiceView=defineAsyncComponent(() => import('@views/front/ServiceView.vue'));
-const HealthView=defineAsyncComponent(() => import('@views/front/HealthView.vue'));
-const ActivityView=defineAsyncComponent(() => import('@views/front/ActivityView.vue'));
-const NoticeView=defineAsyncComponent(() => import('@views/front/NoticeView.vue'));
-const ProfileView=defineAsyncComponent(() => import('@views/front/ProfileView.vue'));
-const NoticeDetailView=defineAsyncComponent(() => import('@views/front/NoticeDetailView.vue'));
+// 定义组件
+const ServiceView = defineAsyncComponent(() => import('@/views/front/ServiceView.vue'));
+const HealthView = defineAsyncComponent(() => import('@/views/front/HealthView.vue'));
+const ActivityView = defineAsyncComponent(() => import('@/views/front/ActivityView.vue'));
+const NoticeView = defineAsyncComponent(() => import('@/views/front/NoticeView.vue'));
+const ProfileView = defineAsyncComponent(() => import('@/views/front/ProfileView.vue'));
+const NoticeDetailView = defineAsyncComponent(() => import('@/views/front/NoticeDetailView.vue'));
+
 // 当前组件
 const currentComponent = computed(() => {
   const componentMap = {

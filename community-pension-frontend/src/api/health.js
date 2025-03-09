@@ -1,8 +1,7 @@
 import axios from '@/utils/axios'
 
 // 获取健康数据
-export const getHealthData = async () => {
-  const token = localStorage.getItem('token');
+export const getHealthData = async (elderId) => {
   const response = await axios.get('/api/health-records/getHealthRecords',
      { 
       headers: {

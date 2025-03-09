@@ -205,10 +205,10 @@ const saveProfile = async () => {
       originalData.value = {...profileForm.value}
       isEditMode.value = false
     } else {
-      ElMessage.error(res.data.msg || '更新失败')
+      console.error(res.data.msg || '更新失败')
     }
   } catch (error) {
-    ElMessage.error(error.message || '更新失败')
+    console.error(error.message || '更新失败')
   }
 }
 </script>

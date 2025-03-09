@@ -152,10 +152,9 @@
 import { ref, reactive, computed, onMounted } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { Back, Upload, Document } from '@element-plus/icons-vue';
-import { useRouter, useRoute } from 'vue-router';
+import { useRouter } from 'vue-router';
 
 const router = useRouter();
-const route = useRoute();
 
 // 判断是否为编辑模式
 const isEdit = computed(() => {

@@ -245,7 +245,7 @@ const initData = async () => {
     staffOptions.value = staffRes.data;
     assessments.value = assessmentRes.data;
   } catch (error) {
-    ElMessage.error('数据加载失败：' + error.message);
+    console.error('数据加载失败：' + error.message);
   } finally {
     loading.value = false;
   }
@@ -273,7 +273,7 @@ const submitForm = async () => {
         dialogVisible.value = false;
         initData(); // 刷新数据
       } catch (error) {
-        ElMessage.error('操作失败：' + error.message);
+        console.error('操作失败：' + error.message);
       } finally {
         loading.value = false;
       }
@@ -297,7 +297,7 @@ const handleDelete = (row) => {
       ElMessage.success('删除成功');
       initData(); // 刷新数据
     } catch (error) {
-      ElMessage.error('删除失败：' + error.message);
+      console.error('删除失败：' + error.message);
     }
   }).catch(() => {
     // 取消删除

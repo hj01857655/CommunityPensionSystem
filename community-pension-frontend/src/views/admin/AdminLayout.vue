@@ -70,16 +70,7 @@
             <el-menu-item index="/admin/users/kin">亲属管理</el-menu-item>
             <el-menu-item index="/admin/users/staff">社区工作人员管理</el-menu-item>
           </el-sub-menu>
-          <!-- 角色管理 -->
-          <el-sub-menu index="roles">
-            <template #title>
-              <el-icon>
-                <User />
-              </el-icon>
-              <span>角色管理</span>
-            </template>
-            <el-menu-item index="/admin/roles/role">角色列表</el-menu-item>
-          </el-sub-menu>
+
           <!-- 服务预约管理 -->
           <el-sub-menu index="services">
             <template #title>
@@ -100,7 +91,7 @@
               </el-icon>
               <span>健康监测管理</span>
             </template>
-            <el-menu-item index="/admin/health/heal">健康监测管理</el-menu-item>
+            <el-menu-item index="/admin/health/healthRecord">健康档案管理</el-menu-item>
             <el-menu-item index="/admin/health/healthAssessment">健康评估管理</el-menu-item>
             <el-menu-item index="/admin/health/healthIntervention">健康干预管理</el-menu-item>
           </el-sub-menu>
@@ -113,7 +104,7 @@
               <span>社区活动管理</span>
             </template>
             <el-menu-item index="/admin/activity/type">活动类型管理</el-menu-item>
-            <el-menu-item index="/admin/activity/registration">活动报名管理</el-menu-item>
+            <el-menu-item index="/admin/activity/registration">社区活动管理</el-menu-item>
             <el-menu-item index="/admin/activity/checkin">活动签到管理</el-menu-item>
           </el-sub-menu>
           <!-- 通知公告管理 -->
@@ -127,7 +118,7 @@
             <el-menu-item index="/admin/notice/list">通知公告列表</el-menu-item>
             <el-menu-item index="/admin/notice/publish">通知公告发布</el-menu-item>
           </el-sub-menu>
-          
+
           <!-- 系统设置 -->
           <el-sub-menu index="/admin/settings">
             <template #title>
@@ -136,33 +127,44 @@
               </el-icon>
               <span>系统设置</span>
             </template>
-            <el-menu-item index="/admin/settings/systemSetting">系统设置管理</el-menu-item>
+            <el-menu-item index="/admin/settings">系统设置管理</el-menu-item>
+            <el-menu-item index="/admin/roles/role">角色管理</el-menu-item>
+            <el-menu-item index="/admin/profile">个人信息</el-menu-item>
           </el-sub-menu>
         </el-menu>
       </el-aside>
 
-      <!-- 主要内容区 -->
+      <!-- 主体内容区 -->
       <el-container class="main-container">
         <!-- 顶部导航栏 -->
         <el-header class="header">
           <div class="header-left">
+            <!-- 折叠按钮 -->
             <el-icon class="toggle-icon" @click="toggleSidebar">
-              <component :is="isCollapse ? 'Expand' : 'Fold'" />
+              <component :is="isCollapse ? Expand : Fold" />
             </el-icon>
+            <!-- 面包屑导航 -->
             <el-breadcrumb separator="/">
               <el-breadcrumb-item :to="{ path: '/admin/analysis/dashboard' }">首页</el-breadcrumb-item>
+              <!-- 当前路由名称 -->
               <el-breadcrumb-item>{{ currentRoute }}</el-breadcrumb-item>
             </el-breadcrumb>
           </div>
+          <!-- 右上角用户信息 -->
           <div class="header-right">
+            <!-- 下拉菜单 -->
             <el-dropdown trigger="click" @command="handleCommand">
               <span class="user-info">
-                <el-avatar :size="32" :src="avatarUrl" />
-                <span class="username">{{ username }}</span>
+                <!-- 用户头像 -->
+                <el-avatar :size="32" :src="adminStore.adminInfo.avatarUrl" />
+                <!-- 用户名 -->
+                <span class="username">{{ adminStore.adminInfo.username }}</span>
+                <!-- 下拉箭头 -->
                 <el-icon>
                   <ArrowDown />
                 </el-icon>
               </span>
+              <!-- 下拉菜单 -->
               <template #dropdown>
                 <el-dropdown-menu>
                   <el-dropdown-item command="profile">个人信息</el-dropdown-item>
@@ -174,7 +176,7 @@
           </div>
         </el-header>
 
-        <!-- 内容区域 -->
+        <!-- 主体内容区 -->
         <el-main class="main">
           <router-view v-slot="{ Component }">
             <transition name="fade" mode="out-in">
@@ -191,62 +193,40 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { ElMessage, ElMessageBox, ElNotification } from 'element-plus';
-import {
-  Odometer, User, Service, FirstAidKit, Calendar, Bell, DataAnalysis, Setting,
-  Fold, Expand, ArrowDown, HomeFilled
-} from '@element-plus/icons-vue';
+import {Odometer, User, Service, FirstAidKit, Calendar, Bell, Setting, ArrowDown, HomeFilled, Expand, Fold} from '@element-plus/icons-vue';
+import { useAdminStore } from '@/stores/adminStore';
 
+// 管理员信息
+const adminStore = useAdminStore();
+// 路由
 const router = useRouter()
-const route = useRoute()
+// 侧边栏折叠状态
 const isCollapse = ref(false)
-const username = ref('管理员')
-const avatarUrl = ref('https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png')
 
-onMounted(() => {
-  // 从本地存储获取用户信息
-  try {
-    const userInfo = localStorage.getItem('userInfo');
-    const token = localStorage.getItem('token');
-
-    if (!userInfo || !token) {
-      ElMessage.error('请先登录');
-      return;
-    }
-
-    try {
-      const parsedUserInfo = JSON.parse(userInfo);
-      if (!parsedUserInfo || typeof parsedUserInfo !== 'object') {
-        throw new Error('无效的用户信息格式');
-      }
-      username.value = parsedUserInfo.username || '管理员';
-
-      ElNotification({
-        title: '登录成功',
-        message: '欢迎回来，' + username.value,
-        type: 'success',
-        duration: 2000
-      });
-    } catch (error) {
-      console.error('获取用户信息失败:', error);
-      ElMessage.error('获取用户信息失败，请重新登录');
-    }
-  }catch (error) {
-    console.error('获取用户信息失败:', error);
-    ElMessage.error('获取用户信息失败，请重新登录');
-  }
+onMounted(async () => {
+  // 获取管理员信息
+  await adminStore.getAdminInfos()
+  
+  ElNotification({
+    title: '登录成功',
+    message: '欢迎回来，' + adminStore.adminInfo.username,
+    type: 'success',
+    duration: 2000
+  });
 })
 // 计算当前路由名称
+const route = useRoute();
 const currentRoute = computed(() => {
-  const matched = route.matched
-  if (matched.length > 1) {
-    return matched[matched.length - 1].meta.title || '未知页面'
+  const matched = route.matched;
+  if (matched && matched.length > 1) {
+    return matched[matched.length - 1].meta.title || '未知页面';
   }
-  return '仪表盘'
-})
+  return '仪表盘';
+});
 
 // 计算当前激活的菜单项
 const activeMenu = computed(() => {
-  return route.path
+  return router.path
 })
 
 // 切换侧边栏
@@ -262,11 +242,11 @@ const handleCommand = (command) => {
       cancelButtonText: '取消',
       type: 'warning'
     }).then(() => {
-      // 清除登录信息
-      localStorage.removeItem('userInfo')
-      localStorage.removeItem('roleId')
+      const adminStore = useAdminStore();
+      adminStore.logout();
+      username.value = '管理员';
       ElMessage.success('退出登录成功')
-      router.push('/login')
+      router.push('/admin/login')
     }).catch(() => { })
   } else if (command === 'profile') {
     // 跳转到个人信息页面

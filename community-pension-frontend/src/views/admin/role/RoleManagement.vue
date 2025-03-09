@@ -270,6 +270,8 @@ const handleEdit = async (row) => {
             roleForm.id = roleDetail.id;
             roleForm.role_name = roleDetail.role_name;
             roleForm.role_description = roleDetail.role_description;
+            roleForm.status = roleDetail.status;
+            roleForm.permissions = roleDetail.permissions || [];
             dialogVisible.value = true;
 
             // 如果抽屉是打开的，则关闭它
@@ -279,7 +281,7 @@ const handleEdit = async (row) => {
         }, 0);
     } catch (error) {
         console.error('获取角色详情失败:', error);
-        ElMessage.error('获取角色详情失败，请稍后重试');
+        console.error('获取角色详情失败，请稍后重试');
     } finally {
         loading.value = false;
     }
@@ -304,20 +306,16 @@ const handleDelete = async (row) => {
             ElMessage.error(deleteResponse.message || '删除角色失败');
             return;
         }
-        ElMessage.success('删除成功');
 
         // 如果删除的是当前选中的角色，关闭抽屉
         if (selectedRole.value && selectedRole.value.id === row.id) {
             drawerVisible.value = false;
             selectedRole.value = null;
         }
-
-        // 重新获取角色列表
-        await fetchRoles();
     } catch (error) {
         if (error !== 'cancel') {
             console.error('删除角色失败:', error);
-            ElMessage.error('删除角色失败，请稍后重试');
+            console.error('删除角色失败，请稍后重试');
         }
     } finally {
         loading.value = false;
@@ -338,7 +336,7 @@ const handleRowClick = async (row) => {
         drawerVisible.value = true;
     } catch (error) {
         console.error('获取角色详情失败:', error);
-        ElMessage.error('获取角色详情失败，请稍后重试');
+        console.error('获取角色详情失败，请稍后重试');
     } finally {
         loading.value = false;
     }
@@ -376,14 +374,16 @@ const submitForm = async () => {
     if (!roleFormRef.value) return;
 
     try {
+        // 表单验证
         await roleFormRef.value.validate();
         submitLoading.value = true;
 
+        // 构建角色数据对象，确保字段名与后端API一致
         const roleData = {
-            role_name: roleForm.role_name,
-            role_description: roleForm.role_description,
-            status: roleForm.status,
-            permissions: roleForm.permissions
+            roleName: roleForm.role_name,
+            roleDescription: roleForm.role_description,
+            status: roleForm.status ?? true,
+            permissions: roleForm.permissions ?? []
         };
 
         if (dialogType.value === 'add') {

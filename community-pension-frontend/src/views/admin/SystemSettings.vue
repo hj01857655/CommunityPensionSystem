@@ -297,11 +297,11 @@
     const isLt2M = file.size / 1024 / 1024 < 2
   
     if (!isImage) {
-      ElMessage.error('Logo必须是图片格式!')
+      console.error('Logo必须是图片格式!')
       return false
     }
     if (!isLt2M) {
-      ElMessage.error('Logo图片大小不能超过2MB!')
+      console.error('Logo图片大小不能超过2MB!')
       return false
     }
     return true

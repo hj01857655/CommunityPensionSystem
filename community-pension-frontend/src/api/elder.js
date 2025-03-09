@@ -16,7 +16,7 @@ export const getElders = async (params) => {
     return { success: true, data: response.data };
   } catch (error) {
     console.error('Get all users error:', error);
-    ElMessage.error('获取老人失败，请稍后重试');
+    console.error('获取老人失败，请稍后重试');
     return { success: false, error: error.message };
   }
 };
@@ -33,7 +33,7 @@ export const getElderById = async (elder) => {
     return { success: true, data: response.data };
   } catch (error) {
     console.error('Get elder by id error:', error);
-    ElMessage.error('获取老人失败，请稍后重试');
+    console.error('获取老人失败，请稍后重试');
     return { success: false, error: error.message };
   }
 };
@@ -51,7 +51,7 @@ export const addElder = async (elder) => {
     return { success: true, data: response.data };
   } catch (error) {
     console.error('Add elder error:', error);
-    ElMessage.error('添加老人失败，请稍后重试');
+    console.error('添加老人失败，请稍后重试');
     return { success: false, error: error.message };
   }
 };
@@ -69,7 +69,7 @@ export const updateElder = async (elder) => {
     return { success: true, data: response.data };
   } catch (error) {
     console.error('Update elder error:', error);
-    ElMessage.error('更新老人失败，请稍后重试');
+    console.error('更新老人失败，请稍后重试');
     return { success: false, error: error.message };
   }
 };
@@ -87,7 +87,7 @@ export const deleteElder = async (id) => {
     return { success: true, data: response.data };
   } catch (error) {
     console.error('Delete elder error:', error);
-    ElMessage.error('删除老人失败，请稍后重试');
+    console.error('删除老人失败，请稍后重试');
     return { success: false, error: error.message };
   }
 };

@@ -79,7 +79,7 @@
           await updateHealthData(healthForm.value)
           ElMessage.success('健康数据保存成功')
         } catch (error) {
-          ElMessage.error('保存失败：' + error.message)
+          console.error('保存失败：' + error.message)
         }
       }
     })
@@ -97,7 +97,7 @@
         healthForm.value = data
       }
     } catch (error) {
-      ElMessage.error('获取健康数据失败：' + error.message)
+      console.error('获取健康数据失败：' + error.message)
     }
   }
   

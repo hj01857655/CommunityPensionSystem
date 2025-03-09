@@ -3,16 +3,16 @@ import axios from '@/utils/axios'
 // 分页获取角色列表
 export const getRoleList = (params) => {
     return axios.get('/api/roles', {
-        params: {
-            page: params?.page ?? 1,
+            params: {
+                page: params?.page ?? 1,
             size: params?.size ?? 10
-        }
+            }
     }).then(response => response.data)
       .catch(error => {
-          return {
+        return {
               status: error.response.status,
               message: error.response.data.message
-          };
+        };
       });
 }
 

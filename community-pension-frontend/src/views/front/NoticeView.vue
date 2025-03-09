@@ -349,7 +349,8 @@ onMounted(() => {
   padding: 16px;
   background-color: #f5f7fa;
   min-height: calc(100vh - 120px);
-  max-width: 100%;
+  width: 100%;
+  max-width: 1200px;
   margin: 0 auto;
 }
 
@@ -393,14 +394,18 @@ onMounted(() => {
 .search-input:focus-within {
   width: 320px;
 }
-
 .filter-tags {
   margin: 16px 0;
   width: 100%;
+  display: flex;
+  justify-content: flex-start;
   overflow-x: auto;
-  white-space: nowrap;
 }
-
+.filter-tags .el-radio-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
 .section-title {
   display: flex;
   align-items: center;
@@ -558,7 +563,6 @@ onMounted(() => {
   .filter-tags {
       padding-bottom: 8px;
   }
-  
   .notice-card {
       height: auto;
       min-height: 130px;
