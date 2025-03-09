@@ -1,25 +1,31 @@
 package com.communitypension.communitypensionadmin.config;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.web.cors.CorsConfigurationSource;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
-    @Autowired
-    private CorsConfigurationSource corsConfigurationSource;
-
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource)) // Enable CORS configuration
-                .csrf(csrf -> csrf.disable()); // Disable CSRF (based on your requirements)
+                .authorizeHttpRequests(authorize -> authorize
+                        .requestMatchers("/api/users/adminLogin", "/api/users/userLogin").permitAll() // 允许访问 adminLogin 和 userLogin
+                        .anyRequest().authenticated() // 其他请求需要身份验证
+                )
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS) // 无状态会话
+                )
+                .formLogin(form -> form
+                        .loginPage("/login") // 自定义登录页面
+                        .permitAll() // 允许所有用户访问登录页面
+                )
+                .csrf(csrf -> csrf.disable()); // 禁用 CSRF 保护
 
         return http.build();
     }

@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,19 +29,14 @@ public class UserController {
     private static final Logger logger = org.slf4j.LoggerFactory.getLogger(UserController.class);
     // 用户服务
     private final UserService userService;
-
     // 角色服务
     private final RoleService roleService;
-
     // 老人服务
     private final ElderService elderService;
-
     // 亲属服务
     private final KinService kinService;
-
     // 社区工作人员服务
     private final StaffService staffService;
-
     // JWT工具类
     @Autowired
     private JwtUtil jwtUtil;
@@ -54,6 +50,36 @@ public class UserController {
         this.kinService = kinService;
         this.staffService = staffService;
     }
+    @Operation(summary = "刷新token")
+    @PostMapping("/refreshToken") //
+    public ResponseEntity<Result<Map<String, Object>>> refreshToken(@RequestHeader("Authorization") String token) {
+        // 如果token为空，返回错误信息
+        if (token == null || token.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Result.error(400, "Authorization header is missing or empty"));
+        }
+        try {
+            JwtUtil.TokenStatus status = jwtUtil.validateToken(token);
+            // 检查令牌是否有效
+            if (status.isValid()) {
+                return ResponseEntity.status(HttpStatus.OK)
+                        .body(Result.success("token有效，无需刷新", null));
+            }
+            // 如果当前令牌无效，则生成新令牌
+            String newToken = jwtUtil.refreshToken(token);
+            Map<String, Object> data = new HashMap<>();
+            data.put("token", newToken);
+
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(Result.success("token刷新成功", data));
+
+        } catch (Exception e) {
+            logger.error("刷新token失败", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Result.error(500, "刷新token失败，请稍后重试"));
+        }
+    }
+
 
     // 查询所有用户
     @Operation(summary = "查询所有用户")
@@ -63,8 +89,7 @@ public class UserController {
 
         if (!status.isValid()) {
             // 明确区分过期和其他错误类型
-            String errorMsg = status.getError().contains("expired") ?
-                    "登录已过期，请重新登录" : "无效的令牌";
+            String errorMsg = status.getError().contains("expired") ? "登录已过期，请重新登录" : "无效的令牌";
             return Result.error(401, errorMsg);
         }
 
@@ -86,8 +111,7 @@ public class UserController {
     public Result<Object> getUser(@RequestHeader("Authorization") String token, @PathVariable Long id) {
         JwtUtil.TokenStatus status = jwtUtil.validateToken(token);
         if (!status.isValid()) {
-            String errorMsg = status.getError().contains("expired") ?
-                    "登录已过期，请重新登录" : "无效的令牌";
+            String errorMsg = status.getError().contains("expired") ? "登录已过期，请重新登录" : "无效的令牌";
             return Result.error(401, errorMsg);
         }
         Map<String, Object> result = new HashMap<>();
@@ -110,8 +134,7 @@ public class UserController {
     public Result<Object> add(@RequestHeader("Authorization") String token, @RequestBody User user) {
         JwtUtil.TokenStatus status = jwtUtil.validateToken(token);
         if (!status.isValid()) {
-            String errorMsg = status.getError().contains("expired") ?
-                    "登录已过期，请重新登录" : "无效的令牌";
+            String errorMsg = status.getError().contains("expired") ? "登录已过期，请重新登录" : "无效的令牌";
             return Result.error(401, errorMsg);
         }
         return Result.success("添加成功", userService.save(user));
@@ -123,8 +146,7 @@ public class UserController {
     public Result<Object> update(@RequestHeader("Authorization") String token, @RequestBody User user) {
         JwtUtil.TokenStatus status = jwtUtil.validateToken(token);
         if (!status.isValid()) {
-            String errorMsg = status.getError().contains("expired") ?
-                    "登录已过期，请重新登录" : "无效的令牌";
+            String errorMsg = status.getError().contains("expired") ? "登录已过期，请重新登录" : "无效的令牌";
             return Result.error(401, errorMsg);
         }
         return Result.success("修改成功", userService.updateById(user));
@@ -136,8 +158,7 @@ public class UserController {
     public Result<Object> delete(@RequestHeader("Authorization") String token, @PathVariable Long id) {
         JwtUtil.TokenStatus status = jwtUtil.validateToken(token);
         if (!status.isValid()) {
-            String errorMsg = status.getError().contains("expired") ?
-                    "登录已过期，请重新登录" : "无效的令牌";
+            String errorMsg = status.getError().contains("expired") ? "登录已过期，请重新登录" : "无效的令牌";
             return Result.error(401, errorMsg);
         }
         boolean flag = userService.removeById(id);
@@ -150,8 +171,8 @@ public class UserController {
 
     // 用户登录
     @Operation(summary = "用户登录")
-    @PostMapping("/login")
-    public ResponseEntity<Result<Map<String, Object>>> login(@RequestBody Map<String, Object> loginData) {
+    @PostMapping("/userLogin")
+    public ResponseEntity<Result<Map<String, Object>>> userLogin(@RequestBody Map<String, Object> loginData) {
         String username = (String) loginData.get("username");
         String password = (String) loginData.get("password");
         Long roleId = Long.parseLong(loginData.get("roleId").toString());
@@ -161,6 +182,7 @@ public class UserController {
             if (username == null || password == null) {
                 return ResponseEntity.badRequest().body(Result.error(400, "参数错误"));
             }
+
             // 根据用户名、密码和角色id查询用户，如果用户不存在，响应401：用户名或密码错误
             User user = userService.getOne(new QueryWrapper<User>().eq("username", username).eq("password", password).eq("role_id", roleId));
             // 根据角色id查询角色
@@ -215,6 +237,7 @@ public class UserController {
             if (role.getRoleName().equals("admin")) {
                 Map<String, Object> data = new HashMap<>();
                 data.put("user", user);
+                data.put("token", jwtUtil.generateToken(user.getUsername(), role.getId()));
                 return ResponseEntity.ok(Result.success("登录成功", data));
             } else {
                 return ResponseEntity.ok(Result.error(400, "角色不是管理员"));
@@ -236,8 +259,7 @@ public class UserController {
             JwtUtil.TokenStatus status = jwtUtil.validateToken(token);
             if (!status.isValid()) {
                 // 统一中文错误提示
-                String errorMsg = status.getError().contains("expired") ?
-                        "登录已过期，请重新登录" : "无效的令牌";
+                String errorMsg = status.getError().contains("expired") ? "登录已过期，请重新登录" : "无效的令牌";
                 return ResponseEntity.status(401).body(Result.error(401, errorMsg));
             }
             // 根据用户id查询用户
@@ -270,8 +292,7 @@ public class UserController {
             // 验证令牌
             JwtUtil.TokenStatus status = jwtUtil.validateToken(token);
             if (!status.isValid()) {
-                String errorMsg = status.getError().contains("expired") ?
-                        "登录已过期，请重新登录" : "无效的令牌";
+                String errorMsg = status.getError().contains("expired") ? "登录已过期，请重新登录" : "无效的令牌";
                 return ResponseEntity.status(401).body(Result.error(401, errorMsg));
             }
             String username = jwtUtil.getUsernameFromToken(token);
@@ -284,18 +305,15 @@ public class UserController {
             }
 
             // 从 token 中获取用户名
-            Role role=roleService.getById(roleId);
-            if(role==null){
+            Role role = roleService.getById(roleId);
+            if (role == null) {
                 return ResponseEntity.ok(Result.error(400, "角色不存在"));
             }
 
-            if (username == null) {// 如果用户名是 null，则返回错误信息
-                return ResponseEntity.status(401).body(Result.error(401, "无效的令牌"));
-            }
 
 
 
-            User user1=userService.getInfoWithUser(user);
+            User user1 = userService.getInfoWithUser(user);
             return ResponseEntity.ok(Result.success("查询成功", user1));
 
         } catch (Exception e) {
