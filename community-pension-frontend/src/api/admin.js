@@ -25,6 +25,7 @@ export const refreshToken = async () => {
 }
 // 后台登录
 export const adminLogin = async (loginData) => {
+export const adminLogin = async (loginData) => {
     try {
         const response = await axios.post('/api/users/adminLogin', loginData);
         if(response.status === 200&&response.data){
@@ -36,6 +37,7 @@ export const adminLogin = async (loginData) => {
         }
         return {code:500,message:"登录失败，请稍后重试"}
     } catch (error) {
+        console.log(error)
         console.log(error)
         const status = error.response?.status;
         const message = status === 401 ? '用户名或密码错误' : '登录失败，请稍后重试';

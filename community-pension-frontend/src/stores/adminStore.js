@@ -39,6 +39,8 @@ export const useAdminStore = defineStore('admin', () => {
         //response是正常的响应
         if(response&&response.data){
             console.log("adminStore.js:response.data", response.data)
+        if(response&&response.data){
+            console.log("adminStore.js:response.data", response.data)
             // 设置token
             setToken(response.data.token)
             // 设置管理员信息
