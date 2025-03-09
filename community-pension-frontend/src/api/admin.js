@@ -1,12 +1,19 @@
 import axios from '@/utils/axios';
 import { ElMessage } from 'element-plus';
 // 后台登录
-export const login = async (loginData) => {
+export const adminLogin = async (loginData) => {
     try {
         const response = await axios.post('/api/users/adminLogin', loginData);
-        
-        return response.data;
+        // console.log("admin.js:response", response)
+        if(response.status === 200&&response.data){
+            return response.data;
+        }
+        if(response.status === 401){
+            return {code:401,message:"用户名或密码错误"}
+        }
+        return {code:500,message:"登录失败，请稍后重试"}
     } catch (error) {
+        console.log(error)
         const status = error.response?.status;
         const message = status === 401 ? '用户名或密码错误' : '登录失败，请稍后重试';
         console.log(message)

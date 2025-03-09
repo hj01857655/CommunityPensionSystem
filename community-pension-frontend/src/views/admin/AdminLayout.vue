@@ -196,8 +196,6 @@ import { ElMessage, ElMessageBox, ElNotification } from 'element-plus';
 import {Odometer, User, Service, FirstAidKit, Calendar, Bell, Setting, ArrowDown, HomeFilled, Expand, Fold} from '@element-plus/icons-vue';
 import { useAdminStore } from '@/stores/adminStore';
 
-// 管理员信息
-const adminStore = useAdminStore();
 // 路由
 const router = useRouter()
 // 侧边栏折叠状态
@@ -242,7 +240,6 @@ const handleCommand = (command) => {
       cancelButtonText: '取消',
       type: 'warning'
     }).then(() => {
-      const adminStore = useAdminStore();
       adminStore.logout();
       username.value = '管理员';
       ElMessage.success('退出登录成功')

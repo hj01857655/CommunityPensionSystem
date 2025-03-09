@@ -82,15 +82,19 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElNotification } from 'element-plus'
 import { User, Lock } from '@element-plus/icons-vue'
-import { login } from '@/api/user' // Assuming you have a login function in your user API
-
+import { useAdminStore } from '@/stores/adminStore'
+const adminStore = useAdminStore()
 const router = useRouter()
 const loginFormRef = ref(null)
 const forgotFormRef = ref(null)
 const loading = ref(false)
+// 重置密码加载中
 const resetLoading = ref(false)
+// 密码是否可见
 const passwordVisible = ref(false)
+// 忘记密码对话框
 const forgotPasswordVisible = ref(false)
+// 当前年份
 const currentYear = computed(() => new Date().getFullYear())
 
 //默认选择管理员角色
@@ -148,12 +152,10 @@ const handleLogin = async () => {
     // 如果验证通过，则进行登录
     try {
       loading.value = true
-      //删除密码
-      const { remember, ...loginFormData } = loginForm
-      
-      const response = await login(loginFormData)
-      console.log(response)
-      if (response.success) {
+      //管理员登录
+      const response = await adminStore.adminLogins(loginForm)
+      console.log("AdminLogin.vue:response", response)
+      if (response) {
         // 保存登录状态
         if (remember) {
           localStorage.setItem('rememberedUsername', loginForm.username)
@@ -208,10 +210,6 @@ const handleResetPassword = async () => {
 
 // 检查是否有记住的用户名和角色
 onMounted(() => {
-  // 初始化adminStore
-  const adminStore = useAdminStore()
-  adminStore.getAdminInfos()
-  
   // 仍然从localStorage获取记住的用户名和角色，因为这是登录页面特有的功能
   const rememberedUsername = localStorage.getItem('rememberedUsername')
   const rememberedRole = localStorage.getItem('rememberedRole')
@@ -226,6 +224,7 @@ onMounted(() => {
   }
 })
 </script>
+
 <style scoped>
 .admin-login-container {
   min-height: 100vh;
