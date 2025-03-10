@@ -15,9 +15,9 @@ const axiosInstance = axios.create({
 const TokenManager = {
   // 前台用户token
   user: {
-    get: () => localStorage.getItem('token'),
-    set: (token) => localStorage.setItem('token', token),
-    remove: () => localStorage.removeItem('token')
+    get: () => localStorage.getItem('user-token'),
+    set: (token) => localStorage.setItem('user-token', token),
+    remove: () => localStorage.removeItem('user-token')
   },
   // 后台管理员token
   admin: {

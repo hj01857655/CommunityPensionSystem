@@ -38,6 +38,10 @@ spring:
       exclude: static/**,public/**
   jpa:
     open-in-view: true
+  security:
+    user:
+      name: admin
+      password: admin
 jwt:
   secret: "cB7ChF1y4Aegk+p9KNkFz0GQeY2e+ZgeIW6EVJbiR9Y="
   expiration: 3600 # 过期时间：1小时
@@ -54,6 +58,11 @@ mybatis-plus:
     map-underscore-to-camel-case: true
     auto-mapping-behavior: full
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
-
-
-
+knife4j:
+  enable: false
+  setting:
+    enable-footer: false
+    enable-filter-multipart-apis: true
+  documents:
+    - group: 社区养老系统
+      name: 管理接口文档

@@ -1,6 +1,7 @@
 package com.communitypension.communitypensionadmin.utils;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -19,6 +20,7 @@ public class JwtUtil {
     // 新增刷新阈值（剩余时间小于总有效期的1/4时刷新）
     private static final double REFRESH_THRESHOLD = 0.25;
     // 密钥
+
     private final Key secretKey;
     // 过期时间
     private final Long expiration;
@@ -63,15 +65,26 @@ public class JwtUtil {
         return getClaimsFromToken(token).get("roleId", Long.class);
     }
 
+    public Date getExpirationDateFromToken(String token) {
+        return getClaimsFromToken(token).getExpiration();
+    }
+
     /**
      * 验证 token 是否有效
      */
     public TokenStatus validateToken(String token) {
         try {
+            final String cleanedToken = cleanToken(token);
+            if (cleanedToken == null || cleanedToken.isEmpty()) {
+                return new TokenStatus(false, false, "空令牌");
+            }
             Claims claims = getClaimsFromToken(cleanToken(token));
+
             boolean shouldRefresh = isTokenNearExpiry(claims);
             return new TokenStatus(true, shouldRefresh, null);
-        } catch (JwtException | IllegalArgumentException e) {
+        } catch (ExpiredJwtException ex){
+            return new TokenStatus(false, true, "令牌已过期");
+        }catch (JwtException | IllegalArgumentException e) {
             return new TokenStatus(false, false, e.getMessage());
         }
     }

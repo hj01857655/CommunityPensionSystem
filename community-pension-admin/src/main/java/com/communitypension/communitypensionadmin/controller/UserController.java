@@ -226,6 +226,7 @@ public class UserController {
                 Map<String, Object> data = new HashMap<>();
                 data.put("user", user);
                 data.put("token", jwtUtil.generateToken(user.getUsername(), role.getId()));
+
                 return ResponseEntity.ok(Result.success("登录成功", data));
             } else {
                 return ResponseEntity.ok(Result.error(400, "角色不是管理员"));
