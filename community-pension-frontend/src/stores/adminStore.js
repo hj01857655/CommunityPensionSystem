@@ -16,6 +16,7 @@ export const useAdminStore = defineStore('admin', () => {
     // 管理员登录
     const adminLogins = async (loginData) => {
         const result = await adminLogin(loginData);
+        console.log(result)
         //response是正常的响应
         if (result && result.data && result.data.token && result.data.user) {
             // 设置token

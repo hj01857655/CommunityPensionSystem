@@ -16,7 +16,7 @@ const TokenManager = {
         set:(user)=>{
             localStorage.setItem('user', user);
         },
-        clear:()=>{
+        remove:()=>{
             localStorage.removeItem('user');
         }
     },
@@ -27,7 +27,7 @@ const TokenManager = {
         set:(token)=>{
             localStorage.setItem('admin-token', token);
         },
-        clear:()=>{
+        remove:()=>{
             localStorage.removeItem('admin-token');
             localStorage.removeItem('adminInfo')
         }
@@ -39,7 +39,7 @@ const refreshToken = async ()=>{
             Authorization: TokenManager.user.get()
         }
     })
-    
+
     return response.data
     
 }
