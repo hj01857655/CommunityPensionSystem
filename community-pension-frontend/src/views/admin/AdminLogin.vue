@@ -90,13 +90,17 @@ const forgotFormRef = ref(null)
 const loading = ref(false)
 // 重置密码加载中
 // 重置密码加载中
+// 重置密码加载中
 const resetLoading = ref(false)
+// 密码是否可见
 // 密码是否可见
 // 密码是否可见
 const passwordVisible = ref(false)
 // 忘记密码对话框
 // 忘记密码对话框
+// 忘记密码对话框
 const forgotPasswordVisible = ref(false)
+// 当前年份
 // 当前年份
 // 当前年份
 const currentYear = computed(() => new Date().getFullYear())
@@ -240,6 +244,7 @@ onMounted(() => {
   }
 })
 </script>
+
 
 
 <style scoped>

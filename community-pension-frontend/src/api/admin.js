@@ -64,6 +64,7 @@ export const adminLogin = async (loginData) => {
         }
     } catch (error) {
         console.log(error)
+        console.log(error)
         const status = error.response?.status;
         const message = status === 401 ? '用户名或密码错误' : '登录失败，请稍后重试';
         console.log(message)
