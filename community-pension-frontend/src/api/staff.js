@@ -1,16 +1,12 @@
 import axios from '@/utils/axios'
 
 // 获取工作人员列表
-export function getStaffList(params) {
-  return request({
-    url: '/staff/list',
-    method: 'get',
+export const getStaffList = async (params) => {
+  const response = await axios.get('/staff/list', {
     params: {
       page: params?.page ?? 1,
-      size: params?.size ?? 10,
-      name: params?.name || null,
-      position: params?.position || null,
-      phone: params?.phone || null
+      size: params?.size ?? 10
+      
     }
   })
 }
