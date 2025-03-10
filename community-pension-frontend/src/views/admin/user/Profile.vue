@@ -11,16 +11,20 @@
             <div class="card-content">
                 <el-form :model="adminStore.adminInfo" label-width="120px">
                     <!-- 不显示管理员ID -->
+                    <el-form-item label="管理员ID" prop="id" style="display: none;">
+                        <el-input v-model="adminStore.adminInfo.id" disabled />
+                    </el-form-item>
                     <el-form-item label="管理员名称">
-                        <el-input v-model="form.username" disabled />
+                        <el-input v-model="adminStore.adminInfo.username" disabled />
                     </el-form-item>
                     <el-form-item label="管理员角色">
-                        <el-select v-model="form.role" placeholder="请选择管理员角色" disabled>
-                            <el-option label="管理员" value="admin" />
+                        <el-select v-model="adminStore.adminInfo.role" placeholder="请选择管理员角色" disabled>
+
+                            
                         </el-select>    
                     </el-form-item>
                     <el-form-item label="管理员状态">
-                        <el-switch v-model="form.status" disabled />
+                        <el-switch v-model="adminStore.adminInfo.status" disabled />
                     </el-form-item>
                 </el-form>
             </div>  
@@ -30,16 +34,10 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
+import { useAdminStore } from '@/stores/adminStore';
 
-// 管理员信息
-const form = ref({
-    id: '',
-    username: '',
-    role: ref('管理员'),
-    status: false
-}); 
+const adminStore = useAdminStore();
 
-//映射字典
 const roleMap = ref({
     '1': '老人',
     '2': '亲属',
@@ -49,11 +47,12 @@ const roleMap = ref({
 })
 
 onMounted(() => {
-    const userInfo = localStorage.getItem('userInfo');
-    form.value = JSON.parse(userInfo);
-    form.value.role = roleMap.value[form.value.roleId];
-    //数据库中没有status字段，根据其他数据判断，如果存在roleId，则status为true，否则为false
-    form.value.status = form.value.roleId ? true : false;
+    console.log(adminStore.adminInfo.status)
+    if(adminStore.adminInfo){
+        adminStore.adminInfo.role = roleMap.value[adminStore.adminInfo.roleId];
+    }
+
+    
 })
 </script>
 

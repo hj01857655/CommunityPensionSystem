@@ -161,31 +161,18 @@ const handleLogin = async () => {
     try {
       loading.value = true
       const response = await adminStore.adminLogins(loginForm)
-      console.log(response)
-      /**
-       * {
-       *    token: "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsInJvbGVJZCI6NCwiaWF0IjoxNzQxNTM4NzEyLCJleHAiOjE3NDE1NDIzMTJ9.Q0nJ9tYzqsnow9006yCtu3NneX8EHwkUXx1Exm7zxVI",
-       *    user: {
-       *      id: 4,
-       *      username: "admin",
-       *      password: "123456",
-       *      roleId: 4,
-       *      status: 1,
-       *      createTime: "2025-03-09 10:00:00",
-       *      updateTime: "2025-03-09 10:00:00",
-       *    }
-       * }
-       */
       if (response) {
-        // 保存登录状态
-        if (adminStore.remember) {
-          adminStore.remember = true;
-        }
         loading.value = false
-        // 跳转到管理后台
-        router.push('/admin/analysis/dashboard')
+        if(response.token){
+          router.push('/admin/analysis/dashboard')
+          ElMessage.success('登录成功')
+        }else{
+          ElMessage.error('登录失败，请稍后重试')
+        }
       } else {
+        loading.value = false
         ElMessage.error('用户名、密码或角色错误，请重试')
+        
       }
 
     } catch (error) {
