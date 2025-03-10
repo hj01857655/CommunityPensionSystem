@@ -83,7 +83,7 @@ const loadUserInfo = async () => {
       ...response.data.data.elder,
       avatar: computed(() => {
         if (response.data.data.elder.avatar) {
-          const avatarUrl = `http://localhost:8081/src/assets/${response.data.data.elder.avatar}`
+          const avatarUrl = `http://127.0.0.1:8081/src/assets/${response.data.data.elder.avatar}`
           return avatarUrl
         }
         return ''

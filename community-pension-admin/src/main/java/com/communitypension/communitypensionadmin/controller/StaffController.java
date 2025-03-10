@@ -5,11 +5,14 @@ import com.communitypension.communitypensionadmin.entity.Staff;
 import com.communitypension.communitypensionadmin.service.StaffService;
 import com.communitypension.communitypensionadmin.util.Result;
 import com.communitypension.communitypensionadmin.utils.JwtUtil;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/staffs")
+@Tag(name = "工作人员管理")
 @CrossOrigin(origins = "http://localhost:8081/")
 public class StaffController {
     private final StaffService staffService;
@@ -22,6 +25,7 @@ public class StaffController {
     }
 
     @GetMapping("")
+    @Operation(summary = "获取工作人员列表")
     public Result<Object> getStaffs(
             @RequestHeader("Authorization") String token,
             @RequestParam(defaultValue = "1") Integer current,

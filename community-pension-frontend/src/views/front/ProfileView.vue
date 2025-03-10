@@ -190,7 +190,7 @@ const getUserProfile= async () => {
     emergencyPhone: userInfoData.emergencyContactPhone,
     healthCondition: userInfoData.healthCondition,
     medicalHistory: userInfoData.medicalHistory || '',
-    avatar: userInfoData.avatar ? `http://localhost:8081/src/assets/${userInfoData.avatar}` : '',
+    avatar: userInfoData.avatar ? `http://127.0.0.1:8081/src/assets/${userInfoData.avatar}` : '',
     remark: userInfoData.remark
   }
   originalData.value = {...profileForm.value}

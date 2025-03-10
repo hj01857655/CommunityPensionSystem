@@ -177,7 +177,6 @@ const handleLogin = async () => {
 
     } catch (error) {
       console.error('登录失败:', error)
-      ElMessage.error('登录失败，请稍后重试')
     } finally {
       loading.value = false
     }

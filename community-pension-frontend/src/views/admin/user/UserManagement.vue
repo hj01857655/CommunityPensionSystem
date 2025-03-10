@@ -183,7 +183,7 @@ import { ref, computed, reactive, onMounted } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { Search, Delete, Check, Close, Document, Printer, Refresh, Plus } from '@element-plus/icons-vue';
 import { ElTableColumn } from 'element-plus'
-import { getAllUsers, addUser, updateUser, deleteUser, resetPassword } from '@/api/user';
+import { getAllUsers, addUser, updateUser, deleteUser, resetPassword } from '@/api/admin';
 import { formatDate } from '@/utils/date';
 const users = ref([])
 // 分页和搜索

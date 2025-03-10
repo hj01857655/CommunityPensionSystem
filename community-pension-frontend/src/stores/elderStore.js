@@ -27,7 +27,7 @@ export const useElderStore = defineStore('elder', () => {
     // 头像
     const avatarUrl = computed(() => {
         if (elderInfo.value.avatar) {
-            return `http://localhost:8081/src/assets/${elderInfo.value.avatar}`;
+            return `http://127.0.0.1:8081/src/assets/${elderInfo.value.avatar}`;
         }
         return 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png';
     });

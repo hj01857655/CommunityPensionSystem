@@ -1,9 +1,10 @@
 import axios from '@/utils/axios'
+import { TokenManager } from '@/utils/axios'
 
 //获取老人健康档案
 export const getHealthRecords = async (elderId) => {
     try {
-        const token = localStorage.getItem('token');
+        const token = TokenManager.user.get();
         const response = await axios.get('/api/health-records/getHealthRecords', {
             headers: {
                 Authorization: `${token}`
@@ -22,7 +23,7 @@ export const getHealthRecords = async (elderId) => {
 //更新老人健康档案
 export const updateHealthRecords = async (healthRecords) => {
     try {
-        const token = localStorage.getItem('token');
+        const token = TokenManager.user.get();
         //@PutMapping("/{id}")
         const response = await axios.put('/health-records', healthRecords, {
             headers: {
