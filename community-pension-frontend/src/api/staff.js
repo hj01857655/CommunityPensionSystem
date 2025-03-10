@@ -9,46 +9,35 @@ export const getStaffList = async (params) => {
       
     }
   })
+  return response.data
 }
 
 // 添加工作人员
-export function addStaff(data) {
-  return request({
-    url: '/staff/add',
-    method: 'post',
-    data
-  })
+export const addStaff = async (data) => {
+  const response = await axios.post('/staff/add', data)
+  return response.data
 }
 
 // 更新工作人员信息
-export function updateStaff(data) {
-  return request({
-    url: '/staff/update',
-    method: 'put',
-    data
-  })
+export const updateStaff = async (data) => {
+  const response = await axios.put('/staff/update', data)
+  return response.data
 }
 
 // 删除工作人员
-export function deleteStaff(id) {
-  return request({
-    url: `/staff/delete/${id}`,
-    method: 'delete'
-  })
+export const deleteStaff = async (id) => {
+  const response = await axios.delete(`/staff/delete/${id}`)
+  return response.data
 }
 
 // 获取工作人员详情
-export function getStaffDetail(id) {
-  return request({
-    url: `/staff/detail/${id}`,
-    method: 'get'
-  })
+export const getStaffDetail = async (id) => {
+  const response = await axios.get(`/staff/detail/${id}`)
+  return response.data
 }
 
 // 获取工作人员服务记录
-export function getStaffServiceRecords(id) {
-  return request({
-    url: `/staff/service-records/${id}`,
-    method: 'get'
-  })
+export const getStaffServiceRecords = async (id) => {
+  const response = await axios.get(`/staff/service-records/${id}`)
+  return response.data
 }
