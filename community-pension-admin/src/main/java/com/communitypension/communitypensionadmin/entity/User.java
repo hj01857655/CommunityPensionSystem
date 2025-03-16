@@ -5,26 +5,97 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
-import java.time.LocalDateTime;
+
+import java.util.Date;
 
 @Data
 @TableName("user")
 public class User {
 
-    @TableId(type = IdType.AUTO)
-    private Long id;    // 用户ID
+    /**
+     * 主键ID
+     */
+    @TableId(value = "id", type = IdType.AUTO)
 
-    private String username;// 用户名
-    private String password;// 密码
-    private String phone;// 手机号
-    private Long roleId;    // 角色ID
-    private int status; // 状态
-    private Long elderId;// 老人ID
-    private Long kinId; // 亲属ID
-    private Long staffId;   // 工作人员ID
+    private Long id;
 
-    private LocalDateTime createTime;    // 创建时间
-    private LocalDateTime updateTime;    // 更新时间
+    /**
+     * 用户名
+     */
+    @TableField("username")
+    private String username;
+
+    /**
+     * 密码（加密存储）
+     */
+    private String password;
+
+    /**
+     * 是否为管理员，0-否，1-是
+     */
+    private Byte isAdmin;
+
+    /**
+     * 用户状态：1-正常，0-禁用，2-锁定
+     */
+    private Byte isActive;
+
+    /**
+     * 是否被删除
+     */
+    private Byte isDeleted;
+
+    private String phone;
+    /**
+     *
+     * 邮箱
+     */
+    private String email;
+
+    /**
+     * 用户地址
+     */
+    private String address;
+
+    /**
+     * 头像
+     */
+    private String avatar;
+
+    /**
+     * 角色ID（关联role表）
+     */
+    private Long roleId;
+
+    /**
+     * 老人ID（关联elder表）
+     */
+    private Long elderId;
+
+    /**
+     * 家属ID（关联kin表）
+     */
+    private Long kinId;
+
+    /**
+     * 员工ID（关联staff表）
+     */
+    private Long staffId;
+
+    /**
+     * 创建时间
+     */
+    private Date createTime;
+
+    /**
+     * 更新时间
+     */
+    private Date updateTime;
+
+    /**
+     * 备注
+     */
+    private String remark;
 
     @TableField(exist = false)
     private Elder elder;

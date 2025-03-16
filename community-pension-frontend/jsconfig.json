@@ -7,6 +7,24 @@
     "paths": {
       "@/*": [
         "src/*"
+      ],
+      "@components/*": [
+        "src/components/*"
+      ],
+      "@views/*": [
+        "src/views/*"
+      ],
+      "@assets/*": [
+        "src/assets/*"
+      ],
+      "@utils/*": [
+        "src/utils/*"
+      ],
+      "@store/*": [
+        "src/store/*"
+      ],
+      "@api/*": [
+        "src/api/*"
       ]
     },
     "lib": [
@@ -15,5 +33,8 @@
       "dom.iterable",
       "scripthost"
     ]
-  }
+  },
+  "types": [
+    "node"
+  ]
 }

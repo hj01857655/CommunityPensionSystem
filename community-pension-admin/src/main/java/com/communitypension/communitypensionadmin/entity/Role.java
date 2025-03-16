@@ -1,18 +1,19 @@
 package com.communitypension.communitypensionadmin.entity;
 
+import com.baomidou.mybatisplus.annotation.TableName;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.time.Instant;
 
-@Getter
-@Setter
+
 @Entity
-@Table(name = "role")
+@Data
+@TableName("roles")
 public class Role {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,11 +21,12 @@ public class Role {
     private Long id;
 
     @Size(max = 50)
-    @NotNull
+    @NotBlank
     @Column(name = "role_name", nullable = false, length = 50)
     private String roleName;
 
     @Size(max = 255)
+    @NotBlank
     @Column(name = "role_description")
     private String roleDescription;
 
@@ -33,7 +35,6 @@ public class Role {
     private String permissions;
 
     @NotNull
-    @ColumnDefault("1")
     @Column(name = "status", nullable = false)
     private Boolean status = false;
 

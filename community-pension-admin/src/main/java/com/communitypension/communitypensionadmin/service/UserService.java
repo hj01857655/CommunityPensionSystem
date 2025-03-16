@@ -6,7 +6,7 @@ import com.communitypension.communitypensionadmin.entity.User;
 
 public interface UserService extends IService<User> {
 
+    boolean resetPassword(Long userId);
 
-    //
-    User getInfoWithUser(User user);
+    User findByUsername(String username);
 }

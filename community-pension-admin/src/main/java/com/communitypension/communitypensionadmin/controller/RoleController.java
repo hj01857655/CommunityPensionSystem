@@ -3,7 +3,7 @@ package com.communitypension.communitypensionadmin.controller;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.communitypension.communitypensionadmin.entity.Role;
 import com.communitypension.communitypensionadmin.service.RoleService;
-import com.communitypension.communitypensionadmin.util.Result;
+import com.communitypension.communitypensionadmin.utils.Result;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.*;
          * @param size 每页数量
          * @return 角色列表
          */
-        @GetMapping
+        @GetMapping()
         public Result<IPage<Role>> getRolePage(
                 @RequestParam(defaultValue = "1") int page,
                 @RequestParam(defaultValue = "10") int size) {
@@ -37,14 +37,7 @@ import org.springframework.web.bind.annotation.*;
          * @param role 角色信息
          * @return 创建结果
          */
-        @PostMapping
-        public Result<Role> createRole(@RequestBody Role role) {
-            if (roleService.getRoleByName(role.getRoleName()) != null) {
-                return Result.error(400, "角色名称已存在");
-            }
-            roleService.save(role);
-            return Result.success(role);
-        }
+
 
         /**
          * 更新角色

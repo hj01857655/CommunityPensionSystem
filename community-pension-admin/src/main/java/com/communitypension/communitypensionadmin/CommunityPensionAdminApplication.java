@@ -3,16 +3,13 @@ package com.communitypension.communitypensionadmin;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.web.bind.annotation.CrossOrigin;
-
-@MapperScan("com.communitypension.communitypensionadmin.mapper")
+import org.springframework.context.annotation.ComponentScan;
 
 @SpringBootApplication
-@CrossOrigin(origins = "http://localhost:8081")
+@MapperScan("com.communitypension.communitypensionadmin.mapper")
+@ComponentScan(basePackages = {"com.communitypension.communitypensionadmin.entity", "com.communitypension.communitypensionadmin.controller", "com.communitypension.communitypensionadmin.service", "com.communitypension.communitypensionadmin.config", "com.communitypension.communitypensionadmin.utils"})
 public class CommunityPensionAdminApplication {
-
     public static void main(String[] args) {
         SpringApplication.run(CommunityPensionAdminApplication.class, args);
     }
-
 }

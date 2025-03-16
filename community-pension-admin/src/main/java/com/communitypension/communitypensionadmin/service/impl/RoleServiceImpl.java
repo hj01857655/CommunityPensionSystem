@@ -11,14 +11,11 @@ import org.springframework.stereotype.Service;
 @Service
 public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements RoleService {
 
+
     @Override
     public Role getRoleByName(String roleName) {
-        return this.lambdaQuery()
-                .eq(Role::getRoleName, roleName)
-                .one();
+        return null;
     }
-
-
 
     @Override
     public IPage<Role> getRolesByPage(int page, int size) {

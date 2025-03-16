@@ -19,26 +19,42 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     private final ElderMapper elderMapper;
     private final KinMapper kinMapper;
     private final StaffMapper staffMapper;
-    private final HealthRecordsMapper healthRecordsMapper;
-    // 根据角色ID查询用户信息
 
     @Override
-    public User getInfoWithUser(User user) {
-         User user1=userMapper.selectById(user.getId());
-         if(user1.getElderId()!=null){
-             Elder elder=elderMapper.selectById(user1.getElderId());
-             HealthRecords healthRecords=healthRecordsMapper.selectHealthRecordsWithElderInfoByElderId(elder.getId());
-             elder.setHealthRecords(healthRecords);
-             user1.setElder(elder);
-         }else if(user1.getKinId()!=null){
-             Kin kin=kinMapper.selectById(user1.getKinId());
-             user1.setKin(kin);
-         }else if(user1.getStaffId()!=null){
-             Staff staff=staffMapper.selectById(user1.getStaffId());
-             user1.setStaff(staff);
-         }
-         return user1;
-
+    public boolean resetPassword(Long userId) {
+        boolean  isResetPassword=userMapper.resetPassword(userId);
+        if(isResetPassword){
+            return true;
+        }else{
+            logger.info("密码重置失败");
+            return false;
+        }
     }
+
+    @Override
+    public User findByUsername(String username) {
+        User user = userMapper.findByUsername(username);
+        if (user != null) {
+            Long roleId = user.getRoleId();
+            if (roleId == 1) {
+                // 查询老人信息
+                Elder elder = elderMapper.selectById(user.getElderId());
+                user.setElder(elder);
+            } else if (roleId == 2) {
+                // 查询护理员信息
+                Staff staff = staffMapper.selectById(user.getStaffId());
+                user.setStaff(staff);
+            } else if (roleId == 3) {
+                // 查询家属信息
+                Kin kin = kinMapper.selectById(user.getKinId());
+                user.setKin(kin);
+            } else if (roleId == 4) {
+                return user;
+            }
+            return user;
+        }
+        return null;
+    }
+
 
 }

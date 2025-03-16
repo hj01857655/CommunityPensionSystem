@@ -1,23 +1,13 @@
 <template>
-  <div class="error-container">
-    <el-result
-      title="404"
-      sub-title="抱歉，您访问的页面不存在"
-    >
-      <template #icon>
-        <el-image src="@/assets/error/404.jpg" />
-      </template>
-      <template #extra>
-        <el-button type="primary" @click="goHome">返回首页</el-button>
-      </template>
-    </el-result>
-  </div>
+  <ErrorPage type="404" @error-click="goHome" />
 </template>
 
 <script setup>
 import { useRouter } from 'vue-router'
+import ErrorPage from '@/components/common/error/ErrorPage.vue'
 
 const router = useRouter()
+
 const goHome = () => {
   if(localStorage.getItem('role') === 'admin'){
     router.push('/admin/analysis/dashboard')

@@ -1,92 +1,201 @@
 package com.communitypension.communitypensionadmin.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.communitypension.communitypensionadmin.entity.Elder;
+import com.communitypension.communitypensionadmin.entity.HealthRecords;
 import com.communitypension.communitypensionadmin.service.ElderService;
-import com.communitypension.communitypensionadmin.util.Result;
-import com.communitypension.communitypensionadmin.utils.JwtUtil;
+import com.communitypension.communitypensionadmin.utils.Result;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
+/**
+ * 老人信息管理控制器
+ * 提供老人基本信息的增删改查、批量操作等功能
+ */
 @RestController
 @RequestMapping("/api/elders")
-@CrossOrigin(origins = "http://localhost:8081/")
+@CrossOrigin(origins = "*")
 public class ElderController {
     private final ElderService elderService;
-    private final JwtUtil jwtUtil;
 
     @Autowired
-    public ElderController(ElderService elderService, JwtUtil jwtUtil) {
+    public ElderController(ElderService elderService) {
         this.elderService = elderService;
-        this.jwtUtil = jwtUtil;
     }
 
-    @GetMapping("")
-    public Result<Object> getElders(@RequestHeader("Authorization") String token, @RequestParam(defaultValue = "1") Integer current, @RequestParam(defaultValue = "10") Integer size) {
-        JwtUtil.TokenStatus status = jwtUtil.validateToken(token);
-        if (!status.isValid()) {
-            return Result.error(401, status.getError());
+    /**
+     * 分页查询老人信息列表
+     * @param current 当前页码
+     * @param size 每页数量
+     * @param name 老人姓名（可选）
+     * @param idCard 身份证号（可选）
+     * @param healthCondition 健康状况（可选）
+     * @return 分页查询结果
+     */
+    @GetMapping
+    public Result<Object> getElders(
+            @RequestParam(defaultValue = "1") Integer current,
+            @RequestParam(defaultValue = "10") Integer size,
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String idCard,
+            @RequestParam(required = false) String healthCondition) {
+        
+        LambdaQueryWrapper<Elder> queryWrapper = new LambdaQueryWrapper<>();
+        if (StringUtils.hasText(name)) {
+            queryWrapper.like(Elder::getName, name);
         }
-        Page<Elder> page = elderService.page(new Page<>(current, size));
+        if (StringUtils.hasText(idCard)) {
+            queryWrapper.like(Elder::getIdCard, idCard);
+        }
+        if (StringUtils.hasText(healthCondition)) {
+            queryWrapper.like(Elder::getHealthCondition, healthCondition);
+        }
+        queryWrapper.orderByDesc(Elder::getId);
+
+        Page<Elder> page = elderService.page(new Page<>(current, size), queryWrapper);
+        // 对身份证号进行脱敏处理
+        page.getRecords().forEach(elder -> {
+            String id = elder.getIdCard();
+            if (StringUtils.hasText(id)) {
+                elder.setIdCard(id.substring(0, 4) + "********" + id.substring(id.length() - 4));
+            }
+        });
         return Result.success("查询成功", page);
     }
 
+    /**
+     * 根据ID查询老人信息
+     * @param id 老人ID
+     * @return 老人详细信息
+     */
     @GetMapping("/{id}")
-    public Result<Object> getElderById(@RequestHeader("Authorization") String token, @PathVariable Long id) {
-        JwtUtil.TokenStatus status = jwtUtil.validateToken(token);
-        if (!status.isValid()) {
-            return Result.error(401, status.getError());
-        }
-
+    public Result<Object> getElderById(@PathVariable Long id) {
         Elder elder = elderService.getById(id);
         if (elder != null) {
             String idCard = elder.getIdCard();
-            elder.setIdCard(idCard.substring(0, 4) + "********" + idCard.substring(idCard.length() - 4));
+            if (StringUtils.hasText(idCard)) {
+                elder.setIdCard(idCard.substring(0, 4) + "********" + idCard.substring(idCard.length() - 4));
+            }
             return Result.success("查询成功", elder);
         } else {
             return Result.error(404, "老人信息不存在");
         }
     }
 
+    /**
+     * 创建老人信息
+     * @param elder 老人信息对象
+     * @return 创建结果
+     */
     @PostMapping
-    public Result<Object> createElder(@RequestHeader("Authorization") String token, @Valid @RequestBody Elder elder) {
-        JwtUtil.TokenStatus status = jwtUtil.validateToken(token);
-        if (!status.isValid()) {
-            return Result.error(401, status.getError());
-        }
-
-        boolean saved = elderService.save(elder);
-        if (saved) {
-            return Result.success("创建成功", elder.getId());
-        } else {
-            return Result.error(500, "创建失败");
+    public Result<Object> createElder(@Valid @RequestBody Elder elder) {
+        try {
+            boolean saved = elderService.save(elder);
+            return saved ? Result.success("创建成功") : Result.error(500, "创建失败");
+        } catch (Exception e) {
+            return Result.error(500, "创建失败：" + e.getMessage());
         }
     }
 
-    @PutMapping
-    public Result<Object> updateElder(@RequestHeader("Authorization") String token, @Valid @RequestBody Elder elder) {
-        JwtUtil.TokenStatus status = jwtUtil.validateToken(token);
-        if (!status.isValid()) {
-            return Result.error(401, status.getError());
-        }
-
-        boolean updated = elderService.updateById(elder);
-        if (updated) {
-            return Result.success("更新成功");
-        } else {
-            return Result.error(500, "更新失败");
+    /**
+     * 更新老人信息
+     * @param id 老人ID
+     * @param elder 更新的老人信息
+     * @return 更新结果
+     */
+    @PutMapping("/{id}")
+    public Result<Object> updateElder(@PathVariable Long id, @Valid @RequestBody Elder elder) {
+        try {
+            elder.setId(id);
+            boolean updated = elderService.updateById(elder);
+            return updated ? Result.success("更新成功") : Result.error(500, "更新失败");
+        } catch (Exception e) {
+            return Result.error(500, "更新失败：" + e.getMessage());
         }
     }
 
+    /**
+     * 删除老人信息
+     * @param id 老人ID
+     * @return 删除结果
+     */
     @DeleteMapping("/{id}")
-    public Result<Object> deleteElder(@RequestHeader("Authorization") String token, @PathVariable Long id) {
-        JwtUtil.TokenStatus status = jwtUtil.validateToken(token);
-        if (!status.isValid()) {
-            return Result.error(401, status.getError());
+    public Result<Object> deleteElder(@PathVariable Long id) {
+        try {
+            boolean removed = elderService.removeById(id);
+            return removed ? Result.success("删除成功") : Result.error(500, "删除失败");
+        } catch (Exception e) {
+            return Result.error(500, "删除失败：" + e.getMessage());
         }
+    }
 
-        boolean removed = elderService.removeById(id);
-        return removed ? Result.success("删除成功") : Result.error(500, "删除失败");
+    /**
+     * 批量创建老人信息
+     * @param elders 老人信息列表
+     * @return 批量创建结果
+     */
+    @PostMapping("/batch")
+    public Result<Object> batchCreateElders(@Valid @RequestBody List<Elder> elders) {
+        try {
+            boolean saved = elderService.saveBatch(elders);
+            return saved ? Result.success("批量创建成功") : Result.error(500, "批量创建失败");
+        } catch (Exception e) {
+            return Result.error(500, "批量创建失败：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 批量删除老人信息
+     * @param ids 老人ID列表
+     * @return 批量删除结果
+     */
+    @DeleteMapping("/batch")
+    public Result<Object> batchDeleteElders(@RequestBody List<Long> ids) {
+        try {
+            boolean removed = elderService.removeByIds(ids);
+            return removed ? Result.success("批量删除成功") : Result.error(500, "批量删除失败");
+        } catch (Exception e) {
+            return Result.error(500, "批量删除失败：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 获取老人健康档案
+     * @param id 老人ID
+     * @return 健康档案信息
+     */
+    @GetMapping("/{id}/health-records")
+    public Result<Object> getHealthRecords(@PathVariable Long id) {
+        try {
+            var healthRecords = elderService.getHealthRecords(id);
+            if (healthRecords != null) {
+                return Result.success("获取健康档案成功", healthRecords);
+            } else {
+                return Result.error(404, "健康档案不存在");
+            }
+        } catch (Exception e) {
+            return Result.error(500, "获取健康档案失败：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 更新老人健康档案
+     * @param id 老人ID
+     * @param healthRecords 健康档案信息
+     * @return 更新结果
+     */
+    @PutMapping("/{id}/health-records")
+    public Result<Object> updateHealthRecords(@PathVariable Long id, @Valid @RequestBody HealthRecords healthRecords) {
+        try {
+            boolean updated = elderService.updateHealthRecords(id, healthRecords);
+            return updated ? Result.success("更新健康档案成功") : Result.error(500, "更新健康档案失败");
+        } catch (Exception e) {
+            return Result.error(500, "更新健康档案失败：" + e.getMessage());
+        }
     }
 }

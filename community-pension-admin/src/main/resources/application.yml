@@ -1,6 +1,6 @@
 
 server:
-  port: 8080
+  port: 9000
 spring:
   application:
     name: community-pension-admin
@@ -11,12 +11,12 @@ spring:
       driver-class-name: com.mysql.cj.jdbc.Driver
       username: root
       password: root
-      maximum-pool-size: 10
-      minimum-idle: 5
-      idle-timeout: 30000
-      max-lifetime: 1800000
+      maximum-pool-size: 20
+      minimum-idle: 10
+      idle-timeout: 60000
+      max-lifetime: 3600000
       pool-name: HikariCP
-      validation-timeout: 5000
+      validation-timeout: 10000
       data-source-properties:
         cachePrepStmts: true
         prepStmtCacheSize: 250
@@ -24,8 +24,9 @@ spring:
         useServerPrepStmts: true
       initialization-fail-timeout: 10000
       connection-init-sql: SELECT 1
-      connection-timeout: 30000
+      connection-timeout: 60000
       auto-commit: on
+
     type: com.zaxxer.hikari.HikariDataSource
     url: jdbc:mysql://127.0.0.1:3306/community_pension?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
   devtools:
@@ -42,9 +43,16 @@ spring:
     user:
       name: admin
       password: admin
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
 jwt:
   secret: "cB7ChF1y4Aegk+p9KNkFz0GQeY2e+ZgeIW6EVJbiR9Y="
-  expiration: 3600 # 过期时间：1小时
+  access-token:
+    expiration: 86400000 # 24小时
+  refresh-token:
+    #7天
+    expiration: 604800000 # 7天
 #MyBatis配置
 mybatis-plus:
   global-config:
@@ -66,3 +74,7 @@ knife4j:
   documents:
     - group: 社区养老系统
       name: 管理接口文档
+management:
+  health:
+    redis:
+      enabled:

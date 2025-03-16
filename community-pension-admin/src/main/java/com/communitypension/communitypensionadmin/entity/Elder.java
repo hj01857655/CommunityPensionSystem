@@ -1,11 +1,17 @@
 package com.communitypension.communitypensionadmin.entity;
 
-import com.baomidou.mybatisplus.annotation.*;
-import jakarta.validation.constraints.*;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
+
 import java.io.Serializable;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Data
 @TableName("elder")
@@ -37,13 +43,7 @@ public class Elder implements Serializable {
     @Pattern(regexp = "^\\d{17}[\\dXx]$", message = "身份证格式错误")
     private String idCard;
 
-    /** 老人联系电话 */
-    @Pattern(regexp = "^1[3-9]\\d{9}$", message = "手机号格式错误")
-    private String phone;
 
-    /** 老人家庭住址 */
-    @Size(max = 200, message = "地址长度不能超过200字符")
-    private String address;
 
     /** 紧急联系人姓名 */
     @Size(max = 50, message = "紧急联系人姓名过长")
@@ -57,22 +57,10 @@ public class Elder implements Serializable {
     @Size(max = 500, message = "健康状况描述过长")
     private String healthCondition;
 
-
-
-    /** 老人头像URL */
-    private String avatar;
-
-    /** 记录创建时间 */
-    @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createTime;
-
-    /** 记录更新时间 */
-    @TableField(fill = FieldFill.INSERT_UPDATE)
-    private LocalDateTime updateTime;
-
     /** 备注信息 */
     @Size(max = 1000, message = "备注信息过长")
     private String remark;
+
     public enum Gender {
         male, female
     }
