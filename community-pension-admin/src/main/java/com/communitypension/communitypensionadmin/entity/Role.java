@@ -1,34 +1,54 @@
 package com.communitypension.communitypensionadmin.entity;
 
-import com.baomidou.mybatisplus.annotation.*;
-import jakarta.validation.constraints.NotBlank;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+import org.hibernate.annotations.ColumnDefault;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
-@Data
-@TableName("role")
+@Getter
+@Setter
+@Entity
+@Table(name = "role")
 public class Role {
-
-    /** 主键ID */
-    @TableId(type = IdType.AUTO)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false)
     private Long id;
 
-    /** 角色名称 */
-    @NotBlank(message = "角色名称不能为空")
-    @Size(max = 50, message = "角色名称长度不能超过50字符")
+    @Size(max = 50)
+    @NotNull
+    @Column(name = "role_name", nullable = false, length = 50)
     private String roleName;
 
-    /** 角色描述 */
-    @Size(max = 200, message = "角色描述长度不能超过200字符")
+    @Size(max = 255)
+    @Column(name = "role_description")
     private String roleDescription;
 
-    /** 创建时间 */
-    @TableField(value = "create_time", fill = FieldFill.INSERT)
-    private LocalDateTime createTime;
+    @Lob
+    @Column(name = "permissions")
+    private String permissions;
 
-    /** 更新时间 */
-    @TableField(value = "update_time", fill = FieldFill.INSERT_UPDATE)
-    private LocalDateTime updateTime;
+    @NotNull
+    @ColumnDefault("1")
+    @Column(name = "status", nullable = false)
+    private Boolean status = false;
+
+    @Column(name = "created_by")
+    private Long createdBy;
+
+    @ColumnDefault("CURRENT_TIMESTAMP")
+    @Column(name = "created_at")
+    private Instant createdAt;
+
+    @Column(name = "updated_by")
+    private Long updatedBy;
+
+    @ColumnDefault("CURRENT_TIMESTAMP")
+    @Column(name = "updated_at")
+    private Instant updatedAt;
+
 }
