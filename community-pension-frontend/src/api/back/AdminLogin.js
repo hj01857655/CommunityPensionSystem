@@ -11,11 +11,11 @@ export const adminLogin = async (data) => {
         });
 
         if (response.code === 200) {
-            // 保存管理员信息到本地存储
+            // 保存管理员信息到会话存储
             if (response.data && response.data.user) {
-                localStorage.setItem("adminInfo", JSON.stringify(response.data.user));
-                localStorage.setItem("roleId", JSON.stringify(response.data.user.roleId));
-                localStorage.setItem("isAdminLoggedIn", "true");
+                sessionStorage.setItem("adminInfo", JSON.stringify(response.data.user));
+                sessionStorage.setItem("roleId", JSON.stringify(response.data.user.roleId));
+                sessionStorage.setItem("isAdminLoggedIn", "true");
             }
 
             // 存储token
@@ -62,11 +62,11 @@ export const adminLogout = async () => {
     }
 }
 
-// 清除本地存储的函数
+// 清除会话存储的函数
 function clearLocalStorage() {
-    localStorage.removeItem("adminInfo");
-    localStorage.removeItem("roleId");
-    localStorage.removeItem("isAdminLoggedIn");
+    sessionStorage.removeItem("adminInfo");
+    sessionStorage.removeItem("roleId");
+    sessionStorage.removeItem("isAdminLoggedIn");
     TokenManager.admin.clear();
 }
 

@@ -54,7 +54,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, defineAsyncComponent, onMounted } from 'vue';
+import { ref, computed, watch, defineAsyncComponent, onMounted, onBeforeUnmount } from 'vue';
 import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import DashBoard from '@/views/fore/DashBoard.vue';
@@ -67,6 +67,13 @@ const isLoggedIn = ref(false);
 // 使用store中的avatarUrl
 const avatarUrl = computed(() => userStore.avatarUrl);
 
+// 处理来自DashBoard的菜单更新事件
+const handleUpdateActiveIndex = (event) => {
+  if (event.detail && event.detail.index) {
+    activeIndex.value = event.detail.index;
+  }
+};
+
 onMounted(() => {
   if (!userStore.isLoggedIn || !localStorage.getItem("isLoggedIn")) {
     router.push('/login');
@@ -74,6 +81,14 @@ onMounted(() => {
     formData.value = userStore.userInfo;
     isLoggedIn.value = true;
   }
+  
+  // 添加自定义事件监听器
+  window.addEventListener('update-active-index', handleUpdateActiveIndex);
+});
+
+onBeforeUnmount(() => {
+  // 移除事件监听器以防止内存泄漏
+  window.removeEventListener('update-active-index', handleUpdateActiveIndex);
 });
 
 const selectedNotice = ref(null);

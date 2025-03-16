@@ -158,11 +158,11 @@ const handleLogin = async () => {
         ElMessage.success('登录成功')
         // 如果记住用户名选项被勾选，则保存用户名和角色到localStorage
         if (remember.value) {
-          localStorage.setItem('rememberedUsername', loginForm.username)
-          localStorage.setItem('rememberedRole', loginForm.roleId)
+          sessionStorage.setItem('rememberedUsername', loginForm.username)
+          sessionStorage.setItem('rememberedRole', loginForm.roleId)
         } else {
-          localStorage.removeItem('rememberedUsername')
-          localStorage.removeItem('rememberedRole')
+          sessionStorage.removeItem('rememberedUsername')
+          sessionStorage.removeItem('rememberedRole')
         }
         // 延迟跳转，确保token和用户信息已经保存
         setTimeout(() => {
@@ -212,8 +212,8 @@ const handleResetPassword = async () => {
 // 检查是否有记住的用户名和角色
 onMounted(() => {
   // 仍然从localStorage获取记住的用户名和角色，因为这是登录页面特有的功能
-  const rememberedUsername = localStorage.getItem('rememberedUsername')
-  const rememberedRole = localStorage.getItem('rememberedRole')
+  const rememberedUsername = sessionStorage.getItem('rememberedUsername')
+  const rememberedRole = sessionStorage.getItem('rememberedRole')
 
   if (rememberedUsername) {
     loginForm.username = rememberedUsername

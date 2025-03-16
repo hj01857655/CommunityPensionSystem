@@ -23,7 +23,7 @@ import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/users")
-@CrossOrigin(origins = "*")
+
 @Tag(name = "用户管理")
 public class UserController {
     private static final Logger logger = LoggerFactory.getLogger(UserController.class);

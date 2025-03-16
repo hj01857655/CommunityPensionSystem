@@ -78,3 +78,5 @@ management:
   health:
     redis:
       enabled:
+allowed:
+  origins: http://localhost:8000

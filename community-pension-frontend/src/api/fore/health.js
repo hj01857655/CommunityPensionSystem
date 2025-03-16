@@ -3,6 +3,9 @@ import axios from '@/utils/axios'
 // 获取健康档案
 export const getHealthData = async (elderId) => {
   try {
+    if (!elderId) {
+      throw new Error('获取健康档案需要提供老人ID');
+    }
     const response = await axios.get('/api/health-records/getHealthRecords', {
       params: { elderId }
     });
@@ -16,6 +19,9 @@ export const getHealthData = async (elderId) => {
 // 添加健康档案
 export const addHealthData = async (data) => {
   try {
+    if (!data.elderId) {
+      throw new Error('添加健康档案需要提供老人ID');
+    }
     const response = await axios.post('/api/health-records/addHealthRecords', data);
     return response;
   } catch (error) {
@@ -27,6 +33,12 @@ export const addHealthData = async (data) => {
 // 更新健康档案
 export const updateHealthData = async (data) => {
   try {
+    if (!data.id) {
+      throw new Error('更新健康档案需要提供记录ID');
+    }
+    if (!data.elderId) {
+      throw new Error('更新健康档案需要提供老人ID');
+    }
     const response = await axios.put('/api/health-records/updateHealthRecords', data);
     return response;
   } catch (error) {

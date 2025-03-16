@@ -1,4 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router';
+import HealthView from '@/views/fore/HealthView.vue';
+import ServiceView from '@/views/fore/ServiceView.vue';
+import ActivityView from '@/views/fore/ActivityView.vue';
+import NoticeView from '@/views/fore/NoticeView.vue';
 
 const routes = [
   {
@@ -22,33 +26,28 @@ const routes = [
       {
         path: 'health',
         name: 'HealthView',
-        component: () => import('@/views/fore/HealthView.vue'),
-        meta: { requiresAuth: true, roles: ['elder'] }
+        component: HealthView
       },
       {
         path: 'service',
         name: 'ServiceView',
-        component: () => import('@/views/fore/ServiceView.vue'),
-        meta: { requiresAuth: true, roles: ['elder'] }
-      },
-      {
-        path: 'notice',
-        name: 'NoticeView',
-        component: () => import('@/views/fore/NoticeView.vue'),
-        meta: { requiresAuth: true, roles: ['elder'] }
+        component: ServiceView
       },
       {
         path: 'activity',
         name: 'ActivityView',
-        component: () => import('@/views/fore/ActivityView.vue'),
-        meta: { requiresAuth: true, roles: ['elder'] }
+        component: ActivityView
+      },
+      {
+        path: 'notice',
+        name: 'NoticeView',
+        component: NoticeView
       },
       {
         path: 'profile',
         name: 'ProfileView',
         component: () => import('@/views/fore/ProfileView.vue'),
         meta: { requiresAuth: true, roles: ['elder'] }
-
       }
     ]
   },
@@ -96,8 +95,6 @@ const routes = [
             component: () => import('@/views/back/analysis/HealthAnalysis.vue'),
             meta: { title: '健康分析', icon: 'odometer', roles: ['admin'] }
           }
-
-
         ]
       },
       {
@@ -222,7 +219,6 @@ const routes = [
             component:()=>import('@/views/back/notice/NoticeType.vue'),
             meta: { title: '通知公告类型管理', icon: 'bell', roles: ['admin'] }
           },
-
           {
             path:'list',
             name:'NoticeList',

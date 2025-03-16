@@ -18,7 +18,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "*")
+
 @Tag(name = "认证管理")
 public class AuthController {
     private static final Logger logger = LoggerFactory.getLogger(AuthController.class);

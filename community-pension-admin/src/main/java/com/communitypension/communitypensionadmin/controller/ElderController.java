@@ -19,7 +19,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/elders")
-@CrossOrigin(origins = "*")
+
 public class ElderController {
     private final ElderService elderService;
 

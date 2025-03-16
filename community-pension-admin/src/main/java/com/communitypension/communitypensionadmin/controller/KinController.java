@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/kins")
-@CrossOrigin(origins = "*")
+
 public class KinController {
     private final KinService kinService;
 

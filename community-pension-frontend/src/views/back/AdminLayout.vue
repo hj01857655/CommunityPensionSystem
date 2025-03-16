@@ -169,8 +169,8 @@
               <!-- 下拉菜单 -->
               <template #dropdown>
                 <el-dropdown-menu>
-                 <el-dropdown-item command="profile" @click="navigateTo('/admin/settings/info')">个人信息</el-dropdown-item>
-                  <el-dropdown-item command="password" @click="navigateTo('/admin/settings/password')">修改密码</el-dropdown-item>
+                 <el-dropdown-item command="profile" @click="navigateTo('/admin/system/info')">个人信息</el-dropdown-item>
+                  <el-dropdown-item command="password" @click="navigateTo('/admin/system/password')">修改密码</el-dropdown-item>
                   <el-dropdown-item divided command="logout" @click="handleLogout">退出登录</el-dropdown-item>
                 </el-dropdown-menu>
               </template>

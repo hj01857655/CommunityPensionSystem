@@ -6,11 +6,19 @@
             <el-row :gutter="20" class="dashboard-grid">
                 <!-- Health Card -->
                 <el-col :span="12" :md="6">
-                    <home-card title="健康监测" icon="FirstAidKit" class="health-card" @more="navigateTo('health')">
+                    <home-card title="健康监测" icon="FirstAidKit" class="health-card" :moreRouteName="'HealthView'" @more="handleMenuSelect">
                         <div v-if="isLoggedIn">
-                            <div class="data-item" v-for="(value, key) in healthData" :key="key">
-                                <span class="label">{{ healthLabels[key] }}</span>
-                                <span class="value">{{ value }}</span>
+                            <div v-if="healthData">
+                                <div class="data-item" v-for="(value, key) in displayHealthData" :key="key">
+                                    <span class="label">{{ healthLabels[key] }}</span>
+                                    <span class="value">{{ formatHealthValue(key, value) }}</span>
+                                </div>
+                                <div class="update-time">
+                                    更新时间: {{ formatDateTime(healthData.recordTime) }}
+                                </div>
+                            </div>
+                            <div v-else>
+                                <el-empty description="暂无健康数据" />
                             </div>
                         </div>
                         <div v-else>
@@ -21,7 +29,7 @@
 
                 <!-- Services Card -->
                 <el-col :span="12" :md="6">
-                    <home-card title="服务预约" icon="Calendar" class="service-card" @more="navigateTo('service')">
+                    <home-card title="服务预约" icon="Calendar" class="service-card" :moreRouteName="'ServiceView'" @more="handleMenuSelect">
                         <div v-if="isLoggedIn">
                             <el-empty v-if="!services.length" description="暂无预约服务" />
                             <div v-else class="service-list">
@@ -41,7 +49,7 @@
 
                 <!-- Activities Card -->
                 <el-col :span="12" :md="6">
-                    <home-card title="社区活动" icon="Flag" class="activity-card" @more="navigateTo('activity')">
+                    <home-card title="社区活动" icon="Flag" class="activity-card" :moreRouteName="'ActivityView'" @more="handleMenuSelect">
                         <el-empty v-if="!activities.length" description="暂无活动" />
                         <div v-else class="activity-list">
                             <div v-for="activity in activities" :key="activity.id" class="activity-item">
@@ -56,7 +64,7 @@
 
                 <!-- Notices Card -->
                 <el-col :span="12" :md="6">
-                    <home-card title="通知公告" icon="Bell" class="notice-card" @more="navigateTo('notice')">
+                    <home-card title="通知公告" icon="Bell" class="notice-card" :moreRouteName="'NoticeView'" @more="handleMenuSelect">
                         <div class="notice-list">
                             <div v-for="notice in recentNotices" :key="notice.date" class="notice-item"
                                 @click="viewNoticeDetail(notice)">
@@ -103,11 +111,13 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed, watch, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
+import { getHealthData } from '@/api/fore/health';
 import HomeCard from '@/components/front/HomeCard.vue';
 import { Phone } from '@element-plus/icons-vue';
+import { ElMessage } from 'element-plus';
 
 const props = defineProps({
     isLoggedIn: {
@@ -123,18 +133,101 @@ const dashboard = ref({
     description: '欢迎来到社区养老系统，您可以在这里查看和管理您的服务预约、健康档案和社区活动。',
 });
 
-// 使用静态数据模拟健康监测
-const healthData = ref({
-    bloodPressure: '120/80 mmHg',
-    heartRate: '72 bpm',
-    bloodSugar: '5.5 mmol/L',
-});
+// 健康数据相关
+const healthData = ref(null);
 
+// 健康指标标签
 const healthLabels = {
     bloodPressure: '血压',
     heartRate: '心率',
-    bloodSugar: '血糖'
+    bloodSugar: '血糖',
+    temperature: '体温',
+    height: '身高',
+    weight: '体重'
 };
+
+// 计算要显示的健康数据
+const displayHealthData = computed(() => {
+    if (!healthData.value) return {};
+    return {
+        bloodPressure: healthData.value.bloodPressure,
+        heartRate: healthData.value.heartRate,
+        bloodSugar: healthData.value.bloodSugar,
+        temperature: healthData.value.temperature,
+        height: healthData.value.height,
+        weight: healthData.value.weight
+    };
+});
+
+// 格式化健康数据显示
+const formatHealthValue = (key, value) => {
+    if (value === null || value === undefined) return '暂无数据';
+    
+    const units = {
+        bloodPressure: 'mmHg',
+        heartRate: '次/分',
+        bloodSugar: 'mmol/L',
+        temperature: '℃',
+        height: 'cm',
+        weight: 'kg'
+    };
+    
+    return `${value} ${units[key] || ''}`;
+};
+
+// 格式化日期时间
+const formatDateTime = (dateStr) => {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    return date.toLocaleString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+};
+
+// 获取健康数据
+const fetchHealthData = async () => {
+    if (!props.isLoggedIn) return;
+    
+    try {
+        // 从本地存储获取老人ID
+        const elderInfo = localStorage.getItem('elderInfo');
+        if (!elderInfo) {
+            console.warn('未找到老人信息');
+            return;
+        }
+
+        const elder = JSON.parse(elderInfo);
+        const response = await getHealthData(elder.id);
+        
+        if (response.code === 200 && response.data) {
+            healthData.value = response.data;
+        } else if (response.code === 404) {
+            console.warn('暂无健康数据');
+            healthData.value = null;
+        }
+    } catch (error) {
+        console.error('获取健康数据失败:', error);
+        ElMessage.error('获取健康数据失败');
+    }
+};
+
+// 导航到健康档案页面
+const navigateTo = (path) => {
+    router.push(`/${path}`);
+};
+
+// 监听登录状态变化
+watch(() => props.isLoggedIn, (newValue) => {
+    if (newValue) {
+        fetchHealthData();
+    } else {
+        healthData.value = null;
+    }
+});
 
 const services = ref([]);
 const activities = ref([]);
@@ -160,15 +253,20 @@ const fetchWeatherData = async () => {
         });
         weatherData.value = response.data;
     } catch (error) {
-        console.error('获取天气数据失败:', error);
+        if (error.response && error.response.data && error.response.data.code === 400) {
+            console.error('调用频次过快，请间隔一分钟再试，或购买钻石会员！');
+        } else {
+            console.error('获取天气数据失败:', error);
+        }
     }
 };
 
 onMounted(() => {
+    if (props.isLoggedIn) {
+        fetchHealthData();
+    }
     fetchWeatherData();
 });
-
-
 
 const getServiceStatusType = (status) => {
     return status === '已完成' ? 'success' : 'warning';
@@ -186,6 +284,34 @@ const handleEmergencyCall = () => {
 
 const formatDate = (date) => {
     return new Date(date).toLocaleDateString();
+};
+
+// 处理菜单选择
+const handleMenuSelect = (routeName) => {
+    if (!props.isLoggedIn && routeName !== 'ActivityView' && routeName !== 'NoticeView') {
+        ElMessage.warning('请先登录以访问此功能');
+        return;
+    }
+    // 将路由名称转换为对应的菜单索引
+    const menuIndexMap = {
+        'HealthView': 'health',
+        'ServiceView': 'service',
+        'ActivityView': 'activity',
+        'NoticeView': 'notice'
+    };
+    
+    // 通知父组件Home.vue更新activeIndex
+    if (menuIndexMap[routeName]) {
+        router.push('/');
+        // 使用nextTick确保DOM更新后再更新activeIndex
+        nextTick(() => {
+            // 通过事件总线或直接修改父组件的activeIndex
+            const event = new CustomEvent('update-active-index', { 
+                detail: { index: menuIndexMap[routeName] } 
+            });
+            window.dispatchEvent(event);
+        });
+    }
 };
 </script>
 
@@ -228,7 +354,7 @@ const formatDate = (date) => {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
     padding: 8px;
     background: rgba(0, 0, 0, 0.02);
     border-radius: 4px;
@@ -236,11 +362,19 @@ const formatDate = (date) => {
 
 .data-item .label {
     color: #666;
+    font-size: 14px;
 }
 
 .data-item .value {
     font-weight: 600;
     color: #2c3e50;
+}
+
+.update-time {
+    margin-top: 12px;
+    font-size: 12px;
+    color: #999;
+    text-align: right;
 }
 
 .service-list,
@@ -317,5 +451,14 @@ const formatDate = (date) => {
 
 .emergency-card {
     border-left: 4px solid var(--el-color-danger);
+}
+
+/* 添加一些动画效果 */
+.data-item {
+    transition: all 0.3s ease;
+}
+
+.data-item:hover {
+    background: rgba(64, 158, 255, 0.1);
 }
 </style>

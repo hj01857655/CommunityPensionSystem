@@ -30,6 +30,10 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue';
+import { useAdminStore } from '@/stores/back/adminStore';
+
+// 初始化adminStore
+const adminStore = useAdminStore();
 
 
 const roleMap = ref({
@@ -56,15 +60,36 @@ const statusValue = computed(() => {
 
 // 获取管理员信息
 const getAdminInfo = async () => {
-    if (adminStore.adminInfo.username) {
-        adminInfo.value = adminStore.adminInfo;
-    } else {
-        adminInfo.value = JSON.parse(localStorage.getItem('adminInfo') || '{}');
+    try {
+        // 先尝试从store获取信息
+        if (adminStore && adminStore.adminInfo && adminStore.adminInfo.username) {
+            adminInfo.value = adminStore.adminInfo;
+        } else {
+            // 如果store中没有，则尝试从sessionStorage获取
+            const adminInfoStr = sessionStorage.getItem('adminInfo');
+            if (adminInfoStr) {
+                adminInfo.value = JSON.parse(adminInfoStr);
+                // 同时更新store中的信息
+                if (adminStore) {
+                    adminStore.adminInfo = adminInfo.value;
+                }
+            } else {
+                // 如果sessionStorage也没有，则使用空对象
+                adminInfo.value = {};
+            }
+        }
+        console.log('当前管理员信息:', adminInfo.value);
+    } catch (error) {
+        console.error('获取管理员信息出错:', error);
+        adminInfo.value = {}; // 出错时使用空对象
     }
-    console.log(adminInfo.value);
 };
 
 onMounted(() => {
+    // 确保先初始化adminStore，再获取管理员信息
+    if (adminStore && typeof adminStore.initAdminInfo === 'function') {
+        adminStore.initAdminInfo();
+    }
     getAdminInfo();
 });
 </script>

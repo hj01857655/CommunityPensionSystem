@@ -19,7 +19,12 @@ public class HealthRecordsImpl extends ServiceImpl<HealthRecordsMapper, HealthRe
     }
 
     //更新健康档案
-
-
+    public boolean updateHealthRecordByElderId(HealthRecords healthRecord, Long elderId) {
+        if (healthRecord == null || elderId == null) {
+            return false;
+        }
+        int result = healthRecordsMapper.updateHealthRecord(healthRecord, elderId);
+        return result > 0;
+    }
 
 }

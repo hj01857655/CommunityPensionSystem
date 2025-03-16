@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/staffs")
 @Tag(name = "工作人员管理")
-@CrossOrigin(origins = "*")
+
 public class StaffController {
     private final StaffService staffService;
 
