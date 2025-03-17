@@ -23,12 +23,8 @@
         <el-table-column prop="id" label="ID" width="80" />
         <el-table-column prop="elderName" label="老人姓名" width="120" />
         <el-table-column prop="serviceName" label="服务项目" width="150" />
-        <el-table-column prop="appointmentTime" label="预约时间" width="180">
-          <template #default="scope">
-            {{ formatDate(scope.row.appointmentTime) }}
-          </template>
-        </el-table-column>
-        <el-table-column prop="staffName" label="服务人员" width="120" />
+        <el-table-column prop="appointmentDate" label="预约日期" width="120" />
+        <el-table-column prop="appointmentTime" label="预约时间" width="120" />
         <el-table-column prop="status" label="状态" width="100">
           <template #default="scope">
             <el-tag :type="getStatusType(scope.row.status)">
@@ -36,7 +32,7 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="remark" label="备注" min-width="200" />
+        <el-table-column prop="notes" label="备注" min-width="200" />
         <el-table-column label="操作" width="250" fixed="right">
           <template #default="scope">
             <el-button type="primary" size="small" @click="handleEdit(scope.row)">编辑</el-button>
@@ -68,17 +64,16 @@
             <el-option v-for="service in serviceOptions" :key="service.id" :label="service.name" :value="service.id" />
           </el-select>
         </el-form-item>
+        <el-form-item label="预约日期" prop="appointmentDate">
+          <el-date-picker v-model="appointmentForm.appointmentDate" type="date" placeholder="选择预约日期"
+            format="YYYY-MM-DD" value-format="YYYY-MM-DD" />
+        </el-form-item>
         <el-form-item label="预约时间" prop="appointmentTime">
-          <el-date-picker v-model="appointmentForm.appointmentTime" type="datetime" placeholder="选择预约时间"
-            format="YYYY-MM-DD HH:mm" value-format="YYYY-MM-DD HH:mm:ss" />
+          <el-time-picker v-model="appointmentForm.appointmentTime" placeholder="选择预约时间"
+            format="HH:mm" value-format="HH:mm:ss" />
         </el-form-item>
-        <el-form-item label="服务人员" prop="staffId">
-          <el-select v-model="appointmentForm.staffId" placeholder="请选择服务人员">
-            <el-option v-for="staff in staffOptions" :key="staff.id" :label="staff.name" :value="staff.id" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="备注" prop="remark">
-          <el-input v-model="appointmentForm.remark" type="textarea" :rows="3" placeholder="请输入备注信息" />
+        <el-form-item label="备注" prop="notes">
+          <el-input v-model="appointmentForm.notes" type="textarea" :rows="3" placeholder="请输入备注信息" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -95,93 +90,117 @@
 import { ref, computed } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { Search } from '@element-plus/icons-vue';
-import { formatDate } from '@/utils/date';
 
-// 预约列表数据
-const appointments = ref([])
-const loading = ref(false)
-const currentPage = ref(1)
-const pageSize = ref(10)
-const searchQuery = ref('')
-const dialogVisible = ref(false)
-const dialogType = ref('add')
+// 预约列表数据（静态数据）
+const appointments = ref([
+  {
+    id: 1,
+    elderName: '张三',
+    serviceName: '健康体检',
+    appointmentDate: '2023-10-01',
+    appointmentTime: '10:00:00',
+    status: '待确认',
+    notes: '需要提前联系'
+  },
+  {
+    id: 2,
+    elderName: '李四',
+    serviceName: '康复按摩',
+    appointmentDate: '2023-10-02',
+    appointmentTime: '14:00:00',
+    status: '已确认',
+    notes: ''
+  }
+]);
+
+const loading = ref(false);
+const currentPage = ref(1);
+const pageSize = ref(10);
+const searchQuery = ref('');
+const dialogVisible = ref(false);
+const dialogType = ref('add');
 
 // 表单相关
-const appointmentFormRef = ref(null)
+const appointmentFormRef = ref(null);
 const appointmentForm = ref({
   elderId: '',
   serviceId: '',
+  appointmentDate: '',
   appointmentTime: '',
-  staffId: '',
-  remark: ''
-})
+  notes: ''
+});
 
 // 选项数据
-const elderOptions = ref([])
-const serviceOptions = ref([])
-const staffOptions = ref([])
+const elderOptions = ref([
+  { id: 1, name: '张三' },
+  { id: 2, name: '李四' }
+]);
+const serviceOptions = ref([
+  { id: 1, name: '健康体检' },
+  { id: 2, name: '康复按摩' }
+]);
 
 // 表单验证规则
 const appointmentRules = {
   elderId: [{ required: true, message: '请选择老人', trigger: 'change' }],
   serviceId: [{ required: true, message: '请选择服务项目', trigger: 'change' }],
-  appointmentTime: [{ required: true, message: '请选择预约时间', trigger: 'change' }],
-  staffId: [{ required: true, message: '请选择服务人员', trigger: 'change' }]
-}
+  appointmentDate: [{ required: true, message: '请选择预约日期', trigger: 'change' }],
+  appointmentTime: [{ required: true, message: '请选择预约时间', trigger: 'change' }]
+};
 
 // 过滤后的预约列表
 const filteredAppointments = computed(() => {
   if (!appointments.value || !searchQuery.value) {
-    return appointments.value || []
+    return appointments.value || [];
   }
 
-  const query = searchQuery.value.toLowerCase()
+  const query = searchQuery.value.toLowerCase();
   return appointments.value.filter(appointment =>
     (appointment.elderName && appointment.elderName.toLowerCase().includes(query)) ||
     (appointment.serviceName && appointment.serviceName.toLowerCase().includes(query))
-  )
-})
+  );
+});
 
 // 总预约数
 const totalAppointments = computed(() => {
-  return filteredAppointments.value ? filteredAppointments.value.length : 0
-})
+  return filteredAppointments.value ? filteredAppointments.value.length : 0;
+});
 
 // 获取状态标签类型
 const getStatusType = (status) => {
   const typeMap = {
-    '待服务': 'warning',
-    '服务中': 'primary',
+    '待确认': 'warning',
+    '已确认': 'primary',
     '已完成': 'success',
     '已取消': 'info'
-  }
-  return typeMap[status] || ''
-}
+  };
+  return typeMap[status] || '';
+};
 
 // 搜索预约
 const handleSearch = () => {
-  currentPage.value = 1
-}
+  currentPage.value = 1;
+};
 
 // 新增预约
 const handleAdd = () => {
-  dialogType.value = 'add'
+  dialogType.value = 'add';
   appointmentForm.value = {
     elderId: '',
     serviceId: '',
+    appointmentDate: '',
     appointmentTime: '',
-    staffId: '',
-    remark: ''
-  }
-  dialogVisible.value = true
-}
+    notes: ''
+  };
+  dialogVisible.value = true;
+};
 
 // 编辑预约
 const handleEdit = (row) => {
-  dialogType.value = 'edit'
-  appointmentForm.value = { ...row }
-  dialogVisible.value = true
-}
+  dialogType.value = 'edit';
+  appointmentForm.value = { ...row };
+  dialogVisible.value = true;
+};
 
 // 完成预约
 const handleComplete = (row) => {
@@ -195,10 +214,10 @@ const handleComplete = (row) => {
     }
   ).then(() => {
     // 这里应该调用更新预约状态的API
-    ElMessage.success('操作成功')
-    row.status = '已完成'
-  })
-}
+    ElMessage.success('操作成功');
+    row.status = '已完成';
+  });
+};
 
 // 取消预约
 const handleCancel = (row) => {
@@ -212,32 +231,32 @@ const handleCancel = (row) => {
     }
   ).then(() => {
     // 这里应该调用取消预约的API
-    ElMessage.success('预约已取消')
-    row.status = '已取消'
-  })
-}
+    ElMessage.success('预约已取消');
+    row.status = '已取消';
+  });
+};
 
 // 提交表单
 const submitForm = () => {
   appointmentFormRef.value.validate((valid) => {
     if (valid) {
       // 这里应该调用添加/更新预约的API
-      ElMessage.success(dialogType.value === 'add' ? '预约添加成功' : '预约更新成功')
-      dialogVisible.value = false
+      ElMessage.success(dialogType.value === 'add' ? '预约添加成功' : '预约更新成功');
+      dialogVisible.value = false;
     }
-  })
-}
+  });
+};
 
 // 分页大小变化
 const handleSizeChange = (val) => {
-  pageSize.value = val
-  currentPage.value = 1
-}
+  pageSize.value = val;
+  currentPage.value = 1;
+};
 
 // 当前页变化
 const handleCurrentChange = (val) => {
-  currentPage.value = val
-}
+  currentPage.value = val;
+};
 </script>
 
 <style scoped>

@@ -206,14 +206,34 @@ const bookingForm = reactive({
   appointmentTime: null,
   remark: ''
 })
+
+// 禁用日期（今天之前的日期不可选）
+const disabledDate = (time) => {
+  return time.getTime() < Date.now() - 8.64e7 // 禁用今天之前的日期
+}
+
 const getStatusType = (status) => {
   return status === '待确认' ? 'warning' : status === '已确认' ? 'success' : status === '已完成' ? 'info' : 'danger'
 }
+
 const formatDateTime = (date) => {
   return formatDate(date, 'YYYY-MM-DD HH:mm')
 }
+
 const handleSearch = () => {
   fetchServices()
+  fetchMyAppointments()
+}
+
+// 分页处理函数
+const handlePageChange = (val) => {
+  currentPage.value = val
+  fetchServices()
+}
+
+// 预约分页处理函数
+const handleAppointmentPageChange = (val) => {
+  appointmentPage.value = val
   fetchMyAppointments()
 }
 const bookingRules = {
@@ -390,10 +410,87 @@ const submitBooking = async () => {
       console.error('预约失败:', error)
       ElMessage.error('预约失败')
     } finally {
-      submitting.value = false
+      submittingEvaluation.value = false
     }
   })
 }
+
+// 取消预约
+const handleCancel = async (row) => {
+  try {
+    await ElMessageBox.confirm(
+      `确定要取消"${row.serviceName}"预约吗？`,
+      '警告',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
+
+    // 调用取消预约API
+    const response = await cancelServiceAppointment(row.id)
+    if (response.code === 200) {
+      ElMessage.success('预约已取消')
+      // 更新本地状态
+      const index = myAppointments.value.findIndex(item => item.id === row.id)
+      if (index !== -1) {
+        myAppointments.value[index].status = '已取消'
+      }
+    }
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('取消预约失败:', error)
+      ElMessage.error('取消预约失败')
+    }
+  }
+  if (activeTab.value === 'my') {
+    fetchMyAppointments()
+  }
+}
+
+// 打开评价对话框
+const openEvaluationDialog = (appointment) => {
+  currentAppointment.value = appointment
+  evaluationForm.rating = 5
+  evaluationForm.content = ''
+  evaluationDialogVisible.value = true
+}
+
+// 提交服务评价
+const submitEvaluation = async () => {
+  await evaluationFormRef.value.validate(async (valid) => {
+    if (!valid) return
+
+    submittingEvaluation.value = true
+    try {
+      const response = await evaluateService(currentAppointment.value.id, evaluationForm)
+      if (response.code === 200) {
+        ElMessage.success('评价提交成功')
+        evaluationDialogVisible.value = false
+        
+        // 更新本地状态
+        const index = myAppointments.value.findIndex(item => item.id === currentAppointment.value.id)
+        if (index !== -1) {
+          myAppointments.value[index].evaluated = true
+        }
+        
+        // 刷新预约列表
+        fetchMyAppointments()
+      }
+    } catch (error) {
+      console.error('评价提交失败:', error)
+      ElMessage.error('评价提交失败')
+    } finally {
+      submittingEvaluation.value = false
+    }
+  })
+}
+// 组件挂载时获取数据
+onMounted(() => {
+  fetchServices()
+  fetchMyAppointments()
+})
 </script>
 <style scoped>
 .service-view {
@@ -408,5 +505,32 @@ h3 {
   margin-bottom: 20px;
   color: #2c3e50;
   font-weight: 600;
+}
+
+.filter-container {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+  gap: 15px;
+}
+
+.search-input {
+  width: 220px;
+}
+
+.pagination {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+}
+
+.el-table {
+  margin-bottom: 10px;
 }
 </style>

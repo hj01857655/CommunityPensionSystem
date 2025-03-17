@@ -94,12 +94,12 @@
               <el-row :gutter="20">
                 <el-col :span="12">
                   <el-form-item label="关联老人">
-                    <el-input v-model="userStore.elderInfo?.name" disabled />
+                    <el-input :value="userStore.elderInfo?.name" disabled />
                   </el-form-item>
                 </el-col>
                 <el-col :span="12">
                   <el-form-item label="与老人关系">
-                    <el-input v-model="userStore.kinInfo?.relationship" :disabled="!isEditMode" />
+                    <el-input :value="userStore.kinInfo?.relationship" :disabled="!isEditMode" />
                   </el-form-item>
                 </el-col>
               </el-row>

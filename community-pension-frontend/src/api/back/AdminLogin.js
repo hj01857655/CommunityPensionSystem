@@ -1,7 +1,6 @@
 import axios from '@/utils/axios';
 import { TokenManager } from '@/utils/axios';
 
-// 管理员登录
 export const adminLogin = async (data) => {
     try {
         const response = await axios.post('/api/users/adminLogin', {
@@ -11,14 +10,6 @@ export const adminLogin = async (data) => {
         });
 
         if (response.code === 200) {
-            // 保存管理员信息到会话存储
-            if (response.data && response.data.user) {
-                sessionStorage.setItem("adminInfo", JSON.stringify(response.data.user));
-                sessionStorage.setItem("roleId", JSON.stringify(response.data.user.roleId));
-                sessionStorage.setItem("isAdminLoggedIn", "true");
-            }
-
-            // 存储token
             if (response.data && response.data.accessToken && response.data.refreshToken) {
                 TokenManager.admin.set(response.data.accessToken, response.data.refreshToken);
             }
@@ -29,7 +20,7 @@ export const adminLogin = async (data) => {
         console.error('登录错误:', error);
         throw error;
     }
-}
+};
 
 // 管理员退出
 export const adminLogout = async () => {

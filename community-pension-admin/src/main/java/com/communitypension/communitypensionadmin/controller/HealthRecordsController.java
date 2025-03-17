@@ -1,5 +1,6 @@
 package com.communitypension.communitypensionadmin.controller;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.communitypension.communitypensionadmin.entity.HealthRecords;
 import com.communitypension.communitypensionadmin.service.HealthRecordsService;
 import com.communitypension.communitypensionadmin.utils.Result;
@@ -31,16 +32,41 @@ public class HealthRecordsController {
     private HealthRecordsService healthRecordsService;
 
     /**
+     * 获取健康档案列表
+     *
+     * @param page 页码
+     * @param size 每页记录数
+     * @return 健康档案列表
+     */
+    @GetMapping("list")
+    @Operation(summary = "获取健康档案列表", description = "获取健康档案列表，支持分页")
+    public Result<Page<HealthRecords>> listHealthRecords(
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size) {
+        log.info("获取健康档案列表，页码: {}, 每页记录数: {}", page, size);
+        try {
+            Page<HealthRecords> pageRequest = new Page<>(page, size);
+            Page<HealthRecords> healthRecordsPage = healthRecordsService.findAll(pageRequest);
+
+            return Result.success("健康档案列表查询成功", healthRecordsPage);
+        } catch (Exception e) {
+            log.error("获取健康档案列表失败，错误: {}", e.getMessage(), e);
+            return Result.error(500, "获取健康档案列表失败: " + e.getMessage());
+        }
+    }
+
+    /**
      * 获取健康档案
+     *
      * @param elderId 老人ID
      * @return 健康档案信息
      */
 
 
-   @Operation(summary = "获取健康档案", description = "根据老人ID获取健康档案信息")
-    @GetMapping("getHealthRecords") public Result<HealthRecords> getHealthRecords(
-            @Parameter(description = "老人ID", required = true)
-            @RequestParam("elderId") @NotNull(message = "老人ID不能为空") Long elderId) {
+    @Operation(summary = "获取健康档案", description = "根据老人ID获取健康档案信息")
+    @GetMapping("getHealthRecords")
+    @Parameter(description = "老人ID", required = true)
+    public Result<HealthRecords> getHealthRecords(@RequestParam("elderId") @NotNull(message = "老人ID不能为空") Long elderId) {
         log.info("获取健康档案，老人ID: {}", elderId);
         try {
             HealthRecords healthRecords = healthRecordsService.getHealthRecordsWithElderInfoByElderId(elderId);
@@ -48,7 +74,7 @@ public class HealthRecordsController {
                 log.warn("健康档案不存在，老人ID: {}", elderId);
                 return Result.error(404, "健康档案不存在");
             } else {
-                return Result.success("查询成功", healthRecords);
+                return Result.success("健康档案查询成功", healthRecords);
             }
         } catch (Exception e) {
             log.error("获取健康档案失败，老人ID: {}, 错误: {}", elderId, e.getMessage(), e);
@@ -63,6 +89,7 @@ public class HealthRecordsController {
 
     /**
      * 添加健康档案
+     *
      * @param healthRecords 健康档案信息
      * @return 添加结果
      */
@@ -99,14 +126,14 @@ public class HealthRecordsController {
             log.warn("健康档案添加失败，参数错误: {}", e.getMessage());
             return Result.error(400, e.getMessage());
         } catch (Exception e) {
-            log.error("添加健康档案失败，老人ID: {}, 错误: {}",
-                    healthRecords.getElderId(), e.getMessage(), e);
+            log.error("添加健康档案失败，老人ID: {}, 错误: {}", healthRecords.getElderId(), e.getMessage(), e);
             return Result.error(500, "添加健康档案失败: " + e.getMessage());
         }
     }
 
     /**
      * 更新健康档案
+     *
      * @param healthRecords 健康档案信息
      * @return 更新结果
      */
@@ -114,8 +141,7 @@ public class HealthRecordsController {
     @Operation(summary = "更新健康档案", description = "更新健康档案信息")
     @Transactional(rollbackFor = Exception.class)
     public Result<HealthRecords> updateHealthRecords(@RequestBody @Valid HealthRecords healthRecords) {
-        log.info("更新健康档案，ID: {}, 老人ID: {}",
-                healthRecords.getId(), healthRecords.getElderId());
+        log.info("更新健康档案，ID: {}, 老人ID: {}", healthRecords.getId(), healthRecords.getElderId());
         try {
             // 参数验证
             if (healthRecords.getId() == null) {
@@ -147,14 +173,14 @@ public class HealthRecordsController {
             log.warn("健康档案更新失败，参数错误: {}", e.getMessage());
             return Result.error(400, e.getMessage());
         } catch (Exception e) {
-            log.error("更新健康档案失败，ID: {}, 错误: {}",
-                    healthRecords.getId(), e.getMessage(), e);
+            log.error("更新健康档案失败，ID: {}, 错误: {}", healthRecords.getId(), e.getMessage(), e);
             return Result.error(500, "更新健康档案失败: " + e.getMessage());
         }
     }
 
     /**
      * 验证健康数据是否在合理范围内
+     *
      * @param healthRecords 健康记录
      * @throws IllegalArgumentException 如果数据不在合理范围内
      */
@@ -163,8 +189,7 @@ public class HealthRecordsController {
         if (healthRecords.getHeight() != null) {
             BigDecimal minHeight = new BigDecimal("100");
             BigDecimal maxHeight = new BigDecimal("250");
-            if (healthRecords.getHeight().compareTo(minHeight) < 0 ||
-                    healthRecords.getHeight().compareTo(maxHeight) > 0) {
+            if (healthRecords.getHeight().compareTo(minHeight) < 0 || healthRecords.getHeight().compareTo(maxHeight) > 0) {
                 throw new IllegalArgumentException("身高应在100-250cm之间");
             }
         }
@@ -173,8 +198,7 @@ public class HealthRecordsController {
         if (healthRecords.getWeight() != null) {
             BigDecimal minWeight = new BigDecimal("30");
             BigDecimal maxWeight = new BigDecimal("200");
-            if (healthRecords.getWeight().compareTo(minWeight) < 0 ||
-                    healthRecords.getWeight().compareTo(maxWeight) > 0) {
+            if (healthRecords.getWeight().compareTo(minWeight) < 0 || healthRecords.getWeight().compareTo(maxWeight) > 0) {
                 throw new IllegalArgumentException("体重应在30-200kg之间");
             }
         }
@@ -199,8 +223,7 @@ public class HealthRecordsController {
         if (healthRecords.getBloodSugar() != null) {
             BigDecimal minBloodSugar = new BigDecimal("2");
             BigDecimal maxBloodSugar = new BigDecimal("30");
-            if (healthRecords.getBloodSugar().compareTo(minBloodSugar) < 0 ||
-                    healthRecords.getBloodSugar().compareTo(maxBloodSugar) > 0) {
+            if (healthRecords.getBloodSugar().compareTo(minBloodSugar) < 0 || healthRecords.getBloodSugar().compareTo(maxBloodSugar) > 0) {
                 throw new IllegalArgumentException("血糖值应在2-30mmol/L之间");
             }
         }
@@ -208,15 +231,14 @@ public class HealthRecordsController {
 
     /**
      * 删除健康档案（可选功能）
+     *
      * @param id 健康档案ID
      * @return 删除结果
      */
     @DeleteMapping("/{id}")
     @Operation(summary = "删除健康档案", description = "删除健康档案信息")
     @Transactional(rollbackFor = Exception.class)
-    public Result<Void> deleteHealthRecord(
-            @Parameter(description = "健康档案ID", required = true)
-            @PathVariable @NotNull(message = "ID不能为空") Long id) {
+    public Result<Void> deleteHealthRecord(@Parameter(description = "健康档案ID", required = true) @PathVariable @NotNull(message = "ID不能为空") Long id) {
         log.info("删除健康档案，ID: {}", id);
         try {
             // 检查记录是否存在

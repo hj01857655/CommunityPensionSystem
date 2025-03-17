@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { getElderList, getElderById, addElder, updateElder, deleteElder } from '@/api/back/UserManage/ElderManage'
+import { getElderList, getElderById, addElder, updateElder, deleteElder, getElders } from '@/api/back/UserManage/ElderManage'
 import { ElMessage } from 'element-plus'
 
 export const useElderStore = defineStore('elder', {
@@ -9,31 +9,35 @@ export const useElderStore = defineStore('elder', {
     currentPage: 1,
     pageSize: 10,
     loading: false,
-    searchQuery: ''
+    searchQuery: '',
   }),
 
   actions: {
     // 获取老人列表
     async fetchElders() {
-      this.loading = true
+      this.loading = true;
       try {
         const params = {
           current: this.currentPage,
           size: this.pageSize,
-          query: this.searchQuery
-        }
-        const response = await getElders(params)
-        if (response.code === 200) {
-          this.elderList = response.data.records
-          this.total = response.data.total
-        } else {
-          ElMessage.error(response.message || '获取老人列表失败')
+          query: this.searchQuery,
+        };
+        console.log(params);
+        const response = await getElderList(params);
+        console.log(response);
+
+        if (response.data) {
+          const { records, total } = response.data;
+          this.elderList = records;
+          this.total = total;
         }
       } catch (error) {
-        console.error('获取老人列表出错:', error)
-        ElMessage.error('获取老人列表失败')
+        console.error('获取老人列表出错:', error);
+        ElMessage.error('获取老人列表失败');
+        this.elderList = [];
+        this.total = 0;
       } finally {
-        this.loading = false
+        this.loading = false;
       }
     },
 
@@ -94,24 +98,6 @@ export const useElderStore = defineStore('elder', {
       }
     },
 
-    // 设置分页
-    setPage(page) {
-      this.currentPage = page
-      this.fetchElders()
-    },
-
-    // 设置每页数量
-    setPageSize(size) {
-      this.pageSize = size
-      this.currentPage = 1
-      this.fetchElders()
-    },
-
-    // 设置搜索关键词
-    setSearchQuery(query) {
-      this.searchQuery = query
-      this.currentPage = 1
-      this.fetchElders()
-    }
+    
   }
 })

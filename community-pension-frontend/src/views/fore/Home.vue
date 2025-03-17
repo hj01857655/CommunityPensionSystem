@@ -75,6 +75,7 @@ const handleUpdateActiveIndex = (event) => {
 };
 
 onMounted(() => {
+  // 检查用户是否已登录
   if (!userStore.isLoggedIn || !localStorage.getItem("isLoggedIn")) {
     router.push('/login');
   } else {

@@ -7,6 +7,7 @@ import com.communitypension.communitypensionadmin.entity.HealthRecords;
 import com.communitypension.communitypensionadmin.service.ElderService;
 import com.communitypension.communitypensionadmin.utils.Result;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
@@ -22,6 +23,7 @@ import java.util.List;
 
 public class ElderController {
     private final ElderService elderService;
+    private final static Logger logger = org.slf4j.LoggerFactory.getLogger(ElderController.class);
 
     @Autowired
     public ElderController(ElderService elderService) {
@@ -44,7 +46,13 @@ public class ElderController {
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String idCard,
             @RequestParam(required = false) String healthCondition) {
-        
+        logger.info("分页查询老人信息列表，参数：current = {}, size = {}, name = {}, idCard = {}, healthCondition = {}",
+                current, size, name, idCard, healthCondition);
+        // 参数校验
+        if (current <= 0 || size <= 0) {
+            return Result.error("分页参数不合法");
+        }
+
         LambdaQueryWrapper<Elder> queryWrapper = new LambdaQueryWrapper<>();
         if (StringUtils.hasText(name)) {
             queryWrapper.like(Elder::getName, name);
@@ -55,17 +63,22 @@ public class ElderController {
         if (StringUtils.hasText(healthCondition)) {
             queryWrapper.like(Elder::getHealthCondition, healthCondition);
         }
-        queryWrapper.orderByDesc(Elder::getId);
+        queryWrapper.orderByAsc(Elder::getId);
 
-        Page<Elder> page = elderService.page(new Page<>(current, size), queryWrapper);
-        // 对身份证号进行脱敏处理
-        page.getRecords().forEach(elder -> {
-            String id = elder.getIdCard();
-            if (StringUtils.hasText(id)) {
-                elder.setIdCard(id.substring(0, 4) + "********" + id.substring(id.length() - 4));
-            }
-        });
-        return Result.success("查询成功", page);
+        try {
+            Page<Elder> page = elderService.page(new Page<>(current, size), queryWrapper);
+            // 对身份证号进行脱敏处理
+            page.getRecords().forEach(elder -> {
+                String id = elder.getIdCard();
+                if (StringUtils.hasText(id)) {
+                    elder.setIdCard(id.substring(0, 4) + "********" + id.substring(id.length() - 4));
+                }
+            });
+            return Result.success("查询老人成功", page);
+        } catch (Exception e) {
+            // 异常处理
+            return Result.error("查询过程中发生错误");
+        }
     }
 
     /**

@@ -78,43 +78,38 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { ElMessage, ElNotification } from 'element-plus'
-import { User, Lock } from '@element-plus/icons-vue'
-import { adminLogin } from '@/api/back/AdminLogin'
-const router = useRouter()
-const loginFormRef = ref(null)
-const forgotFormRef = ref(null)
-const loading = ref(false)
-// 重置密码加载中
-const resetLoading = ref(false)
-// 密码是否可见
-const passwordVisible = ref(false)
-// 忘记密码对话框
-const forgotPasswordVisible = ref(false)
-// 当前年份
-const currentYear = computed(() => new Date().getFullYear())
+import { ref, reactive, computed, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+import { ElMessage } from 'element-plus';
+import { User, Lock } from '@element-plus/icons-vue';
+import { useAdminStore } from '@/stores/back/adminStore';
 
-
-// 登录表单
+const router = useRouter();
+const adminStore = useAdminStore();
+const loginFormRef = ref(null);
+const forgotFormRef = ref(null);
+const loading = ref(false);
+const resetLoading = ref(false);
+const passwordVisible = ref(false);
+const forgotPasswordVisible = ref(false);
+const currentYear = computed(() => new Date().getFullYear());
 
 const loginForm = reactive({
   username: '',
   password: '',
   roleId: '4'
-})
-const remember = ref(true)
-// 忘记密码表单
+});
+const remember = ref(true);
+
 const forgotForm = reactive({
   username: '',
   email: ''
-})
+});
+
 const onRoleChange = (value) => {
-  console.log("角色选择", value);
-  loginForm.roleId = value
-}
-// 登录表单验证规则
+  loginForm.roleId = value;
+};
+
 const loginRules = {
   username: [
     { required: true, message: '请输入用户名', trigger: 'blur' },
@@ -127,9 +122,8 @@ const loginRules = {
   roleId: [
     { required: true, message: '请选择角色', trigger: 'change' }
   ]
-}
+};
 
-// 忘记密码表单验证规则
 const forgotRules = {
   username: [
     { required: true, message: '请输入用户名', trigger: 'blur' }
@@ -138,92 +132,81 @@ const forgotRules = {
     { required: true, message: '请输入邮箱', trigger: 'blur' },
     { type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur' }
   ]
-}
+};
+
 // 处理登录
 const handleLogin = async () => {
-  // 如果登录表单不存在，则返回
-  if (!loginFormRef.value) return
-  // 验证登录表单
+  if (!loginFormRef.value) return;
   await loginFormRef.value.validate(async (valid) => {
     if (!valid) {
-      return false
+      return false;
     }
-    // 如果验证通过，则进行登录
     try {
-      loading.value = true
-      const res = await adminLogin(loginForm)
-      console.log("登录结果", res)
-      // 如果登录成功，则跳转到首页
+      loading.value = true;
+      const res = await adminStore.login(loginForm);
       if (res.code === 200) {
-        ElMessage.success('登录成功')
-        // 如果记住用户名选项被勾选，则保存用户名和角色到localStorage
+        ElMessage.success('登录成功');
         if (remember.value) {
-          sessionStorage.setItem('rememberedUsername', loginForm.username)
-          sessionStorage.setItem('rememberedRole', loginForm.roleId)
+          sessionStorage.setItem('rememberedUsername', loginForm.username);
+          sessionStorage.setItem('rememberedRole', loginForm.roleId);
         } else {
-          sessionStorage.removeItem('rememberedUsername')
-          sessionStorage.removeItem('rememberedRole')
+          sessionStorage.removeItem('rememberedUsername');
+          sessionStorage.removeItem('rememberedRole');
         }
-        // 延迟跳转，确保token和用户信息已经保存
         setTimeout(() => {
-          router.push('/admin/analysis/dashboard')
-        }, 300)
+          router.push('/admin/analysis/dashboard');
+        }, 300);
       }
     } catch (error) {
-      console.error('登录失败:', error)
-      ElMessage.error(error.message || '登录失败，请稍后重试')
+      console.error('登录失败:', error);
+      ElMessage.error(error.message || '登录失败，请稍后重试');
     } finally {
-      loading.value = false
+      loading.value = false;
     }
-  })
-}
+  });
+};
 
 // 处理忘记密码
 const handleForgotPassword = () => {
-  forgotPasswordVisible.value = true
-}
+  forgotPasswordVisible.value = true;
+};
 
 // 处理重置密码
 const handleResetPassword = async () => {
-  if (!forgotFormRef.value) return
+  if (!forgotFormRef.value) return;
 
   await forgotFormRef.value.validate(async (valid) => {
     if (!valid) {
-      return false
+      return false;
     }
 
     try {
-      resetLoading.value = true
-
-      // 模拟API请求
-      await new Promise(resolve => setTimeout(resolve, 1500))
-
-      ElMessage.success('重置密码链接已发送到您的邮箱，请查收')
-      forgotPasswordVisible.value = false
+      resetLoading.value = true;
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      ElMessage.success('重置密码链接已发送到您的邮箱，请查收');
+      forgotPasswordVisible.value = false;
     } catch (error) {
-      console.error('重置密码失败:', error)
-      console.error('重置密码失败，请稍后重试')
+      console.error('重置密码失败:', error);
+      ElMessage.error('重置密码失败，请稍后重试');
     } finally {
-      resetLoading.value = false
+      resetLoading.value = false;
     }
-  })
-}
+  });
+};
 
-// 检查是否有记住的用户名和角色
 onMounted(() => {
-  // 仍然从localStorage获取记住的用户名和角色，因为这是登录页面特有的功能
-  const rememberedUsername = sessionStorage.getItem('rememberedUsername')
-  const rememberedRole = sessionStorage.getItem('rememberedRole')
+  const rememberedUsername = sessionStorage.getItem('rememberedUsername');
+  const rememberedRole = sessionStorage.getItem('rememberedRole');
 
   if (rememberedUsername) {
-    loginForm.username = rememberedUsername
-    remember.value = true
+    loginForm.username = rememberedUsername;
+    remember.value = true;
   }
 
   if (rememberedRole) {
-    loginForm.roleId = rememberedRole
+    loginForm.roleId = rememberedRole;
   }
-})
+});
 </script>
 
 

@@ -59,7 +59,6 @@
 
 <script setup>
 import { ArrowRight } from '@element-plus/icons-vue';
-import { useRouter } from 'vue-router';
 
 const props = defineProps({
     title: {
@@ -124,10 +123,9 @@ const props = defineProps({
         type: String,
         default: ''
     }
-})
+});
 
-const emit = defineEmits(['more'])
-const router = useRouter()
+const emit = defineEmits(['more']);
 
 const emitMore = () => {
     if (!props.loading) {

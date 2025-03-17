@@ -82,10 +82,11 @@ const submitForm = async () => {
         console.log("登录接口在view中返回", response);
         //如果接口返回数据成功，view中是code
         if (response.code === 200&&response.data&&response.message) {
-          console.log("登录接口返回", response.data);
+          console.log("前台登录页面登录成功返回", response.data);
+          console.log("跳转到首页");
           router.push("/home");
         }else if(response.code==401){
-          ElMessage.error(response.message);
+          console.log("登录失败，跳转到登录页面");
           router.push("/login");
         }
       } catch (err) {

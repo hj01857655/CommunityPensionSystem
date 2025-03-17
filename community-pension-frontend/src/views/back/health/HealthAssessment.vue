@@ -154,6 +154,7 @@ import { ref, computed, onMounted } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { Search } from '@element-plus/icons-vue';
 import { formatDate } from '@/utils/date';
+import { getElderList } from '@/api/back/UserManage/ElderManage';
 // 评估列表数据
 const assessments = ref([])
 const loading = ref(false)
@@ -241,7 +242,7 @@ const initData = async () => {
   try {
     loading.value = true;
     const [elderRes, staffRes, assessmentRes] = await Promise.all([
-      getElders(),
+      elderStore.fetchElders(),
       getStaffList(),
       getHealthAssessmentList()
     ]);

@@ -46,31 +46,25 @@ export const useUserStore = defineStore('user', {
   actions: {
     // 登录
     async login(data) {
-      try{
+      try {
         const response = await userLogin(data);
-        //将数据传递给store
-        if(response.code==200&&response.data&&response.message=="登录成功"){
-          console.log("登录接口在store中返回数据", response);
-          //将数据存储到本地
-          localStorage.setItem("userInfo",JSON.stringify(response.data.user));
-          localStorage.setItem("elderInfo",JSON.stringify(response.data.user.elder));
-          localStorage.setItem("kinInfo",JSON.stringify(response.data.user.kin));
-          localStorage.setItem("roleId",JSON.stringify(response.data.user.roleId));
-          localStorage.setItem("isLoggedIn",true);
+        if (response.code == 200 && response.data && response.message == "登录成功") {
+          localStorage.setItem("isLoggedIn", "true");
+          this.isLoggedIn = true;
           //将数据传递给store
           this.userInfo = response.data.user;
           this.elderInfo = response.data.user.elder;
           this.kinInfo = response.data.user.kin;
           this.roleId = response.data.user.roleId;
-          this.isLoggedIn = true;
-      
+          localStorage.setItem("userInfo", JSON.stringify(response.data.user));
+          localStorage.setItem("elderInfo", JSON.stringify(response.data.user.elder));
+          localStorage.setItem("kinInfo", JSON.stringify(response.data.user.kin));
+          localStorage.setItem("roleId", response.data.user.roleId);
           //使用tokenManager存储token
           TokenManager.user.set(response.data.accessToken,response.data.refreshToken);
-          //设置登录状态
-
         }
         return response;
-      }catch(error){
+      } catch (error) {
         console.error("登录错误", error);
         throw new Error('登录过程中发生错误，请稍后再试');
       }

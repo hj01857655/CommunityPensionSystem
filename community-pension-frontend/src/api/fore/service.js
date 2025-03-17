@@ -1,13 +1,15 @@
-import request from '@/utils/axios';
+import axios from '@/utils/axios';
 
 // 获取服务列表
-export function getServiceList(params) {
-  return request({
-    url: '/api/services',
-    method: 'get',
-    params
-  });
-}
+export const getServiceList = async () => {
+  try {
+    const response = await axios.get('/api/services');
+    return response;
+  } catch (error) {
+    console.error('获取服务列表失败:', error);
+    throw error;
+  }
+};
 
 // 获取服务详情
 export function getServiceDetail(id) {

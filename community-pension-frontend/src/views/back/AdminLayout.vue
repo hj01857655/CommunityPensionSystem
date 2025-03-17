@@ -79,9 +79,9 @@
               </el-icon>
               <span>服务预约管理</span>
             </template>
-            <el-menu-item index="/admin/services/serviceType">服务类型管理</el-menu-item>
-            <el-menu-item index="/admin/services/serviceAppointment">服务预约管理</el-menu-item>
-            <el-menu-item index="/admin/services/serviceEvaluation">服务评价管理</el-menu-item>
+            <el-menu-item index="/admin/services/service">服务项目管理</el-menu-item>
+            <el-menu-item index="/admin/services/appointment">服务预约管理</el-menu-item>
+            <el-menu-item index="/admin/services/evaluation">服务评价管理</el-menu-item>
           </el-sub-menu>
           <!-- 健康监测管理 -->
           <el-sub-menu index="/admin/health">
@@ -158,9 +158,9 @@
             <el-dropdown trigger="click" @command="handleCommand">
               <span class="user-info">
                 <!-- 用户头像 -->
-                <el-avatar :size="32" :src="userInfo.avatarUrl" />
+                <el-avatar :size="32" :src="adminStore.avatarUrl" />
                 <!-- 用户名 -->
-                <span class="username">{{ userInfo.username }}</span>
+                <span class="username">{{ adminStore.adminInfo.username }}</span>
                 <!-- 下拉箭头 -->
                 <el-icon>
                   <ArrowDown />
@@ -169,9 +169,9 @@
               <!-- 下拉菜单 -->
               <template #dropdown>
                 <el-dropdown-menu>
-                 <el-dropdown-item command="profile" @click="navigateTo('/admin/system/info')">个人信息</el-dropdown-item>
+                  <el-dropdown-item command="profile" @click="navigateTo('/admin/system/info')">个人信息</el-dropdown-item>
                   <el-dropdown-item command="password" @click="navigateTo('/admin/system/password')">修改密码</el-dropdown-item>
-                  <el-dropdown-item divided command="logout" @click="handleLogout">退出登录</el-dropdown-item>
+                  <el-dropdown-item divided command="logout">退出登录</el-dropdown-item>
                 </el-dropdown-menu>
               </template>
             </el-dropdown>
@@ -194,15 +194,19 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import { ElMessage, ElMessageBox, ElNotification } from 'element-plus';
+import { ElMessage, ElMessageBox } from 'element-plus';
 import { Odometer, User, Service, FirstAidKit, Calendar, Bell, Setting, ArrowDown, HomeFilled, Expand, Fold } from '@element-plus/icons-vue';
+import { useAdminStore } from '@/stores/back/adminStore';
+
+const adminStore = useAdminStore();
 
 // 路由
-const router = useRouter()
-// 计算当前路由名称
+const router = useRouter();
 const route = useRoute();
+
 // 侧边栏折叠状态
-const isCollapse = ref(false)
+const isCollapse = ref(false);
+
 const roleMap = ref({
   '1': '老人',
   '2': '亲属',
@@ -210,17 +214,10 @@ const roleMap = ref({
   '4': '管理员',
   '5': '访客'
 })
-const userInfo = ref({})
 
 const navigateTo = (path) => {
-  router.push(path)
-}
-const handleLogout = () => {
-  router.push('/admin/login')
-  ElMessage.success('退出登录成功')
-}
-onMounted(()=>{
-})
+  router.push(path);
+};
 
 const currentRoute = computed(() => {
   const matched = route.matched;
@@ -237,8 +234,8 @@ const activeMenu = computed(() => {
 
 // 切换侧边栏
 const toggleSidebar = () => {
-  isCollapse.value = !isCollapse.value
-}
+  isCollapse.value = !isCollapse.value;
+};
 
 // 处理下拉菜单命令
 const handleCommand = (command) => {
@@ -248,18 +245,15 @@ const handleCommand = (command) => {
       cancelButtonText: '取消',
       type: 'warning'
     }).then(() => {
-      router.push('/admin/login')
-      ElMessage.success('退出登录成功')
-    }).catch(() => { })
-  } else if (command === 'info') {
-    // 跳转到个人信息页面
-    router.push('/admin/system/info')
+      router.push('/admin/login');
+      ElMessage.success('退出登录成功');
+    }).catch(() => {});
+  } else if (command === 'profile') {
+    router.push('/admin/system/info');
   } else if (command === 'password') {
-    // 跳转到修改密码页面
-    router.push('/admin/system/password')
+    router.push('/admin/system/password');
   }
-}
-
+};
 </script>
 
 <style scoped>

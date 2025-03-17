@@ -7,7 +7,7 @@ import axios from '@/utils/axios';
 /**
  * 获取老人列表（带分页和查询条件）
  * @param {Object} params - 查询参数
- * @param {number} params.page - 页码
+ * @param {number} params.current - 页码
  * @param {number} params.size - 每页数量
  * @param {string} [params.query] - 搜索关键词
  * @param {string} [params.sortBy] - 排序字段
@@ -16,7 +16,7 @@ import axios from '@/utils/axios';
  */
 export const getElderList = async (params) => {
     try {
-        const response = await axios.get('/api/elders/list', { params });
+        const response = await axios.get('/api/elders', { params });
         return response;
     } catch (error) {
         console.error('获取老人列表失败:', error);
@@ -184,4 +184,13 @@ export const importElders = async (file) => {
         console.error('导入老人信息失败:', error);
         throw error;
     }
+};
+
+// 获取老人列表
+export const getElders = () => {
+    return axios.get('/api/elders')
+        .catch(error => {
+            console.error('Error fetching elders:', error);
+            throw error;
+        });
 };

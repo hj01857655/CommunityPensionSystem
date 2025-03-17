@@ -126,6 +126,45 @@
             <el-input-number v-model="healthForm.weight" :min="30" :max="150" :precision="1" :step="0.1" />
             <span class="unit">kg</span>
           </el-form-item>
+          <el-form-item label="身高" prop="height">
+            <el-input-number v-model="healthForm.height" :min="100" :max="250" :precision="1" :step="0.1" />
+            <span class="unit">cm</span>
+          </el-form-item>
+          <el-form-item label="BMI" prop="bmi">
+            <el-input-number v-model="healthForm.bmi" :min="10" :max="50" :precision="1" :step="0.1" disabled />
+          </el-form-item>
+          <el-form-item label="病史" prop="medicalHistory">
+            <el-input 
+              v-model="healthForm.medicalHistory" 
+              type="textarea" 
+              :rows="3" 
+              placeholder="请输入病史"
+            />
+          </el-form-item>
+          <el-form-item label="过敏史" prop="allergy">
+            <el-input 
+              v-model="healthForm.allergy" 
+              type="textarea" 
+              :rows="3" 
+              placeholder="请输入过敏史"
+            />
+          </el-form-item>
+          <el-form-item label="症状描述" prop="symptoms">
+            <el-input 
+              v-model="healthForm.symptoms" 
+              type="textarea" 
+              :rows="3" 
+              placeholder="请输入症状描述"
+            />
+          </el-form-item>
+          <el-form-item label="用药情况" prop="medication">
+            <el-input 
+              v-model="healthForm.medication" 
+              type="textarea" 
+              :rows="3" 
+              placeholder="请输入用药情况"
+            />
+          </el-form-item>
           <el-form-item label="状态" prop="status">
             <el-select v-model="healthForm.status">
               <el-option label="正常" value="正常" />
@@ -210,83 +249,18 @@
   </template>
   
   <script setup>
-  import { ref, computed, reactive, onMounted } from 'vue'
+  import { ref, computed, onMounted } from 'vue'
   import { ElMessage, ElMessageBox } from 'element-plus'
   import { Search } from '@element-plus/icons-vue'
+  import { useRoute } from 'vue-router'
+  import axios from 'axios'
+  import { useHealthStore } from '@/stores/back/healthStore'
+  
+  const healthStore = useHealthStore()
   
   // 健康记录列表数据
-  const healthRecords = ref([
-    {
-      id: 1,
-      elderId: 1,
-      elderName: '张大爷',
-      recordTime: '2025-02-25 09:30',
-      bloodPressure: '120/80',
-      heartRate: 75,
-      bloodSugar: 5.6,
-      temperature: 36.5,
-      weight: 65,
-      height: 170,
-      status: '正常',
-      recorder: '李护士',
-      remark: '一切正常，继续保持良好的生活习惯'
-    },
-    {
-      id: 2,
-      elderId: 2,
-      elderName: '李奶奶',
-      recordTime: '2025-02-24 14:15',
-      bloodPressure: '135/85',
-      heartRate: 82,
-      bloodSugar: 6.8,
-      temperature: 36.7,
-      weight: 58,
-      height: 160,
-      status: '需关注',
-      recorder: '王医生',
-      remark: '血糖偏高，建议减少糖分摄入，一周后复查'
-    },
-    {
-      id: 3,
-      elderId: 3,
-      elderName: '王大爷',
-      recordTime: '2025-02-23 10:45',
-      bloodPressure: '125/75',
-      heartRate: 68,
-      bloodSugar: 5.2,
-      temperature: 36.4,
-      weight: 70,
-      height: 175,
-      status: '正常',
-      recorder: '李护士',
-      remark: '各项指标正常'
-    },
-    {
-      id: 4,
-      elderId: 4,
-      elderName: '赵奶奶',
-      recordTime: '2025-02-22 16:30',
-      bloodPressure: '150/95',
-      heartRate: 88,
-      bloodSugar: 7.2,
-      temperature: 37.1,
-      weight: 62,
-      height: 158,
-      status: '异常',
-      recorder: '张医生',
-      remark: '血压偏高，已调整用药，需密切观察'
-    }
-  ])
-  
-  // 老人选项
-  const elderOptions = ref([
-    { id: 1, name: '张大爷' },
-    { id: 2, name: '李奶奶' },
-    { id: 3, name: '王大爷' },
-    { id: 4, name: '赵奶奶' }
-  ])
-  
-  // 分页和搜索
+  const healthRecords = ref([])
+  const elderOptions = ref([])
   const loading = ref(false)
   const currentPage = ref(1)
   const pageSize = ref(10)
@@ -310,8 +284,7 @@
   const detailDialogVisible = ref(false)
   const dialogType = ref('add') // 'add' 或 'edit'
   const healthFormRef = ref(null)
-  const healthForm = reactive({
-    id: '',
+  const healthForm = ref({
     elderId: '',
     recordTime: '',
     bloodPressure: '',
@@ -319,6 +292,12 @@
     bloodSugar: 5.6,
     temperature: 36.5,
     weight: 65,
+    height: 170,
+    bmi: 0,
+    medicalHistory: '',
+    allergy: '',
+    symptoms: '',
+    medication: '',
     status: '正常',
     remark: ''
   })
@@ -335,42 +314,46 @@
     bloodPressure: [
       { required: true, message: '请输入血压', trigger: 'blur' },
       { pattern: /^\d{2,3}\/\d{2,3}$/, message: '请输入正确的血压格式，如120/80', trigger: 'blur' },
-    { validator: (rule, value, callback) => {
-      if (value) {
-        const [systolic, diastolic] = value.split('/')
-        if (parseInt(systolic) < 60 || parseInt(systolic) > 200 || parseInt(diastolic) < 40 || parseInt(diastolic) > 120) {
-          callback(new Error('血压数值超出正常范围'))
+      { validator: (rule, value, callback) => {
+        if (value) {
+          const [systolic, diastolic] = value.split('/')
+          if (parseInt(systolic) < 60 || parseInt(systolic) > 200 || parseInt(diastolic) < 40 || parseInt(diastolic) > 120) {
+            callback(new Error('血压数值超出正常范围'))
+          } else {
+            callback()
+          }
         } else {
           callback()
         }
-      } else {
-        callback()
-      }
-    }, trigger: 'blur' }
-  ],
-  heartRate: [
-    { required: true, message: '请输入心率', trigger: 'blur' },
-    { type: 'number', min: 40, max: 200, message: '心率应在40-200次/分钟之间', trigger: 'blur' }
-  ],
-  bloodSugar: [
-    { required: true, message: '请输入血糖', trigger: 'blur' },
-    { type: 'number', min: 2, max: 30, message: '血糖值应在2-30mmol/L之间', trigger: 'blur' }
-  ],
-  temperature: [
-    { required: true, message: '请输入体温', trigger: 'blur' },
-    { type: 'number', min: 35, max: 42, message: '体温应在35-42°C之间', trigger: 'blur' }
-  ],
-  weight: [
-    { required: true, message: '请输入体重', trigger: 'blur' },
-    { type: 'number', min: 30, max: 150, message: '体重应在30-150kg之间', trigger: 'blur' }
-  ],
-  status: [
-    { required: true, message: '请选择状态', trigger: 'change' }
-  ],
-  remark: [
-    { max: 500, message: '备注信息不能超过500个字符', trigger: 'blur' }
-  ]
-}
+      }, trigger: 'blur' }
+    ],
+    heartRate: [
+      { required: true, message: '请输入心率', trigger: 'blur' },
+      { type: 'number', min: 40, max: 200, message: '心率应在40-200次/分钟之间', trigger: 'blur' }
+    ],
+    bloodSugar: [
+      { required: true, message: '请输入血糖', trigger: 'blur' },
+      { type: 'number', min: 2, max: 30, message: '血糖值应在2-30mmol/L之间', trigger: 'blur' }
+    ],
+    temperature: [
+      { required: true, message: '请输入体温', trigger: 'blur' },
+      { type: 'number', min: 35, max: 42, message: '体温应在35-42°C之间', trigger: 'blur' }
+    ],
+    weight: [
+      { required: true, message: '请输入体重', trigger: 'blur' },
+      { type: 'number', min: 30, max: 150, message: '体重应在30-150kg之间', trigger: 'blur' }
+    ],
+    height: [
+      { required: true, message: '请输入身高', trigger: 'blur' },
+      { type: 'number', min: 100, max: 250, message: '身高应在100-250cm之间', trigger: 'blur' }
+    ],
+    status: [
+      { required: true, message: '请选择状态', trigger: 'change' }
+    ],
+    remark: [
+      { max: 500, message: '备注信息不能超过500个字符', trigger: 'blur' }
+    ]
+  }
   
   // 获取状态标签类型
   const getStatusType = (status) => {
@@ -385,6 +368,11 @@
   // 搜索健康记录
   const handleSearch = () => {
     currentPage.value = 1
+    healthStore.fetchHealthRecords({
+      elderId: searchQuery.value,
+      page: currentPage.value,
+      size: pageSize.value
+    })
   }
   
   // 添加健康记录
@@ -397,9 +385,9 @@
   // 编辑健康记录
   const handleEdit = (row) => {
     dialogType.value = 'edit'
-    Object.keys(healthForm).forEach(key => {
+    Object.keys(healthForm.value).forEach(key => {
       if (key in row) {
-        healthForm[key] = row[key]
+        healthForm.value[key] = row[key]
       }
     })
     dialogVisible.value = true
@@ -425,9 +413,13 @@
         type: 'warning'
       }
     ).then(() => {
-      // 这里应该调用删除API
-      healthRecords.value = healthRecords.value.filter(record => record.id !== row.id)
-      ElMessage.success('删除成功')
+      healthStore.deleteHealthRecord(row.id)
+        .then(() => {
+          ElMessage.success('删除成功')
+        })
+        .catch(error => {
+          ElMessage.error(`删除失败: ${error.message}`)
+        })
     }).catch(() => {
       // 取消删除
     })
@@ -436,12 +428,13 @@
   // 分页大小变化
   const handleSizeChange = (val) => {
     pageSize.value = val
-    currentPage.value = 1
+    healthStore.fetchAllHealthRecords(currentPage.value, pageSize.value)
   }
   
   // 当前页变化
   const handleCurrentChange = (val) => {
     currentPage.value = val
+    healthStore.fetchAllHealthRecords(currentPage.value, pageSize.value)
   }
   
   // 重置表单
@@ -449,19 +442,23 @@
     if (healthFormRef.value) {
       healthFormRef.value.resetFields()
     }
-    Object.keys(healthForm).forEach(key => {
+    Object.keys(healthForm.value).forEach(key => {
       if (key === 'heartRate') {
-        healthForm[key] = 75
+        healthForm.value[key] = 75
       } else if (key === 'bloodSugar') {
-        healthForm[key] = 5.6
+        healthForm.value[key] = 5.6
       } else if (key === 'temperature') {
-        healthForm[key] = 36.5
+        healthForm.value[key] = 36.5
       } else if (key === 'weight') {
-        healthForm[key] = 65
+        healthForm.value[key] = 65
+      } else if (key === 'height') {
+        healthForm.value[key] = 170
+      } else if (key === 'bmi') {
+        healthForm.value[key] = 0
       } else if (key === 'status') {
-        healthForm[key] = '正常'
+        healthForm.value[key] = '正常'
       } else {
-        healthForm[key] = ''
+        healthForm.value[key] = ''
       }
     })
   }
@@ -470,38 +467,34 @@
   const submitForm = () => {
     healthFormRef.value.validate((valid) => {
       if (valid) {
-        if (dialogType.value === 'add') {
-          // 添加健康记录
-          const elderInfo = elderOptions.value.find(elder => elder.id === healthForm.elderId)
-          const newRecord = {
-            id: healthRecords.value.length + 1,
-            ...healthForm,
-            elderName: elderInfo ? elderInfo.name : '未知'
-          }
-          healthRecords.value.push(newRecord)
-          ElMessage.success('添加健康记录成功')
-        } else {
-          // 编辑健康记录
-          const index = healthRecords.value.findIndex(record => record.id === healthForm.id)
-          if (index !== -1) {
-            const elderInfo = elderOptions.value.find(elder => elder.id === healthForm.elderId)
-            healthRecords.value[index] = { 
-              ...healthForm,
-              elderName: elderInfo ? elderInfo.name : healthRecords.value[index].elderName
-            }
-            ElMessage.success('更新健康记录成功')
-          }
-        }
-        dialogVisible.value = false
-      } else {
-        return false
+        const apiCall = dialogType.value === 'add'
+          ? healthStore.addHealthRecord(healthForm.value)
+          : healthStore.updateHealthRecord(healthForm.value)
+
+        apiCall.then(() => {
+          ElMessage.success(dialogType.value === 'add' ? '添加健康记录成功' : '更新健康记录成功')
+          dialogVisible.value = false
+          healthStore.fetchHealthRecords({
+            elderId: searchQuery.value,
+            page: currentPage.value,
+            size: pageSize.value
+          })
+        }).catch(error => {
+          ElMessage.error(`操作失败: ${error.message}`)
+        })
       }
     })
   }
   
   onMounted(() => {
-    // 这里可以调用API获取健康记录列表和老人列表
+    healthStore.fetchAllHealthRecords(currentPage.value, pageSize.value)
+    healthStore.fetchElderOptions()
   })
+
+  function getElderIdFromSource() {
+    const route = useRoute();
+    return route.params.elderId;
+  }
   </script>
   
   <style scoped>

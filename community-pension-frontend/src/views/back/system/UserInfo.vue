@@ -8,7 +8,7 @@
                 </div>
             </template>
             <div class="card-content">
-                <el-form :model="adminStore.adminInfo" label-width="120px">
+                <el-form :model="adminInfo" label-width="120px">
                     <!-- 不显示管理员ID -->
                     <el-form-item label="管理员ID" prop="id" style="display: none;">
                         <el-input v-model="adminInfo.id" disabled />
@@ -22,6 +22,9 @@
                     <el-form-item label="管理员状态">
                         <el-switch v-model="statusValue" disabled />
                     </el-form-item>
+                    <el-form-item label="头像">
+                        <el-avatar :src="avatarUrl" size="large" />
+                    </el-form-item>
                 </el-form>
             </div>  
         </el-card>
@@ -31,10 +34,10 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import { useAdminStore } from '@/stores/back/adminStore';
+import { getAvatarUrl } from '@/utils/avatarUtils';
 
 // 初始化adminStore
 const adminStore = useAdminStore();
-
 
 const roleMap = ref({
     '1': '老人',
@@ -45,48 +48,46 @@ const roleMap = ref({
 });
 
 // 管理员信息
-const adminInfo = ref({});
+const adminInfo = ref(adminStore.adminInfo);
 
 // 计算角色显示文本
 const roleDisplay = computed(() => {
-    return roleMap.value[adminInfo.value.roleId] ;
+    return roleMap.value[adminInfo.value.roleId];
 });
 
-// 计算状态值，将数字转换为布尔值
+// 计算状态值，将isActive转换为布尔值
 const statusValue = computed(() => {
-    // 将状态值转换为布尔值，1表示true，其他值表示false
-    return adminInfo.value.status === 1 || adminInfo.value.status === '1';
+    // 确保将isActive值正确映射为布尔值
+    return adminInfo.value.isActive === 1 || adminInfo.value.isActive === '1';
 });
+
+// 计算头像URL
+const avatarUrl = computed(() => getAvatarUrl(adminInfo.value.avatar));
 
 // 获取管理员信息
 const getAdminInfo = async () => {
     try {
-        // 先尝试从store获取信息
         if (adminStore && adminStore.adminInfo && adminStore.adminInfo.username) {
             adminInfo.value = adminStore.adminInfo;
         } else {
-            // 如果store中没有，则尝试从sessionStorage获取
             const adminInfoStr = sessionStorage.getItem('adminInfo');
             if (adminInfoStr) {
                 adminInfo.value = JSON.parse(adminInfoStr);
-                // 同时更新store中的信息
                 if (adminStore) {
                     adminStore.adminInfo = adminInfo.value;
                 }
             } else {
-                // 如果sessionStorage也没有，则使用空对象
                 adminInfo.value = {};
             }
         }
         console.log('当前管理员信息:', adminInfo.value);
     } catch (error) {
         console.error('获取管理员信息出错:', error);
-        adminInfo.value = {}; // 出错时使用空对象
+        adminInfo.value = {};
     }
 };
 
 onMounted(() => {
-    // 确保先初始化adminStore，再获取管理员信息
     if (adminStore && typeof adminStore.initAdminInfo === 'function') {
         adminStore.initAdminInfo();
     }

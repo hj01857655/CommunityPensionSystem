@@ -5,6 +5,8 @@ import com.communitypension.communitypensionadmin.entity.Elder;
 import com.communitypension.communitypensionadmin.entity.HealthRecords;
 import com.communitypension.communitypensionadmin.mapper.ElderMapper;
 import com.communitypension.communitypensionadmin.service.ElderService;
+import com.communitypension.communitypensionadmin.service.HealthRecordsService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,13 +15,12 @@ import java.util.List;
 @Service
 public class ElderServiceImpl extends ServiceImpl<ElderMapper, Elder> implements ElderService {
 
+    @Autowired
+    private HealthRecordsService healthRecordsService;
+
     @Override
     public HealthRecords getHealthRecords(Long elderId) {
-        Elder elder = this.getById(elderId);
-        if (elder != null) {
-            return elder.getHealthRecords();
-        }
-        return null;
+        return healthRecordsService.getHealthRecordsWithElderInfoByElderId(elderId);
     }
 
     @Override

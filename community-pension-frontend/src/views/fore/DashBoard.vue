@@ -292,26 +292,7 @@ const handleMenuSelect = (routeName) => {
         ElMessage.warning('请先登录以访问此功能');
         return;
     }
-    // 将路由名称转换为对应的菜单索引
-    const menuIndexMap = {
-        'HealthView': 'health',
-        'ServiceView': 'service',
-        'ActivityView': 'activity',
-        'NoticeView': 'notice'
-    };
-    
-    // 通知父组件Home.vue更新activeIndex
-    if (menuIndexMap[routeName]) {
-        router.push('/');
-        // 使用nextTick确保DOM更新后再更新activeIndex
-        nextTick(() => {
-            // 通过事件总线或直接修改父组件的activeIndex
-            const event = new CustomEvent('update-active-index', { 
-                detail: { index: menuIndexMap[routeName] } 
-            });
-            window.dispatchEvent(event);
-        });
-    }
+    router.push({ name: routeName });
 };
 </script>
 
