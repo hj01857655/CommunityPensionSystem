@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { getKinList, getKinById, addKin, updateKin, deleteKin, getKinsByElderId, getAllKins } from '@/api/back/UserManage/KinManage'
+import { getKinList, addKin, updateKin, deleteKin, getElderByElderId, getAllKins, bindKinToElder, unbindKinFromElder } from '@/api/back/UserManage/KinManage'
 import { ElMessage } from 'element-plus'
 
 export const useKinStore = defineStore('kin', {
@@ -10,8 +10,9 @@ export const useKinStore = defineStore('kin', {
     pageSize: 10,
     loading: false,
     searchQuery: '',
-    elderKins: [], // 特定老人的亲属列表
+    elderKins: null, // 特定老人的亲属列表
     currentElderId: null, // 当前选中的老人ID
+    elderName: null, // 当前选中的老人姓名
   }),
 
   actions: {
@@ -72,23 +73,27 @@ export const useKinStore = defineStore('kin', {
       }
     },
 
-    // 根据老人ID获取亲属列表
-    async fetchKinsByElderId(elderId) {
+    // 根据老人ID获取亲属绑定的老人
+    async fetchElderByElderId(elderId) {
       this.loading = true;
       this.currentElderId = elderId;
       try {
-        const response = await getKinsByElderId(elderId);
-        console.log('获取老人亲属列表', response);
+        const response = await getElderByElderId(elderId);
+        console.log('获取亲属绑定的老人', response.data.name);
         if (response.code === 200) {
           this.elderKins = response.data || [];
+          this.elderName = response.data.name;
+          return response.data; // 返回数据
         } else {
           this.elderKins = [];
-          ElMessage.error(response.message || '获取老人亲属列表失败');
+          ElMessage.error(response.message || '获取亲属绑定的老人失败');
+          return null;
         }
       } catch (error) {
-        console.error('获取老人亲属列表出错:', error);
-        ElMessage.error('获取老人亲属列表失败');
+        console.error('获取亲属绑定的老人 出错:', error);
+        ElMessage.error('获取亲属绑定的老人失败');
         this.elderKins = [];
+        return null;
       } finally {
         this.loading = false;
       }
@@ -103,6 +108,28 @@ export const useKinStore = defineStore('kin', {
         console.error('获取所有亲属出错:', error);
         ElMessage.error('获取所有亲属失败');
         return [];
+      }
+    },
+
+    // 绑定老人
+    async bindElder(kinId, elderId) {
+      try {
+        const response = await bindKinToElder(kinId, elderId);
+        return response.code === 200;
+      } catch (error) {
+        console.error('绑定老人失败:', error);
+        return false;
+      }
+    },
+
+    // 解绑老人
+    async unbindElder(kinId) {
+      try {
+        const response = await unbindKinFromElder(kinId);
+        return response.code === 200;
+      } catch (error) {
+        console.error('解绑老人失败:', error);
+        return false;
       }
     }
   }

@@ -4,7 +4,9 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.communitypension.communitypensionadmin.entity.Elder;
 import com.communitypension.communitypensionadmin.entity.HealthRecords;
+import com.communitypension.communitypensionadmin.entity.Kin;
 import com.communitypension.communitypensionadmin.service.ElderService;
+import com.communitypension.communitypensionadmin.service.KinService;
 import com.communitypension.communitypensionadmin.utils.Result;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -13,6 +15,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 老人信息管理控制器
@@ -22,32 +25,29 @@ import java.util.List;
 @RequestMapping("/api/elders")
 
 public class ElderController {
-    private final ElderService elderService;
     private final static Logger logger = org.slf4j.LoggerFactory.getLogger(ElderController.class);
+    private final ElderService elderService;
+    private final KinService kinService;
 
     @Autowired
-    public ElderController(ElderService elderService) {
+    public ElderController(ElderService elderService, KinService kinService) {
         this.elderService = elderService;
+        this.kinService = kinService;
     }
 
     /**
      * 分页查询老人信息列表
-     * @param current 当前页码
-     * @param size 每页数量
-     * @param name 老人姓名（可选）
-     * @param idCard 身份证号（可选）
+     *
+     * @param current         当前页码
+     * @param size            每页数量
+     * @param name            老人姓名（可选）
+     * @param idCard          身份证号（可选）
      * @param healthCondition 健康状况（可选）
      * @return 分页查询结果
      */
     @GetMapping
-    public Result<Object> getElders(
-            @RequestParam(defaultValue = "1") Integer current,
-            @RequestParam(defaultValue = "10") Integer size,
-            @RequestParam(required = false) String name,
-            @RequestParam(required = false) String idCard,
-            @RequestParam(required = false) String healthCondition) {
-        logger.info("分页查询老人信息列表，参数：current = {}, size = {}, name = {}, idCard = {}, healthCondition = {}",
-                current, size, name, idCard, healthCondition);
+    public Result<Object> getElders(@RequestParam(defaultValue = "1") Integer current, @RequestParam(defaultValue = "10") Integer size, @RequestParam(required = false) String name, @RequestParam(required = false) String idCard, @RequestParam(required = false) String healthCondition) {
+        logger.info("分页查询老人信息列表，参数：current = {}, size = {}, name = {}, idCard = {}, healthCondition = {}", current, size, name, idCard, healthCondition);
         // 参数校验
         if (current <= 0 || size <= 0) {
             return Result.error("分页参数不合法");
@@ -81,8 +81,35 @@ public class ElderController {
         }
     }
 
+
+    /**
+     * 获取未绑定家属的老人列表
+     *
+     * @return 未绑定家属的老人列表
+     */
+    @GetMapping("/unbound")
+    public Result<List<Elder>> getUnboundElders() {
+        // 查询所有已绑定的elderId
+        List<Long> boundElderIds = kinService.lambdaQuery()
+            .select(Kin::getElderId)
+            .isNotNull(Kin::getElderId)
+            .list()
+            .stream()
+            .map(Kin::getElderId)
+            .collect(Collectors.toList());
+
+        // 查询未绑定的老人
+        List<Elder> unboundElders = elderService.lambdaQuery()
+            .notIn(Elder::getId, boundElderIds)
+            .list();
+
+        // 使用两个参数的 success 方法
+        return Result.success(200, "查询成功", unboundElders);
+    }
+
     /**
      * 根据ID查询老人信息
+     *
      * @param id 老人ID
      * @return 老人详细信息
      */
@@ -102,6 +129,7 @@ public class ElderController {
 
     /**
      * 创建老人信息
+     *
      * @param elder 老人信息对象
      * @return 创建结果
      */
@@ -117,7 +145,8 @@ public class ElderController {
 
     /**
      * 更新老人信息
-     * @param id 老人ID
+     *
+     * @param id    老人ID
      * @param elder 更新的老人信息
      * @return 更新结果
      */
@@ -134,6 +163,7 @@ public class ElderController {
 
     /**
      * 删除老人信息
+     *
      * @param id 老人ID
      * @return 删除结果
      */
@@ -149,6 +179,7 @@ public class ElderController {
 
     /**
      * 批量创建老人信息
+     *
      * @param elders 老人信息列表
      * @return 批量创建结果
      */
@@ -164,6 +195,7 @@ public class ElderController {
 
     /**
      * 批量删除老人信息
+     *
      * @param ids 老人ID列表
      * @return 批量删除结果
      */
@@ -179,6 +211,7 @@ public class ElderController {
 
     /**
      * 获取老人健康档案
+     *
      * @param id 老人ID
      * @return 健康档案信息
      */
@@ -198,7 +231,8 @@ public class ElderController {
 
     /**
      * 更新老人健康档案
-     * @param id 老人ID
+     *
+     * @param id            老人ID
      * @param healthRecords 健康档案信息
      * @return 更新结果
      */

@@ -1,9 +1,27 @@
 import axios from '@/utils/axios';
 
-// 获取用户列表
-export const getUserList = () => {
-    return axios.get('/api/users/list');
-}
+/**
+ * 用户信息管理相关接口
+ */
+
+/**
+ * 分页查询用户列表
+ * @param {Object} params - 查询参数
+ * @param {number} params.current - 页码
+ * @param {number} params.size - 每页数量
+ * @param {string} [params.username] - 用户名（可选）
+ * @returns {Promise<{code: number, data: Object, message: string}>}
+ */
+export const getUserList = async (params) => {
+    try {
+        const response = await axios.get('/api/users', { params });
+        console.log('获取用户列表成功:', response.data);
+        return response;
+    } catch (error) {
+        console.error('获取用户列表失败:', error);
+        throw error;
+    }
+};
 
 // 添加用户
 export const addUser = (userData) => {

@@ -131,7 +131,7 @@
             <el-menu-item index="/admin/system/menu">菜单管理</el-menu-item>
             <el-menu-item index="/admin/system/permission">权限管理</el-menu-item>
             <el-menu-item index="/admin/system/role">角色管理</el-menu-item>
-            <el-menu-item index="/admin/system/info">个人信息</el-menu-item>
+            <el-menu-item index="/admin/system/profile">个人中心</el-menu-item>
           </el-sub-menu>
         </el-menu>
       </el-aside>
@@ -169,8 +169,8 @@
               <!-- 下拉菜单 -->
               <template #dropdown>
                 <el-dropdown-menu>
-                  <el-dropdown-item command="profile" @click="navigateTo('/admin/system/info')">个人信息</el-dropdown-item>
-                  <el-dropdown-item command="password" @click="navigateTo('/admin/system/password')">修改密码</el-dropdown-item>
+                  <el-dropdown-item command="profile" @click="navigateTo('/admin/system/profile')">个人中心</el-dropdown-item>
+                  <el-dropdown-item command="password" @click="navigateTo('/admin/system/profile?tab=password')">修改密码</el-dropdown-item>
                   <el-dropdown-item divided command="logout">退出登录</el-dropdown-item>
                 </el-dropdown-menu>
               </template>
@@ -249,9 +249,9 @@ const handleCommand = (command) => {
       ElMessage.success('退出登录成功');
     }).catch(() => {});
   } else if (command === 'profile') {
-    router.push('/admin/system/info');
+    router.push('/admin/system/profile');
   } else if (command === 'password') {
-    router.push('/admin/system/password');
+    router.push('/admin/system/profile?tab=password');
   }
 };
 </script>

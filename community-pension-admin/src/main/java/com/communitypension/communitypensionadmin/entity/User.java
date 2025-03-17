@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Data
 @TableName("user")
@@ -16,7 +16,6 @@ public class User {
      * 主键ID
      */
     @TableId(value = "id", type = IdType.AUTO)
-
     private Long id;
 
     /**
@@ -33,17 +32,17 @@ public class User {
     /**
      * 是否为管理员，0-否，1-是
      */
-    private Byte isAdmin;
+    private Integer isAdmin;
 
     /**
      * 用户状态：1-正常，0-禁用，2-锁定
      */
-    private Byte isActive;
+    private Integer isActive;
 
     /**
      * 是否被删除
      */
-    private Byte isDeleted;
+    private Integer isDeleted;
 
     private String phone;
     /**
@@ -85,12 +84,12 @@ public class User {
     /**
      * 创建时间
      */
-    private Date createTime;
+    private LocalDateTime createTime;
 
     /**
      * 更新时间
      */
-    private Date updateTime;
+    private LocalDateTime updateTime;
 
     /**
      * 备注

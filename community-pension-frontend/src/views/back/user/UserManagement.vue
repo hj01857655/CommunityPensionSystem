@@ -99,7 +99,7 @@
         </div>
       </div>
 
-      <el-table :data="filteredUsers" style="width: 100%" v-loading="loading" border
+      <el-table :data="userList" style="width: 100%" v-loading="loading" border
         @selection-change="handleSelectionChange">
         <el-table-column type="selection" width="55" />
         <el-table-column prop="id" label="ID" width="80" />
@@ -160,9 +160,15 @@
       </el-table>
 
       <div class="pagination-container">
-        <el-pagination v-model:current-page="currentPage" v-model:page-size="pageSize" :page-sizes="[10, 20, 50, 100]"
-          layout="total, sizes, prev, pager, next, jumper" :total="totalUsers" @size-change="handleSizeChange"
-          @current-change="handleCurrentChange" />
+        <el-pagination
+          :current-page="currentPage"
+          :page-size="pageSize"
+          :page-sizes="[10, 20, 50, 100]"
+          layout="total, sizes, prev, pager, next, jumper"
+          :total="total"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+        />
       </div>
     </el-card>
 
@@ -269,62 +275,83 @@
 </template>
 
 <script setup>
-import { ref, computed, reactive, onMounted } from 'vue';
+import { ref, computed, reactive, onMounted, watch } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { Search, Delete, Check, Close, Document, Printer, Refresh, Plus, Edit, View } from '@element-plus/icons-vue';
 import { formatDate } from '@/utils/date';
-import { getUserList, addUser, updateUser, deleteUser, resetPassword, getAllUsers } from '@/api/back/UserManage/UserManage';
+import { useUserStore } from '@/stores/back/userStore';
+import { useRoute } from 'vue-router';
 
-const users = ref([])
-// 分页和搜索
-const loading = ref(false)
-const currentPage = ref(1)
-const pageSize = ref(10)
-const searchQuery = ref('')
-const totalUsers = computed(() => {
-  return users.value ? users.value.length : 0
-})
+const userStore = useUserStore();
+const route = useRoute();
+
+// 使用计算属性确保响应式
+const userList = computed(() => userStore.userList);
+const loading = computed(() => userStore.loading);
+const total = computed(() => userStore.total);
+const currentPage = computed(() => userStore.currentPage);
+const pageSize = computed(() => userStore.pageSize);
+const searchQuery = computed(() => userStore.searchQuery);
+
 onMounted(() => {
-  loading.value = true
-  refreshUserList()
-})
-// 删除多余的console.log()
+  userStore.fetchUsers({
+    current: userStore.currentPage,
+    size: userStore.pageSize,
+    username: userStore.searchQuery,
+  });
+});
 
+// 添加路由监听，在路由切换时重新加载数据
+watch(() => route.name, (newRouteName) => {
+  if (newRouteName === 'UserManagement') {
+    userStore.fetchUsers({
+      current: userStore.currentPage,
+      size: userStore.pageSize,
+      username: userStore.searchQuery,
+    });
+  }
+});
 
 // 过滤后的用户列表
 const filteredUsers = computed(() => {
-  if (!users.value) return []
+  if (!userList.value) return [];
 
-  const start = (currentPage.value - 1) * pageSize.value
-  const end = start + pageSize.value
+  let result = userList.value;
 
-  let result = users.value
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase();
     result = result.filter(user =>
       (user.username && user.username.toLowerCase().includes(query))
-    )
+    );
   }
 
   // 应用高级搜索过滤
   if (advancedSearchForm.roleId > 0) {
-    result = result.filter(user => user.roleId === advancedSearchForm.roleId)
+    result = result.filter(user => user.roleId === advancedSearchForm.roleId);
   }
 
   if (advancedSearchForm.status !== -1) {
-    result = result.filter(user => user.status === advancedSearchForm.status)
+    result = result.filter(user => user.status === advancedSearchForm.status);
   }
 
   if (advancedSearchForm.dateRange && advancedSearchForm.dateRange.length === 2) {
-    const startDate = new Date(advancedSearchForm.dateRange[0]).getTime()
-    const endDate = new Date(advancedSearchForm.dateRange[1]).getTime()
+    const startDate = new Date(advancedSearchForm.dateRange[0]).getTime();
+    const endDate = new Date(advancedSearchForm.dateRange[1]).getTime();
     result = result.filter(user => {
-      const createTime = new Date(user.createTime).getTime()
-      return createTime >= startDate && createTime <= endDate
-    })
+      const createTime = new Date(user.createTime).getTime();
+      return createTime >= startDate && createTime <= endDate;
+    });
   }
 
-  return result.slice(start, end)
+  // 确保 result 是一个数组
+  if (!Array.isArray(result)) {
+    result = [];
+  }
+
+  const start = (currentPage.value - 1) * pageSize.value;
+  const end = start + pageSize.value;
+
+  return result.slice(start, end);
 })
 
 // 对话框相关
@@ -394,9 +421,13 @@ const getRoleType = (roleId) => {
 
 // 搜索用户
 const handleSearch = () => {
-  console.log(searchQuery.value)
-  currentPage.value = 1
-}
+  userStore.currentPage = 1;
+  userStore.fetchUsers({
+    current: userStore.currentPage,
+    size: userStore.pageSize,
+    username: userStore.searchQuery,
+  });
+};
 
 // 添加用户
 const handleAdd = () => {
@@ -434,10 +465,10 @@ const handleDelete = (row) => {
     }
   ).then(() => {
     // 调用删除用户的API
-    deleteUser(row.id)
+    userStore.deleteUser(row.id)
       .then(res => {
         if (res.code === 200) {
-          refreshUserList()
+          userStore.fetchUsers({ current: userStore.currentPage, size: userStore.pageSize, username: userStore.searchQuery });
           ElMessage.success('删除成功')
         } else {
           ElMessage.error(res.message || '删除失败')
@@ -462,7 +493,7 @@ const handleResetPassword = (row) => {
       type: 'warning'
     }
   ).then(() => {
-    resetPassword(row.id)
+    userStore.resetPassword(row.id)
       .then(res => {
         if (res.code === 200) {
           ElMessage.success('密码重置成功')
@@ -487,11 +518,11 @@ const handleStatusChange = (row) => {
     ...row
   }
   
-  updateUser(updateData)
+  userStore.updateUser(updateData)
     .then(res => {
       if (res.code === 200) {
         ElMessage.success('状态更新成功')
-        refreshUserList()
+        userStore.fetchUsers({ current: userStore.currentPage, size: userStore.pageSize, username: userStore.searchQuery });
       } else {
         row.isActive = originalStatus
         ElMessage.error(res.message || '状态更新失败')
@@ -503,16 +534,24 @@ const handleStatusChange = (row) => {
     })
 }
 
-
 // 分页大小变化
 const handleSizeChange = (val) => {
-  pageSize.value = val
-  currentPage.value = 1
+  userStore.pageSize = val;
+  userStore.fetchUsers({
+    current: userStore.currentPage,
+    size: userStore.pageSize,
+    username: userStore.searchQuery,
+  });
 }
 
 // 当前页变化
 const handleCurrentChange = (val) => {
-  currentPage.value = val
+  userStore.currentPage = val;
+  userStore.fetchUsers({
+    current: userStore.currentPage,
+    size: userStore.pageSize,
+    username: userStore.searchQuery,
+  });
 }
 
 // 重置表单
@@ -536,19 +575,7 @@ const resetForm = () => {
 }
 
 const refreshUserList = () => {
-  loading.value = true
-  getAllUsers().then(response => {
-    if (response.success) {
-      users.value = response.data || []
-      ElMessage.success('数据刷新成功')
-    } else {
-      ElMessage.error(response.message || '获取用户列表失败')
-    }
-  }).catch(error => {
-    ElMessage.error(error.message || '获取用户列表失败')
-  }).finally(() => {
-    loading.value = false
-  })
+  userStore.fetchUsers({ current: userStore.currentPage, size: userStore.pageSize, username: userStore.searchQuery });
 }
 
 // 修改提交表单逻辑
@@ -578,7 +605,7 @@ const handleAdvancedSearch = (command) => {
 
 // 应用高级搜索
 const applyAdvancedSearch = () => {
-  currentPage.value = 1
+  userStore.currentPage = 1
   advancedSearchDialogVisible.value = false
   showAdvancedSearch.value = false
 }
@@ -607,17 +634,17 @@ const handleBatchDelete = () => {
     }
   ).then(() => {
     // 这里应该调用批量删除API，但目前后端可能没有提供，所以使用循环单个删除
-    const deletePromises = selectedUsers.value.map(user => deleteUser(user.id))
+    const deletePromises = selectedUsers.value.map(user => userStore.deleteUser(user.id))
 
     Promise.all(deletePromises)
       .then(results => {
         const allSuccess = results.every(res => res.code === 200)
         if (allSuccess) {
-          refreshUserList()
+          userStore.fetchUsers({ current: userStore.currentPage, size: userStore.pageSize, username: userStore.searchQuery });
           ElMessage.success('批量删除成功')
         } else {
           ElMessage.warning('部分用户删除失败')
-          refreshUserList()
+          userStore.fetchUsers({ current: userStore.currentPage, size: userStore.pageSize, username: userStore.searchQuery });
         }
       })
       .catch(error => {
@@ -635,28 +662,26 @@ const handleBatchEnable = () => {
     return
   }
 
-  const updatePromises = selectedUsers.value.map(user => {
-    return updateUser({ 
-      id: user.id, 
-      isActive: 1,
-      ...user  // 保留其他字段
-    })
-  })
+  const updatePromises = selectedUsers.value.map(user => userStore.updateUser({ 
+    id: user.id, 
+    isActive: 1,
+    ...user  // 保留其他字段
+  }))
 
   Promise.all(updatePromises)
     .then(results => {
       const allSuccess = results.every(res => res.code === 200)
       if (allSuccess) {
-        refreshUserList()
+        userStore.fetchUsers({ current: userStore.currentPage, size: userStore.pageSize, username: userStore.searchQuery });
         ElMessage.success('批量启用成功')
       } else {
         ElMessage.warning('部分用户启用失败')
-        refreshUserList()
+        userStore.fetchUsers({ current: userStore.currentPage, size: userStore.pageSize, username: userStore.searchQuery });
       }
     })
     .catch(error => {
       ElMessage.error('批量启用失败：' + error.message)
-      refreshUserList()
+      userStore.fetchUsers({ current: userStore.currentPage, size: userStore.pageSize, username: userStore.searchQuery });
     })
 }
 
@@ -667,28 +692,26 @@ const handleBatchDisable = () => {
     return
   }
 
-  const updatePromises = selectedUsers.value.map(user => {
-    return updateUser({ 
-      id: user.id, 
-      isActive: 0,
-      ...user  // 保留其他字段
-    })
-  })
+  const updatePromises = selectedUsers.value.map(user => userStore.updateUser({ 
+    id: user.id, 
+    isActive: 0,
+    ...user  // 保留其他字段
+  }))
 
   Promise.all(updatePromises)
     .then(results => {
       const allSuccess = results.every(res => res.code === 200)
       if (allSuccess) {
-        refreshUserList()
+        userStore.fetchUsers({ current: userStore.currentPage, size: userStore.pageSize, username: userStore.searchQuery });
         ElMessage.success('批量禁用成功')
       } else {
         ElMessage.warning('部分用户禁用失败')
-        refreshUserList()
+        userStore.fetchUsers({ current: userStore.currentPage, size: userStore.pageSize, username: userStore.searchQuery });
       }
     })
     .catch(error => {
       ElMessage.error('批量禁用失败：' + error.message)
-      refreshUserList()
+      userStore.fetchUsers({ current: userStore.currentPage, size: userStore.pageSize, username: userStore.searchQuery });
     })
 }
 
@@ -751,7 +774,7 @@ const handlePrint = () => {
 const submitForm = () => {
   userFormRef.value.validate((valid) => {
     if (valid) {
-      loading.value = true
+      userStore.loading = true
       const submitData = {
         ...userForm,
         roleId: parseInt(userForm.roleId),
@@ -761,10 +784,10 @@ const submitForm = () => {
       if (dialogType.value === 'add') {
         submitData.createTime = new Date().toISOString()
         
-        addUser(submitData)
+        userStore.addUser(submitData)
           .then(res => {
             if (res.code === 200) {
-              refreshUserList()
+              userStore.fetchUsers({ current: userStore.currentPage, size: userStore.pageSize, username: userStore.searchQuery });
               ElMessage.success('添加用户成功')
               dialogVisible.value = false
             } else {
@@ -775,7 +798,7 @@ const submitForm = () => {
             ElMessage.error('添加用户失败：' + error.message)
           })
           .finally(() => {
-            loading.value = false
+            userStore.loading = false
           })
       } else {
         // 编辑时不需要传递密码，除非有修改
@@ -783,10 +806,10 @@ const submitForm = () => {
           delete submitData.password
         }
         
-        updateUser(submitData)
+        userStore.updateUser(submitData)
           .then(res => {
             if (res.code === 200) {
-              refreshUserList()
+              userStore.fetchUsers({ current: userStore.currentPage, size: userStore.pageSize, username: userStore.searchQuery });
               ElMessage.success('编辑用户成功')
               dialogVisible.value = false
             } else {
@@ -797,7 +820,7 @@ const submitForm = () => {
             ElMessage.error('编辑用户失败：' + error.message)
           })
           .finally(() => {
-            loading.value = false
+            userStore.loading = false
           })
       }
     } else {

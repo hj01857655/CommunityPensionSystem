@@ -15,6 +15,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import org.springframework.util.StringUtils;
 
 import java.util.HashMap;
 import java.util.List;
@@ -56,12 +59,25 @@ public class UserController {
         }
     }
 
-    @Operation(summary = "查询所有用户")
-    @GetMapping("/list")
-    public Result<Object> getUserList() {
-        logger.info("查询所有用户");
-        List<User> users = userService.list();
-        return Result.ok(users);
+    @Operation(summary = "分页查询用户列表")
+    @GetMapping
+    public Result<Object> getUserList(
+        @RequestParam(defaultValue = "1") Integer current,
+        @RequestParam(defaultValue = "10") Integer size,
+        @RequestParam(required = false) String username
+    ) {
+        logger.info("分页查询用户列表，参数：current = {}, size = {}, username = {}", current, size, username);
+        
+        if (current <= 0 || size <= 0) {
+            return Result.error("分页参数不合法");
+        }
+
+        Page<User> page = userService.page(new Page<>(current, size), new LambdaQueryWrapper<User>()
+            .like(StringUtils.hasText(username), User::getUsername, username)
+            .orderByAsc(User::getId)
+        );
+
+        return Result.success("查询用户成功", page);
     }
 
     @Operation(summary = "查询单个用户")
@@ -217,5 +233,70 @@ public class UserController {
             return ResponseEntity.ok(Result.ok("管理员退出成功"));
         }
         return ResponseEntity.status(401).body(Result.error("权限不足"));
+    }
+
+    @PutMapping("/profile")
+    @Operation(summary = "更新个人信息")
+    public Result<User> updateProfile(@RequestBody User user, @RequestAttribute("userId") Long userId) {
+        // 确保只能更新自己的信息
+        user.setId(userId);
+        
+        // 限制只能更新安全字段
+        User currentUser = userService.getById(userId);
+        if (currentUser != null) {
+            // 只更新允许的字段
+            currentUser.setPhone(user.getPhone());
+            currentUser.setEmail(user.getEmail());
+            currentUser.setAddress(user.getAddress());
+            currentUser.setRemark(user.getRemark());
+            
+            // 用户名更新需要特殊处理
+            if (!currentUser.getUsername().equals(user.getUsername())) {
+                // 检查用户名是否已存在
+                User existingUser = userService.findByUsername(user.getUsername());
+                if (existingUser != null && !existingUser.getId().equals(userId)) {
+                    return Result.error("用户名已存在");
+                }
+                currentUser.setUsername(user.getUsername());
+            }
+            
+            boolean success = userService.updateById(currentUser);
+            if (success) {
+                return Result.success("个人信息更新成功", currentUser);
+            }
+        }
+        
+        return Result.error("个人信息更新失败");
+    }
+
+    @PostMapping("/change-password")
+    @Operation(summary = "修改用户密码")
+    public Result<Object> changePassword(@RequestBody Map<String, String> passwordData, @RequestAttribute("userId") Long userId) {
+        String oldPassword = passwordData.get("oldPassword");
+        String newPassword = passwordData.get("newPassword");
+        
+        if (oldPassword == null || newPassword == null) {
+            return Result.error("密码数据不完整");
+        }
+        
+        // 验证旧密码是否正确
+        User currentUser = userService.getById(userId);
+        if (currentUser == null) {
+            return Result.error("用户不存在");
+        }
+        
+        if (!currentUser.getPassword().equals(oldPassword)) {
+            return Result.error("原密码不正确");
+        }
+        
+        // 更新密码
+        currentUser.setPassword(newPassword);
+        boolean success = userService.updateById(currentUser);
+        
+        if (success) {
+            return Result.success("密码修改成功");
+        } else {
+            return Result.error("密码修改失败");
+        }
     }
 }

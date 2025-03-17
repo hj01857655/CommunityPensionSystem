@@ -46,7 +46,7 @@ public class Result<T> {
         result.setTimestamp(System.currentTimeMillis());
         return result;
     }
-    // 添加 created 方法
+    //Result.created(elder);
     public static <T> Result<T> created(T data) {
         Result<T> result = new Result<>();
         result.setCode(201);
@@ -55,7 +55,7 @@ public class Result<T> {
         result.setTimestamp(System.currentTimeMillis());
         return result;
     }
-    //deleted
+    //Result.deleted();
     public static <T> Result<T> deleted(){
         Result<T> result = new Result<>();
         result.setCode(204);
@@ -64,7 +64,7 @@ public class Result<T> {
         result.setTimestamp(System.currentTimeMillis());
         return result;
     }
-
+    //Result.error("查询失败");
     public  static <T> Result<T> error(String message){
         Result<T> result = new Result<>();
         result.setCode(500);
@@ -79,6 +79,15 @@ public class Result<T> {
         result.setCode(code);
         result.setMessage(message);
         result.setData(null);
+        result.setTimestamp(System.currentTimeMillis());
+        return result;
+    }
+    //Result.success(200, "查询成功", elderList);
+    public static <T> Result<T> success(int code, String message, T data) {
+        Result<T> result = new Result<>();
+        result.setCode(code);
+        result.setMessage(message);
+        result.setData(data);
         result.setTimestamp(System.currentTimeMillis());
         return result;
     }

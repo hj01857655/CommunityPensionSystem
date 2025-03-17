@@ -63,7 +63,7 @@ export const addKin = async (data) => {
 export const updateKin = async (data) => {
     try {
         const response = await axios.put(`/api/kins/${data.id}`, data);
-        return response;
+        return response.data;
     } catch (error) {
         console.error('更新亲属信息失败:', error);
         throw error;
@@ -105,16 +105,17 @@ export const batchDeleteKins = async (ids) => {
  * @param {string|number} elderId - 老人ID
  * @returns {Promise<{code: number, data: Object, message: string}>}
  */
-export const getKinsByElderId = async (elderId) => {
+export const getElderByElderId = async (elderId) => {
     if (!elderId) {
         throw new Error('请求参数错误');
     }
     
     try {
-        const response = await axios.get(`/api/kins/elder/${elderId}`);
+        const response = await axios.get(`/api/elders/${elderId}`);
+        console.log('获取亲属绑定的老人', response);
         return response;
     } catch (error) {
-        console.error('获取老人亲属列表失败:', error);
+        console.error('获取亲属绑定的老人失败:', error);
         throw error;
     }
 };
@@ -131,4 +132,26 @@ export const getAllKins = async () => {
         console.error('获取所有亲属失败:', error);
         throw error;
     }
+};
+
+// 绑定家属与老人
+export const bindKinToElder = async (kinId, elderId) => {
+  try {
+    const response = await axios.post(`/api/kins/bind/${kinId}/${elderId}`);
+    return response.data;
+  } catch (error) {
+    console.error('绑定家属与老人失败:', error);
+    throw error;
+  }
+};
+
+// 解绑家属与老人
+export const unbindKinFromElder = async (kinId) => {
+  try {
+    const response = await axios.delete(`/api/kins/unbind/${kinId}`);
+    return response.data;
+  } catch (error) {
+    console.error('解绑家属与老人失败:', error);
+    throw error;
+  }
 };

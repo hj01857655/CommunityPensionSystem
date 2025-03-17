@@ -1,126 +1,188 @@
 <!-- 菜单管理 -->
 <template>
-  <div class="menu-management">
-    <el-card class="table-card">
-      <!-- 搜索和操作栏 -->
-      <div class="operation-bar">
-        <div class="search-bar">
-          <el-input
-            v-model="searchQuery"
-            placeholder="请输入菜单名称"
-            class="search-input"
-            clearable
-            @clear="handleSearch"
-            @keyup.enter="handleSearch"
-          >
-            <template #prefix>
-              <el-icon><Search /></el-icon>
-            </template>
-          </el-input>
-          <el-button type="primary" @click="handleSearch">
-            <el-icon><Search /></el-icon>
-            查询
-          </el-button>
-          <el-button @click="resetSearch">
-            <el-icon><Refresh /></el-icon>
-            重置
-          </el-button>
-        </div>
-        <div class="action-bar">
+  <admin-page-template title="菜单管理" subtitle="管理系统的菜单结构和配置">
+    <!-- 搜索栏 -->
+    <template #search>
+      <search-bar :fields="{ keyword: '' }" @search="handleSearch" @reset="resetSearch">
+        <template #default="{ form }">
+          <el-form-item label="菜单名称">
+            <el-input v-model="form.keyword" placeholder="请输入菜单名称" clearable />
+          </el-form-item>
+        </template>
+        
+        <template #extra-buttons>
           <el-button type="primary" @click="handleAdd">
             <el-icon><Plus /></el-icon>
-            新增
+            新增菜单
           </el-button>
-        </div>
-      </div>
-
-      <!-- 菜单表格 -->
-      <el-table
-        :data="tableData"
-        style="width: 100%"
-        v-loading="loading"
-        row-key="id"
-        border
-        default-expand-all
-      >
-        <el-table-column type="index" label="序号" width="60" align="center" />
-        <el-table-column prop="title" label="菜单名称" min-width="180" />
-        <el-table-column prop="icon" label="图标" width="80" align="center">
-          <template #default="{ row }">
-            <el-icon v-if="row.icon">
-              <component :is="row.icon" />
-            </el-icon>
-          </template>
-        </el-table-column>
-        <el-table-column prop="component" label="组件路径" min-width="180">
-          <template #default="{ row }">
-            {{ row.component === '#' ? '顶级目录' : row.component === '##' ? '子目录' : row.component }}
-          </template>
-        </el-table-column>
-        <el-table-column prop="path" label="路由地址" min-width="180" />
-        <el-table-column prop="permission" label="权限标识" min-width="150" />
-        <el-table-column prop="sort" label="排序" width="80" align="center" />
-        <el-table-column prop="status" label="状态" width="100" align="center">
-          <template #default="{ row }">
-            <el-tag :type="row.status ? 'success' : 'danger'">
-              {{ row.status ? '启用' : '禁用' }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column label="操作" width="280" fixed="right" align="center">
-          <template #default="{ row }">
-            <el-button type="primary" size="small" @click="handleEdit(row)">
-              <el-icon><Edit /></el-icon>
-              编辑
-            </el-button>
-            <el-button type="success" size="small" @click="handleDetail(row)">
-              <el-icon><View /></el-icon>
-              查看
-            </el-button>
-            <el-button type="danger" size="small" @click="handleDelete(row)">
-              <el-icon><Delete /></el-icon>
-              删除
-            </el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-    </el-card>
-
-    <!-- 新增/编辑对话框 -->
-    <el-dialog
-      v-model="dialogVisible"
-      :title="dialogType === 'add' ? '新增菜单' : dialogType === 'edit' ? '编辑菜单' : '查看菜单'"
-      width="600px"
-      destroy-on-close
+        </template>
+      </search-bar>
+    </template>
+    
+    <!-- 表格内容 -->
+    <data-table
+      :data="menuData"
+      :loading="loading"
+      row-key="id"
+      default-expand-all
+      :show-selection="false"
+      :show-pagination="false"
+      @edit="handleEdit"
+      @delete="handleDelete"
+      @view="handleView"
     >
-      <component
-        :is="dialogComponent"
-        ref="formRef"
-        :form-data="currentRow"
-        :disabled="dialogType === 'detail'"
-      />
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="dialogVisible = false">取消</el-button>
-          <el-button v-if="dialogType !== 'detail'" type="primary" @click="handleSubmit">
-            确定
-          </el-button>
-        </span>
-      </template>
-    </el-dialog>
-  </div>
+      <el-table-column prop="title" label="菜单名称" min-width="180" />
+      <el-table-column prop="icon" label="图标" width="80" align="center">
+        <template #default="{ row }">
+          <el-icon v-if="row.icon">
+            <component :is="row.icon" />
+          </el-icon>
+        </template>
+      </el-table-column>
+      <el-table-column prop="component" label="组件路径" min-width="180">
+        <template #default="{ row }">
+          {{ row.component === '#' ? '顶级目录' : row.component === '##' ? '子目录' : row.component }}
+        </template>
+      </el-table-column>
+      <el-table-column prop="path" label="路由地址" min-width="180" />
+      <el-table-column prop="permission" label="权限标识" min-width="150" />
+      <el-table-column prop="sort" label="排序" width="80" align="center" />
+      <el-table-column prop="status" label="状态" width="100" align="center">
+        <template #default="{ row }">
+          <el-tag :type="row.status ? 'success' : 'danger'">
+            {{ row.status ? '启用' : '禁用' }}
+          </el-tag>
+        </template>
+      </el-table-column>
+    </data-table>
+    
+    <!-- 表单对话框 -->
+    <template #extra>
+      <form-dialog
+        v-model:visible="dialogVisible"
+        :title="dialogTitles[dialogType]"
+        :form-type="dialogType"
+        :data="currentRecord"
+        :rules="formRules"
+        width="600px"
+        :loading="submitLoading"
+        @submit="submitForm"
+      >
+        <template #default="{ form, disabled }">
+          <el-row :gutter="20">
+            <el-col :span="24">
+              <el-form-item label="上级菜单" prop="parentId">
+                <el-tree-select
+                  v-model="form.parentId"
+                  :data="menuTreeData"
+                  :props="{ label: 'title', value: 'id', children: 'children' }"
+                  :disabled="disabled"
+                  placeholder="请选择上级菜单"
+                  check-strictly
+                  clearable
+                />
+              </el-form-item>
+            </el-col>
+            
+            <el-col :span="12">
+              <el-form-item label="菜单名称" prop="title">
+                <el-input v-model="form.title" :disabled="disabled" placeholder="请输入菜单名称" />
+              </el-form-item>
+            </el-col>
+            
+            <el-col :span="12">
+              <el-form-item label="菜单图标" prop="icon">
+                <el-input v-model="form.icon" :disabled="disabled" placeholder="请选择图标">
+                  <template #prefix>
+                    <el-icon v-if="form.icon">
+                      <component :is="form.icon" />
+                    </el-icon>
+                  </template>
+                  <template #append>
+                    <el-button :disabled="disabled" @click="openIconSelector">
+                      <el-icon><Select /></el-icon>
+                    </el-button>
+                  </template>
+                </el-input>
+              </el-form-item>
+            </el-col>
+            
+            <el-col :span="12">
+              <el-form-item label="路由地址" prop="path">
+                <el-input v-model="form.path" :disabled="disabled" placeholder="请输入路由地址" />
+              </el-form-item>
+            </el-col>
+            
+            <el-col :span="12">
+              <el-form-item label="组件路径" prop="component">
+                <el-input v-model="form.component" :disabled="disabled" placeholder="请输入组件路径" />
+              </el-form-item>
+            </el-col>
+            
+            <el-col :span="12">
+              <el-form-item label="权限标识" prop="permission">
+                <el-input v-model="form.permission" :disabled="disabled" placeholder="请输入权限标识" />
+              </el-form-item>
+            </el-col>
+            
+            <el-col :span="12">
+              <el-form-item label="排序" prop="sort">
+                <el-input-number v-model="form.sort" :disabled="disabled" :min="0" :max="999" />
+              </el-form-item>
+            </el-col>
+            
+            <el-col :span="12">
+              <el-form-item label="状态" prop="status">
+                <el-switch
+                  v-model="form.status"
+                  :disabled="disabled"
+                  :active-value="true"
+                  :inactive-value="false"
+                  inline-prompt
+                  active-text="启用"
+                  inactive-text="禁用"
+                />
+              </el-form-item>
+            </el-col>
+            
+            <el-col :span="24">
+              <el-form-item label="备注" prop="remark">
+                <el-input
+                  v-model="form.remark"
+                  type="textarea"
+                  :rows="3"
+                  :disabled="disabled"
+                  placeholder="请输入备注信息"
+                />
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </template>
+      </form-dialog>
+      
+      <!-- 图标选择器 (可以根据需要实现) -->
+    </template>
+  </admin-page-template>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { Search, Plus, Edit, Delete, View, Refresh } from '@element-plus/icons-vue';
-import MenuForm from './components/MenuForm.vue';
-import MenuDetail from './components/MenuDetail.vue';
+import { Search, Plus, Edit, Delete, View, Select } from '@element-plus/icons-vue';
+import AdminPageTemplate from '@/components/admin/AdminPageTemplate.vue';
+import SearchBar from '@/components/admin/SearchBar.vue';
+import DataTable from '@/components/admin/DataTable.vue';
+import FormDialog from '@/components/admin/FormDialog.vue';
 
-// 表格数据
+// 数据及状态
 const loading = ref(false);
-const tableData = ref([
+const submitLoading = ref(false);
+const dialogVisible = ref(false);
+const dialogType = ref('add'); // 'add', 'edit', 'view'
+const currentRecord = ref({});
+
+// 菜单树形数据
+const menuData = ref([
   {
     id: 1,
     title: '系统管理',
@@ -165,50 +227,92 @@ const tableData = ref([
   }
 ]);
 
-// 搜索相关
-const searchQuery = ref('');
-
-// 对话框相关
-const dialogVisible = ref(false);
-const dialogType = ref('add'); // add, edit, detail
-const currentRow = ref(null);
-const formRef = ref(null);
-
-// 动态组件
-const dialogComponent = computed(() => {
-  return dialogType.value === 'detail' ? MenuDetail : MenuForm;
+// 用于菜单选择器的树形数据
+const menuTreeData = computed(() => {
+  return [{ id: 0, title: '根菜单', children: JSON.parse(JSON.stringify(menuData.value)) }];
 });
 
+// 对话框标题
+const dialogTitles = {
+  add: '新增菜单',
+  edit: '编辑菜单',
+  view: '查看菜单详情'
+};
+
+// 表单验证规则
+const formRules = {
+  title: [
+    { required: true, message: '请输入菜单名称', trigger: 'blur' },
+    { min: 2, max: 50, message: '长度在 2 到 50 个字符', trigger: 'blur' }
+  ],
+  path: [
+    { required: true, message: '请输入路由地址', trigger: 'blur' }
+  ],
+  component: [
+    { required: true, message: '请输入组件路径', trigger: 'blur' }
+  ],
+  sort: [
+    { required: true, message: '请输入排序值', trigger: 'blur' }
+  ]
+};
+
 // 搜索
-const handleSearch = () => {
-  // TODO: 实现搜索逻辑
-  console.log('搜索:', searchQuery.value);
+const handleSearch = (params) => {
+  console.log('搜索菜单:', params);
+  // 实现搜索逻辑
 };
 
 // 重置搜索
 const resetSearch = () => {
-  searchQuery.value = '';
-  handleSearch();
+  // 重置搜索条件并刷新数据
+  fetchMenuList();
+};
+
+// 获取菜单列表
+const fetchMenuList = async () => {
+  loading.value = true;
+  try {
+    // 实际应用中应该从API获取数据
+    // const response = await getMenuList();
+    // menuData.value = response.data || [];
+    // 模拟数据已经预设在menuData中
+    await new Promise(resolve => setTimeout(resolve, 500));
+  } catch (error) {
+    console.error('获取菜单列表失败:', error);
+    ElMessage.error('获取菜单列表失败');
+  } finally {
+    loading.value = false;
+  }
 };
 
 // 新增菜单
 const handleAdd = () => {
   dialogType.value = 'add';
-  currentRow.value = null;
+  currentRecord.value = {
+    parentId: null,
+    title: '',
+    icon: '',
+    path: '',
+    component: '',
+    permission: '',
+    sort: 0,
+    status: true,
+    remark: ''
+  };
   dialogVisible.value = true;
 };
 
 // 编辑菜单
 const handleEdit = (row) => {
   dialogType.value = 'edit';
-  currentRow.value = { ...row };
+  currentRecord.value = { ...row };
   dialogVisible.value = true;
 };
 
-// 查看菜单详情
-const handleDetail = (row) => {
-  dialogType.value = 'detail';
-  currentRow.value = { ...row };
+// 查看菜单
+const handleView = (row) => {
+  dialogType.value = 'view';
+  currentRecord.value = { ...row };
   dialogVisible.value = true;
 };
 
@@ -216,7 +320,7 @@ const handleDetail = (row) => {
 const handleDelete = async (row) => {
   try {
     await ElMessageBox.confirm(
-      `确定要删除菜单"${row.title}"吗？`,
+      `确定要删除菜单"${row.title}"吗？删除后不可恢复！`,
       '警告',
       {
         confirmButtonText: '确定',
@@ -224,33 +328,52 @@ const handleDelete = async (row) => {
         type: 'warning'
       }
     );
-    // TODO: 调用删除API
+    
+    // 实际应用中应该调用API删除数据
+    // await deleteMenu(row.id);
     ElMessage.success('删除成功');
+    await fetchMenuList();
   } catch (error) {
     if (error !== 'cancel') {
-      console.error('删除失败:', error);
+      console.error('删除菜单失败:', error);
       ElMessage.error('删除失败');
     }
   }
 };
 
 // 提交表单
-const handleSubmit = async () => {
-  if (!formRef.value) return;
-  
+const submitForm = async (formData) => {
+  submitLoading.value = true;
   try {
-    const formData = await formRef.value.submit();
-    if (formData) {
-      // TODO: 调用保存API
-      ElMessage.success(dialogType.value === 'add' ? '新增成功' : '编辑成功');
-      dialogVisible.value = false;
-      // 重新加载数据
+    if (dialogType.value === 'add') {
+      // 实际应用中应该调用API创建数据
+      // await createMenu(formData);
+      ElMessage.success('新增成功');
+    } else if (dialogType.value === 'edit') {
+      // 实际应用中应该调用API更新数据
+      // await updateMenu(formData);
+      ElMessage.success('更新成功');
     }
+    dialogVisible.value = false;
+    await fetchMenuList();
   } catch (error) {
-    console.error('表单提交失败:', error);
+    console.error('提交表单失败:', error);
     ElMessage.error('操作失败');
+  } finally {
+    submitLoading.value = false;
   }
 };
+
+// 打开图标选择器
+const openIconSelector = () => {
+  // 实现图标选择器逻辑
+  console.log('打开图标选择器');
+};
+
+// 页面初始化
+onMounted(() => {
+  fetchMenuList();
+});
 </script>
 
 <style scoped>

@@ -1,15 +1,16 @@
 package com.communitypension.communitypensionadmin.entity;
 
-import com.baomidou.mybatisplus.annotation.*;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 import java.io.Serializable;
-import java.time.LocalDateTime;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Data
 @TableName("kin")
@@ -41,26 +42,7 @@ public class Kin implements Serializable {
     @NotNull(message = "老人ID不能为空")
     @TableField("elder_id")
     private Long elderId;
-    
-    // 电话、地址和紧急联系人字段已移至user表
-    
-    /**
-     * 备注信息
-     */
-    @Size(max = 500, message = "备注信息长度不能超过500字符")
-    private String remark;
-    
-    /**
-     * 创建时间
-     */
-    @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createdAt;
 
-    /**
-     * 更新时间
-     */
-    @TableField(fill = FieldFill.INSERT_UPDATE)
-    private LocalDateTime updatedAt;
 
     /**
      * 关联的老人对象

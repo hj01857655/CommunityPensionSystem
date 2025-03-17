@@ -1,41 +1,32 @@
 import { defineStore } from 'pinia'
-import { getElderList, getElderById, addElder, updateElder, deleteElder, getElders } from '@/api/back/UserManage/ElderManage'
+import { getElderList, addElder, updateElder, deleteElder, getUnboundElders } from '@/api/back/UserManage/ElderManage'
 import { ElMessage } from 'element-plus'
 
 export const useElderStore = defineStore('elder', {
   state: () => ({
-    elderList: [],
-    total: 0,
-    currentPage: 1,
-    pageSize: 10,
-    loading: false,
-    searchQuery: '',
+    elderList: [],//老人列表
+    total: 0,//总条数
+    currentPage: 1,//当前页
+    pageSize: 10,//每页条数
+    loading: false,//加载状态
+    searchQuery: '',//搜索条件
+    unboundElderList: [] // 未绑定家属的老人列表
   }),
 
   actions: {
     // 获取老人列表
-    async fetchElders() {
+    async fetchElders(params) {
       this.loading = true;
       try {
-        const params = {
-          current: this.currentPage,
-          size: this.pageSize,
-          query: this.searchQuery,
-        };
-        console.log(params);
         const response = await getElderList(params);
-        console.log(response);
-
-        if (response.data) {
-          const { records, total } = response.data;
-          this.elderList = records;
-          this.total = total;
+        if (response.code === 200) {
+          this.elderList = response.data.records;
+        } else {
+          ElMessage.error(response.message || '获取老人列表失败');
         }
       } catch (error) {
         console.error('获取老人列表出错:', error);
         ElMessage.error('获取老人列表失败');
-        this.elderList = [];
-        this.total = 0;
       } finally {
         this.loading = false;
       }
@@ -98,6 +89,18 @@ export const useElderStore = defineStore('elder', {
       }
     },
 
-    
+    // 获取未绑定家属的老人列表
+    async fetchUnboundElders() {
+      try {
+        const response = await getUnboundElders();
+        if (response.code === 200) {
+          this.unboundElderList = response.data;
+        } else {
+          console.error('获取未绑定家属的老人列表失败:', response.message);
+        }
+      } catch (error) {
+        console.error('获取未绑定家属的老人列表出错:', error);
+      }
+    },
   }
 })

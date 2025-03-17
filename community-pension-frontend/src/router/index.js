@@ -264,10 +264,20 @@ const routes = [
             meta: { title: '角色管理', icon: 'User', roles: ['admin', 'staff'] }
           },
           {
+            path: 'profile',
+            name: 'UserProfile',
+            component: () => import('@/views/back/system/ProfilePage.vue'),
+            meta: { title: '个人中心', icon: 'User', roles: ['admin', 'staff'] }
+          },
+          {
             path: 'info',
-            name: 'UserInfo',
-            component: () => import('@/views/back/system/UserInfo.vue'),
-            meta: { title: '个人信息', icon: 'User', roles: ['admin', 'staff'] }
+            redirect: '/admin/system/profile',
+            meta: { roles: ['admin', 'staff'] }
+          },
+          {
+            path: 'password',
+            redirect: '/admin/system/profile?tab=password',
+            meta: { roles: ['admin', 'staff'] }
           }
         ]
       },

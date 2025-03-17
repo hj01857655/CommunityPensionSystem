@@ -186,11 +186,17 @@ export const importElders = async (file) => {
     }
 };
 
-// 获取老人列表
-export const getElders = () => {
-    return axios.get('/api/elders')
-        .catch(error => {
-            console.error('Error fetching elders:', error);
-            throw error;
-        });
+/**
+ * 获取未绑定家属的老人列表
+ * @returns {Promise<{code: number, data: Object, message: string}>}
+ */
+export const getUnboundElders = async () => {
+    try {
+        const response = await axios.get('/api/elders/unbound');
+        return response;
+    } catch (error) {
+        console.error('获取未绑定家属的老人列表失败:', error);
+        throw error;
+    }
 };
+
