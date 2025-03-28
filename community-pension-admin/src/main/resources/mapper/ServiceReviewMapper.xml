@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.communitypension.communitypensionadmin.mapper.ServiceReviewMapper">
+
+    <select id="selectReviewPage" resultType="com.communitypension.communitypensionadmin.entity.ServiceReview">
+        select r.*, u.username as user_name, s.service_name,
+        o.service_item_id, o.status as order_status, o.schedule_time
+        from service_review r
+        left join user u on u.user_id = r.user_id
+        left join service_order o on o.id = r.order_id
+        left join service s on s.service_id = o.service_item_id
+        <where>
+            <if test="review.orderId != null">
+                AND r.order_id = #{review.orderId}
+            </if>
+            <if test="review.userId != null">
+                AND r.user_id = #{review.userId}
+            </if>
+            <if test="review.rating != null">
+                AND r.rating = #{review.rating}
+            </if>
+        </where>
+        order by r.review_time desc
+    </select>
+    
+
+    
+
+    
+</mapper> 
