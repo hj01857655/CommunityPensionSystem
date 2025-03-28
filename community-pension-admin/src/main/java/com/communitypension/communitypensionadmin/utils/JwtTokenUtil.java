@@ -50,30 +50,30 @@ public class JwtTokenUtil {
     /**
      * 生成访问令牌
      */
-    public String generateAccessToken(String username, Long roleId) {
-        return generateToken(username, roleId, accessTokenExpiration, "access");
+    public String generateAccessToken(String username,Long roleId) {
+        return generateToken(username ,roleId,accessTokenExpiration, "access");
     }
 
     /**
      * 生成刷新令牌
      */
-    public String generateRefreshToken(String username, Long roleId) {
-        return generateToken(username, roleId, refreshTokenExpiration, "refresh");
+    public String generateRefreshToken(String username,Long roleId) {
+        return generateToken(username, roleId,refreshTokenExpiration, "refresh");
     }
 
     /**
      * 生成令牌
      */
-    private String generateToken(String username, Long roleId, long expiration, String tokenType) {
+    private String generateToken(String username, Long roleId,long expiration, String tokenType) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expiration);
 
-        logger.info("生成{}令牌: 用户={}, 角色ID={}, 过期时间={}", tokenType, username, roleId, expiryDate);
+        logger.info("生成{}令牌: 用户={},  过期时间={}", tokenType, username, expiryDate);
 
         Map<String, Object> claims = new HashMap<>();
         claims.put("sub", username);
-        claims.put("roleId", roleId);
         claims.put("type", tokenType);
+        claims.put("roleId", roleId);
 
         return Jwts.builder()
                 .claims(claims)
@@ -86,9 +86,9 @@ public class JwtTokenUtil {
     /**
      * 生成令牌对
      */
-    public TokenPair generateTokenPair(String username, Long roleId) {
+    public TokenPair generateTokenPair(String username,Long roleId) {
         String accessToken = generateAccessToken(username, roleId);
-        String refreshToken = generateRefreshToken(username, roleId);
+        String refreshToken = generateRefreshToken(username,roleId);
         return new TokenPair(accessToken, refreshToken);
     }
 
@@ -157,9 +157,8 @@ public class JwtTokenUtil {
         
         Claims claims = status.claims();
         String username = claims.getSubject();
-        Long roleId = claims.get("roleId", Long.class);
-        
-        return generateAccessToken(username, roleId);
+        Long roleId=getRoleIdFromToken(refreshToken);
+        return generateAccessToken(username,roleId);
     }
 
     /**
@@ -185,18 +184,15 @@ public class JwtTokenUtil {
             return null;
         }
     }
-
-    /**
-     * 从令牌中获取角色ID
-     */
     public Long getRoleIdFromToken(String token) {
         try {
             Claims claims = getClaimsFromToken(cleanToken(token));
             return claims.get("roleId", Long.class);
         } catch (Exception e) {
-            logger.error("从令牌获取角色ID失败: {}", e.getMessage(), e);
+            logger.error("从令牌获取用户名失败: {}", e.getMessage(), e);
             return null;
         }
+
     }
 
     /**

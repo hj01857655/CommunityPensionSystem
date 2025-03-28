@@ -29,8 +29,8 @@
           <el-form-item prop="roleId" label="角色">
             <el-select v-model="loginForm.roleId" placeholder="请选择角色" class="role-select" tabindex="3" 
               aria-label="角色选择" @change="onRoleChange">
-              <el-option label="社区工作人员" :value="3" />
-              <el-option label="管理员" :value="4" />
+              <el-option :label="'社区工作人员'" :value="3" />
+              <el-option :label="'管理员'" :value="4" />
             </el-select>
           </el-form-item>
 
@@ -51,7 +51,7 @@
       </el-card>
 
       <div class="login-footer">
-        <p>© {{ currentYear }} 社区养老系统 - 版权所有</p>
+        <p>© {{ currentYear }} 社区养老系统 - @copyright 版权所有</p>
       </div>
     </div>
 
@@ -83,6 +83,7 @@ import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import { User, Lock } from '@element-plus/icons-vue';
 import { useAdminStore } from '@/stores/back/adminStore';
+import { TokenManager, storageConfig } from '@/utils/axios';
 
 const router = useRouter();
 const adminStore = useAdminStore();
@@ -95,9 +96,9 @@ const forgotPasswordVisible = ref(false);
 const currentYear = computed(() => new Date().getFullYear());
 
 const loginForm = reactive({
-  username: '',
-  password: '',
-  roleId: '4'
+  username: '',//用户名
+  password: '',//密码
+  roleId: 4//角色id
 });
 const remember = ref(true);
 
@@ -107,21 +108,13 @@ const forgotForm = reactive({
 });
 
 const onRoleChange = (value) => {
-  loginForm.roleId = value;
+  console.log(value);
+  loginForm.roleId = parseInt(value, 10);
 };
 
 const loginRules = {
-  username: [
-    { required: true, message: '请输入用户名', trigger: 'blur' },
-    { min: 3, max: 20, message: '长度在 3 到 20 个字符', trigger: 'blur' }
-  ],
-  password: [
-    { required: true, message: '请输入密码', trigger: 'blur' },
-    { min: 6, message: '密码长度不能小于 6 个字符', trigger: 'blur' }
-  ],
-  roleId: [
-    { required: true, message: '请选择角色', trigger: 'change' }
-  ]
+  username: [{ required: true, trigger: 'blur', message: '请输入用户名' }],
+  password: [{ required: true, trigger: 'blur', message: '请输入密码' }]
 };
 
 const forgotRules = {
@@ -134,6 +127,28 @@ const forgotRules = {
   ]
 };
 
+// 获取角色名称
+const getRoleName = (roleId) => {
+  const roleMap = {
+    1: '老人'|'elder',
+    2: '家属'|'kin',
+    3: '社区工作人员'|'staff',
+    4: '管理员'|'admin',
+    5: '访客'|'visitor'
+  };
+  return roleMap[roleId] || '未知角色';
+};
+//
+const getRoleId = (roleName) => {
+  const roleMap = {
+    '老人': 1,
+    '家属': 2,
+    '社区工作人员': 3,
+    '管理员': 4,
+    '访客': 5
+  };
+  return roleMap[roleName] || 4;
+};
 // 处理登录
 const handleLogin = async () => {
   if (!loginFormRef.value) return;
@@ -143,19 +158,32 @@ const handleLogin = async () => {
     }
     try {
       loading.value = true;
+      if(typeof loginForm.roleId === 'string'){
+        loginForm.roleId = getRoleId(loginForm.roleId);
+      }
       const res = await adminStore.login(loginForm);
       if (res.code === 200) {
         ElMessage.success('登录成功');
+        
+        // 使用 TokenManager 存储 token
+        TokenManager.admin.set(res.data.accessToken, res.data.refreshToken);
+        
+        // 使用 storageConfig 存储用户角色
+        const storage = storageConfig.getStorage(storageConfig.admin);
+        storage.setItem("userRole", loginForm.roleId === 4 ? "admin" : "staff");
+        
         if (remember.value) {
-          sessionStorage.setItem('rememberedUsername', loginForm.username);
-          sessionStorage.setItem('rememberedRole', loginForm.roleId);
+          storage.setItem('rememberedUsername', loginForm.username);
+          storage.setItem('rememberedRole', getRoleName(loginForm.roleId)!=='未知角色' ? getRoleName(loginForm.roleId) : '');
+          storage.setItem('rememberRoleType', loginForm.roleId);
+          storage.setItem('rememberedRoleId', loginForm.roleId);
         } else {
-          sessionStorage.removeItem('rememberedUsername');
-          sessionStorage.removeItem('rememberedRole');
+          storage.removeItem('rememberedUsername');
+          storage.removeItem('rememberedRole');
         }
-        setTimeout(() => {
-          router.push('/admin/analysis/dashboard');
-        }, 300);
+        
+        // 直接跳转，不使用 setTimeout
+        router.push('/admin/home');
       }
     } catch (error) {
       console.error('登录失败:', error);
@@ -195,8 +223,9 @@ const handleResetPassword = async () => {
 };
 
 onMounted(() => {
-  const rememberedUsername = sessionStorage.getItem('rememberedUsername');
-  const rememberedRole = sessionStorage.getItem('rememberedRole');
+  const storage = storageConfig.getStorage(storageConfig.admin);
+  const rememberedUsername = storage.getItem('rememberedUsername');
+  const rememberedRole = storage.getItem('rememberedRole');
 
   if (rememberedUsername) {
     loginForm.username = rememberedUsername;

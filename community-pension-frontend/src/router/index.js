@@ -4,11 +4,32 @@ import ServiceView from '@/views/fore/ServiceView.vue';
 import ActivityView from '@/views/fore/ActivityView.vue';
 import NoticeView from '@/views/fore/NoticeView.vue';
 import ProfileView from '@/views/fore/ProfileView.vue';
+import { TokenManager, storageConfig } from '@/utils/axios';
 
 const routes = [
+  // 根路径重定向
   {
     path: '/',
     redirect: '/home'
+  },
+  // 错误页面路由
+  {
+    path: '/403',
+    name: 'Forbidden',
+    component: () => import('@/views/error/403.vue'),
+    meta: { requiresAuth: false, roles: ['elder', 'kin', 'staff', 'admin', 'guest'] }
+  },
+  {
+    path: '/404',
+    name: 'NotFound',
+    component: () => import('@/views/error/404.vue'),
+    meta: { requiresAuth: false, roles: ['elder', 'kin', 'staff', 'admin', 'guest'] }
+  },
+  {
+    path: '/500',
+    name: 'ServerError',
+    component: () => import('@/views/error/500.vue'),
+    meta: { requiresAuth: false, roles: ['elder', 'kin', 'staff', 'admin', 'guest'] }
   },
   //用户登录
   {
@@ -20,10 +41,14 @@ const routes = [
   //前台首页
   {
     path: '/home',
-    name: 'Home',
     component: () => import('@/views/fore/Home.vue'),
     meta: { requiresAuth: true, roles: ['elder', 'kin'] },
     children: [
+      {
+        path: 'dashboard',
+        name: 'Dashboard',
+        component: () => import('@/views/fore/DashBoard.vue')
+      },
       {
         path: 'health',
         name: 'HealthView',
@@ -45,6 +70,11 @@ const routes = [
         component: NoticeView
       },
       {
+        path: 'notice/:id',
+        name: 'NoticeDetailView',
+        component: () => import('@/views/fore/NoticeDetailView.vue')
+      },
+      {
         path: 'profile',
         name: 'ProfileView',
         component: ProfileView
@@ -63,40 +93,81 @@ const routes = [
     path: '/admin',
     name: 'AdminLayout',
     component: () => import('@/views/back/AdminLayout.vue'),
-    redirect: '/admin/analysis/dashboard',
+    redirect: '/admin/home',
     meta: { requiresAuth: true, roles: ['admin', 'staff'] },
     children: [
       {
-        path: 'analysis',
-        name: 'DataAnalysis',
-        meta: { title: '数据分析看板', icon: 'odometer', roles: ['admin', 'staff'] },
+        path: 'home',
+        name: 'Home',
+        component: () => import('@/views/back/home/Home.vue'),
+        meta: { title: '首页', icon: 'odometer', roles: ['admin', 'staff'] }
+      },
+      {
+        path: 'system',
+        name: 'SystemManagement',
+        component: () => import('@/views/back/system/index.vue'),
+        meta: { title: '系统管理', icon: 'Setting', roles: ['admin', 'staff'] },
         children: [
+
           {
-            path: 'dashboard',
-            name: 'Dashboard',
-            component: () => import('@/views/back/analysis/Dashboard.vue'),
-            meta: { title: '仪表盘', icon: 'odometer', roles: ['admin', 'staff'] }
+            path: 'user',
+            name: 'UserManagement',
+            component: () => import('@/views/back/system/user/index.vue'),
+            meta: { title: '用户管理', icon: 'User', roles: ['admin', 'staff'] },
+            children: [
+              {
+                path: 'auth-role/:userId(\\d+)',
+                name: 'AuthRole',
+                component: () => import('@/views/back/system/user/authRole.vue'),
+                hidden: true,
+                meta: {
+                  title: '分配角色',
+                  activeMenu: '/admin/system/user'
+                }
+              }
+            ]
           },
           {
-            path: 'activity',
-            name: 'ActivityAnalysis',
-            component: () => import('@/views/back/analysis/ActivityAnalysis.vue'),
-            meta: { title: '活动分析', icon: 'odometer', roles: ['admin', 'staff'] }
+            path: 'role',
+            name: 'RoleManagement',
+            component: () => import('@/views/back/system/role/index.vue'),
+            meta: { title: '角色管理', icon: 'User', activeMenu: '/admin/system/role' }
           },
           {
-            path: 'service',
-            name: 'ServiceAnalysis',
-            component: () => import('@/views/back/analysis/ServiceAnalysis.vue'),
-            meta: { title: '服务分析', icon: 'odometer', roles: ['admin', 'staff'] }
+            path: 'menu',
+            name: 'MenuManagement',
+            component: () => import('@/views/back/system/menu/index.vue'),
+            meta: { title: '菜单管理', icon: 'Menu', activeMenu: '/admin/system/menu' }
           },
           {
-            path: 'health',
-            name: 'HealthAnalysis',
-            component: () => import('@/views/back/analysis/HealthAnalysis.vue'),
-            meta: { title: '健康分析', icon: 'odometer', roles: ['admin', 'staff'] }
+            path: 'dict',
+            name: 'DictManagement',
+            component: () => import('@/views/back/system/dict/index.vue'),
+            meta: { title: '字典管理', icon: 'Document', activeMenu: '/admin/system/dict' },
+            children: [
+              {
+                path: 'type/:dictId(\\d+)',
+                name: 'DictDataManagement',
+                component: () => import('@/views/back/system/dict/data.vue'),
+                hidden: true,
+                meta: { title: '字典数据', icon: 'Document', activeMenu: '/admin/system/dict/data' }
+              }
+            ]
+          },
+          {
+            path: 'setting',
+            name: 'SystemSetting',
+            component: () => import('@/views/back/system/SystemSetting.vue'),
+            meta: { title: '系统设置', icon: 'Setting', roles: ['admin', 'staff'] }
+          },
+          {
+            path: 'user/profile',
+            redirect: '/admin/system/user/profile?tab=password',
+            meta: { roles: ['admin', 'staff'] }
           }
         ]
       },
+      //社区活动管理
       {
         path: 'activity',
         name: 'ActivityManagement',
@@ -120,38 +191,6 @@ const routes = [
             name: 'ActivityCheckinList',
             component: () => import('@/views/back/activity/ActivityCheckin.vue'),
             meta: { title: '活动签到管理', icon: 'calendar', roles: ['admin', 'staff'] }
-          }
-        ]
-      },
-      {
-        path: 'users',
-        name: 'UserManagement',
-        component: () => import('@/views/back/user/index.vue'),
-        meta: { title: '用户管理', icon: 'user', roles: ['admin', 'staff'] },
-        children: [
-          {
-            path: 'user',
-            name: 'UserList',
-            component: () => import('@/views/back/user/UserManagement.vue'),
-            meta: { title: '用户管理', icon: 'user', roles: ['admin'] }
-          },
-          {
-            path: 'elder',
-            name: 'ElderList',
-            component: () => import('@/views/back/user/ElderManagement.vue'),
-            meta: { title: '老人管理', icon: 'user', roles: ['admin'] }
-          },
-          {
-            path: 'kin',
-            name: 'KinList',
-            component: () => import('@/views/back/user/KinManagement.vue'),
-            meta: { title: '亲属管理', icon: 'user', roles: ['admin'] }
-          },
-          {
-            path: 'staff',
-            name: 'StaffList',
-            component: () => import('@/views/back/user/StaffManagement.vue'),
-            meta: { title: '社区工作人员管理', icon: 'user', roles: ['admin'] }
           }
         ]
       },
@@ -194,12 +233,6 @@ const routes = [
             meta: { title: '健康档案管理', icon: 'heart', roles: ['admin', 'staff'] }
           },
           {
-            path: 'assessment',
-            name: 'HealthAssessment',
-            component: () => import('@/views/back/health/HealthAssessment.vue'),
-            meta: { title: '健康评估管理', icon: 'heart', roles: ['admin', 'staff'] }
-          },
-          {
             path: 'monitor',
             name: 'HealthMonitor',
             component: () => import('@/views/back/health/HealthMonitor.vue'),
@@ -214,13 +247,7 @@ const routes = [
         meta: { title: '通知公告管理', icon: 'bell', roles: ['admin', 'staff'] },
         children: [
           {
-            path: 'type',
-            name: 'NoticeType',
-            component: () => import('@/views/back/notice/NoticeType.vue'),
-            meta: { title: '通知公告类型管理', icon: 'bell', roles: ['admin', 'staff'] }
-          },
-          {
-            path: 'list',
+            path: '',
             name: 'NoticeList',
             component: () => import('@/views/back/notice/NoticeManagement.vue'),
             meta: { title: '通知公告管理', icon: 'bell', roles: ['admin', 'staff'] }
@@ -233,54 +260,7 @@ const routes = [
           }
         ]
       },
-      {
-        path: 'system',
-        name: 'SystemManagement',
-        component: () => import('@/views/back/system/index.vue'),
-        meta: { title: '系统管理', icon: 'Setting', roles: ['admin', 'staff'] },
-        children: [
-          {
-            path: 'setting',
-            name: 'SystemSetting',
-            component: () => import('@/views/back/system/SystemSetting.vue'),
-            meta: { title: '系统设置', icon: 'Setting', roles: ['admin', 'staff'] }
-          },
-          {
-            path: 'menu',
-            name: 'MenuManagement',
-            component: () => import('@/views/back/system/MenuManagement.vue'),
-            meta: { title: '菜单管理', icon: 'Menu', roles: ['admin', 'staff'] }
-          },
-          {
-            path: 'permission',
-            name: 'PermissionManagement',
-            component: () => import('@/views/back/system/PermissionManagement.vue'),
-            meta: { title: '权限管理', icon: 'Lock', roles: ['admin', 'staff'] }
-          },
-          {
-            path: 'role',
-            name: 'RoleManagement',
-            component: () => import('@/views/back/system/RoleManagement.vue'),
-            meta: { title: '角色管理', icon: 'User', roles: ['admin', 'staff'] }
-          },
-          {
-            path: 'profile',
-            name: 'UserProfile',
-            component: () => import('@/views/back/system/ProfilePage.vue'),
-            meta: { title: '个人中心', icon: 'User', roles: ['admin', 'staff'] }
-          },
-          {
-            path: 'info',
-            redirect: '/admin/system/profile',
-            meta: { roles: ['admin', 'staff'] }
-          },
-          {
-            path: 'password',
-            redirect: '/admin/system/profile?tab=password',
-            meta: { roles: ['admin', 'staff'] }
-          }
-        ]
-      },
+
       {
         path: 'error',
         name: 'ErrorPage',
@@ -314,17 +294,53 @@ const routes = [
 
 const router = createRouter({
   history: createWebHistory(),
+  
   routes
 });
 
 router.beforeEach((to, from, next) => {
-  const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
-  
-  if (to.meta.requiresAuth && !isLoggedIn) {
-    next('/login');
-  } else {
-    next();
+  const isAdminRoute = to.path.startsWith('/admin');
+  const isAdminLoggedIn = TokenManager.admin.getAccessToken();
+  const isUserLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+  const userRole = isAdminRoute ? 
+    storageConfig.getStorage(storageConfig.admin).getItem("userRole") : 
+    localStorage.getItem("userRole");
+
+  // 如果是错误页面或登录页面，直接放行
+  if (to.path === '/403' || to.path === '/404' || to.path === '/500' || 
+      to.path === '/login' || to.path === '/admin/login') {
+    return next();
   }
+
+  // 处理后台路由认证
+  if (isAdminRoute) {
+    if (!isAdminLoggedIn) {
+      return next('/admin/login');
+    }
+    // 检查管理员角色
+    if (userRole !== 'admin' && userRole !== 'staff') {
+      return next('/403');
+    }
+    return next();
+  }
+
+  // 处理前台路由认证
+  if (to.meta.requiresAuth) {
+    if (!isUserLoggedIn) {
+      return next('/login');
+    }
+    // 检查用户角色
+    if (userRole === 'admin' || userRole === 'staff') {
+      return next('/403');
+    }
+  }
+
+  // 如果需要特定角色且用户角色不符合要求
+  if (to.meta.roles && !to.meta.roles.includes(userRole)) {
+    return next('/403');
+  }
+
+  next();
 });
 
 export default router;

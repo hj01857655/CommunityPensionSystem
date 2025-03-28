@@ -1,16 +1,18 @@
 package com.communitypension.communitypensionadmin.utils;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 import org.springframework.lang.NonNull;
+import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Component
+
 public class JwtInterceptor implements HandlerInterceptor {
+
     private static final Logger logger = LoggerFactory.getLogger(JwtInterceptor.class);
     
     private final JwtTokenUtil jwtTokenUtil;
@@ -20,9 +22,25 @@ public class JwtInterceptor implements HandlerInterceptor {
     }
     
     private final ObjectMapper objectMapper = new ObjectMapper();
-    
+
+
     @Override
     public boolean preHandle(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull Object handler) throws Exception {
+        // 放行登录接口
+        logger.info("拦截请求: {}", request.getRequestURI());
+        String requestURI = request.getRequestURI();
+        // 精确匹配登录接口路径
+        if (requestURI.equals("/api/auth/login") ||requestURI.equals(("/auth/login")) ||
+                requestURI.equals("/api/auth/adminLogin") ||
+                requestURI.equals("/auth/adminLogin") ||
+                requestURI.equals("/api/auth/refresh") ||
+                requestURI.equals("/auth/refresh") ||
+                requestURI.startsWith("/static/") ||
+                requestURI.startsWith("/public/")) {
+            logger.info("放行登录接口: {}", requestURI);
+            return true;  // 放行这些请求
+        }
+        logger.info("拦截请求: {}", request.getRequestURI());
         // 获取访问令牌
         String accessToken = request.getHeader("Authorization");
         logger.info("访问令牌: {}", accessToken);
@@ -62,11 +80,9 @@ public class JwtInterceptor implements HandlerInterceptor {
         
         // 令牌有效，将用户信息存储在请求属性中
         String username = jwtTokenUtil.getUsernameFromToken(accessToken);
-        Long roleId = jwtTokenUtil.getRoleIdFromToken(accessToken);
         request.setAttribute("username", username);
-        request.setAttribute("roleId", roleId);
         
-        logger.info("用户 {} (角色ID: {}) 的请求已通过认证", username, roleId);
+        logger.info("用户 {}  的请求已通过认证", username);
         return true;
     }
     
@@ -95,11 +111,9 @@ public class JwtInterceptor implements HandlerInterceptor {
             
             // 从新的访问令牌中获取用户信息
             String username = jwtTokenUtil.getUsernameFromToken(newAccessToken);
-            Long roleId = jwtTokenUtil.getRoleIdFromToken(newAccessToken);
             request.setAttribute("username", username);
-            request.setAttribute("roleId", roleId);
             
-            logger.info("用户 {} (角色ID: {}) 的请求通过刷新令牌认证，已生成新的访问令牌", username, roleId);
+            logger.info("用户 {} 的请求通过刷新令牌认证，已生成新的访问令牌", username);
             return true;
         } catch (Exception e) {
             logger.error("处理刷新令牌时发生错误: {}", e.getMessage(), e);

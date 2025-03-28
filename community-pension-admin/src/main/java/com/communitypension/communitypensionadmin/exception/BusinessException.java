@@ -1,18 +1,20 @@
 package com.communitypension.communitypensionadmin.exception;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-
-@Getter
-@AllArgsConstructor
-@NoArgsConstructor
+/**
+ * 业务异常
+ */
 public class BusinessException extends RuntimeException {
-    private int code;
+    private static final long serialVersionUID = 1L;
 
-    public BusinessException(int code, String message) {
+    public BusinessException(String message) {
         super(message);
-        this.code = code;
     }
 
+    public BusinessException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public BusinessException(Throwable cause) {
+        super(cause);
+    }
 }

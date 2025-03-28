@@ -10,7 +10,7 @@ const router = useRouter();
 
 const goHome = () => {
   if (localStorage.getItem('role') === 'admin') {
-    router.push('/admin/analysis/dashboard');
+    router.push('/admin/home');
   } else {
     router.push('/');
   }

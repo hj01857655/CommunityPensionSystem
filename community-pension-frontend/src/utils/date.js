@@ -1,33 +1,35 @@
-/**
- * 日期格式化工具函数
- * @param {Date|string|number} date 要格式化的日期
- * @param {string} [format='YYYY-MM-DD HH:mm:ss'] 格式化模式
- * @returns {string} 格式化后的日期字符串
- */
-export const formatDate = (date, format = 'YYYY-MM-DD HH:mm:ss') => {
-  if (!date) return '';
-  
-  // 如果传入的是时间戳或日期字符串，转换为Date对象
-  if (!(date instanceof Date)) {
-    date = new Date(date);
-  }
-
-  const year = date.getFullYear();
-  const month = date.getMonth() + 1;
-  const day = date.getDate();
-  const hours = date.getHours();
-  const minutes = date.getMinutes();
-  const seconds = date.getSeconds();
-
-  // 补零函数
-  const padZero = (num) => num.toString().padStart(2, '0');
-
-  // 替换格式化字符
-  return format
-    .replace('YYYY', year)
-    .replace('MM', padZero(month))
-    .replace('DD', padZero(day))
-    .replace('HH', padZero(hours))
-    .replace('mm', padZero(minutes))
-    .replace('ss', padZero(seconds));
+// 格式化日期为YYYY-MM-DD
+export const formatDate = (dateString) => {
+  if (!dateString) return ''
+  const date = new Date(dateString)
+  return date.toISOString().split('T')[0]
 }
+
+// 格式化日期时间为YYYY-MM-DD HH:mm:ss
+export const formatDateTime = (dateString) => {
+  if (!dateString) return ''
+  const date = new Date(dateString)
+  return date.toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  }).replace(/\//g, '-')
+}
+
+// 格式化日期 - 简短版本
+export const formatDateShort = (dateString) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+};
+
+// 格式化日期 - 详细版本
+export const formatDateDetail = (dateString) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`;
+};

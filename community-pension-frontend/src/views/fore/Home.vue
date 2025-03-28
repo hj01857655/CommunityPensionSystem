@@ -32,15 +32,13 @@
         <el-breadcrumb-item>{{ breadcrumbMap[activeIndex] }}</el-breadcrumb-item>
       </el-breadcrumb>
 
-      <el-row :gutter="20">
-        <!-- Dashboard -->
-        <template v-if="activeIndex === 'home'">
-          <DashBoard :is-logged-in="isLoggedIn" />
-        </template>
+      <!-- Dashboard -->
+      <template v-if="activeIndex === 'home'">
+        <DashBoard :is-logged-in="isLoggedIn" />
+      </template>
 
-        <!-- 其他组件 -->
-        <component :is="currentComponent" v-if="activeIndex !== 'home'" v-model:active-index="activeIndex" />
-      </el-row>
+      <!-- 子路由内容 -->
+      <router-view v-else class="router-view" />
     </el-main>
 
     <!-- Footer -->
@@ -148,7 +146,21 @@ const handleMenuSelect = (index) => {
     return;
   }
   activeIndex.value = index;
+  // 使用路由导航
+  if(index === 'home'){
+    router.push(`/home`);
+  }else{
+    router.push(`/home/${index}`);
+  }
 };
+
+// 监听路由变化，更新activeIndex
+watch(() => router.currentRoute.value.path, (newPath) => {
+  const pathParts = newPath.split('/');
+  if (pathParts.length >= 3) {
+    activeIndex.value = pathParts[2];
+  }
+}, { immediate: true });
 
 // 用户操作
 const handleCommand = async (command) => {
@@ -156,7 +168,10 @@ const handleCommand = async (command) => {
     ElMessage.warning('请先登录以访问此功能');
     return;
   }
-  if (command === 'profile' || command === 'changePassword') {
+  if (command === 'profile') {
+    activeIndex.value = 'profile';
+    router.push('/home/profile');
+  } else if (command === 'changePassword') {
     activeIndex.value = command;
   } else if (command === 'logout') {
     ElMessage.success('退出登录成功');
@@ -238,6 +253,24 @@ const getServiceStatusType = (status) => {
   flex: 1;
   padding: 20px;
   background-color: #f0f2f5;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: auto;
+}
+
+:deep(.el-main) {
+  padding: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.router-view {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .footer {

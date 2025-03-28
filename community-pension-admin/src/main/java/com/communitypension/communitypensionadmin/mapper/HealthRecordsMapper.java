@@ -12,9 +12,8 @@ public interface HealthRecordsMapper extends BaseMapper<HealthRecords> {
 // 使用@Select注解来定义一个SQL查询语句
     @Select("SELECT hr.*, e.name AS elder_name " +  // 选择health_records表中的所有字段，并将elder表中的name字段重命名为elder_name
             "FROM health_records hr " +  // 从health_records表中选择数据
-            "LEFT JOIN elder e ON hr.elder_id = e.id " +  // 使用LEFT JOIN将health_records表与elder表连接，连接条件是elder_id等于elder表的主键id
+            "LEFT JOIN user e ON hr.elder_id = e.user_id " +  // 使用LEFT JOIN将health_records表与elder表连接，连接条件是elder_id等于elder表的主键id
             "WHERE hr.elder_id = #{elderId}")  // 查询条件是health_records表中的elder_id等于传入的elderId参数
-
 // 定义一个接口方法selectHealthRecordsWithElderInfoByElderId，用于根据elderId查询健康记录，并包含老人信息
     HealthRecords selectHealthRecordsWithElderInfoByElderId(@Param("elderId") Long elderId);  // @Param注解用于将方法参数elderId绑定到SQL查询中的#{elderId}占位符
 

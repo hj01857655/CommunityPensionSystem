@@ -13,43 +13,25 @@ export const getServiceList = async () => {
 
 // 获取服务详情
 export function getServiceDetail(id) {
-  return request({
-    url: `/api/services/${id}`,
-    method: 'get'
-  });
+  return axios.get(`/api/services/${id}`);
 }
 
 // 创建服务预约
 export function createServiceAppointment(data) {
-  return request({
-    url: '/api/service-appointments',
-    method: 'post',
-    data
-  });
+  return axios.post('/api/service-appointments', data);
 }
 
 // 获取我的服务预约列表
 export function getMyServiceAppointments(params) {
-  return request({
-    url: '/api/service-appointments/my',
-    method: 'get',
-    params
-  });
+  return axios.get('/api/service-appointments/my', { params });
 }
 
 // 取消服务预约
 export function cancelServiceAppointment(id) {
-  return request({
-    url: `/api/service-appointments/${id}/cancel`,
-    method: 'put'
-  });
+  return axios.put(`/api/service-appointments/${id}/cancel`);
 }
 
 // 评价服务
 export function evaluateService(id, data) {
-  return request({
-    url: `/api/service-appointments/${id}/evaluate`,
-    method: 'post',
-    data
-  });
+  return axios.post(`/api/service-appointments/${id}/evaluate`, data);
 }

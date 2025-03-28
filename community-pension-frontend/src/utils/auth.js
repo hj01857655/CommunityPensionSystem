@@ -1,11 +1,11 @@
 import router from '@/router'
-import { useUserStore } from '@/stores/user'
+import { useUserStore } from '@/stores/back/userStore'
 // 检查权限
 export const checkPermission = (requiredRoles) => {
   const userStore = useUserStore()
   return requiredRoles.some(role => userStore.roles.includes(role))
 }
-
+// 设置路由守卫
 export const setupRouterGuard = () => {
   router.beforeEach((to, from, next) => {
     const userStore = useUserStore()

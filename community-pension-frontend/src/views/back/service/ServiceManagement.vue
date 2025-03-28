@@ -64,17 +64,13 @@
             </template>
           </el-table-column>
         </el-table>
-        <div class="pagination-container">
-          <el-pagination
-            v-model:current-page="currentPage"
-            v-model:page-size="pageSize"
-            :page-sizes="[10, 20, 50, 100]"
-            layout="total, sizes, prev, pager, next, jumper"
-            :total="totalItems"
-            @size-change="handleSizeChange"
-            @current-change="handleCurrentChange"
-          />
-        </div>
+        <Pagination
+          v-if="serviceStore.serviceItemTotal > 0"
+          :total="serviceStore.serviceItemTotal"
+          v-model:page="queryParams.pageNum"
+          v-model:limit="queryParams.pageSize"
+          @pagination="getList"
+        />
       </el-card>
       
       <!-- 服务表单对话框 -->
@@ -125,9 +121,13 @@
   </template>
   
   <script setup>
-  import { ref, computed } from 'vue'
+  import { ref, computed, reactive, onMounted } from 'vue'
   import { ElMessage, ElMessageBox } from 'element-plus'
   import { Search } from '@element-plus/icons-vue'
+  import Pagination from '@/components/common/Pagination.vue'
+  import { useServiceStore } from '@/stores/back/service'
+  
+  const serviceStore = useServiceStore()
   
   // 服务列表数据（静态数据）
   const services = ref([

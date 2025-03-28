@@ -28,19 +28,7 @@ export const getStatusTagType = (status) => {
   return typeMap[status] || 'info';
 };
 
-// 格式化日期 - 简短版本
-export const formatDate = (dateString) => {
-  if (!dateString) return '';
-  const date = new Date(dateString);
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-};
 
-// 格式化日期 - 详细版本
-export const formatDateDetail = (dateString) => {
-  if (!dateString) return '';
-  const date = new Date(dateString);
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`;
-};
 
 // 通知数据转换（后台到前台）
 export const transformNoticeForFrontend = (notice) => {
@@ -71,4 +59,4 @@ export const transformNoticeForBackend = (notice) => {
     status: notice.status,
     attachments: notice.attachments
   };
-}; 
+};

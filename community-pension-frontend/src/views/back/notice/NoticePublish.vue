@@ -235,7 +235,7 @@ const handleBack = () => {
     cancelButtonText: '取消',
     type: 'warning'
   }).then(() => {
-    router.push('/admin/notice');
+    router.push('/admin/notice/');
   }).catch(() => {
     // 取消离开
   });
@@ -269,7 +269,7 @@ const handlePublish = () => {
         ElMessage.success(isEdit.value ? '通知更新成功' : '通知发布成功');
         publishing.value = false;
         previewVisible.value = false;
-        router.push('/admin/notice');
+        router.push('/admin/notice/');
       }, 800);
     } else {
       return false;
