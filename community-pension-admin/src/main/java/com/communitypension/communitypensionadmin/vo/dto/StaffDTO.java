@@ -1,4 +1,4 @@
-package com.communitypension.communitypensionadmin.dto;
+package com.communitypension.communitypensionadmin.vo.dto;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;

@@ -1,55 +1,76 @@
 package com.communitypension.communitypensionadmin.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
-import org.hibernate.annotations.ColumnDefault;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import com.baomidou.mybatisplus.annotation.TableField;
+import java.util.List;
 
-import java.time.Instant;
-
-
-@Entity
+/**
+ *  角色实体类
+ */
+@EqualsAndHashCode(callSuper = true)
 @Data
-@TableName("roles")
-public class Role {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", nullable = false)
-    private Long id;
+@NoArgsConstructor
+@TableName("role")
+public class Role extends BaseEntity {
 
-    @Size(max = 50)
-    @NotBlank
-    @Column(name = "role_name", nullable = false, length = 50)
+    /**
+     * 角色ID
+     */
+    @TableId(value = "role_id", type = IdType.AUTO)
+    private Long roleId;
+    /**
+     * 角色名称
+     */
+    @NotBlank(message = "角色名称不能为空")
+    @Size(min = 0, max =30, message = "角色名称长度不能超过30个字符")
+
     private String roleName;
 
-    @Size(max = 255)
-    @NotBlank
-    @Column(name = "role_description")
-    private String roleDescription;
+    /**
+     * 角色权限字符串
+     */
+    @NotBlank(message = "权限字符不能为空")
+    @Size(min = 0, max = 100, message = "权限字符长度不能超过100个字符")
+    private String roleKey;
 
-    @Lob
-    @Column(name = "permissions")
-    private String permissions;
+    /**
+     * 显示顺序
+     */
+    @NotBlank(message = "显示顺序不能为空")
+    private Integer roleSort;
 
-    @NotNull
-    @Column(name = "status", nullable = false)
-    private Boolean status = false;
+    /**
+     * 数据范围（1：全部数据权限 2：自定数据权限 3：本部门数据权限 4：本部门及以下数据权限）
+     */
+    private String dataScope;
 
-    @Column(name = "created_by")
-    private Long createdBy;
+    /**
+     * 菜单树选择项是否关联显示
+     */
+    private Boolean menuCheckStrictly;
 
-    @ColumnDefault("CURRENT_TIMESTAMP")
-    @Column(name = "created_at")
-    private Instant createdAt;
 
-    @Column(name = "updated_by")
-    private Long updatedBy;
+    /**
+     * 角色状态（0正常 1停用）
+     */
+    private String status;
 
-    @ColumnDefault("CURRENT_TIMESTAMP")
-    @Column(name = "updated_at")
-    private Instant updatedAt;
+    /**
+     * 删除标志（0代表存在 2代表删除）
+     */
+    private String delFlag;
+
+    /**
+     *  角色菜单列表
+     */
+    @TableField(exist = false)
+    private List<Long> menuIds;
 
 }

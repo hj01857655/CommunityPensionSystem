@@ -1,10 +1,19 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import path from 'path'
+import { createSvgIconsPlugin } from 'vite-plugin-svg-icons'
 // 配置vite
 export default defineConfig({
   // 插件 
-  plugins: [vue()],
+  plugins: [
+    vue(),
+    createSvgIconsPlugin({
+      // 指定需要缓存的图标文件夹
+      iconDirs: [path.resolve(process.cwd(), 'src/assets/icons/svg')],
+      // 指定symbolId格式
+      symbolId: 'icon-[dir]-[name]'
+    })
+  ],
   // 定义
   define: {
     __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: 'false', // 修复为字符串
@@ -14,6 +23,7 @@ export default defineConfig({
   // 配置别名
   resolve: {
     alias: {
+      '~': path.resolve(__dirname, './'),
       '@': path.resolve(__dirname, './src'),
       '@assets': path.resolve(__dirname, './src/assets'), 
       '@components': path.resolve(__dirname, './src/components'),
@@ -25,20 +35,21 @@ export default defineConfig({
     },
     extensions: ['.js', '.vue', '.json'] // 添加文件扩展名支持
   },
-  // 配置
-  server:{
-    host:'0.0.0.0', // 允许外部访问 
-    port:8000,      // 端口号
-    open:false,      // 是否自动打开浏览器
-    // 配置代理
-    proxy:{
-      '/api':{
-        target:'http://127.0.0.1:9000', //后端服务地址
-        changeOrigin:true,     //是否跨域
-        rewrite:(path)=>path  //不重写路径，保留/api前缀
+  
+  // 服务器配置
+  server: {
+    host: '0.0.0.0',
+    port: 5173,
+    open: true,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:9000',
+        changeOrigin: true,
+        rewrite: (path) => path
       }
     }
   },
+  
   // 构建配置
   build: {
     minify: 'terser', // 使用terser进行代码压缩

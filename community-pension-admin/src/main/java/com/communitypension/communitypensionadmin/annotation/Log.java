@@ -4,7 +4,6 @@ import com.communitypension.communitypensionadmin.enums.BusinessType;
 import com.communitypension.communitypensionadmin.enums.OperatorType;
 
 import java.lang.annotation.*;
-
 /**
  * 自定义注解，用于操作日志记录
  */

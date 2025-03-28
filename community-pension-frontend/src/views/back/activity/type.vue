@@ -126,7 +126,7 @@ import {
   addActivityType,
   updateActivityType,
   deleteActivityType
-} from '@/api/back/ActivityManage/ActivityType'
+} from '@/api/back/activity/type'
 
 // 表格数据
 const loading = ref(false)

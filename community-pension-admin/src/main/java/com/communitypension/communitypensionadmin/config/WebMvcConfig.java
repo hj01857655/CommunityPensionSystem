@@ -5,7 +5,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.lang.NonNull;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-
+/**
+ * WebMvc配置
+ */
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {
     // 注入JwtInterceptor
@@ -17,13 +19,17 @@ public class WebMvcConfig implements WebMvcConfigurer {
     // 注册拦截器
     @Override
     public void addInterceptors(@NonNull InterceptorRegistry registry) {
-        // 注册拦截器
         registry.addInterceptor(jwtInterceptor)
-                .excludePathPatterns(
-                        "/api/**",
-                        "/api/auth/refresh",  // 排除刷新令牌接口
-                        "/api/users/adminLogin",  // 排除后台登录接口
-                        "/api/users/userLogin" // 排除前台登录接口
+                .addPathPatterns("/**")  // 拦截所有请求
+                .excludePathPatterns(    // 不拦截的路径
+                    "/api/auth/login",
+                    "/api/auth/adminLogin",
+                    "/api/auth/refresh",
+                    "/error",
+                    "/swagger-ui/**",
+                    "/v3/api-docs/**",
+                    "/static/**",
+                    "/public/**"
                 );
     }
 }

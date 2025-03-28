@@ -1,4 +1,4 @@
-package com.communitypension.communitypensionadmin.dto;
+package com.communitypension.communitypensionadmin.vo.dto;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;

@@ -94,18 +94,14 @@
         </el-table-column>
       </el-table>
 
-      <!-- 分页 -->
-      <div class="pagination-container">
-        <el-pagination 
-          v-model:current-page="currentPage" 
-          v-model:page-size="pageSize" 
-          :page-sizes="[10, 20, 50, 100]"
-          layout="total, sizes, prev, pager, next, jumper" 
-          :total="totalItems" 
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
-          background />
-      </div>
+      <!-- 修改分页组件 -->
+      <pagination
+        v-if="total > 0"
+        :total="total"
+        v-model:page="queryParams.pageNum"
+        v-model:limit="queryParams.pageSize"
+        @pagination="getList"
+      />
     </el-card>
 
     <!-- 审核对话框 -->
@@ -127,8 +123,8 @@
         </el-form-item>
         <el-form-item label="审核结果" required>
           <el-radio-group v-model="approveForm.status">
-            <el-radio label="approved">通过</el-radio>
-            <el-radio label="rejected">不通过</el-radio>
+            <el-radio value="approved">通过</el-radio>
+            <el-radio value="rejected">不通过</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="审核意见">
@@ -218,6 +214,7 @@
 import { ref, computed, reactive, onMounted } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { Search, Check, Close, Download, InfoFilled, Calendar, Location, User, Phone } from '@element-plus/icons-vue';
+import Pagination from '@/components/common/Pagination.vue';
 
 // 报名数据
 const tableData = ref([

@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { getHealthRecords, addHealthRecord, updateHealthRecord, deleteHealthRecord, getElders, listHealthRecords } from '@/api/back/HealthManage/healthRecords';
+import { getHealthRecords, addHealthRecord, updateHealthRecord, deleteHealthRecord, getElders, listHealthRecords } from '@/api/back/health/records';
 
 export const useHealthStore = defineStore('health', {
     state: () => ({

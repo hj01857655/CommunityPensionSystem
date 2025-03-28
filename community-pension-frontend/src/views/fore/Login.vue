@@ -11,10 +11,10 @@
           </el-select>
         </el-form-item>
         <el-form-item prop="username">
-          <el-input v-model="loginForm.username" placeholder="请输入用户名" prefix-icon="User" clearable />
+          <el-input v-model="loginForm.username" placeholder="请输入用户名/手机号/身份证号" clearable />
         </el-form-item>
         <el-form-item prop="password">
-          <el-input v-model="loginForm.password" type="password" placeholder="请输入密码" prefix-icon="Lock" show-password
+          <el-input v-model="loginForm.password" type="password" placeholder="请输入密码" show-password
             clearable />
         </el-form-item>
         <el-form-item class="extra-options">
@@ -57,7 +57,7 @@ const loading = ref(false);
 const loginRules = ref({
   roleId: [{ required: true, message: '请选择角色', trigger: 'change' }],
   username: [
-    { required: true, message: '请输入用户名', trigger: 'blur' },
+    { required: true, message: '请输入用户名/手机号/身份证号', trigger: 'blur' },
     { min: 3, max: 20, message: '用户名长度在 3 到 20 个字符', trigger: 'blur' },
   ],
   password: [
@@ -83,11 +83,16 @@ const submitForm = async () => {
         //如果接口返回数据成功，view中是code
         if (response.code === 200&&response.data&&response.message) {
           console.log("前台登录页面登录成功返回", response.data);
+          // 存储用户角色
+          localStorage.setItem("userRole", loginForm.value.roleId === 1 ? "elder" : "kin");
           console.log("跳转到首页");
           router.push("/home");
         }else if(response.code==401){
+          ElMessage.error(response.message);
           console.log("登录失败，跳转到登录页面");
           router.push("/login");
+        }else{
+          ElMessage.error(response.message);
         }
       } catch (err) {
         console.error("登录错误", err);
@@ -131,7 +136,7 @@ onMounted(() => {
 
 .title {
   text-align: center;
-  font-size: 28px;
+  font-size: 32px;
   color: #2c3e50;
   margin-bottom: 35px;
   font-weight: 600;
@@ -145,6 +150,14 @@ onMounted(() => {
   margin-bottom: 24px;
 }
 
+.el-form-item label {
+  font-size: 18px;
+}
+
+.el-input {
+  font-size: 18px;
+}
+
 .extra-options {
   display: flex;
   justify-content: space-between;
@@ -152,10 +165,11 @@ onMounted(() => {
   margin-bottom: 20px;
   padding: 0 10px;
   gap: 20px;
+  font-size: 16px;
 }
 
 .forgot-password {
-  font-size: 14px;
+  font-size: 16px;
   color: #409eff;
   text-decoration: none;
   margin-left: 10px;
@@ -167,7 +181,7 @@ onMounted(() => {
 
 .el-button {
   height: 46px;
-  font-size: 16px;
+  font-size: 18px;
   border-radius: 8px;
   transition: opacity 0.3s;
 }

@@ -143,61 +143,37 @@ import { ref, computed, onMounted } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { Search, Edit, Delete, View, Plus } from '@element-plus/icons-vue';
 import { useRouter } from 'vue-router';
+import { useNoticeStore } from '@/stores/back/noticeStore';
 import { 
     getTypeTagType, 
     getStatusTagType, 
-    formatDate, 
-    formatDateDetail,
     noticeStatusMap,
     transformNoticeForFrontend,
     transformNoticeForBackend
 } from '@/utils/notice';
+import { formatDate, formatDateDetail } from '@/utils/date';
 
 const router = useRouter();
+const noticeStore = useNoticeStore();
 
-// 通知列表数据
-const notices = ref([
-    {
-        id: 1,
-        title: '关于社区老年人健康体检的通知',
-        type: '健康通知',
-        content: '<p>各位社区老年人：</p><p>为了关心老年人健康，社区将于2024年6月15日至20日开展免费健康体检活动。请各位老年人携带身份证和社区卡到社区服务中心参加体检。</p><p>体检项目包括：血压、血糖、心电图、B超等基础检查项目。</p><p>请各位老年人合理安排时间参加。</p>',
-        publishTime: '2024-06-01 09:00:00',
-        publisher: '社区管理员',
-        status: 'published',
-        isTop: true
-    },
-    {
-        id: 2,
-        title: '端午节活动安排',
-        type: '活动通知',
-        content: '<p>各位社区居民：</p><p>端午节即将到来，社区将组织以下活动：</p><ol><li>包粽子比赛</li><li>诗词朗诵会</li><li>传统文化讲座</li></ol><p>欢迎大家踊跃参加！</p>',
-        publishTime: '2024-06-05 10:30:00',
-        publisher: '社区活动部',
-        status: 'published',
-        isTop: false
-    },
-    {
-        id: 3,
-        title: '社区环境整治工作通知',
-        type: '工作通知',
-        content: '<p>为创建美丽社区环境，定于本周六上午8:00-11:00进行社区环境整治工作，请各位居民积极配合。</p>',
-        publishTime: '',
-        publisher: '社区管理员',
-        status: 'draft',
-        isTop: false
-    },
-    {
-        id: 4,
-        title: '防暑降温温馨提示',
-        type: '健康通知',
-        content: '<p>近期天气炎热，请各位老年人注意防暑降温，多喝水，少外出，保持室内通风。如有不适，请及时就医。</p>',
-        publishTime: '2024-05-20 14:00:00',
-        publisher: '社区卫生服务站',
-        status: 'expired',
-        isTop: false
+// 获取通知列表
+const getNotices = async () => {
+    try {
+        loading.value = true;
+        await noticeStore.loadNoticeList({
+            page: currentPage.value,
+            pageSize: pageSize.value,
+            status: statusFilter.value === 'published' ? '1' : 
+                   statusFilter.value === 'draft' ? '0' : 
+                   statusFilter.value === 'expired' ? '2' : '',
+            search: searchQuery.value
+        });
+    } catch (error) {
+        ElMessage.error('获取通知列表失败');
+    } finally {
+        loading.value = false;
     }
-]);
+};
 
 // 状态和加载
 const loading = ref(false);
@@ -212,11 +188,14 @@ const currentNotice = ref(null);
 
 // 过滤后的通知列表
 const filteredNotices = computed(() => {
-    let result = notices.value;
+    let result = noticeStore.noticeList;
     
     // 状态筛选
     if (statusFilter.value !== 'all') {
-        result = result.filter(item => item.status === statusFilter.value);
+        const expectedStatus = statusFilter.value === 'published' ? '1' : 
+                              statusFilter.value === 'draft' ? '0' : 
+                              statusFilter.value === 'expired' ? '2' : '';
+        result = result.filter(item => item.status === expectedStatus);
     }
     
     // 搜索筛选
@@ -232,26 +211,27 @@ const filteredNotices = computed(() => {
 });
 
 // 总通知数
-const totalNotices = computed(() => filteredNotices.value.length);
+const totalNotices = computed(() => noticeStore.total);
 
 // 获取状态类型
 const getStatusType = (status) => {
     const typeMap = {
-        'published': 'success',
-        'draft': 'info',
-        'expired': 'danger'
+        '1': 'success',  // 已发布
+        '0': 'info',     // 草稿
+        '2': 'warning'   // 已撤回
     };
     return typeMap[status] || 'info';
 };
 
 // 获取状态文本
 const getStatusText = (status) => {
+
     const textMap = {
-        'published': '已发布',
-        'draft': '草稿',
-        'expired': '已过期'
+        '1': '已发布',
+        '0': '草稿',
+        '2': '已撤回'
     };
-    return textMap[status] || '未知状态';
+    return textMap[status] || '未知';
 };
 
 // 搜索
@@ -275,9 +255,14 @@ const handleEdit = (row) => {
 };
 
 // 预览通知
-const handlePreview = (row) => {
-    currentNotice.value = transformNoticeForFrontend(row);
-    previewDrawerVisible.value = true;
+const handlePreview = async (row) => {
+    try {
+        await noticeStore.fetchNoticeInfo(row.id);
+        currentNotice.value = transformNoticeForFrontend(noticeStore.currentNotice);
+        previewDrawerVisible.value = true;
+    } catch (error) {
+        console.error(error);
+    }
 };
 
 // 删除通知
@@ -290,18 +275,14 @@ const handleDelete = async (row) => {
         });
         
         loading.value = true;
+        await noticeStore.deleteNotice(row.id);
+        ElMessage.success('删除成功');
+        loading.value = false;
         
-        // 模拟API调用
-        setTimeout(() => {
-            notices.value = notices.value.filter(item => item.id !== row.id);
-            ElMessage.success('删除成功');
-            loading.value = false;
-            
-            // 如果删除的是当前预览的通知，关闭抽屉
-            if (currentNotice.value && currentNotice.value.id === row.id) {
-                previewDrawerVisible.value = false;
-            }
-        }, 500);
+        // 如果删除的是当前预览的通知，关闭抽屉
+        if (currentNotice.value && currentNotice.value.id === row.id) {
+            previewDrawerVisible.value = false;
+        }
     } catch (error) {
         console.error(error);
     }
@@ -323,16 +304,7 @@ const handleCurrentChange = (val) => {
     currentPage.value = val;
 };
 
-// 获取通知列表
-const getNotices = () => {
-    loading.value = true;
-    
-    // 模拟API调用
-    setTimeout(() => {
-        // 实际项目中，这里应该调用API获取数据
-        loading.value = false;
-    }, 500);
-};
+
 
 onMounted(() => {
     getNotices();

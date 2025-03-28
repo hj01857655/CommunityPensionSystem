@@ -1,261 +1,251 @@
 <template>
   <div class="service-evaluation">
-    <el-card shadow="hover" class="table-card">
+    <el-card class="box-card">
       <template #header>
         <div class="card-header">
-          <h3>服务评价管理</h3>
-          <div class="header-actions">
-            <el-input
-              v-model="searchQuery"
-              placeholder="搜索服务名称/评价内容"
-              class="search-input"
-              clearable
-              @clear="handleSearch"
-            >
-              <template #prefix>
-                <el-icon><Search /></el-icon>
-              </template>
-            </el-input>
-            <el-button type="primary" @click="handleSearch">搜索</el-button>
+          <el-form :model="queryParams" ref="queryForm" :inline="true">
+            <el-form-item label="服务项目" prop="serviceItemId">
+              <el-select v-model="queryParams.serviceItemId" placeholder="请选择服务项目" clearable>
+                <el-option
+                  v-for="item in serviceStore.serviceItems"
+                  :key="item.serviceId"
+                  :label="item.serviceName"
+                  :value="item.serviceId"
+                />
+              </el-select>
+            </el-form-item>
+            <el-form-item label="评分" prop="rating">
+              <el-select v-model="queryParams.rating" placeholder="请选择评分" clearable>
+                <el-option label="1星" :value="1" />
+                <el-option label="2星" :value="2" />
+                <el-option label="3星" :value="3" />
+                <el-option label="4星" :value="4" />
+                <el-option label="5星" :value="5" />
+              </el-select>
+            </el-form-item>
+            <el-form-item>
+              <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
+              <el-button icon="Refresh" @click="resetQuery">重置</el-button>
+            </el-form-item>
+          </el-form>
+          <div class="right-btns">
+            <el-button type="warning" icon="Download" @click="handleExport">导出</el-button>
           </div>
         </div>
       </template>
-      
+
       <el-table
-        :data="filteredEvaluations"
-        style="width: 100%"
-        v-loading="loading"
-        border
+        v-loading="serviceStore.loading"
+        :data="serviceStore.serviceReviews"
       >
-        <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="serviceName" label="服务名称" width="150" />
-        <el-table-column prop="elderName" label="评价人" width="120" />
-        <el-table-column prop="rating" label="评分" width="120">
-          <template #default="scope">
+        <el-table-column label="评价ID" prop="id" width="100" />
+        <el-table-column label="工单编号" prop="orderId" width="100" />
+        <el-table-column label="用户ID" prop="userId" width="100" />
+        <el-table-column label="服务项目" prop="serviceName" />
+        <el-table-column label="评分" prop="rating" width="100">
+          <template #default="{ row }">
             <el-rate
-              v-model="scope.row.rating"
+              v-model="row.rating"
               disabled
               show-score
               text-color="#ff9900"
             />
           </template>
         </el-table-column>
-        <el-table-column prop="content" label="评价内容" min-width="200" />
-        <el-table-column prop="createTime" label="评价时间" width="180">
-          <template #default="scope">
-            {{ formatDate(scope.row.createTime) }}
-          </template>
-        </el-table-column>
-        <el-table-column prop="status" label="状态" width="100">
-          <template #default="scope">
-            <el-tag :type="getStatusType(scope.row.status)">
-              {{ scope.row.status }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column label="操作" width="180" fixed="right">
-          <template #default="scope">
-            <el-button type="primary" size="small" @click="handleView(scope.row)">查看详情</el-button>
-            <el-button type="danger" size="small" @click="handleDelete(scope.row)">删除</el-button>
+        <el-table-column label="评价内容" prop="content" show-overflow-tooltip />
+        <el-table-column label="回复内容" prop="replyContent" show-overflow-tooltip />
+        <el-table-column label="评价时间" prop="createTime" width="180" />
+        <el-table-column label="操作" width="120" fixed="right">
+          <template #default="{ row }">
+            <el-button
+              v-if="!row.replyContent"
+              link
+              type="primary"
+              icon="ChatLineRound"
+              @click="handleReply(row)"
+            >回复</el-button>
           </template>
         </el-table-column>
       </el-table>
-      
-      <div class="pagination-container">
-        <el-pagination
-          v-model:current-page="currentPage"
-          v-model:page-size="pageSize"
-          :page-sizes="[10, 20, 50, 100]"
-          layout="total, sizes, prev, pager, next, jumper"
-          :total="totalEvaluations"
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
-        />
-      </div>
+
+      <pagination
+        v-if="serviceStore.serviceReviewTotal > 0"
+        :total="serviceStore.serviceReviewTotal"
+        v-model:page="queryParams.pageNum"
+        v-model:limit="queryParams.pageSize"
+        @pagination="getList"
+      />
     </el-card>
 
-    <!-- 评价详情对话框 -->
+    <!-- 回复评价对话框 -->
     <el-dialog
-      v-model="dialogVisible"
-      title="评价详情"
-      width="600px"
+      title="回复评价"
+      v-model="replyDialog.visible"
+      width="500px"
+      append-to-body
     >
-      <div class="evaluation-detail" v-if="currentEvaluation">
-        <div class="detail-item">
-          <span class="label">服务名称：</span>
-          <span>{{ currentEvaluation.serviceName }}</span>
-        </div>
-        <div class="detail-item">
-          <span class="label">评价人：</span>
-          <span>{{ currentEvaluation.elderName }}</span>
-        </div>
-        <div class="detail-item">
-          <span class="label">评分：</span>
-          <el-rate
-            v-model="currentEvaluation.rating"
-            disabled
-            show-score
-            text-color="#ff9900"
+      <el-form ref="replyFormRef" :model="replyForm" :rules="replyRules" label-width="100px">
+        <el-form-item label="评价内容">
+          <div class="review-content">{{ currentReview?.content }}</div>
+        </el-form-item>
+        <el-form-item label="回复内容" prop="replyContent">
+          <el-input
+            v-model="replyForm.replyContent"
+            type="textarea"
+            :rows="4"
+            placeholder="请输入回复内容"
           />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button type="primary" @click="submitReply">确 定</el-button>
+          <el-button @click="replyDialog.visible = false">取 消</el-button>
         </div>
-        <div class="detail-item">
-          <span class="label">评价内容：</span>
-          <p class="evaluation-content">{{ currentEvaluation.content }}</p>
-        </div>
-        <div class="detail-item">
-          <span class="label">评价时间：</span>
-          <span>{{ formatDate(currentEvaluation.createTime) }}</span>
-        </div>
-        <div class="detail-item">
-          <span class="label">服务人员：</span>
-          <span>{{ currentEvaluation.staffName }}</span>
-        </div>
-      </div>
+      </template>
     </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
-import { ElMessage, ElMessageBox } from 'element-plus';
-import { Search } from '@element-plus/icons-vue';
-import { formatDate } from '@/utils/date';
+import { ref, reactive, computed, onMounted } from 'vue';
+import { ElMessage } from 'element-plus';
+import { useServiceStore } from '@/stores/back/service';
+import Pagination from '@/components/common/Pagination.vue';
 
-// 评价列表数据
-const evaluations = ref([])
-const loading = ref(false)
-const currentPage = ref(1)
-const pageSize = ref(10)
-const searchQuery = ref('')
-const dialogVisible = ref(false)
-const currentEvaluation = ref(null)
+const serviceStore = useServiceStore();
 
-// 过滤后的评价列表
-const filteredEvaluations = computed(() => {
-  if (!evaluations.value || !searchQuery.value) {
-    return evaluations.value || []
-  }
-  
-  const query = searchQuery.value.toLowerCase()
-  return evaluations.value.filter(evaluation => 
-    (evaluation.serviceName && evaluation.serviceName.toLowerCase().includes(query)) ||
-    (evaluation.content && evaluation.content.toLowerCase().includes(query))
-  )
-})
+// 查询参数
+const queryParams = reactive({
+  pageNum: 1,
+  pageSize: 10,
+  serviceItemId: '',
+  rating: undefined
+});
 
-// 总评价数
-const totalEvaluations = computed(() => {
-  return filteredEvaluations.value ? filteredEvaluations.value.length : 0
-})
+// 回复表单参数
+const replyFormRef = ref();
+const replyForm = reactive({
+  id: undefined,
+  replyContent: ''
+});
 
-// 获取状态标签类型
-const getStatusType = (status) => {
-  const typeMap = {
-    '已发布': 'success',
-    '待审核': 'warning',
-    '已隐藏': 'info'
-  }
-  return typeMap[status] || ''
-}
+// 回复表单校验规则
+const replyRules = {
+  replyContent: [
+    { required: true, message: '请输入回复内容', trigger: 'blur' },
+    { min: 2, max: 200, message: '长度在 2 到 200 个字符', trigger: 'blur' }
+  ]
+};
 
-// 搜索评价
-const handleSearch = () => {
-  currentPage.value = 1
-}
+// 弹窗参数
+const replyDialog = reactive({
+  visible: false
+});
 
-// 查看评价详情
-const handleView = (row) => {
-  currentEvaluation.value = row
-  dialogVisible.value = true
-}
+// 当前评价
+const currentReview = ref(null);
 
-// 删除评价
-const handleDelete = (row) => {
-  ElMessageBox.confirm(
-    `确定要删除该评价记录吗？`,
-    '警告',
-    {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning'
+// 获取评价列表
+const getList = async () => {
+  await serviceStore.getServiceReviews(queryParams);
+};
+
+// 获取服务项目列表
+const getServiceItems = async () => {
+  await serviceStore.getServiceItems({
+    pageSize: 100,
+    status: '0'
+  });
+};
+
+// 查询操作
+const handleQuery = () => {
+  queryParams.pageNum = 1;
+  getList();
+};
+
+// 重置操作
+const resetQuery = () => {
+  queryParams.serviceItemId = '';
+  queryParams.rating = undefined;
+  handleQuery();
+};
+
+// 回复操作
+const handleReply = (row) => {
+  currentReview.value = row;
+  replyDialog.visible = true;
+  Object.assign(replyForm, {
+    id: row.id,
+    replyContent: ''
+  });
+};
+
+// 提交回复
+const submitReply = async () => {
+  await replyFormRef.value.validate(async (valid) => {
+    if (valid) {
+      try {
+        await serviceStore.replyServiceReview(replyForm);
+        ElMessage.success('回复成功');
+        replyDialog.visible = false;
+        getList();
+      } catch (error) {
+        ElMessage.error(error.message || '回复失败');
+      }
     }
-  ).then(() => {
-    // 这里应该调用删除评价的API
-    ElMessage.success('删除成功')
-    evaluations.value = evaluations.value.filter(item => item.id !== row.id)
-  }).catch(() => {
-    // 取消删除
-  })
-}
+  });
+};
 
-// 分页大小变化
-const handleSizeChange = (val) => {
-  pageSize.value = val
-  currentPage.value = 1
-}
+// 导出操作
+const handleExport = async () => {
+  try {
+    await serviceStore.exportServiceReview(queryParams);
+    ElMessage.success('导出成功');
+  } catch (error) {
+    ElMessage.error(error.message || '导出失败');
+  }
+};
 
-// 当前页变化
-const handleCurrentChange = (val) => {
-  currentPage.value = val
-}
+onMounted(() => {
+  getServiceItems();
+  getList();
+});
 </script>
 
 <style scoped>
 .service-evaluation {
-  padding: 20px;
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .right-btns {
+    margin-left: 20px;
+    white-space: nowrap;
+  }
+
+  .el-card {
+    margin-bottom: 20px;
+  }
+
+  :deep(.el-card__header) {
+    padding: 10px 20px;
+  }
+
+  .review-content {
+    padding: 10px;
+    background-color: #f5f7fa;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    line-height: 1.5;
+  }
 }
 
-.table-card {
-  margin-bottom: 20px;
-}
-
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.card-header h3 {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 600;
-}
-
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.search-input {
-  width: 250px;
-}
-
-.pagination-container {
-  margin-top: 20px;
-  display: flex;
-  justify-content: flex-end;
-}
-
-.evaluation-detail {
-  padding: 20px;
-}
-
-.detail-item {
-  margin-bottom: 15px;
-}
-
-.detail-item .label {
-  font-weight: bold;
-  margin-right: 10px;
-  color: #606266;
-}
-
-.evaluation-content {
-  margin: 10px 0;
-  padding: 10px;
-  background-color: #f5f7fa;
-  border-radius: 4px;
-  line-height: 1.5;
+.dialog-footer {
+  text-align: right;
+  padding-top: 20px;
 }
 </style>
