@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.communitypension.communitypensionadmin.mapper.MenuMapper">
+    
+    <select id="listMenu" resultType="com.communitypension.communitypensionadmin.entity.Menu">
+        SELECT 
+            m.menu_id,
+            m.menu_name,
+            m.parent_id,
+            m.order_num,
+            m.path,
+            m.component,
+            m.query,
+            m.route_name,
+            m.is_frame,
+            m.is_cache,
+            m.menu_type,
+            m.visible,
+            m.status,
+            m.perms,
+            m.icon,
+            m.create_by,
+            m.create_time,
+            m.update_by,
+            m.update_time,
+            m.remark
+        FROM 
+            menu m
+        WHERE 
+            m.status = '0'
+        ORDER BY 
+            m.parent_id, m.order_num
+    </select>
+
+    <select id="selectMenuTree" resultType="com.communitypension.communitypensionadmin.entity.Menu">
+        SELECT 
+            m.menu_id,
+            m.menu_name,
+            m.parent_id,
+            m.order_num,
+            m.path,
+            m.component,
+            m.query,
+            m.route_name,
+            m.is_frame,
+            m.is_cache,
+            m.menu_type,
+            m.visible,
+            m.status,
+            m.perms,
+            m.icon,
+            m.create_by,
+            m.create_time,
+            m.update_by,
+            m.update_time,
+            m.remark
+        FROM 
+            menu m
+        WHERE 
+            m.status = '0'
+        ORDER BY 
+            m.parent_id, m.order_num
+    </select>
+    
+</mapper>

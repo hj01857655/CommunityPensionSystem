@@ -14,7 +14,13 @@ public interface UserMapper extends BaseMapper<User> {
     @Select("select * from user where username = #{username}")
     User findByUsername(String username);
 
-    boolean resetPassword(Long userId);
+    /**
+     * 查询用户总数
+     *
+     * @return 用户总数
+     */
+    @Select("SELECT COUNT(*) FROM user")
+    int countTotalUsers();
 
 
 //

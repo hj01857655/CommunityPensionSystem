@@ -13,7 +13,7 @@ public class Result<T> {
     public static <T> Result<T> ok(T data) {
         Result<T> result = new Result<>();
         result.setCode(200);
-        result.setMessage("成功");
+        result.setMessage("操作成功");
         result.setData(data);
         result.setTimestamp(System.currentTimeMillis());
         return result;
@@ -41,7 +41,7 @@ public class Result<T> {
     public static <T> Result<T> success(T data){
         Result<T> result = new Result<>();
         result.setCode(200);
-        result.setMessage("成功");
+        result.setMessage("操作成功");
         result.setData(data);
         result.setTimestamp(System.currentTimeMillis());
         return result;
