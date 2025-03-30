@@ -1,7 +1,17 @@
 import { defineStore } from 'pinia';
-import { userLogin, } from '@/api/fore/user';
-import {TokenManager} from '@/utils/axios';
+import { 
+  userLogin, 
+  getUnboundElders, 
+  getKinListByElderId,
+  bindElderKinRelation,
+  unbindElderKinRelation
+} from '@/api/fore/user';
+import { TokenManager } from '@/utils/axios';
 import { computed } from 'vue';
+import { getAvatarUrl } from '@/utils/avatarUtils';  // 导入头像工具函数
+import axios from '@/utils/axios';
+import { ElMessage } from 'element-plus';
+import { getHealthRecords } from '@/api/fore/health';
 
 export const useUserStore = defineStore('user', {
   state: () => ({
@@ -15,58 +25,57 @@ export const useUserStore = defineStore('user', {
   getters: {
     // 获取头像URL的计算属性
     avatarUrl: (state) => {
-      const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png';
-      if (!state.userInfo?.avatar) return defaultAvatar;
-      
-      const avatarPath = state.userInfo.avatar;
-      // 如果已经是完整的URL，直接返回
-      if (avatarPath.startsWith('http://') || avatarPath.startsWith('https://')) {
-        return avatarPath;
-      }
-      
-      // 如果是本地assets目录下的文件
-      if (avatarPath.includes('src/assets')) {
-        try {
-          // 将路径转换为相对于assets的路径
-          const assetPath = avatarPath.replace('src/assets/', '');
-          // 使用new URL()构造资源URL
-          return new URL(`../../assets/${assetPath}`, import.meta.url).href;
-        } catch (error) {
-          console.error('Error loading avatar from assets:', error);
-          return defaultAvatar;
-        }
-      }
-      
-      // 如果是后端API路径，拼接后端服务地址
-      const baseUrl = import.meta.env.PROD ? 'http://127.0.0.1:9000' : '';
-      // 确保路径以/开头
-      const normalizedPath = avatarPath.startsWith('/') ? avatarPath : `/${avatarPath}`;
-      return `${baseUrl}${normalizedPath}`;
+      return getAvatarUrl(state.userInfo?.avatar);
     }
   },
   actions: {
     // 登录
-    async login(data) {
+    async login(loginForm) {
       try {
-        const response = await userLogin(data);
-        if (response.code == 200 && response.data && response.message == "登录成功") {
+        const response = await userLogin(loginForm);
+        
+        if (response.code === 200) {
+          console.log("useUserStore登录成功响应",response);
+          // 保存用户信息到本地存储
+          const userInfo = response.data.user;
+          localStorage.setItem("userInfo", JSON.stringify(userInfo));
+          localStorage.setItem("userId", userInfo.id);
+          localStorage.setItem("username", userInfo.username);
+          localStorage.setItem("name", userInfo.name);
+          localStorage.setItem("roleId", userInfo.roleIds[0]);
+          localStorage.setItem("role", userInfo.roleIds[0]);
+          localStorage.setItem("roleName", userInfo.roleNames[0]);
           localStorage.setItem("isLoggedIn", "true");
+
+          // 如果是家属，保存关联的老人信息
+          if (userInfo.role === 'kin' && userInfo.bindElder) {
+            localStorage.setItem("bindElder", JSON.stringify(userInfo.bindElder));
+          }
+
+          // 更新状态
+          this.userInfo = userInfo;
           this.isLoggedIn = true;
-          //将数据传递给store
-          this.userInfo = response.data.user;
-          this.elderInfo = response.data.user.elder;
-          this.kinInfo = response.data.user.kin;
-          this.roleId = response.data.user.roleId;
-          this.roles = ["elder", "kin"]; // 根据roleId设置角色
-          localStorage.setItem("kinInfo", JSON.stringify(response.data.user.kin));
-          localStorage.setItem("roleId", response.data.user.roleId);
-          //使用tokenManager存储token
-          TokenManager.user.set(response.data.accessToken,response.data.refreshToken);
+          this.roleId = userInfo.roleId;
+          this.roles = [userInfo.role];
+
+          // 保存token
+          if (response.data.accessToken) {
+            TokenManager.user.set(response.data.accessToken, response.data.refreshToken);
+          } else {
+            console.error('登录响应中没有token');
+            ElMessage.error('登录失败：未获取到token');
+            return false;
+          }
+
+          return true;
+        } else {
+          ElMessage.error(response.message || '登录失败');
+          return false;
         }
-        return response;
       } catch (error) {
-        console.error("登录错误", error);
-        throw new Error('登录过程中发生错误，请稍后再试');
+        console.error('登录错误:', error);
+        ElMessage.error('登录过程中发生错误，请稍后再试');
+        return false;
       }
     },
 
@@ -167,17 +176,33 @@ export const useUserStore = defineStore('user', {
       }
     },
     
-    // 获取未绑定家属的老人列表
+    // 获取未绑定的老人列表
     async fetchUnboundElders() {
       try {
         const response = await getUnboundElders();
         if (response.code === 200) {
           return response.data;
+        } else {
+          throw new Error(response.message || '获取未绑定老人列表失败');
         }
-        return [];
       } catch (error) {
-        console.error('获取未绑定家属老人列表失败:', error);
-        return [];
+        console.error('获取未绑定老人列表失败:', error);
+        throw error;
+      }
+    },
+
+    // 获取老人的家属列表
+    async fetchKinListByElderId(elderId) {
+      try {
+        const response = await getKinListByElderId(elderId);
+        if (response.code === 200) {
+          return response.data;
+        } else {
+          throw new Error(response.message || '获取家属列表失败');
+        }
+      } catch (error) {
+        console.error('获取家属列表失败:', error);
+        throw error;
       }
     },
 
@@ -211,20 +236,6 @@ export const useUserStore = defineStore('user', {
       }
     },
 
-    // 获取老人的家属列表
-    async fetchKinListByElderId(elderId) {
-      try {
-        const response = await getKinIdsByElderId(elderId);
-        if (response.code === 200) {
-          return response.data;
-        }
-        return [];
-      } catch (error) {
-        console.error('获取老人家属列表失败:', error);
-        return [];
-      }
-    },
-
     // 登出
     async logout() {
       // 清除状态
@@ -246,6 +257,20 @@ export const useUserStore = defineStore('user', {
       TokenManager.user.clear();
       
       return true;
+    },
+
+    // 获取健康记录
+    async getHealthRecords(elderId) {
+      try {
+        const response = await getHealthRecords(elderId);
+        if (response.code === 200) {
+          return response;
+        }
+        return null;
+      } catch (error) {
+        console.error('获取健康记录失败:', error);
+        return null;
+      }
     }
   }
 });

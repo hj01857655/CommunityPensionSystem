@@ -1,110 +1,69 @@
 # 重要提示
-在开始任何开发工作之前，请务必仔细阅读并遵循 `docs/development/README.md` 中的开发规范文档。该文档包含了所有必要的开发标准、最佳实践和代码规范，确保项目的一致性和可维护性。
+在开始任何开发工作之前，请务必：
+1. 阅读项目主文档 `README.md`，了解项目整体架构和功能特性
+2. 遵循 `docs/development/README.md` 中的开发规范
 
-# 技术栈
-## 后端技术栈
-- **Framework**: Spring Boot 3.4
-- **ORM**: MyBatis Plus
-- **Database**: MySQL 8.4
-- **Tools**: Lombok, Maven
-- **API**: RESTful
+# 技术栈参考
+请参考 `README.md` 中的技术栈说明。
 
-## 前端技术栈
-- **Framework**: Vue 3
-- **UI**: Element Plus
-- **State Management**: Pinia
-- **Router**: Vue Router
-- **HTTP Client**: Axios
-- **Language**: JavaScript (非TypeScript)
+# 开发规范速查
+## 1. 代码提交前检查
+- [ ] 代码符合规范要求
+- [ ] 所有测试通过
+- [ ] 没有编译错误
+- [ ] 没有代码冲突
 
-## 官方文档参考
-1. **Vue 3 官方文档**：
-   - 文档地址：https://cn.vuejs.org/
-   - 包含 Vue 3 的核心概念、组件开发、响应式系统等
-   - 建议优先阅读：组件基础、组合式 API、响应式基础
+## 2. 分支管理
+- 主分支：main
+- 开发分支：dev
+- 功能分支：feature/功能名称
+- 修复分支：hotfix/问题描述
 
-2. **Element Plus 文档**：
-   - 文档地址：https://element-plus.org/zh-CN/
-   - 组件总览：https://element-plus.org/zh-CN/component/overview.html
-   - 包含所有 UI 组件的使用说明和示例
-   - 建议优先阅读：基础组件、表单组件、数据展示组件
+## 3. 提交信息规范
+格式：<type>(<scope>): <subject>
+type类型：
+- feat: 新功能
+- fix: 修复
+- docs: 文档
+- style: 格式
+- refactor: 重构
+- test: 测试
+- chore: 其他
 
-3. **MyBatis Plus 文档**：
-   - 文档地址：https://baomidou.com/
-   - 包含 MyBatis Plus 的核心功能、CRUD 接口、条件构造器等
-   - 建议优先阅读：快速开始、CRUD 接口、条件构造器
+## 4. 接口开发规范
+- 后端：必须使用 DTO/VO 对象
+- 前端：必须使用封装的 axios 实例
+- 安全：必须进行权限验证和参数验证
 
-4. **问题解决资源**：
-   - Stack Overflow：https://stackoverflow.com/
-   - 全球最大的程序员问答社区
-   - 建议优先搜索相关问题，避免重复提问
-   - 提问时请提供完整的上下文和错误信息
+## 5. 数据库操作规范
+- 使用 MyBatisPlus
+- 复杂查询：XML配置
+- 简单CRUD：注解
+- 必须添加合适索引
 
-## 数据库
-开发接口之前请先查看 `community-pension-admin/src/main/resources/static/sql/community_pension.sql` 中的数据库设计文档。
+## 6. 安全规范
+- 敏感数据加密
+- 密码使用 BCrypt
+- 接口权限控制
+- 防止 SQL 注入和 XSS
 
-## 开发规范
-所有开发规范请参考 `docs/development/README.md` 文档，包括但不限于：
-1. 目录规范
-2. 命名规范
-3. 代码风格规范
-4. 注释规范
-5. 错误处理规范
-6. 安全规范
-7. 性能规范
-8. 测试规范
-9. 文档规范
-10. Git规范
+## 7. 性能规范
+- 合理使用缓存
+- 避免循环调用
+- 使用分页查询
+- 优化数据库查询
 
-## 开发流程
-1. 开发前仔细阅读开发规范文档
-2. 遵循规范进行开发
-3. 提交代码前进行自查
-4. 确保代码符合规范要求
+## 8. 文档规范
+- 及时更新文档
+- 保持注释完整
+- 记录重要决策
+- 维护 API 文档
 
-## 重要规则
-1. **代码提交前检查**：
-   - 确保代码符合规范要求
-   - 确保所有测试通过
-   - 确保没有编译错误
-   - 确保没有代码冲突
+# 官方文档快速链接
+1. [Vue 3 文档](https://cn.vuejs.org/)
+2. [Element Plus 文档](https://element-plus.org/zh-CN/)
+3. [MyBatis Plus 文档](https://baomidou.com/)
+4. [Stack Overflow](https://stackoverflow.com/)
 
-2. **分支管理**：
-   - 主分支：main
-   - 开发分支：dev
-   - 功能分支：feature/功能名称
-   - 修复分支：hotfix/问题描述
-
-3. **提交信息规范**：
-   - 格式：<type>(<scope>): <subject>
-   - type类型：feat/fix/docs/style/refactor/test/chore
-
-4. **接口开发规范**：
-   - 后端接口必须使用 DTO/VO 对象
-   - 前端接口必须使用封装的 axios 实例
-   - 接口必须进行权限验证
-   - 接口必须进行参数验证
-
-5. **数据库操作规范**：
-   - 必须使用 MyBatisPlus 注解或 XML
-   - 复杂查询优先使用 XML 配置
-   - 简单 CRUD 优先使用注解
-   - 必须添加适当的索引
-
-6. **安全规范**：
-   - 敏感数据必须加密
-   - 密码必须使用 BCrypt 加密
-   - 接口必须进行权限控制
-   - 防止 SQL 注入和 XSS 攻击
-
-7. **性能规范**：
-   - 合理使用缓存
-   - 避免循环调用
-   - 使用分页查询
-   - 优化数据库查询
-
-8. **文档规范**：
-   - 及时更新文档
-   - 保持注释完整
-   - 记录重要决策
-   - 维护 API 文档
+# 数据库文档
+开发前必看：`community-pension-admin/src/main/resources/static/sql/community_pension.sql`

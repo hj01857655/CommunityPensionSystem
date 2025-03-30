@@ -70,7 +70,7 @@
           </el-tab-pane>
 
           <!-- 健康信息标签页（仅老人可见） -->
-          <el-tab-pane label="健康信息" name="health" v-if="isElder">
+          <el-tab-pane v-if="isElder" label="健康信息" name="health">
             <el-row :gutter="20">
               <el-col :span="12">
                 <el-form-item label="健康状况">
@@ -90,65 +90,96 @@
 
           <!-- 其他信息标签页 -->
           <el-tab-pane label="其他信息" name="other">
-            <!-- 老人角色信息 -->
-            <template v-if="isElder">
-              <el-divider content-position="left">已绑定家属</el-divider>
-              <el-row style="margin-bottom: 20px">
-                <el-col :span="24">
-                  <el-button type="primary" @click="showBindDialog = true">绑定新家属</el-button>
-                </el-col>
-              </el-row>
-              <el-table :data="familyMembers" border stripe>
-                <el-table-column prop="name" label="姓名" />
-                <el-table-column prop="relationship" label="关系" />
-                <el-table-column prop="phone" label="联系电话" />
-                <el-table-column label="操作" width="120">
-                  <template #default="scope">
-                    <el-button type="danger" link @click="handleUnbindFamily(scope.row)">
-                      解除绑定
-                    </el-button>
-                  </template>
-                </el-table-column>
-              </el-table>
-            </template>
+            <el-row :gutter="20">
+              <el-col :span="12">
+                <el-form-item label="头像">
+                  <el-upload
+                    class="avatar-uploader"
+                    action="/api/user/avatar"
+                    :show-file-list="false"
+                    :on-success="handleAvatarSuccess"
+                    :before-upload="beforeAvatarUpload"
+                    :headers="uploadHeaders"
+                  >
+                    <img v-if="profileForm.avatar" :src="profileForm.avatar" class="avatar" />
+                    <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
+                  </el-upload>
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="个人简介">
+                  <el-input
+                    v-model="profileForm.remark"
+                    type="textarea"
+                    :rows="3"
+                    placeholder="请输入个人简介"
+                  />
+                </el-form-item>
+              </el-col>
+            </el-row>
 
-            <template v-else-if="isKin">
+            <!-- 根据角色显示不同的表单项 -->
+            <template v-if="isElder">
+              <el-divider content-position="left">绑定家属信息</el-divider>
               <el-row :gutter="20">
                 <el-col :span="12">
-                  <el-form-item label="关联老人">
-                    <el-input v-model="elderName" disabled />
+                  <el-form-item label="绑定家属">
+                    <el-select v-model="profileForm.bindKinIds" placeholder="请选择绑定家属" class="full-width" multiple>
+                      <el-option
+                        v-for="kin in kinList"
+                        :key="kin.id"
+                        :label="kin.name"
+                        :value="kin.id"
+                      />
+                    </el-select>
+                    <div v-if="!kinList || kinList.length === 0" class="no-data">
+                      暂无可绑定的家属
+                    </div>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                  <el-form-item label="与家属关系">
+                    <el-select v-model="profileForm.relationType" placeholder="请选择与家属关系" class="full-width">
+                      <el-option label="子女" value="子女" />
+                      <el-option label="配偶" value="配偶" />
+                      <el-option label="兄弟姐妹" value="兄弟姐妹" />
+                      <el-option label="其他亲属" value="其他亲属" />
+                    </el-select>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+            </template>
+
+            <template v-if="isKin">
+              <el-divider content-position="left">绑定老人信息</el-divider>
+              <el-row :gutter="20">
+                <el-col :span="12">
+                  <el-form-item label="绑定老人">
+                    <el-select v-model="profileForm.bindElderIds" placeholder="请选择绑定老人" class="full-width" multiple>
+                      <el-option
+                        v-for="elder in elderList"
+                        :key="elder.id"
+                        :label="elder.name"
+                        :value="elder.id"
+                      />
+                    </el-select>
+                    <div v-if="!elderList || elderList.length === 0" class="no-data">
+                      暂无可绑定的老人
+                    </div>
                   </el-form-item>
                 </el-col>
                 <el-col :span="12">
                   <el-form-item label="与老人关系">
-                    <el-input v-model="profileForm.relationship" :disabled="!isEditMode" />
+                    <el-select v-model="profileForm.relationType" placeholder="请选择与老人关系" class="full-width">
+                      <el-option label="子女" value="子女" />
+                      <el-option label="配偶" value="配偶" />
+                      <el-option label="兄弟姐妹" value="兄弟姐妹" />
+                      <el-option label="其他亲属" value="其他亲属" />
+                    </el-select>
                   </el-form-item>
                 </el-col>
               </el-row>
             </template>
-
-            <!-- 头像和备注部分 -->
-            <el-divider />
-            <el-row :gutter="20">
-              <el-col :span="8">
-                <el-form-item label="头像">
-                  <el-upload class="avatar-uploader" action="/api/user/avatar" :show-file-list="false"
-                    :on-success="handleAvatarSuccess" :disabled="!isEditMode">
-                    <el-avatar :size="100" :src="profileForm.avatar">
-                      <el-icon>
-                        <UserFilled />
-                      </el-icon>
-                    </el-avatar>
-                    <div class="upload-tip" v-if="isEditMode">点击上传头像</div>
-                  </el-upload>
-                </el-form-item>
-              </el-col>
-              <el-col :span="16">
-                <el-form-item label="备注">
-                  <el-input v-model="profileForm.remark" type="textarea" :rows="4" :disabled="!isEditMode" />
-                </el-form-item>
-              </el-col>
-            </el-row>
           </el-tab-pane>
         </el-tabs>
 
@@ -165,10 +196,19 @@
 <script setup>
 import { onMounted, ref, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { UserFilled } from '@element-plus/icons-vue'
+import { UserFilled, Plus } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/fore/useUserStore';
+import { TokenManager } from '@/utils/axios';
 
 const userStore = useUserStore();
+
+// 当前激活的标签页
+const activeTab = ref('basic');
+
+// 头像上传配置
+const uploadHeaders = computed(() => ({
+  'Authorization': `Bearer ${TokenManager.user.getAccessToken()}`
+}));
 
 // 绑定家属对话框相关状态
 const showBindDialog = ref(false);
@@ -223,38 +263,48 @@ const handleUnbindFamily = async (kin) => {
   }
 };
 
+// 获取用户角色
+const userRole = computed(() => {
+  return userStore.roles?.[0];
+});
+
 // 判断是否为老人角色
-const isElder = computed(() => userStore.roles && userStore.roles.includes('elder'));
-const isKin = computed(() => userStore.roles && userStore.roles.includes('kin'));
+const isElder = computed(() => userRole.value === 'elder');
+const isKin = computed(() => userRole.value === 'kin');
 
 // 初始化老人姓名
 const elderName = ref('未绑定老人');
 
 // 个人信息表单
 const profileForm = ref({
-  id: '',//id
+  id: '',//userId
   name: '',//姓名
   gender: '',//性别
   birthday: '',//出生日期
   idCard: '',//身份证号
   phone: '',//联系电话
   address: '',//地址
+  email: '',//邮箱
   emergencyContactName: '',//紧急联系人
   emergencyContactPhone: '',//紧急联系人电话
   healthCondition: '',//健康状况
-  medicalHistory: '',//既往病史
-  allergy: '',//过敏史
   avatar: '',//头像
   remark: '',//备注
-  relationship: '',//与老人关系
-  elderId: null //绑定的老人ID
+  age: 0,//年龄
+  department: '',//部门
+  position: '',//职位
+  isActive: 1,//是否激活
+  roleIds: [],//角色ID列表
+  roles: [],//角色列表
+  roleNames: [],//角色名称列表
+  bindElderIds: null,//绑定的老人ID列表
+  bindKinIds: null,//绑定的家属ID列表
+  relationType: null//关系类型
 })
 
 // 编辑模式
 const isEditMode = ref(false)
 const originalData = ref({})
-// 当前激活的标签页
-const activeTab = ref('basic')
 
 const handleAvatarSuccess = (response) => {
   if (response && response.code === 200) {
@@ -289,7 +339,7 @@ const initFormData = async () => {
 
     const userData = response.data;
 
-    // 填充基本表单数据
+    // 填充表单数据
     profileForm.value = {
       id: userData.userId || '',
       name: userData.name || '',
@@ -298,21 +348,28 @@ const initFormData = async () => {
       idCard: userData.idCard || '',
       phone: userData.phone || '',
       address: userData.address || '',
+      email: userData.email || '',
       emergencyContactName: userData.emergencyContactName || '',
       emergencyContactPhone: userData.emergencyContactPhone || '',
       healthCondition: userData.healthCondition || '',
-      medicalHistory: userData.medicalHistory || '',
-      allergy: userData.allergy || '',
       avatar: userData.avatar || '',
       remark: userData.remark || '',
-      relationship: userData.relationship || '',
-      elderId: userData.elderId || null
+      age: userData.age || 0,
+      department: userData.department || '',
+      position: userData.position || '',
+      isActive: userData.isActive || 1,
+      roleIds: userData.roleIds || [],
+      roles: userData.roles || [],
+      roleNames: userData.roleNames || [],
+      bindElderIds: userData.bindElderIds || null,
+      bindKinIds: userData.bindKinIds || null,
+      relationType: userData.relationType || null
     };
 
     // 如果是家属并且有绑定老人，获取老人信息
-    if (isKin.value && userData.elderId) {
+    if (isKin.value && userData.bindElderIds && userData.bindElderIds.length > 0) {
       try {
-        const elderResponse = await userStore.getElderInfo(userData.elderId);
+        const elderResponse = await userStore.getElderInfo(userData.bindElderIds[0]);
         if (elderResponse && elderResponse.data) {
           elderName.value = elderResponse.data.name || '未知老人';
         }
@@ -323,6 +380,13 @@ const initFormData = async () => {
 
     // 保存原始数据，用于取消编辑
     originalData.value = { ...profileForm.value };
+
+    // 根据角色获取对应的绑定列表
+    if (isElder.value) {
+      await getKinList();
+    } else if (isKin.value) {
+      await getElderList();
+    }
 
   } catch (error) {
     console.error('初始化表单数据失败:', error);
@@ -358,36 +422,57 @@ const saveProfile = async () => {
   }
 }
 
-onMounted(() => {
-  initFormData();
-})
-
-
-
-// 添加绑定家属方法
-const isDialogVisible = ref(false);
-const familyForm = ref({
-  name: '',
-  relationship: '',
-  phone: ''
-});
-
-
-
-const confirmBindFamily = async () => {
+// 获取未绑定的家属列表
+const kinList = ref([]);
+const getKinList = async () => {
   try {
-    const response = await userStore.bindFamily(familyForm.value);
-    if (response && response.code === 200) {
-      ElMessage.success('绑定家属成功');
-      isDialogVisible.value = false;
-      await initFormData();
-    } else {
-      ElMessage.error('绑定家属失败');
-    }
+    const response = await userStore.fetchKinListByElderId(profileForm.value.id);
+    kinList.value = response || [];
+    console.log('获取到的家属列表:', kinList.value);
   } catch (error) {
-    ElMessage.error('绑定家属失败');
+    console.error('获取家属列表失败:', error);
+    ElMessage.error('获取家属列表失败');
   }
 };
+
+// 获取未绑定的老人列表
+const elderList = ref([]);
+const getElderList = async () => {
+  try {
+    const response = await userStore.fetchUnboundElders();
+    elderList.value = response || [];
+    console.log('获取到的老人列表:', elderList.value);
+  } catch (error) {
+    console.error('获取老人列表失败:', error);
+    ElMessage.error('获取老人列表失败');
+  }
+};
+
+// 添加头像上传前的验证方法
+const beforeAvatarUpload = (file) => {
+  const isJPG = file.type === 'image/jpeg' || file.type === 'image/png' || file.type === 'image/gif';
+  const isLt2M = file.size / 1024 / 1024 < 2;
+
+  if (!isJPG) {
+    ElMessage.error('上传头像图片只能是 JPG/PNG/GIF 格式!');
+  }
+  if (!isLt2M) {
+    ElMessage.error('上传头像图片大小不能超过 2MB!');
+  }
+  return isJPG && isLt2M;
+};
+
+// 添加样式
+const avatarStyle = {
+  width: '100px',
+  height: '100px',
+  display: 'block'
+};
+
+// 组件挂载时初始化数据
+onMounted(async () => {
+  await initFormData();
+});
 
 </script>
 
@@ -418,14 +503,52 @@ h3 {
 }
 
 .avatar-uploader {
+  text-align: center;
+  border: 1px dashed #d9d9d9;
+  border-radius: 6px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  width: 178px;
+  height: 178px;
   display: flex;
-  flex-direction: column;
+  justify-content: center;
   align-items: center;
+}
+
+.avatar-uploader:hover {
+  border-color: #409EFF;
+}
+
+.avatar-uploader-icon {
+  font-size: 28px;
+  color: #8c939d;
+  width: 178px;
+  height: 178px;
+  text-align: center;
+  line-height: 178px;
+}
+
+.avatar {
+  width: 178px;
+  height: 178px;
+  display: block;
+  object-fit: cover;
 }
 
 .upload-tip {
   margin-top: 8px;
   font-size: 12px;
   color: #909399;
+}
+
+.no-data {
+  margin-top: 8px;
+  color: #909399;
+  font-size: 14px;
+  text-align: center;
+  padding: 10px;
+  background-color: #f5f7fa;
+  border-radius: 4px;
 }
 </style>

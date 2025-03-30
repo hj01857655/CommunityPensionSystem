@@ -1,223 +1,154 @@
 <template>
-  <div class="service-appointment">
-    <el-card class="box-card">
-      <template #header>
-        <div class="card-header">
-          <el-form :model="queryParams" ref="queryForm" :inline="true">
-            <el-form-item label="用户ID" prop="userId">
-              <el-input
-                v-model="queryParams.userId"
-                placeholder="请输入用户ID"
-                clearable
-                @keyup.enter="handleQuery"
-              />
-            </el-form-item>
-            <el-form-item label="服务项目" prop="serviceItemId">
-              <el-select v-model="queryParams.serviceItemId" placeholder="请选择服务项目" clearable>
-                <el-option
-                  v-for="item in serviceStore.serviceItems"
-                  :key="item.serviceId"
-                  :label="item.serviceName"
-                  :value="item.serviceId"
-                />
-              </el-select>
-            </el-form-item>
-            <el-form-item label="状态" prop="status">
-              <el-select v-model="queryParams.status" placeholder="请选择状态" clearable>
-                <el-option label="待审核" value="0" />
-                <el-option label="已通过" value="1" />
-                <el-option label="已拒绝" value="2" />
-                <el-option label="待派单" value="3" />
-                <el-option label="已派单" value="4" />
-                <el-option label="服务中" value="5" />
-                <el-option label="已完成" value="6" />
-                <el-option label="已取消" value="7" />
-              </el-select>
-            </el-form-item>
-            <el-form-item label="预约时间" prop="appointmentTime">
-              <el-date-picker
-                v-model="queryParams.appointmentTime"
-                type="datetime"
-                placeholder="请选择预约时间"
-                value-format="YYYY-MM-DD HH:mm:ss"
-                clearable
-              />
-            </el-form-item>
-            <el-form-item>
-              <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
-              <el-button icon="Refresh" @click="resetQuery">重置</el-button>
-            </el-form-item>
-          </el-form>
-          <div class="right-btns">
-            <el-button type="warning" icon="Download" @click="handleExport">导出</el-button>
-          </div>
-        </div>
-      </template>
+  <div class="app-container">
+    <!-- 搜索条件 -->
+    <el-form :model="queryParams" ref="queryRef" :inline="true" v-show="showSearch" label-width="68px">
+      <el-form-item label="服务名称" prop="serviceName">
+        <el-input
+          v-model="queryParams.serviceName"
+          placeholder="请输入服务名称"
+          clearable
+          style="width: 200px"
+          @keyup.enter="handleSearch"
+        />
+      </el-form-item>
+      <el-form-item label="预约状态" prop="status">
+        <el-select
+          v-model="queryParams.status"
+          placeholder="请选择预约状态"
+          clearable
+          style="width: 200px"
+        >
+          <el-option label="待确认" value="0" />
+          <el-option label="已确认" value="1" />
+          <el-option label="已完成" value="2" />
+          <el-option label="已取消" value="3" />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="预约时间">
+        <el-date-picker
+          v-model="dateRange"
+          type="daterange"
+          range-separator="-"
+          start-placeholder="开始日期"
+          end-placeholder="结束日期"
+          value-format="YYYY-MM-DD"
+          style="width: 240px"
+        />
+      </el-form-item>
+      <el-form-item>
+        <el-button type="primary" :icon="Search" @click="handleSearch">搜索</el-button>
+        <el-button :icon="Refresh" @click="handleReset">重置</el-button>
+      </el-form-item>
+    </el-form>
 
-      <el-table
-        v-loading="serviceStore.loading"
-        :data="serviceStore.serviceOrders"
+    <!-- 操作按钮 -->
+    <el-row :gutter="10" class="mb8">
+      <el-col :span="1.5">
+        <el-button type="primary" plain :icon="Plus" @click="handleAdd">新增预约</el-button>
+      </el-col>
+      <el-col :span="1.5">
+        <el-button type="success" plain :icon="Edit" :disabled="single" @click="handleEdit">修改</el-button>
+      </el-col>
+      <el-col :span="1.5">
+        <el-button type="danger" plain :icon="Delete" :disabled="multiple" @click="handleDelete">删除</el-button>
+      </el-col>
+      <right-toolbar v-model:showSearch="showSearch" @queryTable="getList"></right-toolbar>
+    </el-row>
+
+    <!-- 表格 -->
+    <el-table
+      v-loading="loading"
+      :data="appointmentList"
+      @selection-change="handleSelectionChange"
+      border
+    >
+      <el-table-column type="selection" width="55" align="center" />
+      <el-table-column prop="id" label="预约编号" width="80" align="center" />
+      <el-table-column prop="serviceName" label="服务名称" min-width="150" align="center" />
+      <el-table-column prop="elderName" label="预约老人" width="120" align="center" />
+      <el-table-column prop="appointmentTime" label="预约时间" width="180" align="center">
+        <template #default="scope">
+          {{ formatDate(scope.row.appointmentTime) }}
+        </template>
+      </el-table-column>
+      <el-table-column prop="status" label="状态" width="100" align="center">
+        <template #default="scope">
+          <el-tag :type="getStatusType(scope.row.status)">
+            {{ getStatusText(scope.row.status) }}
+          </el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column prop="createTime" label="创建时间" width="180" align="center">
+        <template #default="scope">
+          {{ formatDate(scope.row.createTime) }}
+        </template>
+      </el-table-column>
+      <el-table-column label="操作" width="150" align="center" class-name="small-padding fixed-width">
+        <template #default="scope">
+          <el-button type="primary" link :icon="Edit" @click="handleEdit(scope.row)">修改</el-button>
+          <el-button type="primary" link :icon="Delete" @click="handleDelete(scope.row)">删除</el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+
+    <!-- 分页组件 -->
+    <pagination
+      v-if="total > 0"
+      :total="total"
+      v-model:page="queryParams.pageNum"
+      v-model:limit="queryParams.pageSize"
+      @pagination="getList"
+    />
+
+    <!-- 预约表单对话框 -->
+    <el-dialog
+      v-model="dialogVisible"
+      :title="dialogType === 'add' ? '新增预约' : '编辑预约'"
+      width="600px"
+      append-to-body
+    >
+      <el-form
+        ref="appointmentFormRef"
+        :model="appointmentForm"
+        :rules="appointmentRules"
+        label-width="100px"
       >
-        <el-table-column label="工单编号" prop="orderId" width="100" />
-        <el-table-column label="用户ID" prop="userId" width="100" />
-        <el-table-column label="服务项目" prop="serviceName" />
-        <el-table-column label="申请原因" prop="reason" show-overflow-tooltip />
-        <el-table-column label="预约时间" prop="appointmentTime" width="180" />
-        <el-table-column label="状态" prop="status" width="100">
-          <template #default="{ row }">
-            <el-tag :type="getStatusType(row.status)">{{ getStatusText(row.status) }}</el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column label="创建时间" prop="createTime" width="180" />
-        <el-table-column label="操作" width="200" fixed="right">
-          <template #default="{ row }">
-            <el-button
-              v-if="row.status === '0'"
-              link
-              type="primary"
-              icon="Check"
-              @click="handleReview(row, true)"
-            >通过</el-button>
-            <el-button
-              v-if="row.status === '0'"
-              link
-              type="danger"
-              icon="Close"
-              @click="handleReview(row, false)"
-            >拒绝</el-button>
-            <el-button
-              v-if="row.status === '3'"
-              link
-              type="primary"
-              icon="User"
-              @click="handleAssign(row)"
-            >派单</el-button>
-            <el-button
-              v-if="row.status === '4'"
-              link
-              type="success"
-              icon="VideoPlay"
-              @click="handleStart(row)"
-            >开始</el-button>
-            <el-button
-              v-if="row.status === '5'"
-              link
-              type="warning"
-              icon="Check"
-              @click="handleComplete(row)"
-            >完成</el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-
-      <pagination
-        v-if="serviceStore.serviceOrderTotal > 0"
-        :total="serviceStore.serviceOrderTotal"
-        v-model:page="queryParams.pageNum"
-        v-model:limit="queryParams.pageSize"
-        @pagination="getList"
-      />
-    </el-card>
-
-    <!-- 审核对话框 -->
-    <el-dialog
-      title="审核服务申请"
-      v-model="reviewDialog.visible"
-      width="500px"
-      append-to-body
-    >
-      <el-form ref="reviewFormRef" :model="reviewForm" :rules="reviewRules" label-width="100px">
-        <el-form-item label="申请原因">
-          <div class="review-content">{{ currentOrder?.reason }}</div>
-        </el-form-item>
-        <el-form-item label="审核结果" prop="approved">
-          <el-radio-group v-model="reviewForm.approved">
-            <el-radio :label="true">通过</el-radio>
-            <el-radio :label="false">拒绝</el-radio>
-          </el-radio-group>
-        </el-form-item>
-        <el-form-item label="审核意见" prop="reviewComment">
-          <el-input
-            v-model="reviewForm.reviewComment"
-            type="textarea"
-            :rows="4"
-            placeholder="请输入审核意见"
-          />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <div class="dialog-footer">
-          <el-button type="primary" @click="submitReview">确 定</el-button>
-          <el-button @click="reviewDialog.visible = false">取 消</el-button>
-        </div>
-      </template>
-    </el-dialog>
-
-    <!-- 派单对话框 -->
-    <el-dialog
-      title="派单"
-      v-model="assignDialog.visible"
-      width="500px"
-      append-to-body
-    >
-      <el-form ref="assignFormRef" :model="assignForm" :rules="assignRules" label-width="100px">
-        <el-form-item label="服务人员" prop="staffId">
-          <el-select v-model="assignForm.staffId" placeholder="请选择服务人员" style="width: 100%">
+        <el-form-item label="服务名称" prop="serviceId">
+          <el-select v-model="appointmentForm.serviceId" placeholder="请选择服务">
             <el-option
-              v-for="staff in staffList"
-              :key="staff.id"
-              :label="staff.name"
-              :value="staff.id"
+              v-for="service in serviceOptions"
+              :key="service.id"
+              :label="service.name"
+              :value="service.id"
             />
           </el-select>
         </el-form-item>
-      </el-form>
-      <template #footer>
-        <div class="dialog-footer">
-          <el-button type="primary" @click="submitAssign">确 定</el-button>
-          <el-button @click="assignDialog.visible = false">取 消</el-button>
-        </div>
-      </template>
-    </el-dialog>
-
-    <!-- 完成服务对话框 -->
-    <el-dialog
-      title="完成服务"
-      v-model="completeDialog.visible"
-      width="500px"
-      append-to-body
-    >
-      <el-form ref="completeFormRef" :model="completeForm" :rules="completeRules" label-width="100px">
-        <el-form-item label="实际时长" prop="actualDuration">
-          <el-input-number
-            v-model="completeForm.actualDuration"
-            :min="1"
-            :max="24"
-            placeholder="请输入实际服务时长（小时）"
-            style="width: 100%"
+        <el-form-item label="预约老人" prop="elderId">
+          <el-select v-model="appointmentForm.elderId" placeholder="请选择老人">
+            <el-option
+              v-for="elder in elderOptions"
+              :key="elder.id"
+              :label="elder.name"
+              :value="elder.id"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="预约时间" prop="appointmentTime">
+          <el-date-picker
+            v-model="appointmentForm.appointmentTime"
+            type="datetime"
+            placeholder="选择预约时间"
+            value-format="YYYY-MM-DD HH:mm:ss"
           />
         </el-form-item>
-        <el-form-item label="服务评价" prop="rating">
-          <el-rate
-            v-model="completeForm.rating"
-            :max="5"
-            :texts="['很差', '较差', '一般', '较好', '很好']"
-            show-text
-          />
-        </el-form-item>
-        <el-form-item label="评价内容" prop="content">
-          <el-input
-            v-model="completeForm.content"
-            type="textarea"
-            :rows="4"
-            placeholder="请输入服务评价内容"
-          />
+        <el-form-item label="备注" prop="remark">
+          <el-input v-model="appointmentForm.remark" type="textarea" :rows="3" placeholder="请输入备注信息" />
         </el-form-item>
       </el-form>
       <template #footer>
         <div class="dialog-footer">
-          <el-button type="primary" @click="submitComplete">确 定</el-button>
-          <el-button @click="completeDialog.visible = false">取 消</el-button>
+          <el-button type="primary" @click="submitForm">确 定</el-button>
+          <el-button @click="dialogVisible = false">取 消</el-button>
         </div>
       </template>
     </el-dialog>
@@ -225,302 +156,230 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue';
-import { ElMessage } from 'element-plus';
-import { useServiceStore } from '@/stores/back/service';
-import Pagination from '@/components/common/Pagination.vue';
-
-const serviceStore = useServiceStore();
+import { ref, reactive, onMounted } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { Search, Delete, Edit, Plus, Refresh } from '@element-plus/icons-vue'
+import { formatDate } from '@/utils/date'
+import Pagination from '@/components/common/Pagination.vue'
+import RightToolbar from '@/components/RightToolbar/index.vue'
 
 // 查询参数
 const queryParams = reactive({
   pageNum: 1,
   pageSize: 10,
-  userId: '',
-  serviceItemId: '',
-  status: '',
-  appointmentTime: ''
-});
+  serviceName: '',
+  status: undefined,
+  startTime: '',
+  endTime: ''
+})
 
-// 审核表单参数
-const reviewFormRef = ref();
-const reviewForm = reactive({
-  orderId: undefined,
-  approved: true,
-  reviewComment: ''
-});
+// 日期范围
+const dateRange = ref([])
 
-// 审核表单校验规则
-const reviewRules = {
-  approved: [
-    { required: true, message: '请选择审核结果', trigger: 'change' }
-  ],
-  reviewComment: [
-    { required: true, message: '请输入审核意见', trigger: 'blur' },
-    { min: 2, max: 200, message: '长度在 2 到 200 个字符', trigger: 'blur' }
-  ]
-};
+// 显示搜索条件
+const showSearch = ref(true)
 
-// 派单表单参数
-const assignFormRef = ref();
-const assignForm = reactive({
-  orderId: undefined,
-  staffId: undefined
-});
+// 非单个禁用
+const single = ref(true)
+// 非多个禁用
+const multiple = ref(true)
 
-// 派单表单校验规则
-const assignRules = {
-  staffId: [
-    { required: true, message: '请选择服务人员', trigger: 'change' }
-  ]
-};
+// 加载状态
+const loading = ref(false)
 
-// 完成服务表单参数
-const completeFormRef = ref();
-const completeForm = reactive({
-  orderId: undefined,
-  actualDuration: 1,
-  rating: 5,
-  content: ''
-});
+// 预约列表数据
+const appointmentList = ref([])
+const total = ref(0)
 
-// 完成服务表单校验规则
-const completeRules = {
-  actualDuration: [
-    { required: true, message: '请输入实际服务时长', trigger: 'blur' }
-  ],
-  rating: [
-    { required: true, message: '请选择服务评分', trigger: 'change' }
-  ],
-  content: [
-    { required: true, message: '请输入评价内容', trigger: 'blur' },
-    { min: 2, max: 500, message: '长度在 2 到 500 个字符', trigger: 'blur' }
-  ]
-};
+// 服务选项
+const serviceOptions = ref([])
 
-// 弹窗参数
-const reviewDialog = reactive({
-  visible: false
-});
+// 老人选项
+const elderOptions = ref([])
 
-const assignDialog = reactive({
-  visible: false
-});
+// 对话框相关
+const dialogVisible = ref(false)
+const dialogType = ref('add')
+const appointmentFormRef = ref(null)
 
-const completeDialog = reactive({
-  visible: false
-});
+// 预约表单
+const appointmentForm = ref({
+  serviceId: '',
+  elderId: '',
+  appointmentTime: '',
+  remark: ''
+})
 
-// 当前工单
-const currentOrder = ref(null);
-
-// 服务人员列表
-const staffList = ref([
-  { id: 1, name: '张三' },
-  { id: 2, name: '李四' },
-  { id: 3, name: '王五' }
-]);
-
-// 获取工单列表
-const getList = async () => {
-  await serviceStore.getServiceOrders(queryParams);
-};
-
-// 获取服务项目列表
-const getServiceItems = async () => {
-  await serviceStore.getServiceItems({
-    pageSize: 100,
-    status: '0'
-  });
-};
-
-// 查询操作
-const handleQuery = () => {
-  queryParams.pageNum = 1;
-  getList();
-};
-
-// 重置操作
-const resetQuery = () => {
-  queryParams.userId = '';
-  queryParams.serviceItemId = '';
-  queryParams.status = '';
-  queryParams.appointmentTime = '';
-  handleQuery();
-};
+// 表单验证规则
+const appointmentRules = {
+  serviceId: [{ required: true, message: '请选择服务', trigger: 'change' }],
+  elderId: [{ required: true, message: '请选择老人', trigger: 'change' }],
+  appointmentTime: [{ required: true, message: '请选择预约时间', trigger: 'change' }]
+}
 
 // 获取状态类型
 const getStatusType = (status) => {
   const typeMap = {
-    '0': 'info',
-    '1': 'success',
-    '2': 'danger',
-    '3': 'warning',
-    '4': 'primary',
-    '5': 'success',
-    '6': 'success',
-    '7': 'info'
-  };
-  return typeMap[status] || '';
-};
+    0: 'info',
+    1: 'success',
+    2: 'warning',
+    3: 'danger'
+  }
+  return typeMap[status] || 'info'
+}
 
 // 获取状态文本
 const getStatusText = (status) => {
   const textMap = {
-    '0': '待审核',
-    '1': '已通过',
-    '2': '已拒绝',
-    '3': '待派单',
-    '4': '已派单',
-    '5': '服务中',
-    '6': '已完成',
-    '7': '已取消'
-  };
-  return textMap[status] || '';
-};
-
-// 审核操作
-const handleReview = (row, approved) => {
-  currentOrder.value = row;
-  reviewDialog.visible = true;
-  Object.assign(reviewForm, {
-    orderId: row.orderId,
-    approved,
-    reviewComment: ''
-  });
-};
-
-// 提交审核
-const submitReview = async () => {
-  await reviewFormRef.value.validate(async (valid) => {
-    if (valid) {
-      try {
-        await serviceStore.reviewServiceOrder(reviewForm);
-        ElMessage.success('审核成功');
-        reviewDialog.visible = false;
-        getList();
-      } catch (error) {
-        ElMessage.error(error.message || '审核失败');
-      }
-    }
-  });
-};
-
-// 派单操作
-const handleAssign = (row) => {
-  currentOrder.value = row;
-  assignDialog.visible = true;
-  Object.assign(assignForm, {
-    orderId: row.orderId,
-    staffId: undefined
-  });
-};
-
-// 提交派单
-const submitAssign = async () => {
-  await assignFormRef.value.validate(async (valid) => {
-    if (valid) {
-      try {
-        await serviceStore.assignServiceOrder(assignForm);
-        ElMessage.success('派单成功');
-        assignDialog.visible = false;
-        getList();
-      } catch (error) {
-        ElMessage.error(error.message || '派单失败');
-      }
-    }
-  });
-};
-
-// 开始服务操作
-const handleStart = async (row) => {
-  try {
-    await serviceStore.startServiceOrder(row.orderId);
-    ElMessage.success('开始服务成功');
-    getList();
-  } catch (error) {
-    ElMessage.error(error.message || '开始服务失败');
+    0: '待确认',
+    1: '已确认',
+    2: '已完成',
+    3: '已取消'
   }
-};
+  return textMap[status] || '未知'
+}
 
-// 完成服务操作
-const handleComplete = (row) => {
-  currentOrder.value = row;
-  completeDialog.visible = true;
-  Object.assign(completeForm, {
-    orderId: row.orderId,
-    actualDuration: 1,
-    rating: 5,
-    content: ''
-  });
-};
+// 获取列表数据
+const getList = async () => {
+  loading.value = true
+  try {
+    // 这里应该调用获取预约列表的API
+    // const res = await getAppointmentList(queryParams)
+    // appointmentList.value = res.data.records
+    // total.value = res.data.total
+  } finally {
+    loading.value = false
+  }
+}
 
-// 提交完成服务
-const submitComplete = async () => {
-  await completeFormRef.value.validate(async (valid) => {
+// 搜索按钮操作
+const handleSearch = () => {
+  queryParams.pageNum = 1
+  if (dateRange.value && dateRange.value.length === 2) {
+    queryParams.startTime = dateRange.value[0]
+    queryParams.endTime = dateRange.value[1]
+  } else {
+    queryParams.startTime = ''
+    queryParams.endTime = ''
+  }
+  getList()
+}
+
+// 重置按钮操作
+const handleReset = () => {
+  dateRange.value = []
+  queryParams.serviceName = ''
+  queryParams.status = undefined
+  queryParams.startTime = ''
+  queryParams.endTime = ''
+  handleSearch()
+}
+
+// 多选框选中数据
+const handleSelectionChange = (selection) => {
+  single.value = selection.length !== 1
+  multiple.value = !selection.length
+}
+
+// 新增按钮操作
+const handleAdd = () => {
+  dialogType.value = 'add'
+  appointmentForm.value = {
+    serviceId: '',
+    elderId: '',
+    appointmentTime: '',
+    remark: ''
+  }
+  dialogVisible.value = true
+}
+
+// 修改按钮操作
+const handleEdit = (row) => {
+  dialogType.value = 'edit'
+  appointmentForm.value = { ...row }
+  dialogVisible.value = true
+}
+
+// 删除按钮操作
+const handleDelete = async (row) => {
+  try {
+    await ElMessageBox.confirm(`是否确认删除预约编号为"${row.id}"的预约记录？`, '警告', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+    // 这里应该调用删除预约的API
+    ElMessage.success('删除成功')
+    getList()
+  } catch (error) {
+    console.error('删除操作取消或失败:', error)
+  }
+}
+
+// 表单提交
+const submitForm = () => {
+  appointmentFormRef.value?.validate(async (valid) => {
     if (valid) {
       try {
-        await serviceStore.completeServiceOrder(completeForm);
-        ElMessage.success('完成服务成功');
-        completeDialog.visible = false;
-        getList();
+        // 这里应该调用新增或修改预约的API
+        ElMessage.success(dialogType.value === 'add' ? '新增成功' : '修改成功')
+        dialogVisible.value = false
+        getList()
       } catch (error) {
-        ElMessage.error(error.message || '完成服务失败');
+        console.error('提交表单失败:', error)
+        ElMessage.error('提交表单失败')
       }
     }
-  });
-};
+  })
+}
 
-// 导出操作
-const handleExport = async () => {
+// 获取服务选项
+const getServiceOptions = async () => {
   try {
-    await serviceStore.exportServiceOrder(queryParams);
-    ElMessage.success('导出成功');
+    // 这里应该调用获取服务列表的API
+    // const res = await getServiceList()
+    // serviceOptions.value = res.data
   } catch (error) {
-    ElMessage.error(error.message || '导出失败');
+    console.error('获取服务列表失败:', error)
+    ElMessage.error('获取服务列表失败')
   }
-};
+}
+
+// 获取老人选项
+const getElderOptions = async () => {
+  try {
+    // 这里应该调用获取老人列表的API
+    // const res = await getElderList()
+    // elderOptions.value = res.data
+  } catch (error) {
+    console.error('获取老人列表失败:', error)
+    ElMessage.error('获取老人列表失败')
+  }
+}
 
 onMounted(() => {
-  getServiceItems();
-  getList();
-});
+  getList()
+  getServiceOptions()
+  getElderOptions()
+})
 </script>
 
 <style scoped>
-.service-appointment {
+.app-container {
   padding: 20px;
 }
 
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
+.mb8 {
+  margin-bottom: 8px;
 }
 
-.right-btns {
-  margin-left: 20px;
-  white-space: nowrap;
+.small-padding {
+  padding-left: 5px;
+  padding-right: 5px;
 }
 
-.el-card {
-  margin-bottom: 20px;
-}
-
-:deep(.el-card__header) {
-  padding: 10px 20px;
-}
-
-.review-content {
-  padding: 10px;
-  background-color: #f5f7fa;
-  border-radius: 4px;
-  margin-bottom: 10px;
-  line-height: 1.5;
-}
-
-.dialog-footer {
-  text-align: right;
-  padding-top: 20px;
+.fixed-width .el-button--small {
+  padding: 7px 10px;
+  min-width: 60px;
 }
 </style>

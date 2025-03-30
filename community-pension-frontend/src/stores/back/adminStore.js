@@ -289,11 +289,7 @@ export const useAdminStore = defineStore('admin', {
         // 清除后台相关的存储
         TokenManager.admin.clear();
         // 清除 sessionStorage 中的后台相关数据
-        sessionStorage.removeItem('userRole');
-        sessionStorage.removeItem('rememberedUsername');
-        sessionStorage.removeItem('rememberedRole');
-        sessionStorage.removeItem('rememberRoleType');
-        sessionStorage.removeItem('rememberedRoleId');
+        sessionStorage.clear();
         
         // 重置状态
         this.resetState();

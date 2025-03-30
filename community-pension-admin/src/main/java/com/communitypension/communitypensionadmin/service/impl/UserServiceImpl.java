@@ -86,13 +86,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      * @return 用户信息
      */
     @Override
-    public UserDTO getUserByUsername(String username) {
+    public User getUserByUsername(String username) {
         log.info("根据用户名查询用户信息");
-        UserDTO user = userMapper.selectUserByUsername(username);
+        User user = userMapper.getUserByUsername(username);
         if (user != null) {
             System.out.println(user);
         }
-        return userMapper.selectUserByUsername(username);
+        return user;
 
     }
 

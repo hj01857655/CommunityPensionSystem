@@ -150,15 +150,6 @@ export const useNoticeStore = defineStore('notice', {
     },
     
     /**
-     * 获取通知公告详情(兼容旧代码)
-     * @param {number} id - 通知公告ID
-     * @returns {Promise<Object>}
-     */
-    async fetchNoticeInfo(id) {
-      return this.loadNoticeDetail(id)
-    },
-    
-    /**
      * 根据状态值获取状态名称
      * @param {number} status - 状态值 (0:草稿, 1:已发布, 2:已撤回)
      * @returns {string} - 状态名称

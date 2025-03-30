@@ -165,6 +165,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { formatDate } from '@/utils/date'
 import { Search } from '@element-plus/icons-vue'
 import { getServiceList, getServiceDetail, createServiceAppointment, getMyServiceAppointments, cancelServiceAppointment, evaluateService } from '@/api/fore/service'
+import { useUserStore } from '@/stores/fore/useUserStore'
 
 const activeTab = ref('list')
 
@@ -287,19 +288,47 @@ const filteredServices = computed(() => {
   return result
 })
 
+const userStore = useUserStore()
+
+// 获取用户角色
+const userRole = computed(() => {
+  return userStore.roles?.[0];
+});
+
+// 判断是否为老人角色
+const isElder = computed(() => userRole.value === 'elder');
+
+// 获取用户信息
+const userInfo = computed(() => {
+  return userStore.userInfo;
+});
+
+// 检查登录状态
+const checkLoginStatus = () => {
+  // 检查 store 中的用户信息
+  if (!userInfo.value || !userInfo.value.userId) {
+    // 如果 store 中没有，检查本地存储
+    const localUserInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
+    if (!localUserInfo || !localUserInfo.userId) {
+      ElMessage.warning('请先登录')
+      return false
+    }
+    // 如果本地存储有，但 store 中没有，则重新获取用户信息
+    userStore.getUserInfo();
+  }
+  return true
+}
+
 // 获取服务列表
 const fetchServices = async () => {
+  if (!checkLoginStatus()) return
+  
   loading.value = true
   try {
-    const params = {
-      page: currentPage.value,
-      size: pageSize.value
-    }
-
-    const response = await getServiceList(params)
-    if (response.code === 200) {
-      services.value = response.data.records || []
-      totalServices.value = response.data.total || 0
+    const response = await userStore.getServiceList()
+    if (response && response.data) {
+      services.value = response.data
+      totalServices.value = response.data.length
 
       // 提取所有服务类别
       const categories = new Set(services.value.map(service => service.category))
@@ -315,11 +344,8 @@ const fetchServices = async () => {
 
 // 获取我的预约列表
 const fetchMyAppointments = async () => {
-  if (!localStorage.getItem('elderInfo')) {
-    ElMessage.warning('请先登录')
-    return
-  }
-
+  if (!checkLoginStatus()) return
+  
   loadingAppointments.value = true
   try {
     const params = {
@@ -333,8 +359,8 @@ const fetchMyAppointments = async () => {
       params.endDate = formatDate(dateRange.value[1])
     }
 
-    const response = await getMyServiceAppointments(params)
-    if (response.code === 200) {
+    const response = await userStore.getMyServiceAppointments(params)
+    if (response && response.data) {
       myAppointments.value = response.data.records || []
       totalAppointments.value = response.data.total || 0
     }
@@ -348,11 +374,8 @@ const fetchMyAppointments = async () => {
 
 // 打开服务预约对话框
 const openBookingDialog = (service) => {
-  if (!localStorage.getItem('elderInfo')) {
-    ElMessage.warning('请先登录以预约服务')
-    return
-  }
-
+  if (!checkLoginStatus()) return
+  
   currentService.value = service
   bookingForm.appointmentDate = null
   bookingForm.appointmentTime = null
@@ -362,9 +385,11 @@ const openBookingDialog = (service) => {
 
 // 查看服务详情
 const viewServiceDetail = async (service) => {
+  if (!checkLoginStatus()) return
+  
   try {
-    const response = await getServiceDetail(service.id)
-    if (response.code === 200) {
+    const response = await userStore.getServiceDetail(service.id)
+    if (response && response.data) {
       currentService.value = response.data
       detailDialogVisible.value = true
     }
@@ -387,17 +412,15 @@ const submitBooking = async () => {
       appointmentDateTime.setHours(timeObj.getHours())
       appointmentDateTime.setMinutes(timeObj.getMinutes())
 
-      const elderInfo = JSON.parse(localStorage.getItem('elderInfo'))
-
       const data = {
         serviceId: currentService.value.id,
-        elderId: elderInfo.id,
+        elderId: userInfo.value.id,
         appointmentTime: appointmentDateTime.toISOString(),
         remark: bookingForm.remark
       }
 
-      const response = await createServiceAppointment(data)
-      if (response.code === 200) {
+      const response = await userStore.createServiceAppointment(data)
+      if (response && response.code === 200) {
         ElMessage.success('预约成功')
         bookingDialogVisible.value = false
 
@@ -417,6 +440,8 @@ const submitBooking = async () => {
 
 // 取消预约
 const handleCancel = async (row) => {
+  if (!checkLoginStatus()) return
+  
   try {
     await ElMessageBox.confirm(
       `确定要取消"${row.serviceName}"预约吗？`,
@@ -429,8 +454,8 @@ const handleCancel = async (row) => {
     )
 
     // 调用取消预约API
-    const response = await cancelServiceAppointment(row.id)
-    if (response.code === 200) {
+    const response = await userStore.cancelServiceAppointment(row.id)
+    if (response && response.code === 200) {
       ElMessage.success('预约已取消')
       // 更新本地状态
       const index = myAppointments.value.findIndex(item => item.id === row.id)
@@ -464,8 +489,8 @@ const submitEvaluation = async () => {
 
     submittingEvaluation.value = true
     try {
-      const response = await evaluateService(currentAppointment.value.id, evaluationForm)
-      if (response.code === 200) {
+      const response = await userStore.evaluateService(currentAppointment.value.id, evaluationForm)
+      if (response && response.code === 200) {
         ElMessage.success('评价提交成功')
         evaluationDialogVisible.value = false
         
@@ -486,10 +511,11 @@ const submitEvaluation = async () => {
     }
   })
 }
+
 // 组件挂载时获取数据
-onMounted(() => {
-  fetchServices()
-  fetchMyAppointments()
+onMounted(async () => {
+  await fetchServices()
+  await fetchMyAppointments()
 })
 </script>
 <style scoped>

@@ -38,7 +38,11 @@
       </template>
 
       <!-- 子路由内容 -->
-      <router-view v-else class="router-view" />
+      <router-view v-else class="router-view">
+        <template #default="{ Component }">
+          <component :is="Component" :is-logged-in="isLoggedIn" />
+        </template>
+      </router-view>
     </el-main>
 
     <!-- Footer -->
@@ -57,13 +61,45 @@ import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import DashBoard from '@/views/fore/DashBoard.vue';
 import { useUserStore } from '@/stores/fore/useUserStore';
-const userStore = useUserStore();
-const router = useRouter();
-const formData = ref({});
-const isLoggedIn = ref(false);
+import { getAvatarUrl } from '@/utils/avatarUtils';
 
-// 使用store中的avatarUrl
-const avatarUrl = computed(() => userStore.avatarUrl);
+const router = useRouter();
+const userStore = useUserStore();
+
+// 获取登录状态
+const isLoggedIn = computed(() => {
+  // 从本地缓存获取
+  const localLoginState = localStorage.getItem("isLoggedIn") === "true";
+  // 从store获取
+  const storeLoginState = userStore.isLoggedIn;
+  
+  // 如果本地缓存和store状态不一致，同步到store
+  if (localLoginState !== storeLoginState) {
+    userStore.isLoggedIn = localLoginState;
+  }
+  
+  return localLoginState;
+});
+
+// 获取用户信息
+const formData = computed(() => {
+  // 从本地存储获取用户信息
+  const userInfo = localStorage.getItem('userInfo');
+  if (userInfo) {
+    return JSON.parse(userInfo);
+  }
+  return {};
+});
+
+// 获取头像URL
+const avatarUrl = computed(() => {
+  // 从本地存储获取头像
+  const avatar = formData.value?.avatar;
+  if (avatar) {
+    return getAvatarUrl(avatar);
+  }
+  return getAvatarUrl('/avatar/default.jpg');
+});
 
 // 处理来自DashBoard的菜单更新事件
 const handleUpdateActiveIndex = (event) => {
@@ -73,12 +109,8 @@ const handleUpdateActiveIndex = (event) => {
 };
 
 onMounted(() => {
-  // 检查用户是否已登录
-  if (!userStore.isLoggedIn || !localStorage.getItem("isLoggedIn")) {
+  if (!isLoggedIn.value) {
     router.push('/login');
-  } else {
-    formData.value = userStore.userInfo;
-    isLoggedIn.value = true;
   }
   
   // 添加自定义事件监听器
