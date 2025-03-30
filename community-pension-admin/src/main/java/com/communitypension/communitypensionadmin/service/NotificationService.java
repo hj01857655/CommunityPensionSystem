@@ -3,7 +3,7 @@ package com.communitypension.communitypensionadmin.service;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.communitypension.communitypensionadmin.entity.Notification;
-import com.communitypension.communitypensionadmin.model.query.NotificationQuery;
+import com.communitypension.communitypensionadmin.vo.query.NotificationQuery;
 
 public interface NotificationService extends IService<Notification> {
     

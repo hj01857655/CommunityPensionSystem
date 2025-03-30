@@ -10,14 +10,14 @@ import {
     resetUserPassword,
     uploadAvatar,
     deleteUser,
-    getUserRoles,
-    assignRole,
-    updateUserStatus,
-    getUnboundElders,
-    getAuthRole,
-    updateAuthRole,
-    getUnboundKins,
-    bindElderKinRelation,
+    getUserRoles,//获取用户角色
+    assignRole,//分配角色
+    updateUserStatus,//更新用户状态
+    getUnboundElders,//获取未绑定家属的老人列表
+    getAuthRole,//获取用户角色授权信息
+    updateAuthRole,//更新用户角色授权信息
+    getUnboundKins,//获取未绑定老人的家属列表
+    bindElderKinRelation,//绑定老人和家属关系
     unbindElderKinRelation,
     getKinIdsByElderId,
     getElderIdsByKinId,

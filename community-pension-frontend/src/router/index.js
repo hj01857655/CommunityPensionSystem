@@ -5,6 +5,7 @@ import ActivityView from '@/views/fore/ActivityView.vue';
 import NoticeView from '@/views/fore/NoticeView.vue';
 import ProfileView from '@/views/fore/ProfileView.vue';
 import { TokenManager, storageConfig } from '@/utils/axios';
+import { ElMessage } from 'element-plus';
 
 const routes = [
   // 根路径重定向
@@ -171,24 +172,24 @@ const routes = [
       {
         path: 'activity',
         name: 'ActivityManagement',
-        component: () => import('@/views/back/activity/ActivityLayout.vue'),
+        component: () => import('@/views/back/activity/index.vue'),
         meta: { title: '社区活动管理', icon: 'calendar', roles: ['admin', 'staff'] },
         children: [
           {
-            path: 'type',
-            name: 'ActivityTypeList',
-            component: () => import('@/views/back/activity/type.vue'),
-            meta: { title: '活动类型管理', icon: 'calendar', roles: ['admin', 'staff'] }
+            path: 'list',
+            name: 'ActivityList',
+            component: () => import('@/views/back/activity/ActivityList.vue'),
+            meta: { title: '活动管理', icon: 'calendar', roles: ['admin', 'staff'] }
           },
           {
-            path: 'registration',
-            name: 'ActivityRegistrationList',
-            component: () => import('@/views/back/activity/ActivityRegistration.vue'),
-            meta: { title: '社区活动管理', icon: 'calendar', roles: ['admin', 'staff'] }
+            path: 'participate',
+            name: 'ActivityParticipate',
+            component: () => import('@/views/back/activity/ActivityParticipate.vue'),
+            meta: { title: '活动参与管理', icon: 'calendar', roles: ['admin', 'staff'] }
           },
           {
             path: 'checkin',
-            name: 'ActivityCheckinList',
+            name: 'ActivityCheckin',
             component: () => import('@/views/back/activity/ActivityCheckin.vue'),
             meta: { title: '活动签到管理', icon: 'calendar', roles: ['admin', 'staff'] }
           }
@@ -294,23 +295,37 @@ const routes = [
 
 const router = createRouter({
   history: createWebHistory(),
-  
+
   routes
 });
 
 router.beforeEach((to, from, next) => {
-  const isAdminRoute = to.path.startsWith('/admin');
-  const isAdminLoggedIn = TokenManager.admin.getAccessToken();
-  const isUserLoggedIn = localStorage.getItem("isLoggedIn") === "true";
-  const userRole = isAdminRoute ? 
-    storageConfig.getStorage(storageConfig.admin).getItem("userRole") : 
-    localStorage.getItem("userRole");
-
   // 如果是错误页面或登录页面，直接放行
-  if (to.path === '/403' || to.path === '/404' || to.path === '/500' || 
-      to.path === '/login' || to.path === '/admin/login') {
+  if (to.path === '/403' || to.path === '/404' || to.path === '/500' ||
+    to.path === '/login' || to.path === '/admin/login') {
     return next();
   }
+
+  const isAdminRoute = to.path.startsWith('/admin');
+  const isAdminLoggedIn = TokenManager.admin.getAccessToken();
+  
+  // 根据路由类型获取用户信息
+  let userInfo, isUserLoggedIn, userRole;
+  if (isAdminRoute) {
+    // 后台使用会话存储
+    userInfo = JSON.parse(storageConfig.getStorage(storageConfig.admin).getItem("userInfo") || "{}");
+    isUserLoggedIn = !!TokenManager.admin.getAccessToken();
+  } else {
+    // 前台使用本地存储
+    userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
+    isUserLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+  }
+  
+  userRole = userInfo.roles?.[0];
+
+  console.log("路由守卫 - 当前路由:", to.path);
+  console.log("路由守卫 - 用户登录状态:", isUserLoggedIn);
+  console.log("路由守卫 - 用户角色:", userRole);
 
   // 处理后台路由认证
   if (isAdminRoute) {
@@ -326,17 +341,31 @@ router.beforeEach((to, from, next) => {
 
   // 处理前台路由认证
   if (to.meta.requiresAuth) {
+    // 检查登录状态和用户信息完整性
     if (!isUserLoggedIn) {
+      console.log("路由守卫 - 未登录，重定向到登录页");
+      ElMessage.warning('请先登录');
       return next('/login');
     }
+    
+    if (!userInfo || !userInfo.userId) {
+      console.log("路由守卫 - 用户信息不完整，重定向到登录页");
+      ElMessage.warning('登录信息已失效，请重新登录');
+      return next('/login');
+    }
+
     // 检查用户角色
-    if (userRole === 'admin' || userRole === 'staff') {
+    if (userRole !== 'elder' && userRole !== 'kin') {
+      console.log("路由守卫 - 角色不匹配，重定向到403");
+      ElMessage.error('您没有权限访问该页面');
       return next('/403');
     }
   }
 
   // 如果需要特定角色且用户角色不符合要求
   if (to.meta.roles && !to.meta.roles.includes(userRole)) {
+    console.log("路由守卫 - 角色权限不足，重定向到403");
+    ElMessage.error('您没有权限访问该页面');
     return next('/403');
   }
 

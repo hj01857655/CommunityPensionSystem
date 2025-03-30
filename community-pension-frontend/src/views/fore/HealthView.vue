@@ -105,12 +105,17 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import { getHealthData, updateHealthData, addHealthData } from '@/api/fore/health'
+import { useUserStore } from '@/stores/fore/useUserStore'
 
 const healthFormRef = ref(null)
 const isEditMode = ref(false) // 添加编辑模式状态
+const loading = ref(false) // 添加加载状态
+const healthRecords = ref([]) // 添加健康记录列表
+const totalRecords = ref(0) // 添加总记录数
+
 const healthForm = ref({
   id: null,
   elderId: null,
@@ -168,19 +173,39 @@ const healthRules = {
   ]
 }
 
-// 从本地存储获取老人ID
+const userStore = useUserStore()
+
+// 获取用户角色
+const userRole = computed(() => {
+  return userStore.roles?.[0];
+});
+
+// 判断是否为老人角色
+const isElder = computed(() => userRole.value === 'elder');
+
+// 获取用户信息
+const userInfo = computed(() => {
+  return userStore.userInfo;
+});
+
+// 获取老人ID
 const getElderId = () => {
-  const elderInfo = localStorage.getItem('elderInfo')
-  if (elderInfo) {
-    try {
-      const elder = JSON.parse(elderInfo)
-      return elder.id
-    } catch (e) {
-      console.error('解析elderInfo失败:', e)
-      return null
+  return userInfo.value?.userId;
+}
+
+// 检查登录状态
+const checkLoginStatus = () => {
+  if (!userInfo.value || !userInfo.value.userId) {
+    // 如果 store 中没有，检查本地存储
+    const localUserInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
+    if (!localUserInfo || !localUserInfo.userId) {
+      ElMessage.warning('请先登录')
+      return false
     }
+    // 如果本地存储有，但 store 中没有，则重新获取用户信息
+    userStore.getUserInfo();
   }
-  return null
+  return true
 }
 
 const handleSave = () => {
@@ -234,10 +259,11 @@ const toggleEditMode = () => {
 
 // 获取初始健康数据
 const fetchHealthData = async () => {
+  loading.value = true
   try {
     const elderId = getElderId()
     if (!elderId) {
-      ElMessage.warning('无法获取老人ID，将使用默认值')
+      ElMessage.warning('请先登录')
       return
     }
     
@@ -259,11 +285,39 @@ const fetchHealthData = async () => {
   } catch (error) {
     ElMessage.error('获取健康数据失败：' + (error.message || '未知错误'))
     console.error('获取健康数据失败：', error)
+  } finally {
+    loading.value = false
   }
 }
 
-onMounted(() => {
-  fetchHealthData()
+// 获取健康记录列表
+const fetchHealthRecords = async () => {
+  if (!checkLoginStatus()) return
+  
+  loading.value = true
+  try {
+    const elderId = getElderId()
+    if (!elderId) {
+      ElMessage.warning('无法获取老人信息')
+      return
+    }
+    
+    const response = await userStore.getHealthRecords(elderId)
+    if (response && response.data) {
+      healthRecords.value = response.data
+      totalRecords.value = response.data.length
+    }
+  } catch (error) {
+    console.error('获取健康记录失败:', error)
+    ElMessage.error('获取健康记录失败')
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(async () => {
+  await fetchHealthData()
+  await fetchHealthRecords()
 })
 </script>
 

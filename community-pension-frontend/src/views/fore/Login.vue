@@ -78,24 +78,23 @@ const submitForm = async () => {
     if (valid) {
       loading.value = true;
       try {
-        const response = await userStore.login(loginForm.value);
-        console.log("登录接口在view中返回", response);
-        //如果接口返回数据成功，view中是code
-        if (response.code === 200&&response.data&&response.message) {
-          console.log("前台登录页面登录成功返回", response.data);
-          // 存储用户角色
-          localStorage.setItem("userRole", loginForm.value.roleId === 1 ? "elder" : "kin");
-          console.log("跳转到首页");
-          router.push("/home");
-        }else if(response.code==401){
-          ElMessage.error(response.message);
-          console.log("登录失败，跳转到登录页面");
-          router.push("/login");
-        }else{
-          ElMessage.error(response.message);
+        console.log("开始登录，表单数据：", loginForm.value);
+        const success = await userStore.login(loginForm.value);
+        
+        if (success) {
+          console.log("登录成功，准备跳转");
+          try {
+            console.log("开始路由跳转到 /home/dashboard");
+            await router.push("/home/dashboard");
+            console.log("路由跳转成功");
+          } catch (routerError) {
+            console.error("路由跳转失败：", routerError);
+            ElMessage.error("页面跳转失败，请刷新重试");
+          }
         }
       } catch (err) {
-        console.error("登录错误", err);
+        console.error("登录过程发生错误：", err);
+        ElMessage.error("登录失败，请稍后重试");
       } finally {
         loading.value = false;
       }

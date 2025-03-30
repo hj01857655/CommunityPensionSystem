@@ -10,29 +10,54 @@ src/
   │   │   └── com/communitypension/communitypensionadmin/
   │   │       ├── controller/    # 控制器层
   │   │       ├── service/       # 服务层
-  │   │       │   └── impl/     # 服务实现
-  │   │       ├── mapper/       # 数据访问层
-  │   │       ├── entity/       # 实体类
-  │   │       ├── dto/          # 数据传输对象
-  │   │       ├── vo/           # 视图对象
-  │   │       ├── config/       # 配置类
-  |   |       |── exception/# 异常
-  |   |       |── utils/    # 工具类
-  │   │       └── CommunityPensionAdminApplication.java
+  │   │       ├── mapper/        # 数据访问层
+  │   │       ├── entity/        # 实体类
+  │   │       ├── dto/           # 数据传输对象
+  │   │       ├── vo/            # 视图对象
+  │   │       ├── config/        # 配置类
+  │   │       ├── common/        # 公共类
+  │   │       └── utils/         # 工具类
   │   └── resources/
-  │       ├── mapper/          # MyBatisPlus映射文件
-  │       ├── static/          # 静态资源
-  │       └── application.yml  # 配置文件
+  │       ├── mapper/           # MyBatis映射文件
+  │       ├── application.yml   # 应用配置
+  │       └── application-dev.yml # 开发环境配置
   └── test/                    # 测试目录
 ```
 
-### 1.2 命名规范
+### 1.2 开发环境规范
 
-#### 1.2.1 包命名
+#### 1.2.1 JDK 版本规范
+- 项目使用 JDK 8 及以上版本
+- 使用 `jakarta` 包名替代 `javax`
+- 示例：
+  ```java
+  // 使用 jakarta 包
+  import jakarta.servlet.http.HttpServletResponse;
+  import jakarta.validation.constraints.NotBlank;
+  import jakarta.validation.constraints.NotNull;
+  ```
+
+#### 1.2.2 包命名规范
+- 基础包名：`com.communitypension.communitypensionadmin`
+- 模块包名：按业务模块划分
+- 示例：
+  ```java
+  // 活动模块
+  com.communitypension.communitypensionadmin.controller.activity
+  com.communitypension.communitypensionadmin.service.activity
+  com.communitypension.communitypensionadmin.mapper.activity
+  com.communitypension.communitypensionadmin.entity.activity
+  com.communitypension.communitypensionadmin.dto.activity
+  com.communitypension.communitypensionadmin.vo.activity
+  ```
+
+### 1.3 命名规范
+
+#### 1.3.1 包命名
 - 使用全小写字母，点号分隔
 - 示例：`com.communitypension.communitypensionadmin`
 
-#### 1.2.2 类命名
+#### 1.3.2 类命名
 - 使用大驼峰命名法（PascalCase）
 - 类名应该清晰表达其功能
 - 示例：
@@ -57,7 +82,7 @@ src/
 
   ```
 
-#### 1.2.3 方法命名
+#### 1.3.3 方法命名
 - 使用小驼峰命名法（camelCase）
 - 方法名应该清晰表达其功能
 - 示例：
@@ -67,7 +92,7 @@ src/
   public void deleteNotice()
   ```
 
-#### 1.2.4 变量命名
+#### 1.3.4 变量命名
 - 使用小驼峰命名法（camelCase）
 - 变量名应该清晰表达其含义
 - 示例：
@@ -77,7 +102,7 @@ src/
   private Integer status;
   ```
 
-#### 1.2.5 常量命名
+#### 1.3.5 常量命名
 - 使用全大写下划线分隔（UPPER_SNAKE_CASE）
 - 示例：
   ```java
@@ -86,9 +111,9 @@ src/
   public static final String STATUS_REVOKED = "2";
   ```
 
-### 1.3 注释规范
+### 1.4 注释规范
 
-#### 1.3.1 类注释
+#### 1.4.1 类注释
 ```java
 /**
  * 通知公告控制器
@@ -103,7 +128,7 @@ public class NotificationController {
 }
 ```
 
-#### 1.3.2 方法注释
+#### 1.4.2 方法注释
 ```java
 /**
  * 获取通知公告列表
@@ -116,7 +141,7 @@ public Result<IPage<Notification>> list(NotificationQuery query) {
 }
 ```
 
-#### 1.3.3 字段注释
+#### 1.4.3 字段注释
 ```java
 /**
  * 通知公告标题
@@ -134,7 +159,7 @@ private String content;
 private Integer status;
 ```
 
-### 1.4 代码格式
+### 1.5 代码格式
 - 使用4个空格缩进
 - 大括号使用K&R风格（左括号不换行，右括号独占一行）
 - 每行代码不超过120个字符
@@ -147,9 +172,9 @@ private Integer status;
   }
   ```
 
-### 1.5 数据库规范
+### 1.6 数据库规范
 
-#### 1.5.1 表命名
+#### 1.6.1 表命名
 - 使用小写字母，下划线分隔
 - 示例：
   ```sql
@@ -164,13 +189,13 @@ private Integer status;
   )
   ```
 
-#### 1.5.2 字段命名
+#### 1.6.2 字段命名
 - 使用小写字母，下划线分隔
 - 主键统一使用id
 - 创建时间统一使用create_time
 - 更新时间统一使用update_time
 
-#### 1.5.3 索引规范
+#### 1.6.3 索引规范
 - 主键索引：id
 - 普通索引：idx_字段名
 - 示例：
@@ -179,9 +204,9 @@ private Integer status;
   INDEX idx_publish_time (publish_time)
   ```
 
-### 1.6 MyBatisPlus 注解规范
+### 1.7 MyBatisPlus 注解规范
 
-#### 1.6.1 实体类注解
+#### 1.7.1 实体类注解
 ```java
 /**
  * 用户实体类
@@ -261,7 +286,7 @@ public class User {
 }
 ```
 
-#### 1.6.2 Mapper 接口注解
+#### 1.7.2 Mapper 接口注解
 ```java
 /**
  * 用户Mapper接口
@@ -316,7 +341,7 @@ public interface UserMapper extends BaseMapper<User> {
 }
 ```
 
-#### 1.6.3 Mapper 注解使用规范
+#### 1.7.3 Mapper 注解使用规范
 1. 优先使用 MyBatisPlus 注解和条件构造器：
    - 简单的 CRUD 操作：使用 BaseMapper 提供的方法
    - 单表查询：使用 `@Select` 注解
@@ -397,7 +422,7 @@ public interface UserMapper extends BaseMapper<User> {
      </mapper>
      ```
 
-#### 1.6.4 Service 接口注解
+#### 1.7.4 Service 接口注解
 ```java
 /**
  * 用户服务接口
@@ -416,7 +441,7 @@ public interface UserService extends IService<User> {
 }
 ```
 
-#### 1.6.5 Controller 注解
+#### 1.7.5 Controller 注解
 ```java
 /**
  * 用户控制器
@@ -450,9 +475,9 @@ public class UserController {
 }
 ```
 
-### 1.7 Lombok 注解规范
+### 1.8 Lombok 注解规范
 
-#### 1.7.1 常用注解
+#### 1.8.1 常用注解
 ```java
 /**
  * 用户实体类
@@ -472,7 +497,7 @@ public class User {
 }
 ```
 
-#### 1.7.2 注解使用规范
+#### 1.8.2 注解使用规范
 1. `@Data` 注解：
    - 用于实体类，自动生成 getter、setter、toString 等方法
    - 不建议在 DTO 和 VO 类上使用，应该明确指定需要的方法
@@ -493,7 +518,7 @@ public class User {
    - 用于需要比较对象的类
    - 建议指定 `callSuper = true`，以包含父类字段
 
-#### 1.7.3 示例
+#### 1.8.3 示例
 ```java
 /**
  * 用户DTO
@@ -549,9 +574,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 }
 ```
 
-### 1.8 数据传输对象规范
+### 1.9 数据传输对象规范
 
-#### 1.8.1 DTO（Data Transfer Object）规范
+#### 1.9.1 DTO（Data Transfer Object）规范
 1. 使用场景：
    - 接收前端请求参数
    - 服务层之间的数据传输
@@ -640,7 +665,7 @@ public class UserQueryDTO {
 }
 ```
 
-#### 1.8.2 VO（View Object）规范
+#### 1.9.2 VO（View Object）规范
 1. 使用场景：
    - 返回给前端的数据对象
    - 展示层的数据转换
@@ -762,7 +787,7 @@ public class NoticeVO {
 }
 ```
 
-#### 1.8.3 使用规范
+#### 1.9.3 使用规范
 1. 禁止直接使用实体类与前端交互：
    - 实体类可能包含敏感信息
    - 实体类可能包含不必要的字段
@@ -820,9 +845,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 }
 ```
 
-### 1.9 RESTful 接口开发规范
+### 1.10 RESTful 接口开发规范
 
-#### 1.9.1 Result 类使用规范
+#### 1.10.1 Result 类使用规范
 1. 基本使用规范：
    - 所有接口返回值必须使用 Result 包装类
    - 根据操作类型选择合适的结果方法
@@ -916,7 +941,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
    }
    ```
 
-#### 1.9.2 Controller 层规范
+#### 1.10.2 Controller 层规范
 1. 接口命名规范：
    - 使用复数名词表示资源
    - 使用 HTTP 方法表示操作
@@ -987,15 +1012,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      }
      ```
 
-#### 1.9.3 Service 层规范
+#### 1.10.3 Service 层规范
 1. 接口定义规范：
    - 继承 IService 接口
    - 方法命名语义化
    - 示例：
      ```java
      public interface NoticeService extends IService<Notice> {
-         /**
-          * 获取通知公告列表
+  /**
+   * 获取通知公告列表
           *
           * @param query 查询条件
           * @return 通知公告列表
@@ -1054,7 +1079,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      }
      ```
 
-#### 1.9.4 Mapper 层规范
+#### 1.10.4 Mapper 层规范
 1. 接口定义规范：
    - 继承 BaseMapper
    - 自定义方法命名语义化
@@ -1118,7 +1143,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      </mapper>
      ```
 
-#### 1.9.4 代码重复检查
+#### 1.10.4 代码重复检查
 1. 检查点：
    - 重复的查询条件构建
    - 重复的数据转换逻辑
@@ -1162,517 +1187,291 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      }
      ```
 
-## 2. 前端开发规范
+### 1.11 前后端接口规范
 
-### 2.1 项目结构
-```
-src/
-  ├── api/                # API接口
-  │   ├── back/          # 后台接口
-  │   │   └── notice.js  # 通知公告接口
-  │   └── fore/          # 前台接口
-  ├── assets/            # 静态资源
-  │   ├── images/        # 图片资源
-  │   └── styles/        # 样式文件
-  ├── components/        # 公共组件
-  │   └── common/        # 通用组件
-  ├── stores/            # 状态管理
-  │   └── back/          # 后台状态
-  │       └── noticeStore.js  # 通知公告状态
-  ├── utils/             # 工具函数
-  │   ├── axios.js     # 请求封装
-  │   └── validate.js    # 验证工具
-  ├── views/             # 页面组件
-  │   └── notice/        # 通知公告页面
-  └── router/            # 路由配置
-      └── modules/       # 路由模块
-          └── notice.js  # 通知公告路由
-```
-
-### 2.2 命名规范
-
-#### 2.2.1 文件命名
-- 组件文件：使用大驼峰命名法（PascalCase）
-  ```
-  NoticeList.vue
-  NoticeForm.vue
-  NoticeDetail.vue
-  ```
-- 工具文件：使用小驼峰命名法（camelCase）
-  ```
-  request.js
-  validate.js
-  ```
-- 样式文件：使用小写中划线命名法（kebab-case）
-  ```
-  common.scss
-  variables.scss
-  ```
-
-#### 2.2.2 组件命名
-- 组件名使用大驼峰命名法
-- 基础组件以 Base 开头
-- 示例：
-  ```
-  BaseButton.vue
-  BaseInput.vue
-  BaseTable.vue
-  ```
-
-#### 2.2.3 变量命名
-- 使用小驼峰命名法
-- 布尔类型变量使用 is/has/can 等前缀
-- 示例：
-  ```javascript
-  const userName = 'admin'
-  const isVisible = true
-  const hasPermission = false
-  ```
-
-### 2.3 组件规范
-
-#### 2.3.1 组件结构
-```vue
-<!--
- * @description: 通知公告列表组件
- * @author: 作者名
- * @date: 2024-03-26
--->
-<template>
-  <div class="notice-list">
-    <!-- 搜索区域 -->
-    <div class="notice-list__search">
-      <el-form :model="searchForm" inline>
-        <!-- 表单内容 -->
-      </el-form>
-    </div>
-
-    <!-- 表格区域 -->
-    <div class="notice-list__table">
-      <el-table :data="tableData">
-        <!-- 表格内容 -->
-      </el-table>
-    </div>
-
-    <!-- 分页区域 -->
-    <div class="notice-list__pagination">
-      <el-pagination
-        v-model:current-page="currentPage"
-        v-model:page-size="pageSize"
-        :total="total"
-        @current-change="handlePageChange"
-      />
-    </div>
-  </div>
-</template>
-
-<script setup>
-// 导入依赖
-import { ref, onMounted } from 'vue'
-import { useNoticeStore } from '@/stores/back/noticeStore'
-
-// 状态定义
-const noticeStore = useNoticeStore()
-const searchForm = ref({})
-const tableData = ref([])
-const currentPage = ref(1)
-const pageSize = ref(10)
-const total = ref(0)
-
-// 方法定义
-const loadData = async () => {
-  try {
-    const res = await noticeStore.loadNoticeList({
-      pageNum: currentPage.value,
-      pageSize: pageSize.value,
-      ...searchForm.value
-    })
-    tableData.value = res.data.records
-    total.value = res.data.total
-  } catch (error) {
-    console.error('获取通知列表失败:', error)
-  }
-}
-
-// 生命周期钩子
-onMounted(() => {
-  loadData()
-})
-</script>
-
-<style lang="scss" scoped>
-.notice-list {
-  &__search {
-    margin-bottom: 16px;
-  }
-
-  &__table {
-    margin-bottom: 16px;
-  }
-
-  &__pagination {
-    text-align: right;
-  }
-}
-</style>
-```
-
-#### 2.3.2 组件通信
-- Props 定义：
-  ```javascript
-  const props = defineProps({
-    title: {
-      type: String,
-      required: true
-    },
-    status: {
-      type: Number,
-      default: 0
-    }
-  })
-  ```
-
-- 事件定义：
-  ```javascript
-  const emit = defineEmits(['update', 'delete'])
-  ```
-
-- 插槽定义：
-  ```vue
-  <template>
-    <div class="notice-card">
-      <slot name="header" />
-      <slot />
-      <slot name="footer" />
-    </div>
-  </template>
-  ```
-
-### 2.4 状态管理规范
-
-#### 2.4.1 Store 文件命名
-- 使用小驼峰命名法，以 `Store` 结尾
-- 示例：
-  ```
-  noticeStore.js
-  userStore.js
-  roleStore.js
-  ```
-
-#### 2.4.2 Store 结构
-```javascript
-import { defineStore } from 'pinia'
-import { 
-  getNoticeList, 
-  getNoticeDetail, 
-  addNotice, 
-  updateNotice, 
-  deleteNotice 
-} from '@/api/back/notice/notice'
-
-export const useNoticeStore = defineStore('notice', {
-  // 状态定义
-  state: () => ({
-    noticeList: [],
-    total: 0,
-    currentNotice: null
-  }),
-
-  // 计算属性
-  getters: {
-    getActiveNotices: (state) => {
-      return state.noticeList.filter(notice => notice.status === 1)
-    }
-  },
-
-  // 操作方法
-  actions: {
-    async loadNoticeList(params) {
-      try {
-        const res = await getNoticeList(params)
-        this.noticeList = res.data.records
-        this.total = res.data.total
-        return res
-      } catch (error) {
-        console.error('获取通知公告列表失败:', error)
-        throw error
-      }
-    },
-
-    async createNotice(data) {
-      try {
-        const res = await addNotice(data)
-        return res
-      } catch (error) {
-        console.error('新增通知公告失败:', error)
-        throw error
-      }
-    }
-  }
-})
-```
-
-### 2.5 API 接口规范
-
-#### 2.5.1 接口文件规范
-1. 必须使用封装的 axios 实例：
-   ```javascript
-   // 正确示例
-   import axios from '@/utils/axios'
-   
-   /**
-    * 获取通知公告列表
-    * @param {Object} params - 查询参数
-    * @param {number} params.pageNum - 页码
-    * @param {number} params.pageSize - 每页数量
-    * @param {string} [params.title] - 标题关键字
-    * @returns {Promise<{code: number, data: {records: Array, total: number}, msg: string}>}
-    */
-   export const getNoticeList = (params) => {
-     return axios.get('/api/notices/list', { params })
-   }
-   
-   /**
-    * 新增通知公告
-    * @param {Object} data - 通知公告数据
-    * @returns {Promise<{code: number, msg: string}>}
-    */
-   export const addNotice = (data) => {
-     return axios.post('/api/notices', data)
-   }
-   
-   // 错误示例 - 禁止直接使用 axios
-   import axios from 'axios'  // ❌ 错误
-   ```
-
-2. 接口文件命名规范：
-   - 使用小驼峰命名法
-   - 以功能模块命名
-   - 示例：`notice.js`、`user.js`、`role.js`
-
-3. 接口文件目录结构：
-   ```
-   src/api/
-   ├── back/           # 后台接口
-   │   ├── notice.js   # 通知公告接口
-   │   ├── user.js     # 用户接口
-   │   └── role.js     # 角色接口
-   └── fore/           # 前台接口
-       ├── notice.js   # 通知公告接口
-       └── user.js     # 用户接口
-   ```
-
-4. 接口函数命名规范：
-   - 使用动词 + 名词的形式
-   - 使用小驼峰命名法
+#### 1.11.1 接口命名规范
+1. 后端接口：
+   - 使用 RESTful 风格
+   - 使用复数名词表示资源
    - 示例：
-     ```javascript
-     // 获取数据
-     getNoticeList()
-     getUserInfo()
-     
-     // 创建数据
-     createNotice()
-     addUser()
-     
-     // 更新数据
-     updateNotice()
-     modifyUser()
-     
-     // 删除数据
-     deleteNotice()
-     removeUser()
+     ```java
+     @RestController
+     @RequestMapping("/api/activity")
+     public class ActivityController {
+         @GetMapping("/list")           // 获取列表
+         @GetMapping("/{id}")           // 获取详情
+         @PostMapping                   // 创建
+         @PutMapping("/{id}")           // 更新
+         @DeleteMapping("/{id}")        // 删除
+         @PutMapping("/{id}/status")    // 更新状态
+         @GetMapping("/{id}/stats")     // 获取统计
+     }
      ```
 
-5. 接口注释规范：
-   ```javascript
-   /**
-    * 获取通知公告列表
-    * @param {Object} params - 查询参数
-    * @param {number} params.pageNum - 页码
-    * @param {number} params.pageSize - 每页数量
-    * @param {string} [params.title] - 标题关键字
-    * @returns {Promise<{code: number, data: {records: Array, total: number}, msg: string}>}
-    */
-   export const getNoticeList = (params) => {
-     return axios.get('/api/notices/list', { params })
+2. 前端 API：
+   - 方法名语义化
+   - 与后端接口一一对应
+- 示例：
+```javascript
+     // 活动管理接口
+     export const getList = (params) => axios.get('/api/activity/list', { params })
+     export const getDetail = (id) => axios.get(`/api/activity/${id}`)
+     export const create = (data) => axios.post('/api/activity', data)
+     export const update = (id, data) => axios.put(`/api/activity/${id}`, data)
+     export const deleteActivity = (id) => axios.delete(`/api/activity/${id}`)
+     export const updateStatus = (id, status) => axios.put(`/api/activity/${id}/status`, { status })
+     export const getStats = (id) => axios.get(`/api/activity/${id}/stats`)
+     ```
+
+#### 1.11.2 接口参数规范
+1. 查询参数：
+   - 使用 `@RequestParam` 注解
+   - 设置默认值和是否必填
+   - 示例：
+     ```java
+     @GetMapping("/list")
+     public Result<Page<ActivityVO>> list(
+         @RequestParam(defaultValue = "1") Integer pageNum,
+         @RequestParam(defaultValue = "10") Integer pageSize,
+         @RequestParam(required = false) String title
+     )
+     ```
+
+2. 路径参数：
+   - 使用 `@PathVariable` 注解
+   - 示例：
+     ```java
+     @GetMapping("/{id}")
+     public Result<ActivityVO> getDetail(@PathVariable Long id)
+     ```
+
+3. 请求体参数：
+   - 使用 `@RequestBody` 注解
+   - 使用 DTO 对象接收
+   - 示例：
+     ```java
+     @PostMapping
+     public Result<Void> create(@Validated @RequestBody ActivityDTO activityDTO)
+     ```
+
+#### 1.11.3 接口返回值规范
+1. 统一返回格式：
+   ```java
+   public class Result<T> {
+       private int code;          // 状态码
+       private String message;    // 消息
+       private T data;           // 数据
+       private long timestamp;    // 时间戳
    }
    ```
 
-#### 2.5.2 请求方法规范
-- GET：获取数据
-- POST：创建数据
-- PUT：更新数据
-- DELETE：删除数据
+2. 状态码使用：
+   - 200：操作成功
+   - 201：创建成功
+   - 204：删除成功
+   - 400：请求参数错误
+   - 401：未授权
+   - 403：禁止访问
+   - 404：资源不存在
+   - 500：系统异常
 
-#### 2.5.3 响应格式
-```javascript
-{
-  code: 200,          // 状态码
-  message: "成功",     // 提示信息
-  data: {            // 响应数据
-    records: [],     // 列表数据
-    total: 0         // 总记录数
-  },
-  timestamp: 1711440000000  // 时间戳
-}
-```
-
-### 2.6 样式规范
-
-#### 2.6.1 命名规范
-- 使用 BEM 命名规范
-- 示例：
-  ```scss
-  .notice-list {
-    &__search {
-      margin-bottom: 16px;
-    }
-
-    &__table {
-      margin-bottom: 16px;
-    }
-
-    &__pagination {
-      text-align: right;
-    }
-  }
-  ```
-
-#### 2.6.2 样式结构
-```scss
-// 变量定义
-$primary-color: #409EFF;
-$success-color: #67C23A;
-$warning-color: #E6A23C;
-$danger-color: #F56C6C;
-$info-color: #909399;
-
-// 混入定义
-@mixin flex-center {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-// 样式定义
-.notice-list {
-  @include flex-center;
-  color: $primary-color;
-}
-```
-
-## 3. 通用规范
-
-### 3.1 Git 规范
-
-#### 3.1.1 分支管理
-- 主分支：main
-- 开发分支：dev
-- 功能分支：feature/功能名称
-- 修复分支：hotfix/问题描述
-- 示例：
-  ```
-  feature/notification-management
-  hotfix/notification-publish-bug
-  ```
-
-#### 3.1.2 提交信息规范
-- 格式：<type>(<scope>): <subject>
-- type类型：
-  - feat: 新功能
-  - fix: 修复bug
-  - docs: 文档更新
-  - style: 代码格式调整
-  - refactor: 重构
-  - test: 测试相关
-  - chore: 构建过程或辅助工具的变动
-- 示例：
-  ```
-  feat(notice): 添加通知公告管理功能
-  fix(notice): 修复通知发布状态更新问题
-  ```
-
-### 3.2 安全规范
-
-#### 3.2.1 密码安全
-1. 密码存储：
-   - 使用BCrypt加密
-   - 禁止明文存储
-   - 禁止使用MD5
-
-2. 密码策略：
-   - 最小长度8位
-   - 必须包含大小写字母和数字
-   - 定期更换密码
-
-#### 3.2.2 接口安全
-1. 认证：
-   - 使用JWT token
-   - token有效期控制
-   - 支持token刷新
-
-2. 授权：
-   - 基于RBAC模型
-   - 细粒度的权限控制
-   - 角色继承关系
-
-3. 数据安全：
-   - 敏感数据加密
-   - 防止SQL注入
-   - 防止XSS攻击
-   - 防止CSRF攻击
-
-### 3.3 测试规范
-
-#### 3.3.1 单元测试
-1. 测试覆盖率要求：
-   - 核心业务代码：>80%
-   - 工具类：>90%
-   - 整体覆盖率：>70%
-
-2. 测试命名：
+3. 返回值方法使用：
    ```java
-   @Test
-   public void shouldReturnUserInfoWhenUserIdIsValid() {}
+   // 查询成功
+   return Result.success(data);
+   return Result.success("查询成功", data);
    
-   @Test
-   public void shouldThrowExceptionWhenUserIdIsInvalid() {}
+   // 创建成功
+   return Result.created(data);
+   
+   // 删除成功
+   return Result.deleted();
+   
+   // 操作失败
+   return Result.error("操作失败");
+   return Result.error(500, "系统异常");
    ```
 
-#### 3.3.2 接口测试
-1. 测试用例：
-   - 正常场景
-   - 异常场景
-   - 边界条件
-   - 性能测试
+4. 分页数据格式：
+   ```java
+   public class Page<T> {
+       private List<T> records;  // 数据列表
+       private Long total;       // 总记录数
+       private Long size;        // 每页大小
+       private Long current;     // 当前页码
+   }
+   ```
 
-2. 测试工具：
-   - Postman
-   - JMeter
-   - Swagger
+## 2. 前端开发规范
 
-### 3.4 文档规范
+### 1. 项目结构
+```
+src/
+  ├── api/                # API接口目录
+  │   ├── back/          # 后台接口
+  │   │   ├── system/    # 系统管理
+  │   │   │   ├── user.js        # 用户管理
+  │   │   │   ├── role.js        # 角色管理
+  │   │   │   ├── menu.js        # 菜单管理
+  │   │   │   └── dept.js        # 部门管理
+  │   │   ├── notice/    # 通知管理
+  │   │   │   ├── index.js       # 通知基础接口
+  │   │   │   ├── category.js    # 通知分类
+  │   │   │   └── comment.js     # 通知评论
+  │   │   ├── activity/  # 活动管理
+  │   │   │   ├── index.js       # 活动基础接口
+  │   │   │   ├── type.js        # 活动类型
+  │   │   │   ├── participate.js # 活动参与
+  │   │   │   └── checkin.js     # 活动签到
+  │   │   └── elder/     # 老人管理
+  │   │       ├── index.js       # 老人基础接口
+  │   │       ├── health.js      # 健康档案
+  │   │       └── visit.js       # 探访记录
+  │   └── fore/          # 前台接口
+  │       ├── user.js    # 用户相关
+  │       ├── notice.js  # 通知相关
+  │       ├── activity.js # 活动相关
+  │       └── elder.js   # 老人相关
+  ├── assets/            # 静态资源
+  │   ├── images/        # 图片资源
+  │   │   ├── logo/      # Logo图片
+  │   │   ├── icons/     # 图标图片
+  │   │   └── common/    # 通用图片
+  │   └── styles/        # 样式文件
+  │       ├── variables.scss  # 变量定义
+  │       ├── mixins.scss     # 混入定义
+  │       ├── common.scss     # 通用样式
+  │       └── themes/         # 主题样式
+  ├── components/        # 公共组件
+  │   ├── common/        # 通用组件
+  │   │   ├── BaseButton.vue    # 基础按钮
+  │   │   ├── BaseInput.vue     # 基础输入框
+  │   │   ├── BaseTable.vue     # 基础表格
+  │   │   └── BaseForm.vue      # 基础表单
+  │   └── business/      # 业务组件
+  │       ├── notice/    # 通知相关组件
+  │       ├── activity/  # 活动相关组件
+  │       └── elder/     # 老人相关组件
+  ├── stores/            # 状态管理
+  │   ├── back/          # 后台状态
+  │   │   ├── system/    # 系统管理
+  │   │   │   ├── user.js       # 用户状态
+  │   │   │   ├── role.js       # 角色状态
+  │   │   │   └── menu.js       # 菜单状态
+  │   │   ├── notice/    # 通知管理
+  │   │   │   ├── index.js      # 通知状态
+  │   │   │   └── category.js   # 分类状态
+  │   │   ├── activity/  # 活动管理
+  │   │   │   ├── index.js      # 活动状态
+  │   │   │   └── type.js       # 类型状态
+  │   │   └── elder/     # 老人管理
+  │   │       ├── index.js      # 老人状态
+  │   │       └── health.js     # 健康状态
+  │   └── fore/          # 前台状态
+  │       ├── user.js    # 用户状态
+  │       ├── notice.js  # 通知状态
+  │       ├── activity.js # 活动状态
+  │       └── elder.js   # 老人状态
+  ├── utils/             # 工具函数
+  │   ├── axios.js       # 请求封装
+  │   ├── validate.js    # 验证工具
+  │   ├── storage.js     # 存储工具
+  │   ├── date.js        # 日期工具
+  │   └── permission.js  # 权限工具
+  ├── views/             # 页面组件
+  │   ├── back/          # 后台页面
+  │   │   ├── system/    # 系统管理
+  │   │   │   ├── user/          # 用户管理
+  │   │   │   ├── role/          # 角色管理
+  │   │   │   └── menu/          # 菜单管理
+  │   │   ├── notice/    # 通知管理
+  │   │   │   ├── list/          # 通知列表
+  │   │   │   └── publish/       # 通知发布
+  │   │   ├── activity/  # 活动管理
+  │   │   │   ├── list/          # 活动列表
+  │   │   │   └── type/          # 活动类型
+  │   │   └── elder/     # 老人管理
+  │   │       ├── list/          # 老人列表
+  │   │       └── health/        # 健康档案
+  │   └── fore/          # 前台页面
+  │       ├── Home.vue           # 首页
+  │       ├── Login.vue          # 登录页
+  │       ├── Notice.vue         # 通知页
+  │       ├── Activity.vue       # 活动页
+  │       └── Profile.vue        # 个人中心
+  ├── router/            # 路由配置
+  │   └── index.js       # 路由入口(统一管理前后台路由)
+  ├── constants/         # 常量定义
+  │   ├── status.js      # 状态常量
+  │   ├── types.js       # 类型常量
+  │   └── config.js      # 配置常量
+  ├── hooks/             # 组合式函数
+  │   ├── useTable.js    # 表格相关
+  │   ├── useForm.js     # 表单相关
+  │   └── usePermission.js # 权限相关
+  ├── locales/           # 国际化
+  │   ├── zh-CN/         # 中文
+  │   └── en-US/         # 英文
+  ├── App.vue            # 根组件
+  ├── main.js            # 入口文件
+  └── env.js             # 环境配置
+```
 
-#### 3.4.1 必要文档
-1. 项目文档：
-   - README.md
-   - 部署文档
-   - API文档
-   - 数据库设计文档
+### 2.2 目录说明
 
-2. 代码文档：
-   - 类注释
-   - 方法注释
-   - 关键代码注释
+#### 2.2.1 API 目录
+- `api/back/`: 后台接口
+  - 按业务模块划分目录
+  - 每个模块下按功能划分文件
+  - 基础接口使用 index.js
+  - 相关功能使用独立文件
 
-#### 3.4.2 文档更新
-1. 及时性：
-   - 代码变更同步更新文档
-   - 定期审查文档准确性
-   - 版本发布更新文档
+- `api/fore/`: 前台接口
+  - 直接按功能模块划分文件
+  - 不创建子目录
+  - 文件命名清晰表达功能
 
-2. 完整性：
-   - 包含所有必要信息
-   - 示例完整
-   - 说明清晰 
+#### 2.2.2 组件目录
+- `components/common/`: 通用组件
+  - 基础UI组件
+  - 业务无关的通用组件
+
+- `components/business/`: 业务组件
+  - 按业务模块划分目录
+  - 包含特定业务逻辑的组件
+
+#### 2.2.3 状态管理
+- `stores/back/`: 后台状态
+  - 按业务模块划分目录
+  - 每个模块下按功能划分文件
+  - 基础状态使用 index.js
+  - 相关状态使用独立文件
+
+- `stores/fore/`: 前台状态
+  - 直接按功能模块划分文件
+  - 不创建子目录
+  - 文件命名清晰表达功能
+
+#### 2.2.4 工具函数
+- `utils/`: 工具函数目录
+  - 按功能类型划分文件
+  - 保持单一职责
+  - 避免重复代码
+
+#### 2.2.5 页面组件
+- `views/back/`: 后台页面
+  - 按业务模块划分目录
+  - 每个模块下按功能划分子目录
+  - 保持目录结构清晰
+
+- `views/fore/`: 前台页面
+  - 直接按功能模块划分文件
+  - 不创建子目录
+  - 文件命名清晰表达功能
+
+#### 2.2.6 路由配置
+- `router/`: 路由配置目录
+  - 统一使用 index.js 管理所有路由
+  - 包含前后台路由配置
+
+// ... 其他规范内容保持不变 ...

@@ -80,7 +80,7 @@
           <el-icon>
             <Service />
           </el-icon>
-          <span>服务预约工单管理</span>
+          <span>服务预约管理</span>
         </template>
         <el-menu-item index="/admin/services/service">
           <template #title>
@@ -95,7 +95,7 @@
             <el-icon>
               <Service />
             </el-icon>
-            <span>服务预约工单管理</span>
+            <span>服务工单管理</span>
           </template>
         </el-menu-item>
         <el-menu-item index="/admin/services/evaluation">
@@ -142,20 +142,20 @@
           </el-icon>
           <span>社区活动管理</span>
         </template>
-        <el-menu-item index="/admin/activity/type">
+        <el-menu-item index="/admin/activity/list">
           <template #title>
             <el-icon>
               <Calendar />
             </el-icon>
-            <span>活动类型管理</span>
+            <span>活动管理</span>
           </template>
         </el-menu-item>
-        <el-menu-item index="/admin/activity/registration">
+        <el-menu-item index="/admin/activity/participate">
           <template #title>
             <el-icon>
               <Calendar />
             </el-icon>
-            <span>社区活动管理</span>
+            <span>活动参与管理</span>
           </template>
         </el-menu-item>
         <el-menu-item index="/admin/activity/checkin">

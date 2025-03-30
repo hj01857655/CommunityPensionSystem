@@ -2,9 +2,10 @@ package com.communitypension.communitypensionadmin.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.communitypension.communitypensionadmin.utils.Result;
 import com.communitypension.communitypensionadmin.entity.DictData;
 import com.communitypension.communitypensionadmin.service.DictDataService;
+import com.communitypension.communitypensionadmin.utils.Result;
+import com.communitypension.communitypensionadmin.vo.DictDataVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -48,7 +49,7 @@ public class DictDataController {
      * 根据字典类型获取字典数据
      */
     @GetMapping("/type/{dictType}")
-    public Result<List<DictData>> getDictDataByType(@PathVariable String dictType) {
+    public Result<List<DictDataVO>> getDictDataByType(@PathVariable String dictType) {
         return Result.success(dictDataService.selectDictDataByType(dictType));
     }
     

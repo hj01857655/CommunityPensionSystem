@@ -45,6 +45,7 @@ const TokenManager = {
         clear: () => {
             storageConfig.getStorage(storageConfig.user).removeItem("user-access-token");
             storageConfig.getStorage(storageConfig.user).removeItem("user-refresh-token");
+            storageConfig.getStorage(storageConfig.user).clear();
         }
     },
     // 管理员相关的token管理（使用会话存储）
@@ -62,6 +63,7 @@ const TokenManager = {
         clear: () => {
             storageConfig.getStorage(storageConfig.admin).removeItem("admin-access-token");
             storageConfig.getStorage(storageConfig.admin).removeItem("admin-refresh-token");
+            storageConfig.getStorage(storageConfig.admin).clear();
         }
     }
 };

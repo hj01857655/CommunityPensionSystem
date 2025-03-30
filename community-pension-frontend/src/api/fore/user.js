@@ -1,22 +1,16 @@
 import axios from '@/utils/axios';
 import { TokenManager } from '@/utils/axios';
 
-// 用户登录
-export const userLogin = async (data) => {
-    try {
-        const response = await axios.post('/api/auth/login', {
-            username: data.username,
-            password: data.password,
-            roleId: data.roleId
-        });
-        
-        // 响应拦截器已经处理了基本的错误，这里只需要返回数据
-        return response;
-    } catch (error) {
-        console.error('登录错误:', error);
-        throw error; // 直接抛出错误，让上层处理
-    }
-}
+/**
+ * 用户登录
+ * @param {Object} data - 登录参数
+ * @param {string} data.username - 用户名
+ * @param {string} data.password - 密码
+ * @returns {Promise<{code: number, data: Object, message: string}>}
+ */
+export const userLogin = (data) => {
+  return axios.post('/api/auth/login', data);
+};
 
 // 更新用户信息
 export const updateUserInfo = async (data) => {
@@ -57,8 +51,6 @@ export const userLogout = async (data) => {
         console.error('退出错误:', error);
         // 即使发生错误，也要清除本地存储
         localStorage.removeItem("userInfo");
-        localStorage.removeItem("elderInfo");
-        localStorage.removeItem("kinInfo");
         localStorage.removeItem("roleId");
         localStorage.removeItem("isLoggedIn");
         TokenManager.user.clear();
@@ -67,42 +59,43 @@ export const userLogout = async (data) => {
     }
 }
 
-// 获取未绑定家属的老人列表
-export const getUnboundElders = async () => {
-  try {
-    const response = await axios.get('/api/user/unbound/elders');
-    return response;
-  } catch (error) {
-    console.error('获取未绑定家属老人列表失败:', error);
-    throw error;
-  }
-}
+/**
+ * 获取未绑定的老人列表
+ * @returns {Promise<{code: number, data: Array, message: string}>}
+ */
+export const getUnboundElders = () => {
+  return axios.get('/api/user/elder/unbound');
+};
 
-// 绑定老人和家属关系
-export const bindElderKinRelation = async (elderId, kinId, relationType) => {
-  try {
-    const response = await axios.post('/api/user/bind-relation', null, {
-      params: { elderId, kinId, relationType }
-    });
-    return response;
-  } catch (error) {
-    console.error('绑定老人家属关系失败:', error);
-    throw error;
-  }
-}
+/**
+ * 获取老人的家属列表
+ * @param {number} elderId - 老人ID
+ * @returns {Promise<{code: number, data: Array, message: string}>}
+ */
+export const getKinListByElderId = (elderId) => {
+  return axios.get(`/api/user/kin/list/${elderId}`);
+};
 
-// 解绑老人和家属关系
-export const unbindElderKinRelation = async (elderId, kinId) => {
-  try {
-    const response = await axios.post('/api/user/unbind-relation', null, {
-      params: { elderId, kinId }
-    });
-    return response;
-  } catch (error) {
-    console.error('解绑老人家属关系失败:', error);
-    throw error;
-  }
-}
+/**
+ * 绑定老人和家属关系
+ * @param {number} elderId - 老人ID
+ * @param {number} kinId - 家属ID
+ * @param {string} relationType - 关系类型
+ * @returns {Promise<{code: number, message: string}>}
+ */
+export const bindElderKinRelation = (elderId, kinId, relationType) => {
+  return axios.post('/api/user/elder-kin/bind', { elderId, kinId, relationType });
+};
+
+/**
+ * 解绑老人和家属关系
+ * @param {number} elderId - 老人ID
+ * @param {number} kinId - 家属ID
+ * @returns {Promise<{code: number, message: string}>}
+ */
+export const unbindElderKinRelation = (elderId, kinId) => {
+  return axios.post('/api/user/elder-kin/unbind', { elderId, kinId });
+};
 
 // 获取老人的家属ID列表
 export const getKinIdsByElderId = async (elderId) => {

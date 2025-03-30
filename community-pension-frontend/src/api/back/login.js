@@ -23,8 +23,8 @@ export const adminLogin = async (data) => {
             if (response.data && response.data.accessToken && response.data.refreshToken) {
                 // 设置token
                 TokenManager.admin.set(response.data.accessToken, response.data.refreshToken);
-                console.log(TokenManager.admin.getAccessToken());
-                console.log(TokenManager.admin.getRefreshToken());
+                // console.log(TokenManager.admin.getAccessToken());
+                // console.log(TokenManager.admin.getRefreshToken());
                 return response;
             } else {
                 throw new Error('登录响应数据格式错误');

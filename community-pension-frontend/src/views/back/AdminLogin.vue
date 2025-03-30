@@ -174,7 +174,6 @@ const handleLogin = async () => {
         
         if (remember.value) {
           storage.setItem('rememberedUsername', loginForm.username);
-          storage.setItem('rememberedRole', getRoleName(loginForm.roleId)!=='未知角色' ? getRoleName(loginForm.roleId) : '');
           storage.setItem('rememberRoleType', loginForm.roleId);
           storage.setItem('rememberedRoleId', loginForm.roleId);
         } else {

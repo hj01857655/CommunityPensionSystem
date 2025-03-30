@@ -82,7 +82,7 @@
                     <home-card title="当前天气" icon="Cloudy" class="weather-card">
                         <div v-if="weatherData">
                             <p>温度: {{ weatherData.temperature }}°C</p>
-                            <p>天气: {{ weatherData.weather1 }}</p>
+                            <p>天气: {{ weatherData.weather }}</p>
                             <p>湿度: {{ weatherData.humidity }}%</p>
                         </div>
                         <div v-else>
@@ -111,13 +111,14 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch, nextTick } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
 import { getHealthData } from '@/api/fore/health';
 import HomeCard from '@/components/front/HomeCard.vue';
 import { Phone } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
+import { formatDateTime, formatDate } from '@/utils/date';
 
 const props = defineProps({
     isLoggedIn: {
@@ -175,32 +176,19 @@ const formatHealthValue = (key, value) => {
     return `${value} ${units[key] || ''}`;
 };
 
-// 格式化日期时间
-const formatDateTime = (dateStr) => {
-    if (!dateStr) return '';
-    const date = new Date(dateStr);
-    return date.toLocaleString('zh-CN', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit'
-    });
-};
-
 // 获取健康数据
 const fetchHealthData = async () => {
     if (!props.isLoggedIn) return;
     
     try {
         // 从本地存储获取老人ID
-        const elderInfo = localStorage.getItem('elderInfo');
-        if (!elderInfo) {
+        const userInfo = localStorage.getItem('userInfo');
+        if (!userInfo) {
             console.warn('未找到老人信息');
             return;
         }
 
-        const elder = JSON.parse(elderInfo);
+        const elder = JSON.parse(userInfo);
         const response = await getHealthData(elder.id);
         
         if (response.code === 200 && response.data) {
@@ -239,33 +227,21 @@ const recentNotices = ref([
 const emergencyContact = ref('张三');
 const emergencyPhone = ref('123-456-7890');
 
-const weatherData = ref(null);
-
-const fetchWeatherData = async () => {
-    try {
-        const response = await axios.get('https://cn.apihz.cn/api/tianqi/tqyb.php', {
-            params: {
-                id: '88888888', // 替换为您的ID
-                key: '88888888', // 替换为您的Key
-                sheng: '四川',
-                place: '绵阳'
-            }
-        });
-        weatherData.value = response.data;
-    } catch (error) {
-        if (error.response && error.response.data && error.response.data.code === 400) {
-            console.error('调用频次过快，请间隔一分钟再试，或购买钻石会员！');
-        } else {
-            console.error('获取天气数据失败:', error);
-        }
-    }
-};
+// 天气数据
+const weatherData = ref({
+  temperature: 25,
+  weather: '晴',
+  humidity: 65,
+  windDirection: '东南风',
+  windSpeed: '3级',
+  airQuality: '优',
+  updateTime: new Date().toLocaleString()
+});
 
 onMounted(() => {
     if (props.isLoggedIn) {
         fetchHealthData();
     }
-    fetchWeatherData();
 });
 
 const getServiceStatusType = (status) => {
@@ -280,10 +256,6 @@ const viewNoticeDetail = (notice) => {
 const handleEmergencyCall = () => {
     console.log('紧急呼叫');
     // 紧急呼叫的逻辑
-};
-
-const formatDate = (date) => {
-    return new Date(date).toLocaleDateString();
 };
 
 // 处理菜单选择

@@ -1,10 +1,8 @@
 package com.communitypension.communitypensionadmin.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.communitypension.communitypensionadmin.dto.UserDTO;
 import com.communitypension.communitypensionadmin.entity.User;
 import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
@@ -20,16 +18,9 @@ public interface UserMapper extends BaseMapper<User> {
      * @param username 用户名
      * @return 用户信息
      */
-    @Select("select u.*," +
-            "CAST(GROUP_CONCAT(r.role_id ORDER BY r.role_id SEPARATOR ',') AS CHAR) AS roleIds," +
-            "CAST(GROUP_CONCAT(r.role_name ORDER BY r.role_id SEPARATOR ',') AS CHAR) AS roleNames," +
-            "CAST(GROUP_CONCAT(r.role_key ORDER BY r.role_id SEPARATOR ',') AS CHAR) AS roles" +
-            " FROM user u" +
-            " LEFT JOIN user_role ur ON u.user_id = ur.user_id" +
-            " LEFT JOIN role r ON ur.role_id = r.role_id" +
-            " WHERE u.username = #{username}" +
-            " GROUP BY u.user_id")
-    UserDTO selectUserByUsername(@Param("username") String username);
+    @Select("select  u.* from user u where u.username = #{username}")
+    User getUserByUsername(String username);
+
     /**
      * 查询未绑定家属的老人列表
      */

@@ -4,46 +4,70 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 /**
- *  服务项目表
+ * 服务项目实体类
  */
-@EqualsAndHashCode(callSuper = true)
 @Data
 @TableName("service_item")
-public class ServiceItem extends BaseEntity {
+public class ServiceItem {
+    
     /**
-     * 服务项目ID
+     * 服务ID
      */
-    @TableId(type = IdType.AUTO)
+    @TableId(type = IdType.ASSIGN_ID)
     private Long serviceId;
-
+    
     /**
      * 服务名称
      */
     private String serviceName;
+    
+    /**
+     * 服务类型
+     */
+    private String serviceType;
+    
     /**
      * 服务描述
      */
-    private String serviceDescription;
-    /**
-     * 服务价格（单位：元）
-     */
-    private BigDecimal servicePrice;
-    /**
-     * 服务时长（单位：小时）
-     */
-    private Integer serviceDuration;
-
+    private String description;
     
     /**
-     * 状态（0正常 1停用）
+     * 服务价格
      */
-    private String status;
-
+    private BigDecimal price;
     
-
+    /**
+     * 状态（0下架/1上架）
+     */
+    private Integer status;
+    
+    /**
+     * 创建时间
+     */
+    private LocalDateTime createTime;
+    
+    /**
+     * 创建者
+     */
+    private String createBy;
+    
+    /**
+     * 更新者
+     */
+    private String updateBy;
+    
+    /**
+     * 备注
+     */
+    private String remark;
+    
+    /**
+     * 更新时间
+     */
+    private LocalDateTime updateTime;
 }

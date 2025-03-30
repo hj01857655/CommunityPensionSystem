@@ -18,6 +18,7 @@ public class Result<T> {
         result.setTimestamp(System.currentTimeMillis());
         return result;
     }
+
     //success,接收message
     public static <T> Result<T> success(String message){
         Result<T> result = new Result<>();

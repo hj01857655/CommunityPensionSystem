@@ -88,10 +88,10 @@
         
         <el-form-item label="接收对象" prop="receivers">
           <el-checkbox-group v-model="noticeForm.receivers">
-            <el-checkbox label="all">所有人</el-checkbox>
-            <el-checkbox label="elders">老人</el-checkbox>
-            <el-checkbox label="staff">工作人员</el-checkbox>
-            <el-checkbox label="family">家属</el-checkbox>
+            <el-checkbox value="all">所有人</el-checkbox>
+            <el-checkbox value="elders">老人</el-checkbox>
+            <el-checkbox value="staff">工作人员</el-checkbox>
+            <el-checkbox value="family">家属</el-checkbox>
           </el-checkbox-group>
         </el-form-item>
         
@@ -154,6 +154,7 @@ import { ElMessage, ElMessageBox } from 'element-plus';
 import { Back, Upload, Document } from '@element-plus/icons-vue';
 import { useRouter } from 'vue-router';
 import { useRoute } from 'vue-router';
+import { useNoticeStore } from '@/stores/back/noticeStore';
 const router = useRouter();
 const route = useRoute();
 
@@ -290,19 +291,10 @@ const handlePreview = () => {
 };
 
 // 获取通知详情
-const getNoticeDetail = (id) => {
-  // 模拟API调用
-  setTimeout(() => {
-    // 假设这是从API获取的数据
-    const noticeDetail = {
-      id: id,
-      title: '关于社区老年人健康体检的通知',
-      type: '健康通知',
-      content: '<p>各位社区老年人：</p><p>为了关心老年人健康，社区将于2024年6月15日至20日开展免费健康体检活动。请各位老年人携带身份证和社区卡到社区服务中心参加体检。</p><p>体检项目包括：血压、血糖、心电图、B超等基础检查项目。</p><p>请各位老年人合理安排时间参加。</p>',
-      publishTime: '2024-06-01 09:00:00',
-      receivers: ['all', 'elders'],
-      isTop: true
-    };
+const getNoticeDetail = async (id) => {
+  try {
+    await noticeStore.loadNoticeDetail(id);
+    const noticeDetail = noticeStore.currentNotice;
     
     // 填充表单
     Object.keys(noticeDetail).forEach(key => {
@@ -311,12 +303,17 @@ const getNoticeDetail = (id) => {
       }
     });
     
-    // 模拟附件
-    fileList.value = [
-      { name: '体检项目清单.docx', url: '' },
-      { name: '体检注意事项.pdf', url: '' }
-    ];
-  }, 500);
+    // 处理附件
+    if (noticeDetail.attachments) {
+      fileList.value = noticeDetail.attachments.map(att => ({
+        name: att.name,
+        url: att.url
+      }));
+    }
+  } catch (error) {
+    console.error('获取通知详情失败:', error);
+    ElMessage.error('获取通知详情失败');
+  }
 };
 
 onMounted(() => {

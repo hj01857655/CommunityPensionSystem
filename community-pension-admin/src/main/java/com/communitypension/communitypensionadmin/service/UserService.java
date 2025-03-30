@@ -42,7 +42,7 @@ public interface UserService extends IService<User> {
      */
     List<String> getUserRoles(Long userId);
 
-    UserDTO getUserByUsername(String username);
+    User getUserByUsername(String username);
 
     boolean hasRole(Long userId, Long roleId);
 

@@ -1,50 +1,66 @@
 import axios from '@/utils/axios'
 
-// 获取健康档案
-export const getHealthData = async (elderId) => {
-  try {
-    if (!elderId) {
-      throw new Error('获取健康档案需要提供老人ID');
-    }
-    const response = await axios.get('/api/health-records/getHealthRecords', {
-      params: { elderId }
-    });
-    return response;
-  } catch (error) {
-    console.error('获取健康档案错误:', error);
-    throw error; // 直接抛出错误，让上层处理
-  }
+/**
+ * 获取健康记录列表
+ * @param {number} elderId - 老人ID
+ * @returns {Promise<{code: number, data: Array, message: string}>}
+ */
+export const getHealthRecords = (elderId) => {
+  return axios.get(`/api/health/records/${elderId}`)
 }
 
-// 添加健康档案
-export const addHealthData = async (data) => {
-  try {
-    if (!data.elderId) {
-      throw new Error('添加健康档案需要提供老人ID');
-    }
-    const response = await axios.post('/api/health-records/addHealthRecords', data);
-    return response;
-  } catch (error) {
-    console.error('添加健康档案错误:', error);
-    throw error;
-  }
+/**
+ * 获取健康档案
+ * @param {number} elderId - 老人ID
+ * @returns {Promise<{code: number, data: Object, message: string}>}
+ */
+export const getHealthData = (elderId) => {
+  return axios.get(`/api/health/data/${elderId}`)
 }
 
-// 更新健康档案
-export const updateHealthData = async (data) => {
-  try {
-    if (!data.id) {
-      throw new Error('更新健康档案需要提供记录ID');
-    }
-    if (!data.elderId) {
-      throw new Error('更新健康档案需要提供老人ID');
-    }
-    const response = await axios.put('/api/health-records/updateHealthRecords', data);
-    return response;
-  } catch (error) {
-    console.error('更新健康档案错误:', error);
-    throw error;
-  }
+/**
+ * 更新健康档案
+ * @param {Object} data - 健康档案数据
+ * @param {number} data.id - 记录ID
+ * @param {number} data.elderId - 老人ID
+ * @param {string} data.bloodPressure - 血压值
+ * @param {number} data.heartRate - 心率
+ * @param {number} data.bloodSugar - 血糖值
+ * @param {number} data.temperature - 体温
+ * @param {number} data.weight - 体重
+ * @param {number} data.height - 身高
+ * @param {number} data.bmi - BMI指数
+ * @param {string} data.medicalHistory - 病史
+ * @param {string} data.allergy - 过敏史
+ * @param {string} data.symptoms - 症状描述
+ * @param {string} data.medication - 用药情况
+ * @returns {Promise<{code: number, data: Object, message: string}>}
+ */
+export const updateHealthData = (data) => {
+  return axios.put('/api/health/data', data)
+}
+
+/**
+ * 添加健康记录
+ * @param {Object} data - 健康记录数据
+ * @param {number} data.elderId - 老人ID
+ * @param {string} data.bloodPressure - 血压值
+ * @param {number} data.heartRate - 心率
+ * @param {number} data.bloodSugar - 血糖值
+ * @param {number} data.temperature - 体温
+ * @param {number} data.weight - 体重
+ * @param {number} data.height - 身高
+ * @param {number} data.bmi - BMI指数
+ * @param {string} data.medicalHistory - 病史
+ * @param {string} data.allergy - 过敏史
+ * @param {string} data.symptoms - 症状描述
+ * @param {string} data.medication - 用药情况
+ * @param {string} data.recordType - 记录类型
+ * @param {string} data.recordTime - 记录时间
+ * @returns {Promise<{code: number, data: Object, message: string}>}
+ */
+export const addHealthData = (data) => {
+  return axios.post('/api/health/records', data)
 }
 
 // 统一的错误处理函数

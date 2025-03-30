@@ -257,7 +257,7 @@ const handleEdit = (row) => {
 // 预览通知
 const handlePreview = async (row) => {
     try {
-        await noticeStore.fetchNoticeInfo(row.id);
+        await noticeStore.loadNoticeDetail(row.id);
         currentNotice.value = transformNoticeForFrontend(noticeStore.currentNotice);
         previewDrawerVisible.value = true;
     } catch (error) {
