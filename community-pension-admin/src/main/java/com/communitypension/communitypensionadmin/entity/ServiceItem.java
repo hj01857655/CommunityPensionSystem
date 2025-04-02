@@ -1,8 +1,6 @@
 package com.communitypension.communitypensionadmin.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -16,7 +14,7 @@ import java.time.LocalDateTime;
 public class ServiceItem {
     
     /**
-     * 服务ID
+     * 服务项目ID
      */
     @TableId(type = IdType.ASSIGN_ID)
     private Long serviceId;
@@ -42,32 +40,41 @@ public class ServiceItem {
     private BigDecimal price;
     
     /**
-     * 状态（0下架/1上架）
+     * 服务时长（分钟）
      */
-    private Integer status;
+    private Integer duration;
     
     /**
-     * 创建时间
+     * 状态（0正常 1停用）
      */
-    private LocalDateTime createTime;
+    private String status;
     
     /**
      * 创建者
      */
+    @TableField(fill = FieldFill.INSERT)
     private String createBy;
+    
+    /**
+     * 创建时间
+     */
+    @TableField(fill = FieldFill.INSERT)
+    private LocalDateTime createTime;
     
     /**
      * 更新者
      */
+    @TableField(fill = FieldFill.INSERT_UPDATE)
     private String updateBy;
+    
+    /**
+     * 更新时间
+     */
+    @TableField(fill = FieldFill.INSERT_UPDATE)
+    private LocalDateTime updateTime;
     
     /**
      * 备注
      */
     private String remark;
-    
-    /**
-     * 更新时间
-     */
-    private LocalDateTime updateTime;
 }

@@ -1,9 +1,8 @@
 # 字典管理页面
 <template>
-  <div class="dict-container">
-    <el-card class="box-card">
+  <div class="app-container">
       <!-- 搜索区域 -->
-      <el-form :model="queryParams" ref="queryRef" :inline="true">
+      <el-form :model="queryParams" ref="queryRef" :inline="true" v-show="showSearch">
         <el-form-item label="字典名称" prop="dictName">
           <el-input
             v-model="queryParams.dictName"
@@ -21,12 +20,12 @@
           />
         </el-form-item>
         <el-form-item label="状态" prop="status">
-          <el-select v-model="queryParams.status" placeholder="字典状态" clearable>
+          <el-select v-model="queryParams.status" placeholder="字典状态" clearable style="width: 200px">
             <el-option
-              v-for="item in statusOptions"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
+              v-for="dict in statusOptions"
+              :key="dict.value"
+              :label="dict.label"
+              :value="dict.value"
             />
           </el-select>
         </el-form-item>
@@ -80,17 +79,23 @@
             @click="handleRefreshCache"
           >刷新缓存</el-button>
         </el-col>
+        <right-toolbar v-model:showSearch="showSearch" @queryTable="getList"></right-toolbar>
       </el-row>
 
       <!-- 数据表格 -->
-      <el-table v-loading="loading" :data="dictList" @selection-change="handleSelectionChange">
+      <el-table v-loading="dictTypeStore.loading" :data="dictTypeStore.dictTypeList" @selection-change="handleSelectionChange">
         <el-table-column type="selection" width="55" align="center" />
         <el-table-column label="字典编号" align="center" prop="dictId" />
         <el-table-column label="字典名称" align="center" prop="dictName" />
-        <el-table-column label="字典类型" align="center" prop="dictType" :show-overflow-tooltip="true">
+        <el-table-column 
+          label="字典类型" 
+          align="center" 
+          prop="dictType" 
+          :show-overflow-tooltip="{ effect: 'light' }"
+        >
           <template #default="scope">
-            <router-link 
-              :to="`/admin/system/dict/type/${scope.row.dictId}`"
+            <router-link
+              :to="`/admin/system/dict/data/type/${scope.row.dictType}`"
               class="link-type"
             >
               {{ scope.row.dictType }}
@@ -99,31 +104,34 @@
         </el-table-column>
         <el-table-column label="状态" align="center" prop="status">
           <template #default="scope">
-            <el-switch
-              v-model="scope.row.status"
-              :active-value="1"
-              :inactive-value="0"
-              @change="handleStatusChange(scope.row)"
+            <dict-tag
+              :options="statusOptions"
+              :value="scope.row.status"
             />
           </template>
         </el-table-column>
-        <el-table-column label="备注" align="center" prop="remark" :show-overflow-tooltip="true" />
+        <el-table-column 
+          label="备注" 
+          align="center" 
+          prop="remark" 
+          :show-overflow-tooltip="{ effect: 'light' }"
+        />
         <el-table-column 
           label="创建时间" 
           align="center" 
           prop="createTime" 
           width="180"
-          :formatter="(row, column, cellValue) => formatDate(cellValue)"
+          :formatter="(row, column, cellValue) => formatDateTime(cellValue)"
         />
         <el-table-column label="操作" align="center" width="180">
           <template #default="scope">
             <el-button
-              type="link"
+              link
               icon="Edit"
               @click="handleUpdate(scope.row)"
             >修改</el-button>
             <el-button
-              type="link"
+              link
               icon="Delete"
               @click="handleDelete(scope.row)"
             >删除</el-button>
@@ -132,17 +140,13 @@
       </el-table>
 
       <!-- 分页 -->
-      <el-pagination
-        v-show="total > 0"
-        v-model:current-page="queryParams.pageNum"
-        v-model:page-size="queryParams.pageSize"
-        :page-sizes="[10, 20, 30, 40]"
-        :total="total"
-        layout="total, sizes, prev, pager, next, jumper"
-        @size-change="handleSizeChange"
-        @current-change="handleCurrentChange"
+      <pagination
+        v-show="dictTypeStore.dictTypeTotal > 0"
+        :total="dictTypeStore.dictTypeTotal"
+        :page.sync="queryParams.pageNum"
+        :limit.sync="queryParams.pageSize"
+        @pagination="getList"
       />
-    </el-card>
 
     <!-- 添加或修改字典类型对话框 -->
     <el-dialog :title="title" v-model="open" width="500px" append-to-body>
@@ -173,25 +177,33 @@
   </div>
 </template>
 
-<script setup>
-import { ref, reactive, onMounted } from 'vue'
+<script setup name="Dict">
+import { ref, reactive, onMounted, computed, getCurrentInstance, toRefs } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useRouter } from 'vue-router'
-import { formatDate } from '@/utils/date'
-import { 
-  getDictTypeList, 
-  getDictType, 
-  addDictType, 
-  updateDictType, 
-  deleteDictType, 
-  changeDictTypeStatus,
-  refreshCache 
-} from '@/api/back/system/dict'
+import { formatDateTime } from '@/utils/date'
+import { useDictTypeStore } from '@/stores/back/dictTypeStore'
+import { useDict } from '@/utils/dict'
 
+const dictTypeStore = useDictTypeStore()
 const router = useRouter()
 
-// 遮罩层
-const loading = ref(false)
+// 获取当前实例
+const { proxy } = getCurrentInstance()
+
+// 使用字典
+const { normal_disable } = useDict('normal_disable')
+
+// 状态选项
+const statusOptions = computed(() => normal_disable.value || [])
+
+const typeList = ref([])
+// 是否显示弹出层
+const open = ref(false)
+// 是否显示loading
+const loading = ref(true)
+// 是否显示搜索区域
+const showSearch = ref(true)
 // 选中数组
 const ids = ref([])
 // 非单个禁用
@@ -200,219 +212,174 @@ const single = ref(true)
 const multiple = ref(true)
 // 总条数
 const total = ref(0)
-// 字典表格数据
-const dictList = ref([])
 // 弹出层标题
 const title = ref("")
-// 是否显示弹出层
-const open = ref(false)
-// 状态数据字典
-const statusOptions = [
-  { label: '正常', value: 1 },
-  { label: '停用', value: 0 }
-]
 
-// 查询参数
-const queryParams = reactive({
-  pageNum: 1,
-  pageSize: 10,
-  dictName: undefined,
-  dictType: undefined,
-  status: undefined
+const data = reactive({
+  form: {},
+  queryParams: {
+    pageNum: 1, //当前页
+    pageSize: 10, //每页条数
+    dictName: undefined, //字典名称
+    dictType: undefined, //字典类型
+    status: undefined //状态
+  },
+  rules: {
+    dictName: [{ required: true, message: "字典名称不能为空", trigger: "blur" }],
+    dictType: [{ required: true, message: "字典类型不能为空", trigger: "blur" }]
+  }
 })
 
-// 表单参数
-const form = reactive({
-  dictId: undefined,
-  dictName: undefined,
-  dictType: undefined,
-  status: 1,
-  remark: undefined
-})
+const { queryParams, form, rules } = toRefs(data)
 
-// 表单校验
-const rules = {
-  dictName: [
-    { required: true, message: "字典名称不能为空", trigger: "blur" }
-  ],
-  dictType: [
-    { required: true, message: "字典类型不能为空", trigger: "blur" }
-  ]
-}
-
-/** 查询字典类型列表 */
-function getList() {
-  loading.value = true
-  console.log('开始获取字典类型列表，参数：', queryParams)
-  getDictTypeList(queryParams).then(res => {
-    console.log('获取字典类型列表响应：', res)
-    if (res.data) {
-      dictList.value = res.data.records || []
-      total.value = res.data.total || 0
-      console.log('设置字典类型列表数据：', dictList.value)
-      console.log('设置总数：', total.value)
-    } else {
-      console.log('响应数据格式不正确：', res)
-      dictList.value = []
-      total.value = 0
-    }
-    loading.value = false
-  }).catch(error => {
-    console.error('获取字典类型列表失败:', error)
-    dictList.value = []
-    total.value = 0
-    loading.value = false
+// 获取字典类型列表
+const getList = async () => {
+  loading.value=true;
+  await dictTypeStore.fetchDictTypeList(queryParams.value).then(response=>{
+    typeList.value=response.records;
+    total.value=response.total;
+    loading.value=false;
   })
 }
 
-/** 取消按钮 */
-function cancel() {
+// 取消按钮
+const cancel = () => {
   open.value = false
   reset()
 }
 
-/** 表单重置 */
-function reset() {
-  form.dictId = undefined
-  form.dictName = undefined
-  form.dictType = undefined
-  form.status = 1
-  form.remark = undefined
+// 表单重置
+const reset = () => {
+  form.value = {
+    dictId: undefined,
+    dictName: undefined,
+    dictType: undefined,
+    status: 1,
+    remark: undefined
+  }
+  proxy.$refs['dictRef']?.resetFields()
 }
 
-/** 搜索按钮操作 */
-function handleQuery() {
+// 搜索按钮操作
+const handleQuery = () => {
   queryParams.pageNum = 1
-  getList()
+  getList();
 }
 
-/** 重置按钮操作 */
-function resetQuery() {
+// 重置按钮操作
+const resetQuery = () => {
   queryParams.dictName = undefined
   queryParams.dictType = undefined
   queryParams.status = undefined
   handleQuery()
 }
 
-/** 新增按钮操作 */
-function handleAdd() {
-  reset()
-  open.value = true
-  title.value = "添加字典类型"
-}
-
-/** 多选框选中数据 */
-function handleSelectionChange(selection) {
+// 多选框选中数据
+const handleSelectionChange = (selection) => {
   ids.value = selection.map(item => item.dictId)
   single.value = selection.length !== 1
   multiple.value = !selection.length
 }
 
-/** 修改按钮操作 */
-function handleUpdate(row) {
-  loading.value = true
+// 新增按钮操作
+const handleAdd = () => {
+  reset()
+  open.value = true
+  title.value = "添加字典类型"
+}
+
+// 修改按钮操作
+const handleUpdate = (row) => {
   reset()
   const dictId = row.dictId || ids.value[0]
-  getDictType(dictId).then(res => {
-    if (res.data) {
-      Object.assign(form, res.data)
+  dictTypeStore.fetchDictTypeDetail(dictId).then(response => {
+    if (response.code === 200 && response.data) {
+      // 使用 Object.assign 确保所有字段都被正确赋值
+      Object.assign(form.value, response.data)
       open.value = true
       title.value = "修改字典类型"
+    } else {
+      ElMessage.error(response.message || "获取字典类型详情失败")
     }
-  }).finally(() => {
-    loading.value = false
+  }).catch(error => {
+    console.error('获取字典类型详情失败:', error)
+    ElMessage.error("获取字典类型详情失败")
   })
 }
 
-/** 提交按钮 */
-function submitForm() {
-  const dictRef = ref()
-  dictRef.value?.validate((valid) => {
+// 提交按钮
+const submitForm = async () => {
+  proxy.$refs['dictRef'].validate(async (valid) => {
     if (valid) {
-      if (form.dictId) {
-        updateDictType(form).then(() => {
-          ElMessage.success('修改成功')
-          open.value = false
-          getList()
-        })
-      } else {
-        addDictType(form).then(() => {
-          ElMessage.success('新增成功')
-          open.value = false
-          getList()
-        })
+      try {
+        if (form.value.dictId != undefined) {
+          await dictTypeStore.updateDictTypeInfo(form.value)
+          ElMessage.success("修改成功")
+        } else {
+          await dictTypeStore.createNewDictType(form.value)
+          ElMessage.success("新增成功")
+        }
+        open.value = false
+        getList()
+      } catch (error) {
+        console.error('提交表单失败:', error)
+        ElMessage.error(error.message || "操作失败")
       }
     }
   })
 }
 
-/** 删除按钮操作 */
-function handleDelete(row) {
+// 删除按钮操作
+const handleDelete = (row) => {
   const dictIds = row.dictId || ids.value
   ElMessageBox.confirm('是否确认删除字典编号为"' + dictIds + '"的数据项?', "警告", {
     confirmButtonText: "确定",
     cancelButtonText: "取消",
     type: "warning"
-  }).then(() => {
-    deleteDictType(dictIds).then(() => {
-      ElMessage.success('删除成功')
-      getList()
-    })
+  }).then(async () => {
+    await dictTypeStore.removeDictType(dictIds)
+    getList()
+    ElMessage.success("删除成功")
   })
 }
 
-/** 导出按钮操作 */
-function handleExport() {
-  // 实现导出功能
+// 导出按钮操作
+const handleExport = () => {
+  dictTypeStore.exportDictType(queryParams)
 }
 
-/** 字典数据按钮操作 */
-function handleData(row) {
-  router.push(`/admin/system/dict/type/${row.dictId}`)
+// 刷新缓存按钮操作
+const handleRefreshCache = async () => {
+  await dictTypeStore.refreshDictTypeCache()
+  ElMessage.success("刷新成功")
 }
 
-/** 状态修改 */
-function handleStatusChange(row) {
-  const text = row.status === 1 ? '启用' : '停用'
-  ElMessageBox.confirm('确认要"' + text + '""' + row.dictName + '"字典类型吗?', "警告", {
-    confirmButtonText: "确定",
-    cancelButtonText: "取消",
-    type: "warning"
-  }).then(() => {
-    changeDictTypeStatus({
-      dictId: row.dictId,
-      status: row.status
-    }).then(() => {
-      ElMessage.success(text + '成功')
-    })
-  }).catch(() => {
+// 字典数据按钮操作
+const handleData = (row) => {
+  router.push(`/system/dict/data/type/${row.dictType}`)
+}
+
+// 状态修改
+const handleStatusChange = async (row) => {
+  const text = row.status === 1 ? "启用" : "停用"
+  try {
+    await dictTypeStore.updateDictTypeStatus(row.dictId, row.status)
+    ElMessage.success(text + "成功")
+  } catch (error) {
     row.status = row.status === 1 ? 0 : 1
-  })
+  }
 }
 
-/** 分页大小改变 */
-function handleSizeChange(val) {
+// 分页大小改变
+const handleSizeChange = (val) => {
   queryParams.pageSize = val
   getList()
 }
 
-/** 分页页码改变 */
-function handleCurrentChange(val) {
+// 页码改变
+const handleCurrentChange = (val) => {
   queryParams.pageNum = val
   getList()
-}
-
-/** 刷新缓存操作 */
-function handleRefreshCache() {
-  ElMessageBox.confirm('是否确认刷新字典缓存?', "警告", {
-    confirmButtonText: "确定",
-    cancelButtonText: "取消",
-    type: "warning"
-  }).then(() => {
-    refreshCache().then(() => {
-      ElMessage.success('刷新缓存成功')
-    })
-  })
 }
 
 onMounted(() => {

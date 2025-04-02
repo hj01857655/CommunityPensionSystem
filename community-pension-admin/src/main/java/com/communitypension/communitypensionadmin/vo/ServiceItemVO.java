@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 public class ServiceItemVO {
     
     /**
-     * 服务ID
+     * 服务项目ID
      */
     private Long serviceId;
     
@@ -42,9 +42,14 @@ public class ServiceItemVO {
     private BigDecimal price;
     
     /**
-     * 状态（0下架/1上架）
+     * 服务时长（分钟）
      */
-    private Integer status;
+    private Integer duration;
+    
+    /**
+     * 状态（0正常 1停用）
+     */
+    private String status;
     
     /**
      * 状态名称
@@ -52,24 +57,24 @@ public class ServiceItemVO {
     private String statusName;
     
     /**
-     * 创建时间
-     */
-    private LocalDateTime createTime;
-    
-    /**
      * 创建者
      */
     private String createBy;
     
     /**
-     * 更新时间
+     * 创建时间
      */
-    private LocalDateTime updateTime;
+    private LocalDateTime createTime;
     
     /**
      * 更新者
      */
     private String updateBy;
+    
+    /**
+     * 更新时间
+     */
+    private LocalDateTime updateTime;
     
     /**
      * 备注

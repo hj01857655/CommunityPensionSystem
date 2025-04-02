@@ -13,23 +13,43 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class DictTypeServiceImpl extends ServiceImpl<DictTypeMapper, DictType> implements DictTypeService {
-    
+    /**
+     * 根据字典类型查询字典类型信息
+     *
+     * @param dictType 字典类型
+     * @return 字典类型信息
+     */
     @Override
     public DictType selectDictTypeByType(String dictType) {
         return getOne(new LambdaQueryWrapper<DictType>()
                 .eq(DictType::getDictType, dictType));
     }
-    
+    /**
+     * 新增字典类型信息
+     *
+     * @param dictType 字典类型信息
+     * @return 结果
+     */
     @Override
     public boolean insertDictType(DictType dictType) {
         return save(dictType);
     }
-    
+    /**
+     * 修改字典类型信息
+     *
+     * @param dictType 字典类型信息
+     * @return 结果
+     */
     @Override
     public boolean updateDictType(DictType dictType) {
         return updateById(dictType);
     }
-    
+    /**
+     * 删除字典类型信息
+     *
+     * @param dictId 字典类型ID
+     * @return 结果
+     */
     @Override
     public boolean deleteDictTypeById(Long dictId) {
         return removeById(dictId);
@@ -37,6 +57,8 @@ public class DictTypeServiceImpl extends ServiceImpl<DictTypeMapper, DictType> i
 
     /**
      * 刷新字典缓存
+     *
+     *
      */
     @Override
     @CacheEvict(value = {"dict-type", "dict-data"}, allEntries = true)

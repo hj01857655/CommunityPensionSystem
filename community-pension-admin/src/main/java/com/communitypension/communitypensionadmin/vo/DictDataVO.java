@@ -1,6 +1,7 @@
 package com.communitypension.communitypensionadmin.vo;
 
 import lombok.Data;
+import java.time.LocalDateTime;
 
 /**
  * 字典数据VO
@@ -11,6 +12,11 @@ public class DictDataVO {
      * 字典编码
      */
     private Long dictCode;
+    
+    /**
+     * 字典排序
+     */
+    private Integer dictSort;
     
     /**
      * 字典标签
@@ -33,7 +39,7 @@ public class DictDataVO {
     private String cssClass;
     
     /**
-     * 表格字典样式
+     * 表格回显样式
      */
     private String listClass;
     
@@ -45,15 +51,35 @@ public class DictDataVO {
     /**
      * 状态（0正常 1停用）
      */
-    private String status;
+    private Integer status;
+    
+    /**
+     * 状态名称
+     */
+    private String statusName;
+    
+    /**
+     * 创建者
+     */
+    private String createBy;
+    
+    /**
+     * 创建时间
+     */
+    private LocalDateTime createTime;
+    
+    /**
+     * 更新者
+     */
+    private String updateBy;
+    
+    /**
+     * 更新时间
+     */
+    private LocalDateTime updateTime;
     
     /**
      * 备注
      */
     private String remark;
-    
-    /**
-     * 排序
-     */
-    private Integer dictSort;
-} 
+}

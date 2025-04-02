@@ -69,6 +69,23 @@ spring:
     caffeine:
       spec: maximumSize=500,expireAfterWrite=3600s
 
+  # 邮件配置
+  mail:
+    host: smtp.qq.com  # 邮件服务器地址
+    port: 587
+    username: ${MAIL_USERNAME:1292548381@qq.com}  # 发件人邮箱
+    password: ${MAIL_PASSWORD:kejxhibrhnqrijgh}  # 邮箱授权码
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+        socketFactory:
+          port: 587
+          class: javax.net.ssl.SSLSocketFactory
+
 jwt:
   secret: "cB7ChF1y4Aegk+p9KNkFz0GQeY2e+ZgeIW6EVJbiR9Y="
   access-token:

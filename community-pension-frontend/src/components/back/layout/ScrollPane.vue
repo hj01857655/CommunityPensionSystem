@@ -42,6 +42,8 @@ const emitScroll = () => {
 
 // 移动到目标标签
 const moveToTarget = (currentTag) => {
+  if (!currentTag) return;
+  
   const $container = scrollContainer.value?.$el;
   if (!$container) return;
   
@@ -62,36 +64,38 @@ const moveToTarget = (currentTag) => {
   } else {
     // 找到前一个和后一个标签
     const currentIndex = tagList.findIndex(item => item === currentTag);
+    if (currentIndex === -1) return;
+    
     const prevTag = tagList[currentIndex - 1];
     const nextTag = tagList[currentIndex + 1];
-
-    // 计算标签位置
-    const afterNextTagOffsetLeft = nextTag.$el.offsetLeft + nextTag.$el.offsetWidth + tagAndTagSpacing;
-    const beforePrevTagOffsetLeft = prevTag.$el.offsetLeft - tagAndTagSpacing;
-
-    if (afterNextTagOffsetLeft > $scrollWrapper.scrollLeft + $containerWidth) {
-      $scrollWrapper.scrollLeft = afterNextTagOffsetLeft - $containerWidth;
-    } else if (beforePrevTagOffsetLeft < $scrollWrapper.scrollLeft) {
-      $scrollWrapper.scrollLeft = beforePrevTagOffsetLeft;
+    
+    if (prevTag && nextTag) {
+      const prevTagLeft = prevTag.offsetLeft;
+      const nextTagLeft = nextTag.offsetLeft;
+      const nextTagRight = nextTagLeft + nextTag.offsetWidth;
+      
+      if (nextTagRight > $scrollWrapper.scrollLeft + $containerWidth) {
+        $scrollWrapper.scrollLeft = nextTagRight - $containerWidth + tagAndTagSpacing;
+      } else if (prevTagLeft < $scrollWrapper.scrollLeft) {
+        $scrollWrapper.scrollLeft = prevTagLeft - tagAndTagSpacing;
+      }
     }
   }
 };
 
-// 组件挂载时
+// 组件挂载时添加滚动事件监听
 onMounted(() => {
-  // 等待 DOM 更新后再添加事件监听
-  setTimeout(() => {
-    scrollWrapper.value = scrollWrapperComputed.value;
-    if (scrollWrapper.value) {
-      scrollWrapper.value.addEventListener('scroll', emitScroll, true);
-    }
-  }, 0);
+  const $scrollWrapper = scrollWrapperComputed.value;
+  if ($scrollWrapper) {
+    $scrollWrapper.addEventListener('scroll', emitScroll, true);
+  }
 });
 
-// 组件卸载前
+// 组件卸载时移除滚动事件监听
 onBeforeUnmount(() => {
-  if (scrollWrapper.value) {
-    scrollWrapper.value.removeEventListener('scroll', emitScroll);
+  const $scrollWrapper = scrollWrapperComputed.value;
+  if ($scrollWrapper) {
+    $scrollWrapper.removeEventListener('scroll', emitScroll);
   }
 });
 

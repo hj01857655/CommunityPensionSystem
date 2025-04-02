@@ -117,7 +117,7 @@
         <el-descriptions-item label="评价老人">{{ currentEvaluation?.elderName }}</el-descriptions-item>
         <el-descriptions-item label="评分">
           <el-rate
-            v-model="currentEvaluation?.rating"
+            v-model="currentRating"
             disabled
             show-score
             text-color="#ff9900"
@@ -164,7 +164,7 @@ const queryParams = reactive({
   current: 1,
   size: 10,
   serviceName: '',
-  rating: undefined,
+  rating: null,
   startTime: '',
   endTime: ''
 })
@@ -206,6 +206,9 @@ const replyRules = {
     { min: 2, max: 200, message: '长度在 2 到 200 个字符', trigger: 'blur' }
   ]
 }
+
+// 在 script setup 部分添加
+const currentRating = ref(0)
 
 // 获取列表数据
 const getList = async () => {
@@ -258,6 +261,7 @@ const handleSelectionChange = (selection) => {
 const handleView = (row) => {
   dialogType.value = 'view'
   currentEvaluation.value = row
+  currentRating.value = row.rating || 0
   dialogVisible.value = true
 }
 
@@ -272,7 +276,9 @@ const handleReply = (row) => {
 
 // 提交回复
 const submitReply = async () => {
-  replyFormRef.value?.validate(async (valid) => {
+  if (!replyFormRef.value) return
+  
+  await replyFormRef.value.validate(async (valid) => {
     if (valid) {
       try {
         const res = await replyEvaluation(replyForm)
@@ -329,6 +335,7 @@ const handleDelete = async (row) => {
   }
 }
 
+// 页面加载时获取数据
 onMounted(() => {
   getList()
 })

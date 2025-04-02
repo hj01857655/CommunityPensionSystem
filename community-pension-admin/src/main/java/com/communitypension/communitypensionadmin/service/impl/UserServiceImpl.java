@@ -339,8 +339,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      * @param roleIds 角色ID列表
      */
     public void validateRoleCombination(List<Long> roleIds) {
-        boolean hasElderRole = roleIds.contains(1L); // 假设老人角色ID为1
-        boolean hasFamilyRole = roleIds.contains(2L); // 假设家属角色ID为2
+        boolean hasElderRole = roleIds.contains(RoleEnum.ELDER.getId()); // 假设老人角色ID为1
+        boolean hasFamilyRole = roleIds.contains(RoleEnum.KIN.getId()); // 假设家属角色ID为2
 
         if (hasElderRole && hasFamilyRole) {
             throw new RuntimeException("一个用户不能同时拥有老人和家属角色");

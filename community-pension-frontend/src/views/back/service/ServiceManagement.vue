@@ -53,12 +53,12 @@
       border
     >
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column prop="id" label="ID" width="80" align="center" />
-      <el-table-column prop="name" label="服务名称" min-width="150" align="center" />
-      <el-table-column prop="category" label="类别" width="120" align="center">
+      <el-table-column prop="serviceId" label="ID" width="80" align="center" />
+      <el-table-column prop="serviceName" label="服务名称" min-width="150" align="center" />
+      <el-table-column prop="serviceType" label="类别" width="120" align="center">
         <template #default="scope">
-          <el-tag :type="getCategoryType(scope.row.category)">
-            {{ scope.row.category }}
+          <el-tag :type="getCategoryType(scope.row.serviceType)">
+            {{ getServiceTypeName(scope.row.serviceType) }}
           </el-tag>
         </template>
       </el-table-column>
@@ -73,13 +73,11 @@
           {{ scope.row.price }} 元
         </template>
       </el-table-column>
-      <el-table-column prop="is_active" label="状态" width="100" align="center">
+      <el-table-column prop="status" label="状态" width="100" align="center">
         <template #default="scope">
           <el-switch
-            v-model="scope.row.is_active"
-            :active-value="1"
-            :inactive-value="0"
-            @change="handleStatusChange(scope.row)"
+            :model-value="scope.row.status === '1'"
+            @change="(val) => handleStatusChange(scope.row, val ? '1' : '0')"
           />
         </template>
       </el-table-column>
@@ -113,16 +111,14 @@
         :rules="serviceRules"
         label-width="100px"
       >
-        <el-form-item label="服务名称" prop="name">
-          <el-input v-model="serviceForm.name" placeholder="请输入服务名称" />
+        <el-form-item label="服务名称" prop="serviceName">
+          <el-input v-model="serviceForm.serviceName" placeholder="请输入服务名称" />
         </el-form-item>
-        <el-form-item label="类别" prop="category">
-          <el-select v-model="serviceForm.category" placeholder="请选择服务类别">
-            <el-option label="护理服务" value="护理服务" />
-            <el-option label="餐饮服务" value="餐饮服务" />
-            <el-option label="医疗服务" value="医疗服务" />
-            <el-option label="家政服务" value="家政服务" />
-            <el-option label="生活服务" value="生活服务" />
+        <el-form-item label="类别" prop="serviceType">
+          <el-select v-model="serviceForm.serviceType" placeholder="请选择服务类别">
+            <el-option label="医疗服务" value="medical" />
+            <el-option label="保洁服务" value="cleaning" />
+            <el-option label="维修服务" value="repair" />
           </el-select>
         </el-form-item>
         <el-form-item label="描述" prop="description">
@@ -134,8 +130,8 @@
         <el-form-item label="价格" prop="price">
           <el-input-number v-model="serviceForm.price" :min="0" placeholder="请输入服务价格" />
         </el-form-item>
-        <el-form-item label="状态" prop="is_active">
-          <el-switch v-model="serviceForm.is_active" :active-value="1" :inactive-value="0" />
+        <el-form-item label="状态" prop="status">
+          <el-switch v-model="serviceForm.status" :active-value="1" :inactive-value="0" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -154,24 +150,13 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Delete, Edit, Plus, Refresh } from '@element-plus/icons-vue'
 import Pagination from '@/components/common/Pagination.vue'
 import RightToolbar from '@/components/RightToolbar/index.vue'
-import { useServiceStore } from '@/stores/back/service'
+import { useServiceItemStore } from '@/stores/back/service'
 
-const serviceStore = useServiceStore()
+const serviceStore = useServiceItemStore()
 
-// 服务列表数据（静态数据）
-const services = ref([
-  { id: 1, name: '基础护理', category: '护理服务', description: '提供基础的日常生活照料', duration: 60, price: 100.00, is_active: 1 },
-  { id: 2, name: '营养餐配送', category: '餐饮服务', description: '提供营养均衡的餐点配送', duration: 30, price: 50.00, is_active: 1 },
-  { id: 3, name: '健康咨询', category: '医疗服务', description: '提供专业的健康咨询服务', duration: 45, price: 80.00, is_active: 1 },
-  { id: 4, name: '家庭清洁', category: '家政服务', description: '提供家庭清洁服务', duration: 90, price: 120.00, is_active: 1 },
-  { id: 5, name: '陪同外出', category: '生活服务', description: '陪同老人外出活动', duration: 120, price: 150.00, is_active: 1 },
-  { id: 6, name: '心理辅导', category: '医疗服务', description: '提供心理健康辅导', duration: 60, price: 100.00, is_active: 1 },
-  { id: 7, name: '康复训练', category: '医疗服务', description: '提供专业的康复训练', duration: 90, price: 150.00, is_active: 1 },
-  { id: 8, name: '定制膳食', category: '餐饮服务', description: '根据老人需求定制营养餐点', duration: 45, price: 80.00, is_active: 1 },
-  { id: 9, name: '居家安全检查', category: '家政服务', description: '提供居家安全检查服务', duration: 60, price: 100.00, is_active: 1 },
-  { id: 10, name: '远程医疗咨询', category: '医疗服务', description: '提供远程医疗咨询服务', duration: 30, price: 60.00, is_active: 1 }
-])
-
+// 服务列表数据和分页信息
+const services = ref([])
+const totalItems = ref(0)
 const loading = ref(false)
 const currentPage = ref(1)
 const pageSize = ref(10)
@@ -182,18 +167,19 @@ const dialogType = ref('add')
 // 表单相关
 const serviceFormRef = ref(null)
 const serviceForm = ref({
-  name: '',
-  category: '',
+  serviceId: '',
+  serviceName: '',
+  serviceType: '',
   description: '',
   duration: 0,
   price: 0,
-  is_active: 1
+  status: '1'
 })
 
 // 表单验证规则
 const serviceRules = {
-  name: [{ required: true, message: '请输入服务名称', trigger: 'blur' }],
-  category: [{ required: true, message: '请选择服务类别', trigger: 'change' }],
+  serviceName: [{ required: true, message: '请输入服务名称', trigger: 'blur' }],
+  serviceType: [{ required: true, message: '请选择服务类别', trigger: 'change' }],
   description: [{ required: true, message: '请输入服务描述', trigger: 'blur' }],
   duration: [{ required: true, message: '请输入服务时长', trigger: 'blur' }],
   price: [{ required: true, message: '请输入服务价格', trigger: 'blur' }]
@@ -201,106 +187,195 @@ const serviceRules = {
 
 // 过滤后的服务列表
 const filteredServices = computed(() => {
-  if (!services.value || !searchQuery.value) {
-    return services.value || []
+  if (!services.value) {
+    return []
+  }
+  
+  if (!searchQuery.value) {
+    return services.value
   }
   
   const query = searchQuery.value.toLowerCase()
   return services.value.filter(service =>
-    service.name.toLowerCase().includes(query) ||
-    service.category.toLowerCase().includes(query)
+    service.serviceName?.toLowerCase().includes(query) ||
+    service.serviceType?.toLowerCase().includes(query)
   )
 })
 
-// 总服务数
-const totalItems = computed(() => {
-  return filteredServices.value ? filteredServices.value.length : 0
-})
+// 获取服务类型名称
+const getServiceTypeName = (type) => {
+  const typeMap = {
+    'medical': '医疗服务',
+    'cleaning': '保洁服务',
+    'repair': '维修服务'
+  }
+  return typeMap[type] || type
+}
+
+// 获取服务类型编码
+const getServiceTypeCode = (name) => {
+  const typeMap = {
+    '医疗服务': 'medical',
+    '保洁服务': 'cleaning',
+    '维修服务': 'repair'
+  }
+  return typeMap[name] || name
+}
 
 // 获取类别标签类型
-const getCategoryType = (category) => {
+const getCategoryType = (type) => {
   const typeMap = {
-    '护理服务': 'success',
-    '餐饮服务': 'info',
-    '医疗服务': 'warning',
-    '家政服务': 'primary',
-    '生活服务': 'danger'
+    'medical': 'danger',  // 医疗服务使用红色
+    'cleaning': 'info',   // 保洁服务使用蓝色
+    'repair': 'warning'   // 维修服务使用黄色
   }
-  return typeMap[category] || 'info'
+  return typeMap[type] || 'info'
 }
 
-// 搜索服务
-const handleSearch = () => {
-  currentPage.value = 1
+// 查询参数
+const queryParams = reactive({
+  name: '',
+  category: ''
+})
+
+// 显示搜索条件
+const showSearch = ref(true)
+
+// 选中的服务
+const selectedServices = ref([])
+const single = computed(() => selectedServices.value.length !== 1)
+const multiple = computed(() => selectedServices.value.length === 0)
+
+// 获取服务列表
+const getList = async () => {
+  loading.value = true
+  try {
+    const res = await serviceStore.getServiceItemList({
+      page: currentPage.value,
+      limit: pageSize.value,
+      serviceName: queryParams.name,
+      serviceType: queryParams.category
+    })
+    if (res) {
+      services.value = res.records
+      totalItems.value = res.total
+    }
+  } catch (error) {
+    console.error('获取服务列表失败:', error)
+    ElMessage.error('获取服务列表失败')
+  } finally {
+    loading.value = false
+  }
 }
 
-// 新增服务
-const handleAdd = () => {
-  dialogType.value = 'add'
-  serviceForm.value = {
-    name: '',
-    category: '',
-    description: '',
-    duration: 0,
-    price: 0,
-    is_active: 1
-  }
-  dialogVisible.value = true
+// 重置查询
+const handleReset = () => {
+  queryParams.name = ''
+  queryParams.category = ''
+  handleSearch()
+}
+
+// 表格选择
+const handleSelectionChange = (selection) => {
+  selectedServices.value = selection
 }
 
 // 编辑服务
 const handleEdit = (row) => {
   dialogType.value = 'edit'
-  serviceForm.value = { ...row }
+  serviceForm.value = {
+    serviceId: row.serviceId,
+    serviceName: row.serviceName,
+    serviceType: row.serviceType,
+    description: row.description,
+    duration: row.duration,
+    price: row.price,
+    status: row.status
+  }
   dialogVisible.value = true
 }
 
 // 删除服务
 const handleDelete = (row) => {
-  ElMessageBox.confirm(
-    `确定要删除服务 "${row.name}" 吗？`,
-    '警告',
-    {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning'
+  const ids = row ? [row.serviceId] : selectedServices.value.map(item => item.serviceId)
+  ElMessageBox.confirm('确认要删除选中的服务吗？', '警告', {
+    type: 'warning'
+  }).then(async () => {
+    try {
+      if (ids.length === 1) {
+        await serviceStore.deleteServiceItem(ids[0])
+      } else {
+        await serviceStore.batchDeleteServiceItem(ids)
+      }
+      ElMessage.success('删除成功')
+      getList()
+    } catch (error) {
+      console.error('删除服务失败:', error)
+      ElMessage.error('删除服务失败')
     }
-  ).then(() => {
-    // 这里应该调用删除服务的API
-    ElMessage.success('删除成功')
-    services.value = services.value.filter(service => service.id !== row.id)
   })
+}
+
+// 状态变更
+const handleStatusChange = async (row, newStatus) => {
+  try {
+    await serviceStore.updateServiceItemStatus(row.serviceId, newStatus)
+    ElMessage.success('状态更新成功')
+    // 更新成功后重新获取列表
+    await getList()
+  } catch (error) {
+    console.error('更新服务状态失败:', error)
+    ElMessage.error('更新服务状态失败')
+  }
 }
 
 // 提交表单
-const submitForm = () => {
-  serviceFormRef.value.validate((valid) => {
+const submitForm = async () => {
+  if (!serviceFormRef.value) return
+  
+  await serviceFormRef.value.validate(async (valid) => {
     if (valid) {
-      if (dialogType.value === 'add') {
-        // 添加服务
-        const newService = {
-          id: services.value.length + 1,
-          ...serviceForm.value
+      try {
+        if (dialogType.value === 'add') {
+          await serviceStore.addServiceItem(serviceForm.value)
+          ElMessage.success('新增成功')
+        } else {
+          await serviceStore.updateServiceItem(serviceForm.value)
+          ElMessage.success('更新成功')
         }
-        services.value.push(newService)
-        ElMessage.success('添加服务成功')
-      } else {
-        // 编辑服务
-        const index = services.value.findIndex(service => service.id === serviceForm.value.id)
-        if (index !== -1) {
-          services.value[index] = { ...serviceForm.value }
-          ElMessage.success('更新服务成功')
-        }
+        dialogVisible.value = false
+        getList()
+      } catch (error) {
+        console.error('保存服务失败:', error)
+        ElMessage.error('保存服务失败')
       }
-      dialogVisible.value = false
     }
   })
 }
 
-// 处理服务状态切换
-const handleStatusChange = (row) => {
-  // 这里应该调用更新服务状态的API
-  ElMessage.success(`服务 "${row.name}" 状态已更新`)
+// 页面加载时获取数据
+onMounted(() => {
+  getList()
+})
+
+// 新增服务
+const handleAdd = () => {
+  dialogType.value = 'add'
+  serviceForm.value = {
+    serviceId: '',
+    serviceName: '',
+    serviceType: '',
+    description: '',
+    duration: 0,
+    price: 0,
+    status: '1'
+  }
+  dialogVisible.value = true
+}
+
+// 搜索服务
+const handleSearch = () => {
+  currentPage.value = 1
 }
 
 // 分页大小变化
@@ -312,34 +387,6 @@ const handleSizeChange = (val) => {
 // 当前页变化
 const handleCurrentChange = (val) => {
   currentPage.value = val
-}
-
-const queryParams = ref({
-  name: '',
-  category: ''
-})
-
-// 重置
-const handleReset = () => {
-  queryParams.value = {
-    name: '',
-    category: ''
-  }
-  handleSearch()
-}
-
-// 显示搜索条件
-const showSearch = ref(true)
-
-// 非单个禁用
-const single = ref(true)
-// 非多个禁用
-const multiple = ref(true)
-
-// 多选框选中数据
-const handleSelectionChange = (selection) => {
-  single.value = selection.length !== 1
-  multiple.value = !selection.length
 }
 </script>
 

@@ -57,31 +57,33 @@ const scrollPaneRef = ref(null);
 
 const { proxy } = getCurrentInstance();
 const route = useRoute();
-const router = router();
+const router = useRouter();
 
 const visitedViews = computed(() => useTagsViewStore().visitedViews);
 const routes = computed(() => usePermissionStore().routes);
 const theme = computed(() => useSettingsStore().theme);
 
-watch(route, (newVal) => {
-  newVal.matched.forEach(route => {
-    addTags()
-    moveToCurrentTag()
-  })
-})
+watch(() => route.path, () => {
+  addTags();
+  moveToCurrentTag();
+}, { immediate: true });
 
 watch(visible, (value) => {
   if (value) {
-    document.body.addEventListener('click', closeMenu)
+    document.body.addEventListener('click', closeMenu);
   } else {
-    document.body.removeEventListener('click', closeMenu)
+    document.body.removeEventListener('click', closeMenu);
   }
-})
+});
 
 onMounted(() => {
-  initTags()
-  addTags()
-})
+  initTags();
+  addTags();
+});
+
+onUnmounted(() => {
+  document.body.removeEventListener('click', closeMenu);
+});
 
 function isActive(r) {
   return route.matched.some(matchedRoute => matchedRoute.path === r.path)
@@ -149,24 +151,22 @@ function initTags() {
 }
 
 function addTags() {
-  const { name } = route
-  if (name) {
-    useTagsViewStore().addView(route)
+  const { name, path, meta } = route;
+  if (name && path && !meta.hidden) {
+    useTagsViewStore().addView(route);
   }
 }
 
 function moveToCurrentTag() {
   nextTick(() => {
-    for (const r of visitedViews.value) {
-      if (r.path === route.path) {
-        scrollPaneRef.value.moveToTarget(r);
-        // when query is different then update
-        if (r.fullPath !== route.fullPath) {
-          useTagsViewStore().updateVisitedView(route)
-        }
+    const currentView = visitedViews.value.find(r => r.path === route.path);
+    if (currentView) {
+      scrollPaneRef.value?.moveToTarget(currentView);
+      if (currentView.fullPath !== route.fullPath) {
+        useTagsViewStore().updateVisitedView(route);
       }
     }
-  })
+  });
 }
 
 function refreshSelectedTag(view) {
@@ -177,8 +177,10 @@ function refreshSelectedTag(view) {
 }
 
 function closeSelectedTag(view) {
+  if (!view) return;
   proxy.$tab.closePage(view).then(({ visitedViews }) => {
     if (isActive(view)) {
+      toLastView(visitedViews, view);
       toLastView(visitedViews, view)
     }
   })

@@ -14,7 +14,7 @@ export const getDictDataByType = (dictType) => {
  * @param {Object} params - 查询参数
  * @param {string} [params.dictType] - 字典类型
  * @param {string} [params.dictLabel] - 字典标签
- * @param {string} [params.status] - 状态：0-正常 1-停用
+ * @param {number} [params.status] - 状态：0-正常 1-停用
  * @returns {Promise<{code: number, data: Array, msg: string}>}
  */
 export const getDictDataList = (params) => {
@@ -36,7 +36,7 @@ export const getDictDataDetail = (dictCode) => {
  * @param {string} data.dictType - 字典类型
  * @param {string} data.dictLabel - 字典标签
  * @param {string} data.dictValue - 字典键值
- * @param {string} data.status - 状态：0-正常 1-停用
+ * @param {number} data.status - 状态：0-正常 1-停用
  * @param {number} [data.dictSort] - 字典排序
  * @param {string} [data.remark] - 备注
  * @returns {Promise<{code: number, msg: string}>}
@@ -52,7 +52,7 @@ export const createDictData = (data) => {
  * @param {string} data.dictType - 字典类型
  * @param {string} data.dictLabel - 字典标签
  * @param {string} data.dictValue - 字典键值
- * @param {string} data.status - 状态：0-正常 1-停用
+ * @param {number} data.status - 状态：0-正常 1-停用
  * @param {number} [data.dictSort] - 字典排序
  * @param {string} [data.remark] - 备注
  * @returns {Promise<{code: number, msg: string}>}
@@ -75,7 +75,7 @@ export const deleteDictData = (dictCodes) => {
  * @param {Object} params - 查询参数
  * @param {string} [params.dictType] - 字典类型
  * @param {string} [params.dictLabel] - 字典标签
- * @param {string} [params.status] - 状态：0-正常 1-停用
+ * @param {number} [params.status] - 状态：0-正常 1-停用
  * @returns {Promise<Blob>} - 返回文件流
  */
 export const exportDictData = (params) => {

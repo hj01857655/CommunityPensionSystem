@@ -4,14 +4,13 @@
     <scroll-pane ref="scrollPane" class="tags-view-wrapper" @scroll="handleScroll">
       <router-link
         v-for="tag in visitedViews"
-        ref="tag"
         :key="tag.path"
         :class="isActive(tag) ? 'active' : ''"
         :to="{ path: tag.path, query: tag.query, fullPath: tag.fullPath }"
         tag="span"
         class="tags-view-item"
         @click.middle="!isAffix(tag) && closeSelectedTag(tag)"
-        @contextmenu.prevent="openMenu($event, view)"
+        @contextmenu.prevent="openMenu($event, tag)"
       >
         {{ tag.title }}
         <el-icon v-if="!isAffix(tag)" class="close-icon" @click.prevent.stop="closeSelectedTag(tag)">
@@ -25,7 +24,7 @@
       <li @click="closeOthersTags"><el-icon><CircleClose /></el-icon> 关闭其他</li>
       <li v-if="!isFirstView()" @click="closeLeftTags"><el-icon><ArrowLeft /></el-icon> 关闭左侧</li>
       <li v-if="!isLastView()" @click="closeRightTags"><el-icon><ArrowRight /></el-icon> 关闭右侧</li>
-      <li @click="closeAllTags(selectedTag)"><el-icon><CircleClose /></el-icon> 全部关闭</li>
+      <li @click="closeAllTags"><el-icon><CircleClose /></el-icon> 全部关闭</li>
     </ul>
   </div>
 </template>
@@ -42,8 +41,16 @@ const props = defineProps({
     required: true
   }
 });
-console.log(props.visitedViews)
-const emit = defineEmits(['remove-tab', 'close-others', 'close-left', 'close-right', 'close-all', 'refresh', 'add-tab']);
+
+const emit = defineEmits([
+  'remove-tab',
+  'close-others',
+  'close-left',
+  'close-right',
+  'close-all',
+  'refresh',
+  'add-tab'
+]);
 
 const route = useRoute();
 const router = useRouter();
@@ -67,7 +74,7 @@ const isAffix = (tag) => {
 // 判断是否是第一个标签
 const isFirstView = () => {
   try {
-    return selectedTag.value.path === '/admin/home' || selectedTag.value.path === props.visitedViews[1].path;
+    return selectedTag.value.path === '/admin/home' || selectedTag.value.path === props.visitedViews[1]?.path;
   } catch (err) {
     return false;
   }
@@ -76,7 +83,7 @@ const isFirstView = () => {
 // 判断是否是最后一个标签
 const isLastView = () => {
   try {
-    return selectedTag.value.path === props.visitedViews[props.visitedViews.length - 1].path;
+    return selectedTag.value.path === props.visitedViews[props.visitedViews.length - 1]?.path;
   } catch (err) {
     return false;
   }
@@ -113,8 +120,8 @@ const closeRightTags = () => {
 };
 
 // 关闭所有标签
-const closeAllTags = (view) => {
-  emit('close-all', view);
+const closeAllTags = () => {
+  emit('close-all');
 };
 
 // 打开右键菜单
@@ -136,6 +143,11 @@ const closeMenu = () => {
   visible.value = false;
 };
 
+// 处理滚动
+const handleScroll = () => {
+  closeMenu();
+};
+
 // 监听点击事件，关闭右键菜单
 document.addEventListener('click', closeMenu);
 
@@ -143,11 +155,6 @@ document.addEventListener('click', closeMenu);
 onBeforeUnmount(() => {
   document.removeEventListener('click', closeMenu);
 });
-
-// 处理滚动
-const handleScroll = () => {
-  closeMenu();
-};
 
 // 监听路由变化
 watch(() => route, (newRoute) => {
@@ -268,10 +275,20 @@ onMounted(() => {
         width: 16px;
         height: 16px;
         vertical-align: 2px;
-        margin-left: 4px;
-        cursor: pointer;
+        border-radius: 50%;
+        text-align: center;
+        transition: all .3s cubic-bezier(.645, .045, .355, 1);
+        transform-origin: 100% 50%;
+
+        &:before {
+          transform: scale(.6);
+          display: inline-block;
+          vertical-align: -3px;
+        }
+
         &:hover {
-          color: #f56c6c;
+          background-color: #b4bccc;
+          color: #fff;
         }
       }
     }
@@ -289,14 +306,12 @@ onMounted(() => {
     font-weight: 400;
     color: #333;
     box-shadow: 2px 2px 3px 0 rgba(0, 0, 0, .3);
+    border: 1px solid #e4e7ed;
 
     li {
       margin: 0;
       padding: 7px 16px;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 8px;
 
       &:hover {
         background: #eee;

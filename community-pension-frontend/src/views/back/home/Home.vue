@@ -36,8 +36,8 @@
             <div class="chart-header">
               <span>用户活跃趋势</span>
               <el-radio-group v-model="timeRange" size="small" @change="handleTimeRangeChange">
-                <el-radio-button label="week">本周</el-radio-button>
-                <el-radio-button label="month">本月</el-radio-button>
+                <el-radio-button value="week">本周</el-radio-button>
+                <el-radio-button value="month">本月</el-radio-button>
               </el-radio-group>
             </div>
           </template>
