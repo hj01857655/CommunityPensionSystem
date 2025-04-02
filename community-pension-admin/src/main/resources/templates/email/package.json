@@ -1,0 +1,17 @@
+{
+  "name": "email-templates",
+  "version": "1.0.0",
+  "description": "Email templates for community pension system",
+  "scripts": {
+    "build": "vue-cli-service build",
+    "serve": "vue-cli-service serve"
+  },
+  "dependencies": {
+    "vue": "^3.3.4",
+    "vue-server-renderer": "^3.3.4"
+  },
+  "devDependencies": {
+    "@vue/cli-service": "^5.0.8",
+    "@vue/compiler-sfc": "^3.3.4"
+  }
+} 

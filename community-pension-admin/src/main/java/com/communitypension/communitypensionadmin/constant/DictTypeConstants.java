@@ -2,6 +2,8 @@ package com.communitypension.communitypensionadmin.constant;
 
 /**
  * 字典类型常量
+ *
+ * @date 2024-03-26
  */
 public class DictTypeConstants {
     
@@ -49,4 +51,24 @@ public class DictTypeConstants {
      * 评价等级
      */
     public static final String REVIEW_RATING = "review_rating";
+    
+    /**
+     * 通知类型
+     */
+    public static final String NOTIFICATION_TYPE = "notification_type";
+    
+    /**
+     * 系统通知
+     */
+    public static final String NOTIFICATION_TYPE_SYSTEM = "system";
+    
+    /**
+     * 活动通知
+     */
+    public static final String NOTIFICATION_TYPE_ACTIVITY = "activity";
+    
+    /**
+     * 服务通知
+     */
+    public static final String NOTIFICATION_TYPE_SERVICE = "service";
 } 

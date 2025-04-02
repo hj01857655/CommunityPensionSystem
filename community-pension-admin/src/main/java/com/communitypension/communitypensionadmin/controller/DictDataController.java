@@ -1,11 +1,10 @@
 package com.communitypension.communitypensionadmin.controller;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.communitypension.communitypensionadmin.entity.DictData;
 import com.communitypension.communitypensionadmin.service.DictDataService;
 import com.communitypension.communitypensionadmin.utils.Result;
 import com.communitypension.communitypensionadmin.vo.DictDataVO;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,63 +16,93 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/system/dict/data")
 public class DictDataController {
-    
+
     @Autowired
     private DictDataService dictDataService;
-    
     /**
+     *
      * 获取字典数据列表
+     * @param current
+     * @param size
+     * @param dictType
+     * @param dictLabel
+     * @param dictValue
+     * @return
      */
     @GetMapping("/list")
-    public Result<Page<DictData>> list(DictData dictData,
-                                     @RequestParam(defaultValue = "1") int current,
-                                     @RequestParam(defaultValue = "10") int size) {
-        Page<DictData> page = new Page<>(current, size);
-        LambdaQueryWrapper<DictData> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(dictData.getDictType() != null, DictData::getDictType, dictData.getDictType())
-                .like(dictData.getDictLabel() != null, DictData::getDictLabel, dictData.getDictLabel())
-                .eq(dictData.getStatus() != null, DictData::getStatus, dictData.getStatus())
-                .orderByAsc(DictData::getDictSort);
-        return Result.success(dictDataService.page(page, wrapper));
+    public Result<Page<DictDataVO>> list(
+            @RequestParam(defaultValue = "1") int current,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String dictType,
+            @RequestParam(required = false) String dictLabel,
+            @RequestParam(required = false) String dictValue) {
+        Page<DictDataVO> pageVO = dictDataService.getDictDataList(current, size, dictType, dictLabel, dictValue);
+        return Result.success(pageVO);
     }
-    
-    /**
-     * 获取字典数据详细信息
-     */
-    @GetMapping("/{dictCode}")
-    public Result<DictData> getInfo(@PathVariable Long dictCode) {
-        return Result.success(dictDataService.getById(dictCode));
-    }
-    
-    /**
-     * 根据字典类型获取字典数据
-     */
-    @GetMapping("/type/{dictType}")
-    public Result<List<DictDataVO>> getDictDataByType(@PathVariable String dictType) {
-        return Result.success(dictDataService.selectDictDataByType(dictType));
-    }
-    
     /**
      * 新增字典数据
+     * @param dictDataVO
+     * @return
      */
     @PostMapping
-    public Result<Boolean> add(@RequestBody DictData dictData) {
-        return Result.success(dictDataService.insertDictData(dictData));
+    public Result<Boolean> add(@RequestBody DictDataVO dictDataVO) {
+        dictDataService.createDictData(dictDataVO);
+        return Result.success(true);
     }
-    
     /**
      * 修改字典数据
+     * @param dictDataVO 字典数据
+     * @return
      */
     @PutMapping
-    public Result<Boolean> edit(@RequestBody DictData dictData) {
-        return Result.success(dictDataService.updateDictData(dictData));
+    public Result<Boolean> edit(@RequestBody DictDataVO dictDataVO) {
+        dictDataService.updateDictData(dictDataVO);
+        return Result.success(true);
     }
-    
+
     /**
      * 删除字典数据
+     * @param dictCode
+     * @return
      */
     @DeleteMapping("/{dictCode}")
     public Result<Boolean> remove(@PathVariable Long dictCode) {
-        return Result.success(dictDataService.deleteDictDataById(dictCode));
+        dictDataService.deleteDictDataById(dictCode);
+        return Result.success(true);
     }
-} 
+
+    /**
+     * 获取字典数据详细信息
+     * @param dictCode
+     * @return
+     */
+    @GetMapping("/{dictCode}")
+    public Result<DictDataVO> getInfo(@PathVariable Long dictCode) {
+        DictDataVO dictDataVO = dictDataService.getDictDataDetail(String.valueOf(dictCode));
+        return Result.success(dictDataVO);
+    }
+    /**
+     * 根据字典类型查询字典数据
+     * @param dictType
+     * @return
+     */
+    @GetMapping("/type/{dictType}")
+    public Result<List<DictDataVO>> getDictDataByType(@PathVariable String dictType) {
+        List<DictDataVO> dictDataVOList = dictDataService.getDictDataByType(dictType);
+        return Result.success(dictDataVOList);
+    }
+    /**
+     * 导出字典数据
+     * @param response 响应对象
+     * @param dictType
+     * @param dictLabel
+     * @param dictValue
+     */
+    @GetMapping("/export")
+    public void export(HttpServletResponse response,
+                       @RequestParam(required = false) String dictType,
+                       @RequestParam(required = false) String dictLabel,
+                       @RequestParam(required = false) String dictValue) {
+        dictDataService.exportDictData(dictType, dictLabel, dictValue, response);
+    }
+}

@@ -1,5 +1,5 @@
 <template>
-  <div class="health-management">
+  <div class="app-container">
     <router-view></router-view>
   </div>
 </template>

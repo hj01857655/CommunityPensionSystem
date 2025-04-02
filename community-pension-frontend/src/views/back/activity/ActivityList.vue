@@ -466,23 +466,276 @@ onMounted(() => {
 
 <style scoped>
 .activity-list {
-  padding: 20px;
+  padding: 24px;
+  background-color: #f0f2f5;
+  min-height: calc(100vh - 84px);
+  animation: fadeIn 0.5s ease-out;
 }
 
-.search-card {
-  margin-bottom: 20px;
+.search-card, .table-card {
+  margin-bottom: 24px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: linear-gradient(to right bottom, #ffffff, #fafafa);
+}
+
+.search-card:hover, .table-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
 }
 
 .card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 16px 24px;
+  background: linear-gradient(to right, #f8f9fa, #ffffff);
+  border-radius: 12px 12px 0 0;
+}
+
+.card-header span {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a1a1a;
+  letter-spacing: 0.5px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+:deep(.el-table) {
+  border-radius: 12px;
+  overflow: hidden;
+  margin: 0 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+}
+
+:deep(.el-table th) {
+  background: linear-gradient(to bottom, #f8f9fa, #f5f7fa) !important;
+  color: #1a1a1a;
+  font-weight: 600;
+  font-size: 14px;
+  padding: 16px 0;
+}
+
+:deep(.el-table td) {
+  padding: 16px 0;
+  color: #4a4a4a;
+  font-size: 14px;
+}
+
+:deep(.el-table--striped .el-table__body tr.el-table__row--striped td) {
+  background: #fafafa;
+}
+
+:deep(.el-table__row:hover > td) {
+  background-color: #f5f7fa !important;
+}
+
+:deep(.el-button-group) {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+:deep(.el-button--link) {
+  padding: 6px 12px;
+  border-radius: 6px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-weight: 500;
+  position: relative;
+  overflow: hidden;
+}
+
+:deep(.el-button--link:hover) {
+  background-color: #f5f7fa;
+  transform: translateY(-1px);
+}
+
+:deep(.el-button--link::after) {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: all 0.3s ease;
+}
+
+:deep(.el-button--link:hover::after) {
+  transform: translateX(100%);
+}
+
+:deep(.el-tag) {
+  border-radius: 6px;
+  padding: 0 12px;
+  height: 28px;
+  line-height: 28px;
+  font-weight: 500;
+  border: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+:deep(.el-tag--info) {
+  background: linear-gradient(45deg, #e6f3ff, #f0f7ff);
+  color: #409eff;
+}
+
+:deep(.el-tag--success) {
+  background: linear-gradient(45deg, #e6f7e6, #f0f9f0);
+  color: #67c23a;
+}
+
+:deep(.el-tag--warning) {
+  background: linear-gradient(45deg, #fff7e6, #fff9f0);
+  color: #e6a23c;
+}
+
+:deep(.el-tag--danger) {
+  background: linear-gradient(45deg, #ffe6e6, #fff0f0);
+  color: #f56c6c;
 }
 
 .pagination {
   margin-top: 20px;
   display: flex;
   justify-content: flex-end;
+  padding: 10px 0;
+}
+
+:deep(.el-dialog) {
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+:deep(.el-dialog__header) {
+  margin: 0;
+  padding: 24px 32px;
+  background: linear-gradient(to right, #f8f9fa, #ffffff);
+  border-bottom: 1px solid #e4e7ed;
+}
+
+:deep(.el-dialog__title) {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+:deep(.el-dialog__body) {
+  padding: 32px;
+}
+
+:deep(.el-dialog__footer) {
+  padding: 24px 32px;
+  background: linear-gradient(to right, #f8f9fa, #ffffff);
+  border-top: 1px solid #e4e7ed;
+}
+
+:deep(.el-descriptions) {
+  padding: 24px;
+  background: linear-gradient(135deg, #f8f9fa, #ffffff);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+:deep(.el-descriptions__label) {
+  font-weight: 600;
+  color: #1a1a1a;
+  font-size: 14px;
+}
+
+:deep(.el-descriptions__content) {
+  color: #4a4a4a;
+  font-size: 14px;
+}
+
+:deep(.el-form-item__label) {
+  font-weight: 600;
+  color: #1a1a1a;
+  font-size: 14px;
+}
+
+:deep(.el-input__wrapper),
+:deep(.el-select__wrapper),
+:deep(.el-date-editor__wrapper) {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 8px;
+}
+
+:deep(.el-input__wrapper:hover),
+:deep(.el-select__wrapper:hover),
+:deep(.el-date-editor__wrapper:hover) {
+  box-shadow: 0 4px 12px rgba(64, 158, 255, 0.1);
+}
+
+:deep(.el-input__wrapper.is-focus),
+:deep(.el-select__wrapper.is-focus),
+:deep(.el-date-editor__wrapper.is-focus) {
+  box-shadow: 0 4px 12px rgba(64, 158, 255, 0.2);
+}
+
+/* 添加响应式布局 */
+@media screen and (max-width: 768px) {
+  .activity-list {
+    padding: 16px;
+  }
+  
+  .search-card,
+  .table-card {
+    margin-bottom: 16px;
+  }
+  
+  .card-header {
+    padding: 12px 16px;
+  }
+  
+  :deep(.el-table) {
+    margin: 0 8px;
+  }
+  
+  :deep(.el-button-group) {
+    gap: 8px;
+  }
+  
+  :deep(.el-dialog) {
+    margin: 8px !important;
+  }
+  
+  :deep(.el-dialog__body) {
+    padding: 16px;
+  }
+}
+
+/* 添加滚动条美化 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
 }
 </style>
 

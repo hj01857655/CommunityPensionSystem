@@ -8,11 +8,12 @@
       @close-right="closeRightTags"
       @close-all="closeAllTags"
       @refresh="refreshTag"
+      @add-tab="addTab"
     />
     <div class="content-container">
       <router-view v-slot="{ Component }">
         <transition name="fade" mode="out-in">
-          <keep-alive :include="tagsViewStore.cachedViews">
+          <keep-alive :include="cachedViews">
             <component :is="Component" :key="$route.path" />
           </keep-alive>
         </transition>
@@ -22,7 +23,7 @@
 </template>
 
 <script setup>
-import { watch, onMounted, onBeforeUnmount } from 'vue';
+import { watch, onMounted, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useTagsViewStore } from '@/stores/tagsView';
 import TagsView from './TagsView.vue';
@@ -30,6 +31,11 @@ import TagsView from './TagsView.vue';
 const router = useRouter();
 const route = useRoute();
 const tagsViewStore = useTagsViewStore();
+
+// 计算缓存的视图
+const cachedViews = computed(() => {
+  return tagsViewStore.cachedViews || [];
+});
 
 // 移除标签
 const removeTab = (view) => {
@@ -49,8 +55,8 @@ const removeTab = (view) => {
 const closeOthersTags = (view) => {
   tagsViewStore.closeOthersTags(view);
   // 自动跳转到最后一个有效标签页
-  if (!visitedViews.some(v => v.path === route.path)) {
-    const lastView = visitedViews.slice(-1)[0] || { path: '/admin/home' };
+  if (!tagsViewStore.visitedViews.some(v => v.path === route.path)) {
+    const lastView = tagsViewStore.visitedViews.slice(-1)[0] || { path: '/admin/home' };
     router.push(lastView.path);
   }
 };
@@ -59,8 +65,8 @@ const closeOthersTags = (view) => {
 const closeLeftTags = (view) => {
   tagsViewStore.closeLeftTags(view);
   // 自动跳转到最后一个有效标签页
-  if (!visitedViews.some(v => v.path === route.path)) {
-    const lastView = visitedViews.slice(-1)[0] || { path: '/admin/home' };
+  if (!tagsViewStore.visitedViews.some(v => v.path === route.path)) {
+    const lastView = tagsViewStore.visitedViews.slice(-1)[0] || { path: '/admin/home' };
     router.push(lastView.path);
   }
 };
@@ -69,8 +75,8 @@ const closeLeftTags = (view) => {
 const closeRightTags = (view) => {
   tagsViewStore.closeRightTags(view);
   // 自动跳转到最后一个有效标签页
-  if (!visitedViews.some(v => v.path === route.path)) {
-    const lastView = visitedViews.slice(-1)[0] || { path: '/admin/home' };
+  if (!tagsViewStore.visitedViews.some(v => v.path === route.path)) {
+    const lastView = tagsViewStore.visitedViews.slice(-1)[0] || { path: '/admin/home' };
     router.push(lastView.path);
   }
 };
@@ -87,6 +93,16 @@ const closeAllTags = () => {
 // 刷新标签
 const refreshTag = (view) => {
   tagsViewStore.refreshTag(view);
+};
+
+// 添加标签
+const addTab = (view) => {
+  if (view.path === '/admin/home') {
+    tagsViewStore.initDashboardTab();
+  } else {
+    tagsViewStore.addVisitedView(view);
+    tagsViewStore.addCachedView(view);
+  }
 };
 
 // 监听路由变化
@@ -127,13 +143,14 @@ onMounted(() => {
 
 <style scoped>
 .main-container {
-  background-color: #fff;
-  border-radius: 4px;
-  box-shadow: 0 1px 4px rgba(0, 21, 41, 0.08);
-  min-height: calc(100vh - 120px);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .content-container {
+  flex: 1;
+  overflow: auto;
   padding: 20px;
 }
 

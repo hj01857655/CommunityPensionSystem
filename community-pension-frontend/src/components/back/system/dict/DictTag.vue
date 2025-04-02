@@ -4,6 +4,7 @@
 
 <script setup>
 import { computed } from 'vue';
+import { useDict } from '@/utils/dict'
 
 const props = defineProps({
   value: {
@@ -16,29 +17,18 @@ const props = defineProps({
   }
 });
 
-// 这里应该从字典数据中获取对应的标签和类型
-// 暂时使用模拟数据
+// 使用字典数据
+const dictData = useDict(props.dictType)
+
+// 获取标签
 const label = computed(() => {
-  const dictMap = {
-    sys_normal_disable: {
-      '0': '正常',
-      '1': '停用'
-    },
-    sys_show_hide: {
-      '0': '显示',
-      '1': '隐藏'
-    }
-  };
-  return dictMap[props.dictType]?.[props.value] || props.value;
+  const item = dictData.value?.find(item => item.value === props.value)
+  return item?.label || props.value
 });
 
+// 获取标签类型
 const type = computed(() => {
-  if (props.dictType === 'sys_normal_disable') {
-    return props.value === '0' ? 'success' : 'danger';
-  }
-  if (props.dictType === 'sys_show_hide') {
-    return props.value === '0' ? 'success' : 'info';
-  }
-  return '';
+  const item = dictData.value?.find(item => item.value === props.value)
+  return item?.elTagType || ''
 });
 </script> 

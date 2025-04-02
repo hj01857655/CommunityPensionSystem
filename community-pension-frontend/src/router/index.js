@@ -114,19 +114,7 @@ const routes = [
             path: 'user',
             name: 'UserManagement',
             component: () => import('@/views/back/system/user/index.vue'),
-            meta: { title: '用户管理', icon: 'User', roles: ['admin', 'staff'] },
-            children: [
-              {
-                path: 'auth-role/:userId(\\d+)',
-                name: 'AuthRole',
-                component: () => import('@/views/back/system/user/authRole.vue'),
-                hidden: true,
-                meta: {
-                  title: '分配角色',
-                  activeMenu: '/admin/system/user'
-                }
-              }
-            ]
+            meta: { title: '用户管理', icon: 'User', roles: ['admin', 'staff'] }
           },
           {
             path: 'role',
@@ -144,16 +132,13 @@ const routes = [
             path: 'dict',
             name: 'DictManagement',
             component: () => import('@/views/back/system/dict/index.vue'),
-            meta: { title: '字典管理', icon: 'Document', activeMenu: '/admin/system/dict' },
-            children: [
-              {
-                path: 'type/:dictId(\\d+)',
-                name: 'DictDataManagement',
-                component: () => import('@/views/back/system/dict/data.vue'),
-                hidden: true,
-                meta: { title: '字典数据', icon: 'Document', activeMenu: '/admin/system/dict/data' }
-              }
-            ]
+            meta: { title: '字典管理', icon: 'Document', activeMenu: '/admin/system/dict' }
+          },
+          {
+            path: 'dict/data/type/:dictType',
+            name: 'DictDataManagement',
+            component: () => import('@/views/back/system/dict/data.vue'),
+            meta: { title: '字典数据', icon: 'Document', activeMenu: '/admin/system/dict/data' }
           },
           {
             path: 'setting',

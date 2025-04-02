@@ -10,9 +10,9 @@
 
 <script setup>
 import { onMounted, onUnmounted } from 'vue';
-import { useServiceStore } from '@/stores/back/service';
+import { useServiceItemStore } from '@/stores/back/service';
 
-const serviceStore = useServiceStore();
+const serviceStore = useServiceItemStore();
 
 onMounted(() => {
   // 组件挂载时可以进行一些初始化操作

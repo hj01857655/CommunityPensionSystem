@@ -65,10 +65,3 @@ export const refreshDictCache = () => {
   return axios.delete('/api/system/dict/type/refreshCache');
 };
 
-/**
- * 获取字典类型选择列表
- * @returns {Promise<{code: number, data: Array, msg: string}>}
- */
-export const getDictTypeOptions = () => {
-  return axios.get('/api/system/dict/type/optionselect');
-}; 

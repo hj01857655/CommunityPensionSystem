@@ -31,10 +31,10 @@
             <!-- 状态筛选标签 -->
             <div class="filter-tags">
                 <el-radio-group v-model="statusFilter" size="large" @change="handleFilterChange">
-                    <el-radio-button value="all" label="全部">全部</el-radio-button>
-                    <el-radio-button value="published" label="已发布">已发布</el-radio-button>
-                    <el-radio-button value="draft" label="草稿">草稿</el-radio-button>
-                    <el-radio-button value="expired" label="已过期">已过期</el-radio-button>
+                    <el-radio-button value="all">全部</el-radio-button>
+                    <el-radio-button value="published">已发布</el-radio-button>
+                    <el-radio-button value="draft">草稿</el-radio-button>
+                    <el-radio-button value="expired">已过期</el-radio-button>
                 </el-radio-group>
             </div>
 
@@ -313,98 +313,199 @@ onMounted(() => {
 
 <style scoped>
 .notice-management {
-    padding: 16px;
-    background-color: #f5f7fa;
-    min-height: calc(100vh - 120px);
+    padding: 24px;
+    background-color: #f0f2f5;
+    min-height: calc(100vh - 84px);
+    animation: fadeIn 0.5s ease-out;
 }
 
 .main-card {
-    margin-bottom: 20px;
-    transition: all 0.3s;
-    border-radius: 8px;
-    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+    margin-bottom: 24px;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: linear-gradient(to right bottom, #ffffff, #fafafa);
+    overflow: hidden;
 }
 
 .main-card:hover {
-    box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.15);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
 }
 
 .card-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 8px 0;
+    padding: 20px 32px;
+    background: linear-gradient(to right, #f8f9fa, #ffffff);
+    border-bottom: 1px solid #e4e7ed;
 }
 
 .card-header h3 {
     margin: 0;
-    font-size: 20px;
+    font-size: 22px;
     font-weight: 600;
-    color: #303133;
+    color: #1a1a1a;
+    letter-spacing: 0.5px;
 }
 
 .header-actions {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 16px;
 }
 
 .search-input {
     width: 280px;
-    transition: all 0.3s;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .search-input:focus-within {
     width: 320px;
 }
 
+:deep(.el-input__wrapper) {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+:deep(.el-input__wrapper:hover) {
+    box-shadow: 0 4px 12px rgba(64, 158, 255, 0.1);
+}
+
+:deep(.el-input__wrapper.is-focus) {
+    box-shadow: 0 4px 12px rgba(64, 158, 255, 0.2);
+}
+
 .filter-tags {
-    margin: 16px 0;
+    margin: 24px 32px;
+    padding: 16px;
+    background: linear-gradient(135deg, #f8f9fa, #ffffff);
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+}
+
+:deep(.el-radio-button__inner) {
+    border-radius: 6px;
+    padding: 8px 20px;
+    transition: all 0.3s ease;
+}
+
+:deep(.el-radio-button__inner:hover) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .notice-table {
-    margin: 16px 0;
-    border-radius: 4px;
+    margin: 0 32px 24px;
+    border-radius: 12px;
     overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
 }
 
 .notice-table :deep(th) {
-    background-color: #f5f7fa !important;
-    color: #606266;
+    background: linear-gradient(to bottom, #f8f9fa, #f5f7fa) !important;
+    color: #1a1a1a;
     font-weight: 600;
+    font-size: 14px;
+    padding: 16px 0;
+}
+
+.notice-table :deep(td) {
+    padding: 16px 0;
+    color: #4a4a4a;
+    font-size: 14px;
 }
 
 .notice-table :deep(.el-table__row) {
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .notice-table :deep(.el-table__row:hover) {
-    background-color: #ecf5ff !important;
+    background-color: #f5f7fa !important;
+    transform: translateY(-1px);
+}
+
+:deep(.el-tag) {
+    border-radius: 6px;
+    padding: 0 12px;
+    height: 28px;
+    line-height: 28px;
+    font-weight: 500;
+    border: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+:deep(.el-tag--success) {
+    background: linear-gradient(45deg, #e6f7e6, #f0f9f0);
+    color: #67c23a;
+}
+
+:deep(.el-tag--primary) {
+    background: linear-gradient(45deg, #e6f3ff, #f0f7ff);
+    color: #409eff;
+}
+
+:deep(.el-tag--warning) {
+    background: linear-gradient(45deg, #fff7e6, #fff9f0);
+    color: #e6a23c;
+}
+
+:deep(.el-tag--info) {
+    background: linear-gradient(45deg, #f4f4f5, #f9f9fa);
+    color: #909399;
 }
 
 .pagination-container {
-    margin-top: 24px;
+    margin: 24px 32px;
+    padding: 16px;
     display: flex;
     justify-content: flex-end;
-    padding: 8px 0;
+    background: linear-gradient(to right, #f8f9fa, #ffffff);
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+}
+
+:deep(.el-drawer) {
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+:deep(.el-drawer__header) {
+    margin: 0;
+    padding: 24px 32px;
+    background: linear-gradient(to right, #f8f9fa, #ffffff);
+    border-bottom: 1px solid #e4e7ed;
+}
+
+:deep(.el-drawer__title) {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1a1a1a;
 }
 
 .notice-preview {
-    padding: 16px;
-    position: relative;
+    padding: 32px;
+    background: linear-gradient(135deg, #f8f9fa, #ffffff);
     min-height: 100%;
+    position: relative;
 }
 
 .notice-header {
-    margin-bottom: 16px;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #e4e7ed;
 }
 
 .notice-header h2 {
     margin: 0 0 16px 0;
-    font-size: 22px;
+    font-size: 24px;
     font-weight: 600;
-    color: #303133;
+    color: #1a1a1a;
+    line-height: 1.4;
 }
 
 .notice-meta {
@@ -418,8 +519,13 @@ onMounted(() => {
 
 .notice-content {
     line-height: 1.8;
-    color: #606266;
+    color: #4a4a4a;
+    font-size: 15px;
     margin-bottom: 80px;
+    padding: 24px;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
 }
 
 .drawer-footer {
@@ -427,32 +533,119 @@ onMounted(() => {
     bottom: 0;
     left: 0;
     right: 0;
-    padding: 16px;
-    background-color: #fff;
+    padding: 24px 32px;
+    background: linear-gradient(to right, #f8f9fa, #ffffff);
     text-align: right;
     border-top: 1px solid #e4e7ed;
 }
 
-/* 响应式调整 */
+:deep(.el-button) {
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+:deep(.el-button:hover) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+:deep(.el-button--primary) {
+    background: linear-gradient(45deg, #409EFF, #66b1ff);
+    border: none;
+}
+
+:deep(.el-button--primary:hover) {
+    background: linear-gradient(45deg, #66b1ff, #409EFF);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 响应式布局 */
 @media screen and (max-width: 768px) {
+    .notice-management {
+        padding: 16px;
+    }
+    
+    .card-header {
+        padding: 16px 20px;
+    }
+    
     .header-actions {
         flex-direction: column;
-        align-items: flex-start;
+        align-items: stretch;
     }
     
     .search-input {
         width: 100%;
     }
     
-    .header-actions .el-button {
-        margin-top: 8px;
+    .search-input:focus-within {
+        width: 100%;
     }
     
     .filter-tags {
+        margin: 16px 20px;
+        padding: 12px;
         overflow-x: auto;
         white-space: nowrap;
-        padding-bottom: 8px;
     }
+    
+    .notice-table {
+        margin: 0 20px 16px;
+    }
+    
+    .pagination-container {
+        margin: 16px 20px;
+        padding: 12px;
+    }
+    
+    .notice-preview {
+        padding: 20px;
+    }
+    
+    .notice-header h2 {
+        font-size: 20px;
+    }
+    
+    .notice-content {
+        padding: 16px;
+        margin-bottom: 60px;
+    }
+    
+    .drawer-footer {
+        padding: 16px 20px;
+    }
+}
+
+/* 滚动条美化 */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
 }
 </style>
 

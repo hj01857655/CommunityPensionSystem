@@ -14,7 +14,7 @@ import java.math.BigDecimal;
 public class ServiceItemDTO {
     
     /**
-     * 服务ID
+     * 服务项目ID（修改时必填）
      */
     private Long serviceId;
     
@@ -33,6 +33,7 @@ public class ServiceItemDTO {
     /**
      * 服务描述
      */
+    @NotBlank(message = "服务描述不能为空")
     private String description;
     
     /**
@@ -43,10 +44,16 @@ public class ServiceItemDTO {
     private BigDecimal price;
     
     /**
-     * 状态（0下架/1上架）
+     * 服务时长（分钟）
      */
-    @NotNull(message = "状态不能为空")
-    private Integer status;
+    @NotNull(message = "服务时长不能为空")
+    @Positive(message = "服务时长必须大于0")
+    private Integer duration;
+    
+    /**
+     * 状态（0正常 1停用）
+     */
+    private String status;
     
     /**
      * 备注
