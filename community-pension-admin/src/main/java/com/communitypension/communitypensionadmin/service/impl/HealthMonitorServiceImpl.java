@@ -1,0 +1,410 @@
+package com.communitypension.communitypensionadmin.service.impl;
+
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.communitypension.communitypensionadmin.converter.HealthMonitorConverter;
+import com.communitypension.communitypensionadmin.dto.HealthMonitorDTO;
+import com.communitypension.communitypensionadmin.entity.HealthMonitor;
+import com.communitypension.communitypensionadmin.entity.User;
+import com.communitypension.communitypensionadmin.exception.BusinessException;
+import com.communitypension.communitypensionadmin.mapper.HealthMonitorMapper;
+import com.communitypension.communitypensionadmin.service.HealthMonitorService;
+import com.communitypension.communitypensionadmin.service.UserService;
+import com.communitypension.communitypensionadmin.vo.HealthMonitorVO;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.*;
+import java.util.stream.Collectors;
+
+/**
+ * 健康监测Service实现类
+ */
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class HealthMonitorServiceImpl extends ServiceImpl<HealthMonitorMapper, HealthMonitor> implements HealthMonitorService {
+
+    private final UserService userService;
+
+    /**
+     * 添加健康监测记录
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Long addHealthMonitor(HealthMonitorDTO monitorDTO) {
+        // 检查老人是否存在
+        User elder = userService.getById(monitorDTO.getElderId());
+        if (elder == null) {
+            throw new BusinessException("老人不存在");
+        }
+
+        // 验证监测数据
+        validateMonitorData(monitorDTO);
+
+        // 转换为实体并保存
+        HealthMonitor monitor = HealthMonitorConverter.toEntity(monitorDTO);
+        save(monitor);
+
+        return monitor.getId();
+    }
+
+    /**
+     * 更新健康监测记录
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean updateHealthMonitor(HealthMonitorDTO monitorDTO) {
+        // 检查监测记录是否存在
+        HealthMonitor monitor = getById(monitorDTO.getId());
+        if (monitor == null) {
+            throw new BusinessException("健康监测记录不存在");
+        }
+
+        // 检查老人是否存在
+        User elder = userService.getById(monitorDTO.getElderId());
+        if (elder == null) {
+            throw new BusinessException("老人不存在");
+        }
+
+        // 验证监测数据
+        validateMonitorData(monitorDTO);
+
+        // 更新监测记录
+        HealthMonitor updateMonitor = HealthMonitorConverter.toEntity(monitorDTO);
+        return updateById(updateMonitor);
+    }
+
+    /**
+     * 删除健康监测记录
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean deleteHealthMonitor(Long id) {
+        // 检查监测记录是否存在
+        HealthMonitor monitor = getById(id);
+        if (monitor == null) {
+            throw new BusinessException("健康监测记录不存在");
+        }
+
+        return removeById(id);
+    }
+
+    /**
+     * 获取健康监测详情
+     */
+    @Override
+    public HealthMonitorVO getHealthMonitorDetail(Long id) {
+        // 获取监测记录
+        HealthMonitor monitor = getById(id);
+        if (monitor == null) {
+            throw new BusinessException("健康监测记录不存在");
+        }
+
+        // 获取老人信息
+        User elder = userService.getById(monitor.getElderId());
+
+        // 转换为VO
+        return HealthMonitorConverter.toVO(monitor, elder);
+    }
+
+    /**
+     * 分页查询健康监测列表
+     */
+    @Override
+    public Page<HealthMonitorVO> getHealthMonitorList(Long elderId, String elderName, Integer monitorType, 
+                                                     LocalDate startDate, LocalDate endDate, 
+                                                     Integer pageNum, Integer pageSize) {
+        // 如果有老人姓名，先查询老人ID列表
+        List<Long> elderIds = new ArrayList<>();
+        if (StringUtils.hasText(elderName)) {
+            LambdaQueryWrapper<User> userWrapper = new LambdaQueryWrapper<>();
+            userWrapper.like(User::getUsername, elderName);
+            userWrapper.eq(User::getIsDeleted, 0);
+            List<User> users = userService.list(userWrapper);
+            elderIds = users.stream().map(User::getUserId).collect(Collectors.toList());
+            if (elderIds.isEmpty()) {
+                // 没有找到符合条件的老人，返回空结果
+                Page<HealthMonitorVO> emptyPage = new Page<>(pageNum, pageSize, 0);
+                emptyPage.setRecords(new ArrayList<>());
+                return emptyPage;
+            }
+        }
+
+        // 构建查询条件
+        LambdaQueryWrapper<HealthMonitor> wrapper = new LambdaQueryWrapper<>();
+        if (elderId != null) {
+            wrapper.eq(HealthMonitor::getElderId, elderId);
+        } else if (!elderIds.isEmpty()) {
+            wrapper.in(HealthMonitor::getElderId, elderIds);
+        }
+        if (monitorType != null) {
+            wrapper.eq(HealthMonitor::getMonitorType, monitorType);
+        }
+        if (startDate != null) {
+            wrapper.ge(HealthMonitor::getMonitorTime, LocalDateTime.of(startDate, LocalTime.MIN));
+        }
+        if (endDate != null) {
+            wrapper.le(HealthMonitor::getMonitorTime, LocalDateTime.of(endDate, LocalTime.MAX));
+        }
+        wrapper.eq(HealthMonitor::getIsDeleted, 0);
+        wrapper.orderByDesc(HealthMonitor::getMonitorTime);
+
+        // 分页查询
+        Page<HealthMonitor> page = new Page<>(pageNum, pageSize);
+        page = page(page, wrapper);
+
+        // 获取老人ID列表
+        List<Long> monitorElderIds = page.getRecords().stream()
+                .map(HealthMonitor::getElderId)
+                .distinct()
+                .collect(Collectors.toList());
+
+        // 获取老人信息
+        Map<Long, User> elderMap = new HashMap<>();
+        if (!monitorElderIds.isEmpty()) {
+            List<User> elders = userService.listByIds(monitorElderIds);
+            elderMap = elders.stream().collect(Collectors.toMap(User::getUserId, user -> user));
+        }
+
+        // 转换为VO
+        List<HealthMonitorVO> voList = HealthMonitorConverter.toVOList(page.getRecords(), elderMap);
+
+        // 构建返回结果
+        Page<HealthMonitorVO> resultPage = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());
+        resultPage.setRecords(voList);
+
+        return resultPage;
+    }
+
+    /**
+     * 获取老人的最新健康监测记录
+     */
+    @Override
+    public List<HealthMonitorVO> getElderLatestMonitors(Long elderId) {
+        // 检查老人是否存在
+        User elder = userService.getById(elderId);
+        if (elder == null) {
+            throw new BusinessException("老人不存在");
+        }
+
+        // 查询每种类型的最新监测记录
+        List<HealthMonitor> latestMonitors = new ArrayList<>();
+        for (int type = 1; type <= 7; type++) {
+            LambdaQueryWrapper<HealthMonitor> wrapper = new LambdaQueryWrapper<>();
+            wrapper.eq(HealthMonitor::getElderId, elderId);
+            wrapper.eq(HealthMonitor::getMonitorType, type);
+            wrapper.eq(HealthMonitor::getIsDeleted, 0);
+            wrapper.orderByDesc(HealthMonitor::getMonitorTime);
+            wrapper.last("LIMIT 1");
+            HealthMonitor monitor = getOne(wrapper);
+            if (monitor != null) {
+                latestMonitors.add(monitor);
+            }
+        }
+
+        // 转换为VO
+        Map<Long, User> elderMap = new HashMap<>();
+        elderMap.put(elderId, elder);
+        return HealthMonitorConverter.toVOList(latestMonitors, elderMap);
+    }
+
+    /**
+     * 获取老人的健康监测统计
+     */
+    @Override
+    public Map<String, Object> getElderMonitorStats(Long elderId, Integer monitorType, LocalDate startDate, LocalDate endDate) {
+        // 检查老人是否存在
+        User elder = userService.getById(elderId);
+        if (elder == null) {
+            throw new BusinessException("老人不存在");
+        }
+
+        // 构建查询条件
+        LambdaQueryWrapper<HealthMonitor> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(HealthMonitor::getElderId, elderId);
+        if (monitorType != null) {
+            wrapper.eq(HealthMonitor::getMonitorType, monitorType);
+        }
+        if (startDate != null) {
+            wrapper.ge(HealthMonitor::getMonitorTime, LocalDateTime.of(startDate, LocalTime.MIN));
+        }
+        if (endDate != null) {
+            wrapper.le(HealthMonitor::getMonitorTime, LocalDateTime.of(endDate, LocalTime.MAX));
+        }
+        wrapper.eq(HealthMonitor::getIsDeleted, 0);
+        wrapper.orderByAsc(HealthMonitor::getMonitorTime);
+
+        // 查询监测记录
+        List<HealthMonitor> monitors = list(wrapper);
+
+        // 统计数据
+        Map<String, Object> stats = new HashMap<>();
+        stats.put("total", monitors.size());
+
+        // 按监测结果统计
+        Map<Integer, Long> resultStats = monitors.stream()
+                .collect(Collectors.groupingBy(HealthMonitor::getMonitorResult, Collectors.counting()));
+        stats.put("resultStats", resultStats);
+
+        // 按监测类型统计
+        Map<Integer, Long> typeStats = monitors.stream()
+                .collect(Collectors.groupingBy(HealthMonitor::getMonitorType, Collectors.counting()));
+        stats.put("typeStats", typeStats);
+
+        // 按日期统计
+        Map<String, Long> dateStats = monitors.stream()
+                .collect(Collectors.groupingBy(
+                        monitor -> monitor.getMonitorTime().toLocalDate().toString(),
+                        Collectors.counting()));
+        stats.put("dateStats", dateStats);
+
+        // 计算平均值、最大值、最小值等
+        if (monitorType != null) {
+            switch (monitorType) {
+                case 1: // 血压
+                    DoubleSummaryStatistics systolicStats = monitors.stream()
+                            .filter(m -> m.getSystolicPressure() != null)
+                            .mapToDouble(m -> m.getSystolicPressure())
+                            .summaryStatistics();
+                    DoubleSummaryStatistics diastolicStats = monitors.stream()
+                            .filter(m -> m.getDiastolicPressure() != null)
+                            .mapToDouble(m -> m.getDiastolicPressure())
+                            .summaryStatistics();
+                    stats.put("systolicStats", systolicStats);
+                    stats.put("diastolicStats", diastolicStats);
+                    break;
+                case 2: // 血糖
+                    DoubleSummaryStatistics bloodSugarStats = monitors.stream()
+                            .filter(m -> m.getBloodSugar() != null)
+                            .mapToDouble(m -> m.getBloodSugar())
+                            .summaryStatistics();
+                    stats.put("bloodSugarStats", bloodSugarStats);
+                    break;
+                case 3: // 体温
+                    DoubleSummaryStatistics temperatureStats = monitors.stream()
+                            .filter(m -> m.getTemperature() != null)
+                            .mapToDouble(m -> m.getTemperature())
+                            .summaryStatistics();
+                    stats.put("temperatureStats", temperatureStats);
+                    break;
+                case 4: // 心率
+                    DoubleSummaryStatistics heartRateStats = monitors.stream()
+                            .filter(m -> m.getHeartRate() != null)
+                            .mapToDouble(m -> m.getHeartRate())
+                            .summaryStatistics();
+                    stats.put("heartRateStats", heartRateStats);
+                    break;
+                case 5: // 血氧
+                    DoubleSummaryStatistics bloodOxygenStats = monitors.stream()
+                            .filter(m -> m.getBloodOxygen() != null)
+                            .mapToDouble(m -> m.getBloodOxygen())
+                            .summaryStatistics();
+                    stats.put("bloodOxygenStats", bloodOxygenStats);
+                    break;
+                case 6: // 体重
+                    DoubleSummaryStatistics weightStats = monitors.stream()
+                            .filter(m -> m.getWeight() != null)
+                            .mapToDouble(m -> m.getWeight())
+                            .summaryStatistics();
+                    stats.put("weightStats", weightStats);
+                    break;
+            }
+        }
+
+        return stats;
+    }
+
+    /**
+     * 批量添加健康监测记录
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean batchAddHealthMonitors(List<HealthMonitorDTO> monitorDTOs) {
+        if (monitorDTOs == null || monitorDTOs.isEmpty()) {
+            return false;
+        }
+
+        List<HealthMonitor> monitors = new ArrayList<>();
+        for (HealthMonitorDTO dto : monitorDTOs) {
+            // 检查老人是否存在
+            User elder = userService.getById(dto.getElderId());
+            if (elder == null) {
+                throw new BusinessException("老人不存在，ID: " + dto.getElderId());
+            }
+
+            // 验证监测数据
+            validateMonitorData(dto);
+
+            // 转换为实体
+            HealthMonitor monitor = HealthMonitorConverter.toEntity(dto);
+            monitors.add(monitor);
+        }
+
+        return saveBatch(monitors);
+    }
+
+    /**
+     * 验证监测数据
+     */
+    private void validateMonitorData(HealthMonitorDTO monitorDTO) {
+        Integer monitorType = monitorDTO.getMonitorType();
+        if (monitorType == null) {
+            throw new BusinessException("监测类型不能为空");
+        }
+
+        switch (monitorType) {
+            case 1: // 血压
+                if (monitorDTO.getSystolicPressure() == null || monitorDTO.getDiastolicPressure() == null) {
+                    throw new BusinessException("血压监测必须填写收缩压和舒张压");
+                }
+                break;
+            case 2: // 血糖
+                if (monitorDTO.getBloodSugar() == null) {
+                    throw new BusinessException("血糖监测必须填写血糖值");
+                }
+                if (monitorDTO.getBloodSugarType() == null) {
+                    throw new BusinessException("血糖监测必须选择血糖类型");
+                }
+                break;
+            case 3: // 体温
+                if (monitorDTO.getTemperature() == null) {
+                    throw new BusinessException("体温监测必须填写体温值");
+                }
+                break;
+            case 4: // 心率
+                if (monitorDTO.getHeartRate() == null) {
+                    throw new BusinessException("心率监测必须填写心率值");
+                }
+                break;
+            case 5: // 血氧
+                if (monitorDTO.getBloodOxygen() == null) {
+                    throw new BusinessException("血氧监测必须填写血氧饱和度");
+                }
+                break;
+            case 6: // 体重
+                if (monitorDTO.getWeight() == null) {
+                    throw new BusinessException("体重监测必须填写体重值");
+                }
+                break;
+            case 7: // 其他
+                if (!StringUtils.hasText(monitorDTO.getOtherValue())) {
+                    throw new BusinessException("其他类型监测必须填写监测值");
+                }
+                break;
+            default:
+                throw new BusinessException("无效的监测类型");
+        }
+
+        if (monitorDTO.getMonitorResult() == null) {
+            throw new BusinessException("监测结果不能为空");
+        }
+    }
+}

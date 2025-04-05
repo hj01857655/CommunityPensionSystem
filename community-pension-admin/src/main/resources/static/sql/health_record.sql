@@ -1,0 +1,26 @@
+-- 创建健康档案表
+CREATE TABLE `health_record` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '档案ID',
+  `elder_id` bigint NOT NULL COMMENT '老人ID',
+  `blood_type` varchar(10) DEFAULT NULL COMMENT '血型：A型、B型、AB型、O型、其他',
+  `height` double DEFAULT NULL COMMENT '身高（cm）',
+  `weight` double DEFAULT NULL COMMENT '体重（kg）',
+  `allergies` varchar(500) DEFAULT NULL COMMENT '过敏史',
+  `family_history` varchar(500) DEFAULT NULL COMMENT '家族病史',
+  `medical_history` varchar(500) DEFAULT NULL COMMENT '既往病史',
+  `surgical_history` varchar(500) DEFAULT NULL COMMENT '手术史',
+  `medication_history` varchar(500) DEFAULT NULL COMMENT '长期用药情况',
+  `lifestyle` varchar(500) DEFAULT NULL COMMENT '生活习惯',
+  `dietary_habits` varchar(500) DEFAULT NULL COMMENT '饮食习惯',
+  `emergency_contact_name` varchar(50) DEFAULT NULL COMMENT '紧急联系人姓名',
+  `emergency_contact_phone` varchar(20) DEFAULT NULL COMMENT '紧急联系人电话',
+  `emergency_contact_relation` varchar(50) DEFAULT NULL COMMENT '紧急联系人关系',
+  `remarks` varchar(500) DEFAULT NULL COMMENT '备注',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `is_deleted` tinyint(1) NOT NULL DEFAULT '0' COMMENT '是否已删除',
+  PRIMARY KEY (`id`),
+  KEY `idx_elder_id` (`elder_id`),
+  KEY `idx_is_deleted` (`is_deleted`),
+  CONSTRAINT `fk_health_record_elder` FOREIGN KEY (`elder_id`) REFERENCES `user` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='健康档案表';
