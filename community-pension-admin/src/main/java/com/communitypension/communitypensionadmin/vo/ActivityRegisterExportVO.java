@@ -9,42 +9,52 @@ import java.time.LocalDateTime;
  */
 @Data
 public class ActivityRegisterExportVO {
-    
+
     /**
      * 报名ID
      */
     private Long id;
-    
+
     /**
      * 活动标题
      */
     private String activityTitle;
-    
+
     /**
-     * 用户姓名
+     * 老人姓名
      */
-    private String userName;
-    
+    private String elderName;
+
     /**
-     * 用户手机号
+     * 老人手机号
      */
-    private String userPhone;
-    
+    private String elderPhone;
+
+    /**
+     * 报名人姓名
+     */
+    private String registerUserName;
+
+    /**
+     * 报名类型名称
+     */
+    private String registerTypeName;
+
     /**
      * 报名时间
      */
     private LocalDateTime registerTime;
-    
+
     /**
      * 状态
      */
     private String statusName;
-    
+
     /**
      * 签到时间
      */
     private LocalDateTime checkInTime;
-    
+
     /**
      * 备注
      */

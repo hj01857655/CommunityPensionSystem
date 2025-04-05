@@ -23,10 +23,10 @@ import java.util.Map;
 @RequestMapping("/api/activity")
 @RequiredArgsConstructor
 public class ActivityController {
-    
+
     private final ActivityService activityService;
     private final DictDataService dictDataService;
-    
+
     /**
      * 分页查询活动列表
      */
@@ -34,7 +34,7 @@ public class ActivityController {
     public Result<Page<ActivityVO>> getActivityList(ActivityQuery query) {
         return Result.success(activityService.getActivityList(query));
     }
-    
+
     /**
      * 获取活动详情
      */
@@ -42,7 +42,7 @@ public class ActivityController {
     public Result<ActivityVO> getActivityDetail(@PathVariable Long id) {
         return Result.success(activityService.getActivityDetail(id));
     }
-    
+
     /**
      * 创建活动
      */
@@ -51,7 +51,7 @@ public class ActivityController {
         activityService.createActivity(dto);
         return Result.success("创建成功");
     }
-    
+
     /**
      * 更新活动
      */
@@ -60,7 +60,7 @@ public class ActivityController {
         activityService.updateActivity(id, dto);
         return Result.success("更新成功");
     }
-    
+
     /**
      * 删除活动
      */
@@ -69,7 +69,7 @@ public class ActivityController {
         activityService.deleteActivity(id);
         return Result.success("删除成功");
     }
-    
+
     /**
      * 更新活动状态
      */
@@ -78,7 +78,7 @@ public class ActivityController {
         activityService.updateActivityStatus(id, status);
         return Result.success("状态更新成功");
     }
-    
+
     /**
      * 获取活动统计
      */
@@ -87,7 +87,7 @@ public class ActivityController {
         Map<String, Object> stats = activityService.getActivityStats(id);
         return Result.success(stats);
     }
-    
+
     /**
      * 导出活动列表
      */
@@ -100,9 +100,11 @@ public class ActivityController {
             HttpServletResponse response) {
         activityService.exportActivityList(title, status, startTime, endTime, response);
     }
-    
+
     @GetMapping("/types")
     public Result<List<DictDataVO>> getActivityTypes() {
         return Result.success(dictDataService.getDictDataByType("activity_type"));
     }
-} 
+
+
+}

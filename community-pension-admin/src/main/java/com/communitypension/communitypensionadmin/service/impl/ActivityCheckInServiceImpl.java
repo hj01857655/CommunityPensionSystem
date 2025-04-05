@@ -5,26 +5,26 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.communitypension.communitypensionadmin.entity.Activity;
 import com.communitypension.communitypensionadmin.entity.ActivityCheckIn;
-import com.communitypension.communitypensionadmin.entity.ActivityParticipate;
+import com.communitypension.communitypensionadmin.entity.ActivityRegister;
 import com.communitypension.communitypensionadmin.entity.User;
 import com.communitypension.communitypensionadmin.exception.BusinessException;
 import com.communitypension.communitypensionadmin.mapper.ActivityCheckInMapper;
 import com.communitypension.communitypensionadmin.service.ActivityCheckInService;
-import com.communitypension.communitypensionadmin.service.ActivityParticipateService;
+import com.communitypension.communitypensionadmin.service.ActivityRegisterService;
 import com.communitypension.communitypensionadmin.service.ActivityService;
 import com.communitypension.communitypensionadmin.service.UserService;
 import com.communitypension.communitypensionadmin.vo.ActivityCheckInVO;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.servlet.http.HttpServletResponse;
-
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,7 +39,7 @@ import java.util.stream.Collectors;
 public class ActivityCheckInServiceImpl extends ServiceImpl<ActivityCheckInMapper, ActivityCheckIn> implements ActivityCheckInService {
 
     private final ActivityService activityService;
-    private final ActivityParticipateService activityParticipateService;
+    private final ActivityRegisterService activityRegisterService;
     private final UserService userService;
 
     /**
@@ -47,46 +47,38 @@ public class ActivityCheckInServiceImpl extends ServiceImpl<ActivityCheckInMappe
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean checkIn(Long participateId) {
+    public boolean checkIn(Long registerId, Long checkInUserId, Integer isProxyCheckIn) {
         // 获取报名记录
-        ActivityParticipate participate = activityParticipateService.getById(participateId);
-        if (participate == null) {
+        ActivityRegister register = activityRegisterService.getById(registerId);
+        if (register == null) {
             throw new BusinessException("报名记录不存在");
         }
 
         // 只有已通过状态的报名可以签到
-        if (participate.getStatus() != 1) {
+        if (register.getStatus() != 1) {
             throw new BusinessException("只有已通过审核的报名可以签到");
         }
 
         // 检查是否已经签到
-        ActivityCheckIn existingCheckIn = baseMapper.getCheckInByParticipateId(participateId);
-        if (existingCheckIn != null && existingCheckIn.getStatus() == 1) {
+        ActivityCheckIn existingCheckIn = baseMapper.getCheckInByRegisterId(registerId);
+        if (existingCheckIn != null) {
             throw new BusinessException("已经签到，请勿重复操作");
         }
 
-        // 创建或更新签到记录
-        ActivityCheckIn checkIn;
-        if (existingCheckIn != null) {
-            checkIn = existingCheckIn;
-            checkIn.setStatus(1);
-            checkIn.setCheckInTime(LocalDateTime.now());
-        } else {
-            checkIn = new ActivityCheckIn();
-            checkIn.setActivityId(participate.getActivityId());
-            checkIn.setUserId(participate.getUserId());
-            checkIn.setParticipateId(participateId);
-            checkIn.setStatus(1);
-            checkIn.setCheckInTime(LocalDateTime.now());
-        }
+        // 创建签到记录
+        ActivityCheckIn checkIn = new ActivityCheckIn();
+        checkIn.setRegisterId(registerId);
+        checkIn.setCheckInUserId(checkInUserId);
+        checkIn.setIsProxyCheckIn(isProxyCheckIn);
+        checkIn.setSignInTime(LocalDateTime.now());
 
         // 保存签到记录
-        boolean result = saveOrUpdate(checkIn);
+        boolean result = save(checkIn);
 
         // 更新报名状态为已签到
         if (result) {
-            participate.setStatus(4); // 4-已签到
-            activityParticipateService.updateById(participate);
+            register.setStatus(4); // 4-已签到
+            activityRegisterService.updateById(register);
         }
 
         return result;
@@ -97,15 +89,15 @@ public class ActivityCheckInServiceImpl extends ServiceImpl<ActivityCheckInMappe
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean batchCheckIn(List<Long> participateIds) {
-        if (participateIds == null || participateIds.isEmpty()) {
+    public boolean batchCheckIn(List<Long> registerIds, Long checkInUserId, Integer isProxyCheckIn) {
+        if (registerIds == null || registerIds.isEmpty()) {
             return false;
         }
 
         boolean allSuccess = true;
-        for (Long id : participateIds) {
+        for (Long id : registerIds) {
             try {
-                if (!checkIn(id)) {
+                if (!checkIn(id, checkInUserId, isProxyCheckIn)) {
                     allSuccess = false;
                 }
             } catch (Exception e) {
@@ -119,11 +111,20 @@ public class ActivityCheckInServiceImpl extends ServiceImpl<ActivityCheckInMappe
     }
 
     /**
-     * 获取用户签到状态
+     * 签退
      */
     @Override
-    public Integer getUserCheckInStatus(Long activityId, Long userId) {
-        return baseMapper.getUserCheckInStatus(activityId, userId);
+    @Transactional(rollbackFor = Exception.class)
+    public boolean signOut(Long registerId) {
+        // 获取签到记录
+        ActivityCheckIn checkIn = baseMapper.getCheckInByRegisterId(registerId);
+        if (checkIn == null) {
+            throw new BusinessException("签到记录不存在，无法签退");
+        }
+
+        // 更新签退时间
+        checkIn.setSignOutTime(LocalDateTime.now());
+        return updateById(checkIn);
     }
 
     /**
@@ -138,24 +139,24 @@ public class ActivityCheckInServiceImpl extends ServiceImpl<ActivityCheckInMappe
         }
 
         // 查询已通过审核的报名记录
-        LambdaQueryWrapper<ActivityParticipate> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(ActivityParticipate::getActivityId, activityId)
-               .in(ActivityParticipate::getStatus, 1, 4); // 1-已通过，4-已签到
-        int totalCount = activityParticipateService.count(wrapper);
+        LambdaQueryWrapper<ActivityRegister> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(ActivityRegister::getActivityId, activityId)
+               .eq(ActivityRegister::getStatus, 1); // 1-已通过
+        long approvedCount = activityRegisterService.count(wrapper);
 
         // 查询已签到的记录数
         int checkedInCount = baseMapper.getCheckInCount(activityId);
-        int notCheckedInCount = totalCount - checkedInCount;
+        long notCheckedInCount = approvedCount - checkedInCount;
 
         // 计算签到率
-        double checkInRate = totalCount > 0 ? (double) checkedInCount / totalCount * 100 : 0;
+        double checkInRate = approvedCount > 0 ? (double) checkedInCount / approvedCount * 100 : 0;
 
         // 构建统计结果
         Map<String, Object> stats = new HashMap<>();
         stats.put("activityId", activityId);
         stats.put("activityTitle", activity.getTitle());
-        stats.put("totalCount", totalCount);
-        stats.put("checkedInCount", checkedInCount);
+        stats.put("approvedCount", approvedCount);
+        stats.put("checkedInCount", (long) checkedInCount);
         stats.put("notCheckedInCount", notCheckedInCount);
         stats.put("checkInRate", String.format("%.2f%%", checkInRate));
 
@@ -168,19 +169,90 @@ public class ActivityCheckInServiceImpl extends ServiceImpl<ActivityCheckInMappe
     @Override
     public Page<ActivityCheckInVO> getCheckInList(Long activityId, Integer pageNum, Integer pageSize) {
         Page<ActivityCheckIn> page = new Page<>(pageNum, pageSize);
-        LambdaQueryWrapper<ActivityCheckIn> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(ActivityCheckIn::getActivityId, activityId)
-               .orderByDesc(ActivityCheckIn::getUpdatedAt);
 
-        Page<ActivityCheckIn> checkInPage = page(page, wrapper);
+        // 查询签到记录
+        LambdaQueryWrapper<ActivityCheckIn> checkInWrapper = new LambdaQueryWrapper<>();
+        checkInWrapper.orderByDesc(ActivityCheckIn::getCreatedAt);
+
+        // 使用自定义SQL查询关联报名表
+        // 这里需要自定义SQL或使用MyBatis-Plus的连表查询
+        // 简化起见，这里先查询所有签到记录，然后在内存中过滤
+        Page<ActivityCheckIn> checkInPage = page(page, checkInWrapper);
+
+        // 获取报名ID列表
+        List<Long> registerIds = checkInPage.getRecords().stream()
+                .map(ActivityCheckIn::getRegisterId)
+                .collect(Collectors.toList());
+
+        if (registerIds.isEmpty()) {
+            // 没有签到记录，返回空结果
+            Page<ActivityCheckInVO> resultPage = new Page<>(pageNum, pageSize, 0);
+            resultPage.setRecords(new ArrayList<>());
+            return resultPage;
+        }
+
+        // 查询报名记录
+        Map<Long, ActivityRegister> registerMap = activityRegisterService.listByIds(registerIds).stream()
+                .collect(Collectors.toMap(ActivityRegister::getId, register -> register));
+
+        // 过滤出指定活动的签到记录
+        List<ActivityCheckIn> filteredCheckIns = checkInPage.getRecords().stream()
+                .filter(checkIn -> {
+                    ActivityRegister register = registerMap.get(checkIn.getRegisterId());
+                    return register != null && register.getActivityId().equals(activityId);
+                })
+                .collect(Collectors.toList());
+
+        // 获取老人ID和签到人ID列表
+        List<Long> userIds = new ArrayList<>();
+        for (ActivityCheckIn checkIn : filteredCheckIns) {
+            ActivityRegister register = registerMap.get(checkIn.getRegisterId());
+            if (register != null) {
+                userIds.add(register.getElderId());
+                userIds.add(checkIn.getCheckInUserId());
+            }
+        }
+
+        // 查询用户信息
+        Map<Long, User> userMap = userService.listByIds(userIds).stream()
+                .collect(Collectors.toMap(User::getUserId, user -> user));
+
+        // 查询活动信息
+        Activity activity = activityService.getById(activityId);
 
         // 转换为VO
-        List<ActivityCheckInVO> voList = checkInPage.getRecords().stream()
-                .map(this::convertToVO)
+        List<ActivityCheckInVO> voList = filteredCheckIns.stream()
+                .map(checkIn -> {
+                    ActivityRegister register = registerMap.get(checkIn.getRegisterId());
+                    User elder = register != null ? userMap.get(register.getElderId()) : null;
+                    User checkInUser = userMap.get(checkIn.getCheckInUserId());
+
+                    ActivityCheckInVO vo = new ActivityCheckInVO();
+                    BeanUtils.copyProperties(checkIn, vo);
+
+                    if (register != null) {
+                        vo.setElderId(register.getElderId());
+                        vo.setActivityId(register.getActivityId());
+                    }
+
+                    if (activity != null) {
+                        vo.setActivityTitle(activity.getTitle());
+                    }
+
+                    if (elder != null) {
+                        vo.setElderName(elder.getUsername());
+                    }
+
+                    if (checkInUser != null) {
+                        vo.setCheckInUserName(checkInUser.getUsername());
+                    }
+
+                    return vo;
+                })
                 .collect(Collectors.toList());
 
         // 构建返回结果
-        Page<ActivityCheckInVO> resultPage = new Page<>(checkInPage.getCurrent(), checkInPage.getSize(), checkInPage.getTotal());
+        Page<ActivityCheckInVO> resultPage = new Page<>(checkInPage.getCurrent(), checkInPage.getSize(), filteredCheckIns.size());
         resultPage.setRecords(voList);
 
         return resultPage;
@@ -200,8 +272,7 @@ public class ActivityCheckInServiceImpl extends ServiceImpl<ActivityCheckInMappe
 
             // 查询活动签到记录
             LambdaQueryWrapper<ActivityCheckIn> wrapper = new LambdaQueryWrapper<>();
-            wrapper.eq(ActivityCheckIn::getActivityId, activityId)
-                   .orderByDesc(ActivityCheckIn::getUpdatedAt);
+            wrapper.orderByDesc(ActivityCheckIn::getCreatedAt);
             List<ActivityCheckIn> checkIns = list(wrapper);
 
             // 设置响应头
@@ -227,42 +298,55 @@ public class ActivityCheckInServiceImpl extends ServiceImpl<ActivityCheckInMappe
     }
 
     /**
-     * 将实体转换为VO
+     * 根据报名ID获取签到记录
      */
-    private ActivityCheckInVO convertToVO(ActivityCheckIn checkIn) {
+    @Override
+    public ActivityCheckInVO getCheckInByRegisterId(Long registerId) {
+        ActivityCheckIn checkIn = baseMapper.getCheckInByRegisterId(registerId);
+        if (checkIn == null) {
+            return null;
+        }
+
+        ActivityRegister register = activityRegisterService.getById(registerId);
+        if (register == null) {
+            return null;
+        }
+
+        // 查询用户信息
+        User elder = userService.getById(register.getElderId());
+        User checkInUser = userService.getById(checkIn.getCheckInUserId());
+
+        // 查询活动信息
+        Activity activity = activityService.getById(register.getActivityId());
+
         ActivityCheckInVO vo = new ActivityCheckInVO();
         BeanUtils.copyProperties(checkIn, vo);
 
-        // 设置活动标题
-        Activity activity = activityService.getById(checkIn.getActivityId());
+        vo.setRegisterId(registerId);
+        vo.setActivityId(register.getActivityId());
+        vo.setElderId(register.getElderId());
+
         if (activity != null) {
             vo.setActivityTitle(activity.getTitle());
         }
 
-        // 设置用户姓名
-        User user = userService.getById(checkIn.getUserId());
-        if (user != null) {
-            vo.setUserName(user.getUsername());
+        if (elder != null) {
+            vo.setElderName(elder.getUsername());
         }
 
-        // 设置状态名称
-        vo.setStatusName(getStatusName(checkIn.getStatus()));
+        if (checkInUser != null) {
+            vo.setCheckInUserName(checkInUser.getUsername());
+        }
 
         return vo;
     }
 
     /**
-     * 获取状态名称
+     * 检查老人是否已签到
      */
-    private String getStatusName(Integer status) {
-        if (status == null) {
-            return "未知状态";
-        }
-
-        return switch (status) {
-            case 0 -> "未签到";
-            case 1 -> "已签到";
-            default -> "未知状态";
-        };
+    @Override
+    public boolean checkElderCheckedIn(Long activityId, Long elderId) {
+        Integer count = baseMapper.checkElderCheckedIn(activityId, elderId);
+        return count != null && count > 0;
     }
 }

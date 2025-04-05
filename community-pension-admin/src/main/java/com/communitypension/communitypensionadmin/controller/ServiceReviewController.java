@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,7 +25,6 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Tag(name = "服务评价管理", description = "服务评价相关接口")
 public class ServiceReviewController {
-
     private final ServiceReviewService serviceReviewService;
 
     /**
@@ -34,7 +34,7 @@ public class ServiceReviewController {
     @Operation(summary = "添加服务评价", description = "添加服务评价")
     public Result<Long> addServiceReview(@Valid @RequestBody ServiceReviewDTO reviewDTO) {
         Long reviewId = serviceReviewService.addServiceReview(reviewDTO);
-        return Result.success(reviewId, "评价成功");
+        return Result.success("添加评价成功", reviewId);
     }
 
     /**

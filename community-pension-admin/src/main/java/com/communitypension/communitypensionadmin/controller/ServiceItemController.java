@@ -1,14 +1,13 @@
 package com.communitypension.communitypensionadmin.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.communitypension.communitypensionadmin.utils.Result;
 import com.communitypension.communitypensionadmin.dto.ServiceItemDTO;
 import com.communitypension.communitypensionadmin.entity.ServiceItem;
 import com.communitypension.communitypensionadmin.service.ServiceItemService;
+import com.communitypension.communitypensionadmin.utils.Result;
 import com.communitypension.communitypensionadmin.vo.ServiceItemVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -28,10 +27,7 @@ public class ServiceItemController {
 
     @Operation(summary = "分页查询服务项目列表")
     @GetMapping("/list")
-    public Result<Page<ServiceItemVO>> list(
-            @RequestParam(defaultValue = "1") Integer current,
-            @RequestParam(defaultValue = "10") Integer size,
-            ServiceItem serviceItem) {
+    public Result<Page<ServiceItemVO>> list(@RequestParam(defaultValue = "1") Integer current, @RequestParam(defaultValue = "10") Integer size, ServiceItem serviceItem) {
         Page<ServiceItem> page = new Page<>(current, size);
         Page<ServiceItemVO> pageVO = serviceItemService.getServiceItemList(page, serviceItem);
         return Result.success(pageVO);
@@ -67,17 +63,10 @@ public class ServiceItemController {
         return Result.success(serviceItemService.batchDeleteServiceItems(serviceIds));
     }
 
-    @Operation(summary = "导出服务项目列表")
-    @GetMapping("/export")
-    public void export(HttpServletResponse response, ServiceItem serviceItem) {
-        serviceItemService.exportServiceItems(response, serviceItem);
-    }
 
     @Operation(summary = "更新服务项目状态")
     @PutMapping("/{status}/{serviceId}")
-    public Result<Boolean> updateStatus(
-            @PathVariable String status,
-            @PathVariable Long serviceId) {
+    public Result<Boolean> updateStatus(@PathVariable String status, @PathVariable Long serviceId) {
         return Result.success(serviceItemService.updateServiceItemStatus(serviceId, status));
     }
 } 

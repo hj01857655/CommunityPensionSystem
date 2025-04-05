@@ -90,7 +90,7 @@
             <span>服务项目管理</span>
           </template>
         </el-menu-item>
-        <el-menu-item index="/admin/services/appointment">
+        <el-menu-item index="/admin/services/order">
           <template #title>
             <el-icon>
               <Service />

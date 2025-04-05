@@ -3,17 +3,18 @@ package com.communitypension.communitypensionadmin.entity;
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
  * 健康档案实体类
  */
 @Data
-@TableName("health_record")
+@TableName("health_records")
 public class HealthRecord {
 
     /**
-     * 档案ID
+     * 记录ID
      */
     @TableId(type = IdType.AUTO)
     private Long id;
@@ -24,74 +25,79 @@ public class HealthRecord {
     private Long elderId;
 
     /**
-     * 血型：A型、B型、AB型、O型、其他
+     * 血压值
      */
-    private String bloodType;
+    private String bloodPressure;
 
     /**
-     * 身高（cm）
+     * 心率
      */
-    private Double height;
+    private Integer heartRate;
 
     /**
-     * 体重（kg）
+     * 血糖值
      */
-    private Double weight;
+    private BigDecimal bloodSugar;
 
     /**
-     * 过敏史
+     * 体温
      */
-    private String allergies;
+    private BigDecimal temperature;
 
     /**
-     * 家族病史
+     * 体重(kg)
      */
-    private String familyHistory;
+    private BigDecimal weight;
 
     /**
-     * 既往病史
+     * 身高(cm)
+     */
+    private BigDecimal height;
+
+    /**
+     * BMI指数
+     */
+    private BigDecimal bmi;
+
+    /**
+     * 病史
      */
     private String medicalHistory;
 
     /**
-     * 手术史
+     * 过敏史
      */
-    private String surgicalHistory;
+    private String allergy;
 
     /**
-     * 长期用药情况
+     * 症状描述
      */
-    private String medicationHistory;
+    private String symptoms;
 
     /**
-     * 生活习惯
+     * 症状记录时间
      */
-    private String lifestyle;
+    private LocalDateTime symptomsRecordTime;
 
     /**
-     * 饮食习惯
+     * 用药情况
      */
-    private String dietaryHabits;
+    private String medication;
 
     /**
-     * 紧急联系人姓名
+     * 记录时间
      */
-    private String emergencyContactName;
+    private LocalDateTime recordTime;
 
     /**
-     * 紧急联系人电话
+     * 记录人ID
      */
-    private String emergencyContactPhone;
+    private Long recorderId;
 
     /**
-     * 紧急联系人关系
+     * 记录类型
      */
-    private String emergencyContactRelation;
-
-    /**
-     * 备注
-     */
-    private String remarks;
+    private String recordType;
 
     /**
      * 创建时间
@@ -104,10 +110,4 @@ public class HealthRecord {
      */
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updatedAt;
-
-    /**
-     * 是否已删除
-     */
-    @TableLogic
-    private Integer isDeleted;
 }

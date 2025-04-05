@@ -93,5 +93,14 @@ public class Result<T> {
         return result;
     }
 
-    // 省略 getter 和 setter 方法...
+    //Result.success();
+    public static <T> Result<T> success() {
+        Result<T> result = new Result<>();
+        result.setCode(200);
+        result.setMessage("操作成功");
+        result.setData(null);
+        result.setTimestamp(System.currentTimeMillis());
+        return result;
+    }
+
 }

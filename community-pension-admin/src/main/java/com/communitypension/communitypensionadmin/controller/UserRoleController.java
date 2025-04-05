@@ -1,9 +1,9 @@
 package com.communitypension.communitypensionadmin.controller;
 
+import com.communitypension.communitypensionadmin.converter.UserConverter;
 import com.communitypension.communitypensionadmin.dto.ElderDTO;
 import com.communitypension.communitypensionadmin.dto.KinDTO;
 import com.communitypension.communitypensionadmin.dto.StaffDTO;
-import com.communitypension.communitypensionadmin.dto.UserDTO;
 import com.communitypension.communitypensionadmin.entity.User;
 import com.communitypension.communitypensionadmin.enums.RoleEnum;
 import com.communitypension.communitypensionadmin.service.UserService;
@@ -15,7 +15,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -33,6 +32,9 @@ public class UserRoleController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private UserConverter userConverter;
+
     /**
      * 创建老人用户
      */
@@ -41,10 +43,10 @@ public class UserRoleController {
     public Result<?> createElderUser(@RequestBody @Valid ElderDTO elderDTO) {
         // 设置角色ID
         elderDTO.setRoleIds(List.of(RoleEnum.ELDER.getId()));
-        
+
         // 调用服务层保存用户
         userService.addUserWithRoles(elderDTO);
-        
+
         return Result.success("创建老人用户成功");
     }
 
@@ -56,10 +58,10 @@ public class UserRoleController {
     public Result<?> createKinUser(@RequestBody @Valid KinDTO kinDTO) {
         // 设置角色ID
         kinDTO.setRoleIds(List.of(RoleEnum.KIN.getId()));
-        
+
         // 调用服务层保存用户
         userService.addUserWithRoles(kinDTO);
-        
+
         return Result.success("创建家属用户成功");
     }
 
@@ -71,10 +73,10 @@ public class UserRoleController {
     public Result<?> createStaffUser(@RequestBody @Valid StaffDTO staffDTO) {
         // 设置角色ID
         staffDTO.setRoleIds(List.of(RoleEnum.STAFF.getId()));
-        
+
         // 调用服务层保存用户
         userService.addUserWithRoles(staffDTO);
-        
+
         return Result.success("创建社区工作人员用户成功");
     }
 
@@ -88,24 +90,24 @@ public class UserRoleController {
         if (user == null) {
             return Result.error("用户不存在");
         }
-        
+
         // 获取用户角色
         List<Long> roleIds = userService.getUserRoleIds(userId);
-        
+
         // 根据角色返回不同的VO
         if (roleIds.contains(RoleEnum.ELDER.getId())) { // 老人角色
-            ElderUserVO elderUserVO = ElderUserVO.convertFromEntity(user);
+            ElderUserVO elderUserVO = userConverter.toElderUserVO(user);
             // 加载老人特有信息
             // ...
             return Result.success(elderUserVO);
         } else if (roleIds.contains(RoleEnum.KIN.getId())) { // 家属角色
-            KinUserVO kinUserVO = KinUserVO.convertFromEntity(user);
+            KinUserVO kinUserVO = userConverter.toKinUserVO(user);
             // 加载家属特有信息
             // ...
             return Result.success(kinUserVO);
         } else {
             // 其他角色返回基础UserVO
-            UserVO userVO = UserVO.fromEntity(user);
+            UserVO userVO = userConverter.toUserVO(user);
             return Result.success(userVO);
         }
     }

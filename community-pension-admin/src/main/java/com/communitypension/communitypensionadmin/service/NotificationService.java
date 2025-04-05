@@ -7,43 +7,45 @@ import com.communitypension.communitypensionadmin.query.NotificationQuery;
 import com.communitypension.communitypensionadmin.entity.ServiceOrder;
 import com.communitypension.communitypensionadmin.entity.User;
 
+import java.lang.Deprecated;
+
 public interface NotificationService extends IService<Notification> {
-    
+
     /**
      * 获取通知公告列表
      */
     IPage<Notification> getNotificationList(NotificationQuery query);
-    
+
     /**
      * 获取通知公告详情
      */
     Notification getNotificationById(Long id);
-    
+
     /**
      * 保存通知公告
      */
     void saveNotification(Notification notification);
-    
+
     /**
      * 更新通知公告
      */
     void updateNotification(Notification notification);
-    
+
     /**
      * 删除通知公告
      */
     void deleteNotification(Long id);
-    
+
     /**
      * 发布通知公告
      */
     void publishNotification(Long id);
-    
+
     /**
      * 撤回通知公告
      */
     void revokeNotification(Long id);
-    
+
     /**
      * 发送系统消息
      *
@@ -53,16 +55,18 @@ public interface NotificationService extends IService<Notification> {
      * @param type 消息类型
      */
     void sendSystemMessage(Long userId, String title, String content, String type);
-    
+
     /**
-     * 发送邮件
+     * 发送邮件 - 已经废弃，改为使用系统内通知
      *
      * @param to 收件人邮箱
      * @param subject 邮件主题
      * @param content 邮件内容
+     * @deprecated 邮件通知功能已经废弃，改为使用系统内通知
      */
+    @Deprecated
     void sendEmail(String to, String subject, String content);
-    
+
     /**
      * 发送预约相关通知
      *
@@ -71,4 +75,4 @@ public interface NotificationService extends IService<Notification> {
      * @param message 通知消息
      */
     void sendOrderNotification(ServiceOrder order, User user, String message);
-} 
+}

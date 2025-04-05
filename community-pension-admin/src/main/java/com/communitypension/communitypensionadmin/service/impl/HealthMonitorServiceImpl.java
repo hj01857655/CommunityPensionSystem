@@ -112,22 +112,22 @@ public class HealthMonitorServiceImpl extends ServiceImpl<HealthMonitorMapper, H
         User elder = userService.getById(monitor.getElderId());
 
         // 转换为VO
-        return HealthMonitorConverter.toVO(monitor, elder);
+        return HealthMonitorConverter.toVO(monitor, elder, null);
     }
 
     /**
      * 分页查询健康监测列表
      */
     @Override
-    public Page<HealthMonitorVO> getHealthMonitorList(Long elderId, String elderName, Integer monitorType, 
-                                                     LocalDate startDate, LocalDate endDate, 
+    public Page<HealthMonitorVO> getHealthMonitorList(Long elderId, String elderName, Integer monitorType,
+                                                     LocalDate startDate, LocalDate endDate,
                                                      Integer pageNum, Integer pageSize) {
         // 如果有老人姓名，先查询老人ID列表
         List<Long> elderIds = new ArrayList<>();
         if (StringUtils.hasText(elderName)) {
             LambdaQueryWrapper<User> userWrapper = new LambdaQueryWrapper<>();
             userWrapper.like(User::getUsername, elderName);
-            userWrapper.eq(User::getIsDeleted, 0);
+            userWrapper.eq(User::getIsActive, 0);
             List<User> users = userService.list(userWrapper);
             elderIds = users.stream().map(User::getUserId).collect(Collectors.toList());
             if (elderIds.isEmpty()) {
@@ -146,16 +146,17 @@ public class HealthMonitorServiceImpl extends ServiceImpl<HealthMonitorMapper, H
             wrapper.in(HealthMonitor::getElderId, elderIds);
         }
         if (monitorType != null) {
-            wrapper.eq(HealthMonitor::getMonitorType, monitorType);
+            wrapper.eq(HealthMonitor::getMonitoringType, monitorType);
         }
         if (startDate != null) {
-            wrapper.ge(HealthMonitor::getMonitorTime, LocalDateTime.of(startDate, LocalTime.MIN));
+            wrapper.ge(HealthMonitor::getMonitoringTime, LocalDateTime.of(startDate, LocalTime.MIN));
         }
         if (endDate != null) {
-            wrapper.le(HealthMonitor::getMonitorTime, LocalDateTime.of(endDate, LocalTime.MAX));
+            wrapper.le(HealthMonitor::getMonitoringTime, LocalDateTime.of(endDate, LocalTime.MAX));
         }
-        wrapper.eq(HealthMonitor::getIsDeleted, 0);
-        wrapper.orderByDesc(HealthMonitor::getMonitorTime);
+        // 查询未处理的监测记录
+        wrapper.eq(HealthMonitor::getIsProcessed, 0);
+        wrapper.orderByDesc(HealthMonitor::getMonitoringTime);
 
         // 分页查询
         Page<HealthMonitor> page = new Page<>(pageNum, pageSize);
@@ -200,9 +201,9 @@ public class HealthMonitorServiceImpl extends ServiceImpl<HealthMonitorMapper, H
         for (int type = 1; type <= 7; type++) {
             LambdaQueryWrapper<HealthMonitor> wrapper = new LambdaQueryWrapper<>();
             wrapper.eq(HealthMonitor::getElderId, elderId);
-            wrapper.eq(HealthMonitor::getMonitorType, type);
-            wrapper.eq(HealthMonitor::getIsDeleted, 0);
-            wrapper.orderByDesc(HealthMonitor::getMonitorTime);
+            wrapper.eq(HealthMonitor::getMonitoringType, String.valueOf(type));
+            wrapper.eq(HealthMonitor::getIsProcessed, false);
+            wrapper.orderByDesc(HealthMonitor::getMonitoringTime);
             wrapper.last("LIMIT 1");
             HealthMonitor monitor = getOne(wrapper);
             if (monitor != null) {
@@ -231,16 +232,16 @@ public class HealthMonitorServiceImpl extends ServiceImpl<HealthMonitorMapper, H
         LambdaQueryWrapper<HealthMonitor> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(HealthMonitor::getElderId, elderId);
         if (monitorType != null) {
-            wrapper.eq(HealthMonitor::getMonitorType, monitorType);
+            wrapper.eq(HealthMonitor::getMonitoringType, String.valueOf(monitorType));
         }
         if (startDate != null) {
-            wrapper.ge(HealthMonitor::getMonitorTime, LocalDateTime.of(startDate, LocalTime.MIN));
+            wrapper.ge(HealthMonitor::getMonitoringTime, LocalDateTime.of(startDate, LocalTime.MIN));
         }
         if (endDate != null) {
-            wrapper.le(HealthMonitor::getMonitorTime, LocalDateTime.of(endDate, LocalTime.MAX));
+            wrapper.le(HealthMonitor::getMonitoringTime, LocalDateTime.of(endDate, LocalTime.MAX));
         }
-        wrapper.eq(HealthMonitor::getIsDeleted, 0);
-        wrapper.orderByAsc(HealthMonitor::getMonitorTime);
+        wrapper.eq(HealthMonitor::getIsProcessed, false);
+        wrapper.orderByAsc(HealthMonitor::getMonitoringTime);
 
         // 查询监测记录
         List<HealthMonitor> monitors = list(wrapper);
@@ -250,19 +251,19 @@ public class HealthMonitorServiceImpl extends ServiceImpl<HealthMonitorMapper, H
         stats.put("total", monitors.size());
 
         // 按监测结果统计
-        Map<Integer, Long> resultStats = monitors.stream()
-                .collect(Collectors.groupingBy(HealthMonitor::getMonitorResult, Collectors.counting()));
+        Map<String, Long> resultStats = monitors.stream()
+                .collect(Collectors.groupingBy(HealthMonitor::getMonitoringStatus, Collectors.counting()));
         stats.put("resultStats", resultStats);
 
         // 按监测类型统计
-        Map<Integer, Long> typeStats = monitors.stream()
-                .collect(Collectors.groupingBy(HealthMonitor::getMonitorType, Collectors.counting()));
+        Map<String, Long> typeStats = monitors.stream()
+                .collect(Collectors.groupingBy(HealthMonitor::getMonitoringType, Collectors.counting()));
         stats.put("typeStats", typeStats);
 
         // 按日期统计
         Map<String, Long> dateStats = monitors.stream()
                 .collect(Collectors.groupingBy(
-                        monitor -> monitor.getMonitorTime().toLocalDate().toString(),
+                        monitor -> monitor.getMonitoringTime().toLocalDate().toString(),
                         Collectors.counting()));
         stats.put("dateStats", dateStats);
 
@@ -271,48 +272,48 @@ public class HealthMonitorServiceImpl extends ServiceImpl<HealthMonitorMapper, H
             switch (monitorType) {
                 case 1: // 血压
                     DoubleSummaryStatistics systolicStats = monitors.stream()
-                            .filter(m -> m.getSystolicPressure() != null)
-                            .mapToDouble(m -> m.getSystolicPressure())
+                            .filter(m -> getNumericValue(m.getMonitoringValue(), "systolic") != null)
+                            .mapToDouble(m -> getNumericValue(m.getMonitoringValue(), "systolic"))
                             .summaryStatistics();
                     DoubleSummaryStatistics diastolicStats = monitors.stream()
-                            .filter(m -> m.getDiastolicPressure() != null)
-                            .mapToDouble(m -> m.getDiastolicPressure())
+                            .filter(m -> getNumericValue(m.getMonitoringValue(), "diastolic") != null)
+                            .mapToDouble(m -> getNumericValue(m.getMonitoringValue(), "diastolic"))
                             .summaryStatistics();
                     stats.put("systolicStats", systolicStats);
                     stats.put("diastolicStats", diastolicStats);
                     break;
                 case 2: // 血糖
                     DoubleSummaryStatistics bloodSugarStats = monitors.stream()
-                            .filter(m -> m.getBloodSugar() != null)
-                            .mapToDouble(m -> m.getBloodSugar())
+                            .filter(m -> getNumericValue(m.getMonitoringValue(), null) != null)
+                            .mapToDouble(m -> getNumericValue(m.getMonitoringValue(), null))
                             .summaryStatistics();
                     stats.put("bloodSugarStats", bloodSugarStats);
                     break;
                 case 3: // 体温
                     DoubleSummaryStatistics temperatureStats = monitors.stream()
-                            .filter(m -> m.getTemperature() != null)
-                            .mapToDouble(m -> m.getTemperature())
+                            .filter(m -> getNumericValue(m.getMonitoringValue(), null) != null)
+                            .mapToDouble(m -> getNumericValue(m.getMonitoringValue(), null))
                             .summaryStatistics();
                     stats.put("temperatureStats", temperatureStats);
                     break;
                 case 4: // 心率
                     DoubleSummaryStatistics heartRateStats = monitors.stream()
-                            .filter(m -> m.getHeartRate() != null)
-                            .mapToDouble(m -> m.getHeartRate())
+                            .filter(m -> getNumericValue(m.getMonitoringValue(), null) != null)
+                            .mapToDouble(m -> getNumericValue(m.getMonitoringValue(), null))
                             .summaryStatistics();
                     stats.put("heartRateStats", heartRateStats);
                     break;
                 case 5: // 血氧
                     DoubleSummaryStatistics bloodOxygenStats = monitors.stream()
-                            .filter(m -> m.getBloodOxygen() != null)
-                            .mapToDouble(m -> m.getBloodOxygen())
+                            .filter(m -> getNumericValue(m.getMonitoringValue(), null) != null)
+                            .mapToDouble(m -> getNumericValue(m.getMonitoringValue(), null))
                             .summaryStatistics();
                     stats.put("bloodOxygenStats", bloodOxygenStats);
                     break;
                 case 6: // 体重
                     DoubleSummaryStatistics weightStats = monitors.stream()
-                            .filter(m -> m.getWeight() != null)
-                            .mapToDouble(m -> m.getWeight())
+                            .filter(m -> getNumericValue(m.getMonitoringValue(), null) != null)
+                            .mapToDouble(m -> getNumericValue(m.getMonitoringValue(), null))
                             .summaryStatistics();
                     stats.put("weightStats", weightStats);
                     break;
@@ -355,56 +356,109 @@ public class HealthMonitorServiceImpl extends ServiceImpl<HealthMonitorMapper, H
      * 验证监测数据
      */
     private void validateMonitorData(HealthMonitorDTO monitorDTO) {
-        Integer monitorType = monitorDTO.getMonitorType();
-        if (monitorType == null) {
+        String monitorType = monitorDTO.getMonitoringType();
+        if (monitorType == null || monitorType.isEmpty()) {
             throw new BusinessException("监测类型不能为空");
         }
 
+        if (monitorDTO.getMonitoringValue() == null || monitorDTO.getMonitoringValue().isEmpty()) {
+            throw new BusinessException("监测值不能为空");
+        }
+
         switch (monitorType) {
-            case 1: // 血压
-                if (monitorDTO.getSystolicPressure() == null || monitorDTO.getDiastolicPressure() == null) {
-                    throw new BusinessException("血压监测必须填写收缩压和舒张压");
+            case "1": // 血压
+                if (!monitorDTO.getMonitoringValue().contains("/")) {
+                    throw new BusinessException("血压监测值格式不正确，应为收缩压/舒张压");
                 }
                 break;
-            case 2: // 血糖
-                if (monitorDTO.getBloodSugar() == null) {
-                    throw new BusinessException("血糖监测必须填写血糖值");
-                }
-                if (monitorDTO.getBloodSugarType() == null) {
-                    throw new BusinessException("血糖监测必须选择血糖类型");
-                }
-                break;
-            case 3: // 体温
-                if (monitorDTO.getTemperature() == null) {
-                    throw new BusinessException("体温监测必须填写体温值");
+            case "2": // 血糖
+                // 验证血糖值是否为数字
+                try {
+                    Double.parseDouble(monitorDTO.getMonitoringValue());
+                } catch (NumberFormatException e) {
+                    throw new BusinessException("血糖值必须为数字");
                 }
                 break;
-            case 4: // 心率
-                if (monitorDTO.getHeartRate() == null) {
-                    throw new BusinessException("心率监测必须填写心率值");
+            case "3": // 体温
+                // 验证体温值是否为数字
+                try {
+                    Double.parseDouble(monitorDTO.getMonitoringValue());
+                } catch (NumberFormatException e) {
+                    throw new BusinessException("体温值必须为数字");
                 }
                 break;
-            case 5: // 血氧
-                if (monitorDTO.getBloodOxygen() == null) {
-                    throw new BusinessException("血氧监测必须填写血氧饱和度");
+            case "4": // 心率
+                // 验证心率值是否为整数
+                try {
+                    Integer.parseInt(monitorDTO.getMonitoringValue());
+                } catch (NumberFormatException e) {
+                    throw new BusinessException("心率值必须为整数");
                 }
                 break;
-            case 6: // 体重
-                if (monitorDTO.getWeight() == null) {
-                    throw new BusinessException("体重监测必须填写体重值");
+            case "5": // 血氧
+                // 验证血氧值是否为整数且在0-100之间
+                try {
+                    int value = Integer.parseInt(monitorDTO.getMonitoringValue());
+                    if (value < 0 || value > 100) {
+                        throw new BusinessException("血氧饱和度必须在0-100之间");
+                    }
+                } catch (NumberFormatException e) {
+                    throw new BusinessException("血氧饱和度必须为整数");
                 }
                 break;
-            case 7: // 其他
-                if (!StringUtils.hasText(monitorDTO.getOtherValue())) {
-                    throw new BusinessException("其他类型监测必须填写监测值");
+            case "6": // 体重
+                // 验证体重值是否为数字
+                try {
+                    Double.parseDouble(monitorDTO.getMonitoringValue());
+                } catch (NumberFormatException e) {
+                    throw new BusinessException("体重值必须为数字");
                 }
+                break;
+            case "7": // 其他
+                // 其他类型不做特殊验证
                 break;
             default:
                 throw new BusinessException("无效的监测类型");
         }
 
-        if (monitorDTO.getMonitorResult() == null) {
-            throw new BusinessException("监测结果不能为空");
+        if (monitorDTO.getMonitoringStatus() == null || monitorDTO.getMonitoringStatus().isEmpty()) {
+            throw new BusinessException("监测状态不能为空");
         }
+    }
+
+    /**
+     * 从监测值中提取数值
+     *
+     * @param monitoringValue 监测值字符串
+     * @param valueType 值类型，如“systolic”或“diastolic”，用于血压等复合值
+     * @return 数值，如果无法解析则返回null
+     */
+    private Double getNumericValue(String monitoringValue, String valueType) {
+        if (monitoringValue == null || monitoringValue.isEmpty()) {
+            return null;
+        }
+
+        try {
+            // 如果是血压值，需要分离收缩压和舒张压
+            if ("systolic".equals(valueType) && monitoringValue.contains("/")) {
+                String[] parts = monitoringValue.split("/");
+                if (parts.length >= 1) {
+                    return Double.parseDouble(parts[0].trim());
+                }
+            } else if ("diastolic".equals(valueType) && monitoringValue.contains("/")) {
+                String[] parts = monitoringValue.split("/");
+                if (parts.length >= 2) {
+                    return Double.parseDouble(parts[1].trim());
+                }
+            } else {
+                // 其他类型直接解析
+                return Double.parseDouble(monitoringValue.trim());
+            }
+        } catch (NumberFormatException e) {
+            // 如果无法解析为数字，返回null
+            return null;
+        }
+
+        return null;
     }
 }

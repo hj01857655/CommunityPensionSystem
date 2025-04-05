@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.communitypension.communitypensionadmin.dto.PasswordDTO;
 import com.communitypension.communitypensionadmin.dto.StatusDTO;
 import com.communitypension.communitypensionadmin.dto.UserDTO;
+import com.communitypension.communitypensionadmin.dto.UserQueryDTO;
 import com.communitypension.communitypensionadmin.entity.User;
 import com.communitypension.communitypensionadmin.enums.RoleEnum;
 import com.communitypension.communitypensionadmin.service.UserService;
@@ -36,50 +37,36 @@ public class UserController {
     private final UserService userService;
 
     /**
-     * 获取用户角色列表
-     */
-    @GetMapping("/{userId}/roles")
-    @Operation(summary = "获取用户角色列表")
-    public Result<List<Long>> getUserRoles(@PathVariable Long userId) {
-        try {
-            if (userId <= 0) {
-                return Result.error("用户ID无效");
-            }
-            List<Long> roleIds = userService.getUserRoleIds(userId);
-            return Result.success("查询成功", roleIds);
-        } catch (Exception e) {
-            logger.error("获取用户角色失败: {}", e.getMessage());
-            return Result.error("获取用户角色失败: " + e.getMessage());
-        }
-    }
-   
-
-    /**
      * 分页查询用户列表
      *
-     * @param current  当前页码
-     * @param size     每页条数
-     * @param username 用户名
+     * @param queryDTO 查询参数
      * @return 用户列表
      */
     @GetMapping("/list")
     @Operation(summary = "分页查询用户列表")
-    public Result<Page<UserDTO>> getUserList(@RequestParam(defaultValue = "1") int current, @RequestParam(defaultValue = "10") int size, @RequestParam(required = false) String username, @RequestParam(required = false) String phone, @RequestParam(required = false) String name) {
+    public Result<Page<UserDTO>> getUserList(UserQueryDTO queryDTO) {
         try {
             // 参数校验
-            if (current < 1) current = 1;
-            if (size < 1 || size > 100) size = 10;
+            if (queryDTO.getCurrent() == null || queryDTO.getCurrent() < 1) {
+                queryDTO.setCurrent(1);
+            }
+            if (queryDTO.getSize() == null || queryDTO.getSize() < 1 || queryDTO.getSize() > 100) {
+                queryDTO.setSize(10);
+            }
 
             // 构建查询条件
             QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-            if (StringUtils.hasText(username)) {
-                queryWrapper.like("username", username);
+            if (StringUtils.hasText(queryDTO.getUsername())) {
+                queryWrapper.like("username", queryDTO.getUsername());
             }
-            if (StringUtils.hasText(phone)) {
-                queryWrapper.like("phone", phone);
+            if (queryDTO.getIsActive() != null) {
+                queryWrapper.eq("is_active", queryDTO.getIsActive());
             }
-            if (StringUtils.hasText(name)) {
-                queryWrapper.like("name", name);
+            if (StringUtils.hasText(queryDTO.getStartTime())) {
+                queryWrapper.ge("create_time", queryDTO.getStartTime());
+            }
+            if (StringUtils.hasText(queryDTO.getEndTime())) {
+                queryWrapper.le("create_time", queryDTO.getEndTime());
             }
 
             // 默认按创建时间倒序
@@ -87,7 +74,7 @@ public class UserController {
 
             // 执行查询
             // 获取原始用户分页数据
-            Page<User> userPage = userService.getUserPage(new Page<>(current, size), queryWrapper);
+            Page<User> userPage = userService.getUserPage(new Page<>(queryDTO.getCurrent(), queryDTO.getSize()), queryWrapper);
             // 转换为DTO分页
             Page<UserDTO> dtoPage = new Page<>();
             BeanUtils.copyProperties(userPage, dtoPage, "records");
@@ -96,7 +83,6 @@ public class UserController {
                 // 复制基础属性
                 BeanUtils.copyProperties(user, dto);
                 // 设置角色信息（需要确保user对象携带了角色数据）
-
                 dto.setRoleIds(userService.getUserRoleIds(user.getUserId()));
                 dto.setRoleNames(userService.getUserRoleNames(user.getUserId()));
                 dto.setRoles(userService.getUserRoles(user.getUserId()));
@@ -452,7 +438,23 @@ public class UserController {
         List<Long> elderIds = userService.getElderIdsByKinId(kinId);
         return Result.success(elderIds);
     }
-
+    /**
+     * 获取用户角色列表
+     */
+    @GetMapping("/{userId}/roles")
+    @Operation(summary = "获取用户角色列表")
+    public Result<List<Long>> getUserRoles(@PathVariable Long userId) {
+        try {
+            if (userId <= 0) {
+                return Result.error("用户ID无效");
+            }
+            List<Long> roleIds = userService.getUserRoleIds(userId);
+            return Result.success("查询成功", roleIds);
+        } catch (Exception e) {
+            logger.error("获取用户角色失败: {}", e.getMessage());
+            return Result.error("获取用户角色失败: " + e.getMessage());
+        }
+    }
 
 
 }

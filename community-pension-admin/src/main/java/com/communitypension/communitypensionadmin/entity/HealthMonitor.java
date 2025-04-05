@@ -9,11 +9,11 @@ import java.time.LocalDateTime;
  * 健康监测实体类
  */
 @Data
-@TableName("health_monitor")
+@TableName("health_monitoring")
 public class HealthMonitor {
 
     /**
-     * 监测ID
+     * 监测记录ID
      */
     @TableId(type = IdType.AUTO)
     private Long id;
@@ -24,69 +24,69 @@ public class HealthMonitor {
     private Long elderId;
 
     /**
-     * 监测类型：1-血压，2-血糖，3-体温，4-心率，5-血氧，6-体重，7-其他
+     * 监测类型(血压/血糖/心率等)
      */
-    private Integer monitorType;
+    private String monitoringType;
 
     /**
-     * 收缩压（mmHg）
+     * 监测值
      */
-    private Integer systolicPressure;
+    private String monitoringValue;
 
     /**
-     * 舒张压（mmHg）
+     * 监测单位
      */
-    private Integer diastolicPressure;
-
-    /**
-     * 血糖值（mmol/L）
-     */
-    private Double bloodSugar;
-
-    /**
-     * 血糖类型：1-空腹，2-餐后，3-随机
-     */
-    private Integer bloodSugarType;
-
-    /**
-     * 体温（℃）
-     */
-    private Double temperature;
-
-    /**
-     * 心率（次/分）
-     */
-    private Integer heartRate;
-
-    /**
-     * 血氧饱和度（%）
-     */
-    private Integer bloodOxygen;
-
-    /**
-     * 体重（kg）
-     */
-    private Double weight;
-
-    /**
-     * 其他监测值
-     */
-    private String otherValue;
+    private String monitoringUnit;
 
     /**
      * 监测时间
      */
-    private LocalDateTime monitorTime;
+    private LocalDateTime monitoringTime;
 
     /**
-     * 监测结果：1-正常，2-偏高，3-偏低，4-异常
+     * 设备ID
      */
-    private Integer monitorResult;
+    private String deviceId;
 
     /**
-     * 备注
+     * 监测状态(normal/abnormal)
      */
-    private String remarks;
+    private String monitoringStatus;
+
+    /**
+     * 异常等级(low/medium/high)
+     */
+    private String abnormalLevel;
+
+    /**
+     * 异常描述
+     */
+    private String abnormalDescription;
+
+    /**
+     * 是否已处理
+     */
+    private Boolean isProcessed;
+
+    /**
+     * 处理时间
+     */
+    private LocalDateTime processedTime;
+
+    /**
+     * 处理人ID
+     */
+    private Long processedBy;
+
+    /**
+     * 处理结果
+     */
+    private String processedResult;
+
+    /**
+     * 关联的健康档案ID
+     */
+    private Long healthRecordId;
 
     /**
      * 创建时间
@@ -99,10 +99,4 @@ public class HealthMonitor {
      */
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updatedAt;
-
-    /**
-     * 是否已删除
-     */
-    @TableLogic
-    private Integer isDeleted;
 }

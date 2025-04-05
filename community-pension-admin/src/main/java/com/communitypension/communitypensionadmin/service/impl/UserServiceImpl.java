@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.communitypension.communitypensionadmin.dto.PasswordDTO;
 import com.communitypension.communitypensionadmin.dto.UserDTO;
+import com.communitypension.communitypensionadmin.dto.UserRoleInfo;
 import com.communitypension.communitypensionadmin.entity.Role;
 import com.communitypension.communitypensionadmin.entity.User;
 import com.communitypension.communitypensionadmin.entity.UserRole;
@@ -363,7 +364,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (elder == null || kin == null) {
             throw new BusinessException("用户不存在");
         }
-        
+
         // 验证角色
         if (!elder.getRoleIds().contains(RoleEnum.ELDER.getId())) {
             throw new BusinessException("第一个用户必须是老人角色");
@@ -371,10 +372,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (!kin.getRoleIds().contains(RoleEnum.KIN.getId())) {
             throw new BusinessException("第二个用户必须是家属角色");
         }
-        
+
         return elderKinRelationService.bindRelation(elderId, kinId, relationType);
     }
-    
+
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean unbindElderKinRelation(Long elderId, Long kinId, String relationType) {
@@ -383,12 +384,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public List<Long> getKinIdsByElderId(Long elderId) {
-        return List.of();
+        return elderKinRelationService.getKinIdsByElderId(elderId);
     }
 
     @Override
     public List<Long> getElderIdsByKinId(Long kinId) {
-        return List.of();
+        return elderKinRelationService.getElderIdsByKinId(kinId);
     }
 
 
@@ -410,5 +411,20 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 }
             }
         }
+    }
+
+    @Override
+    public UserRoleInfo getUserRoleInfo(Long userId) {
+        // 一次性查询所有角色信息，减少数据库查询次数
+        List<String> roles = getUserRoles(userId);
+        List<Long> roleIds = getUserRoleIds(userId);
+        List<String> roleNames = getUserRoleNames(userId);
+
+        // 构建并返回 UserRoleInfo 对象
+        return UserRoleInfo.builder()
+                .roles(roles)
+                .roleIds(roleIds)
+                .roleNames(roleNames)
+                .build();
     }
 }

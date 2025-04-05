@@ -57,6 +57,12 @@ public class Notification {
      */
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updateTime;
+
+    /**
+     * 发布时间
+     */
+    @TableField(fill = FieldFill.INSERT_UPDATE)
+    private LocalDateTime publishTime;
     
     @TableField(exist = false)
     private String statusName;

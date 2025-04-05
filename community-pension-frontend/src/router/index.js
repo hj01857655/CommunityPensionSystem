@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import HealthView from '@/views/fore/HealthView.vue';
 import ServiceView from '@/views/fore/ServiceView.vue';
-import ActivityView from '@/views/fore/ActivityView.vue';
+import ActivityView from '@/views/fore/ActivityView.vue'; // 社区活动视图组件
 import NoticeView from '@/views/fore/NoticeView.vue';
 import ProfileView from '@/views/fore/ProfileView.vue';
 import { TokenManager, storageConfig } from '@/utils/axios';
@@ -43,6 +43,7 @@ const routes = [
   {
     path: '/home',
     component: () => import('@/views/fore/Home.vue'),
+    redirect: '/home/dashboard',
     meta: { requiresAuth: true, roles: ['elder', 'kin'] },
     children: [
       {
@@ -63,7 +64,8 @@ const routes = [
       {
         path: 'activity',
         name: 'ActivityView',
-        component: ActivityView
+        component: ActivityView,
+        meta: { title: '社区活动', icon: 'calendar' } // 社区活动路由，整合了活动列表和我的报名
       },
       {
         path: 'notice',
@@ -158,25 +160,25 @@ const routes = [
         path: 'activity',
         name: 'ActivityManagement',
         component: () => import('@/views/back/activity/index.vue'),
-        meta: { title: '社区活动管理', icon: 'calendar', roles: ['admin', 'staff'] },
+        meta: { title: '社区活动管理', icon: 'calendar', roles: ['admin', 'staff'] }, // 管理端活动管理模块
         children: [
           {
             path: 'list',
             name: 'ActivityList',
             component: () => import('@/views/back/activity/ActivityList.vue'),
-            meta: { title: '活动管理', icon: 'calendar', roles: ['admin', 'staff'] }
+            meta: { title: '活动管理', icon: 'calendar', roles: ['admin', 'staff'] } // 管理员发布和管理活动的页面
           },
           {
             path: 'participate',
             name: 'ActivityParticipate',
             component: () => import('@/views/back/activity/ActivityParticipate.vue'),
-            meta: { title: '活动参与管理', icon: 'calendar', roles: ['admin', 'staff'] }
+            meta: { title: '活动报名管理', icon: 'calendar', roles: ['admin', 'staff'] } // 管理活动报名记录的页面
           },
           {
             path: 'checkin',
             name: 'ActivityCheckin',
             component: () => import('@/views/back/activity/ActivityCheckin.vue'),
-            meta: { title: '活动签到管理', icon: 'calendar', roles: ['admin', 'staff'] }
+            meta: { title: '活动签到管理', icon: 'calendar', roles: ['admin', 'staff'] } // 管理活动签到记录的页面
           }
         ]
       },
@@ -193,10 +195,10 @@ const routes = [
             meta: { title: '服务项目管理', icon: 'service', roles: ['admin', 'staff'] }
           },
           {
-            path: 'appointment',
-            name: 'ServiceAppointmentList',
-            component: () => import('@/views/back/service/ServiceAppointment.vue'),
-            meta: { title: '服务预约管理', icon: 'service', roles: ['admin', 'staff'] }
+            path: 'order',
+            name: 'ServiceOrderManagement',
+            component: () => import('@/views/back/service/ServiceOrderManagement.vue'),
+            meta: { title: '服务工单管理', icon: 'service', roles: ['admin', 'staff'] }
           },
           {
             path: 'evaluation',
@@ -230,19 +232,19 @@ const routes = [
         path: 'notice',
         name: 'NoticeManagement',
         component: () => import('@/views/back/notice/index.vue'),
-        meta: { title: '通知公告管理', icon: 'bell', roles: ['admin', 'staff'] },
+        meta: { title: '通知公告', icon: 'bell', roles: ['admin', 'staff'] },
         children: [
           {
             path: '',
             name: 'NoticeList',
             component: () => import('@/views/back/notice/NoticeManagement.vue'),
-            meta: { title: '通知公告管理', icon: 'bell', roles: ['admin', 'staff'] }
+            meta: { title: '通知列表', icon: 'bell', roles: ['admin', 'staff'] }
           },
           {
             path: 'publish',
             name: 'NoticePublish',
             component: () => import('@/views/back/notice/NoticePublish.vue'),
-            meta: { title: '通知公告发布', icon: 'bell', roles: ['admin', 'staff'] }
+            meta: { title: '通知发布', icon: 'bell', roles: ['admin', 'staff'] }
           }
         ]
       },

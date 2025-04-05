@@ -11,7 +11,7 @@
  Target Server Version : 80400 (8.4.0)
  File Encoding         : 65001
 
- Date: 31/03/2025 17:03:51
+ Date: 05/04/2025 15:34:57
 */
 
 SET NAMES utf8mb4;
@@ -26,10 +26,16 @@ CREATE TABLE `activities`  (
   `title` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '活动标题',
   `type` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '活动类型（字典类型：activity_type）',
   `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '活动描述',
+  `cover_image` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '活动封面图片URL',
   `start_time` datetime NOT NULL COMMENT '开始时间',
   `end_time` datetime NOT NULL COMMENT '结束时间',
+  `register_start_time` datetime NULL DEFAULT NULL COMMENT '报名开始时间',
+  `register_end_time` datetime NULL DEFAULT NULL COMMENT '报名结束时间',
   `location` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '活动地点',
   `max_participants` int NULL DEFAULT NULL COMMENT '最大参与人数',
+  `min_participants` int NULL DEFAULT NULL COMMENT '最小参与人数',
+  `need_approval` tinyint(1) NOT NULL DEFAULT 1 COMMENT '是否需要审核：0-不需要，1-需要',
+  `tags` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '活动标签，多个标签用逗号分隔',
   `organizer_id` bigint NOT NULL COMMENT '组织者ID',
   `status` tinyint NOT NULL DEFAULT 0 COMMENT '状态：0-筹备中，1-报名中，2-进行中，3-已结束，4-已取消',
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -38,106 +44,141 @@ CREATE TABLE `activities`  (
   INDEX `idx_organizer_id`(`organizer_id` ASC) USING BTREE,
   INDEX `idx_status`(`status` ASC) USING BTREE,
   INDEX `idx_start_time`(`start_time` ASC) USING BTREE,
-  INDEX `idx_end_time`(`end_time` ASC) USING BTREE
+  INDEX `idx_end_time`(`end_time` ASC) USING BTREE,
+  INDEX `idx_register_start_time`(`register_start_time` ASC) USING BTREE,
+  INDEX `idx_register_end_time`(`register_end_time` ASC) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 72 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '社区活动表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of activities
 -- ----------------------------
-INSERT INTO `activities` VALUES (1, '社区烧烤活动', '7', '欢迎大家参加本次社区烧烤活动，一起享受美食、聊天、玩游戏。', '2023-05-01 18:00:00', '2023-05-01 21:00:00', '社区广场', 100, 1, 1, '2025-03-13 18:16:28', '2025-03-30 19:21:03');
-INSERT INTO `activities` VALUES (2, '社区健康讲座', '2', '本次讲座将邀请专业医生为大家讲解如何保持健康的生活方式。', '2023-05-10 19:30:00', '2023-05-10 21:00:00', '社区活动中心', 50, 2, 1, '2025-03-13 18:16:28', '2025-03-30 19:21:03');
-INSERT INTO `activities` VALUES (3, '社区植树活动', '4', '让我们一起为社区种下更多绿色植被,共建美丽家园。', '2023-05-15 09:00:00', '2023-05-15 12:00:00', '社区公园', 80, 3, 1, '2025-03-13 18:16:28', '2025-03-30 19:21:03');
-INSERT INTO `activities` VALUES (4, '社区亲子游戏日', '9', '孩子们快来参加这次有趣的亲子游戏活动吧!', '2023-05-20 14:00:00', '2023-05-20 17:00:00', '社区活动中心', 60, 4, 1, '2025-03-13 18:16:28', '2025-03-30 19:21:03');
-INSERT INTO `activities` VALUES (5, '社区篮球赛', '3', '欢迎大家参加本次社区篮球赛,展现你的球技!', '2023-05-25 19:00:00', '2023-05-25 21:30:00', '社区体育馆', 40, 5, 1, '2025-03-13 18:16:28', '2025-03-30 19:21:03');
-INSERT INTO `activities` VALUES (6, '社区书籍交换会', '9', '把你家里的旧书带来,和其他人交换心仪的新书吧。', '2023-06-01 14:00:00', '2023-06-01 17:00:00', '社区图书馆', 30, 6, 1, '2025-03-13 18:16:28', '2025-03-30 19:21:03');
-INSERT INTO `activities` VALUES (7, '社区环保讲座', '8', '让我们一起学习如何在日常生活中实践环保理念。', '2023-06-05 19:30:00', '2023-06-05 21:00:00', '社区活动中心', 50, 7, 1, '2025-03-13 18:16:28', '2025-03-30 19:22:25');
-INSERT INTO `activities` VALUES (8, '社区DIY手工坊', '9', '来学习制作各种有趣的手工艺品吧!', '2023-06-10 14:00:00', '2023-06-10 17:00:00', '社区活动中心', 40, 8, 1, '2025-03-13 18:16:28', '2025-03-30 19:21:03');
-INSERT INTO `activities` VALUES (9, '社区烹饪课', '9', '邀请专业厨师为大家讲解美味佳肴的制作方法。', '2023-06-15 19:00:00', '2023-06-15 21:30:00', '社区活动中心', 30, 9, 1, '2025-03-13 18:16:28', '2025-03-30 19:21:03');
-INSERT INTO `activities` VALUES (10, '社区户外拓展', '9', '一起来体验户外拓展活动,增强团队合作能力。', '2023-06-20 09:00:00', '2023-06-20 16:00:00', '社区公园', 60, 10, 1, '2025-03-13 18:16:28', '2025-03-30 19:21:03');
-INSERT INTO `activities` VALUES (11, '社区音乐会', '1', '欣赏各种精彩的音乐表演,享受美好的音乐时光。', '2023-06-25 19:30:00', '2023-06-25 21:30:00', '社区文化中心', 80, 1, 1, '2025-03-13 18:17:14', '2025-03-30 19:21:03');
-INSERT INTO `activities` VALUES (12, '社区绘画展', '1', '欣赏社区居民的绘画作品,感受艺术的魅力。', '2023-07-01 14:00:00', '2023-07-01 17:00:00', '社区文化中心', 50, 2, 1, '2025-03-13 18:17:14', '2025-03-30 19:21:03');
-INSERT INTO `activities` VALUES (13, '社区舞蹈课', '3', '学习各种流行舞蹈,展现自己的舞蹈才能。', '2023-07-05 19:00:00', '2023-07-05 21:00:00', '社区活动中心', 40, 3, 1, '2025-03-13 18:17:14', '2025-03-30 19:21:03');
-INSERT INTO `activities` VALUES (14, '社区趣味运动会', '3', '参加各种有趣的运动项目,增强身体素质。', '2023-07-10 09:00:00', '2023-07-10 12:00:00', '社区体育场', 80, 4, 1, '2025-03-13 18:17:14', '2025-03-30 19:21:03');
-INSERT INTO `activities` VALUES (15, '社区电影欣赏', '1', '观看精彩的电影作品,享受电影带来的视听盛宴。', '2023-07-15 19:00:00', '2023-07-15 21:30:00', '社区文化中心', 60, 5, 1, '2025-03-13 18:17:14', '2025-03-30 19:21:03');
-INSERT INTO `activities` VALUES (16, '社区园艺培训', '6', '学习园艺知识,种植自己喜欢的花草植物。', '2023-07-20 14:00:00', '2023-07-20 17:00:00', '社区公园', 30, 6, 1, '2025-03-13 18:17:14', '2025-03-30 19:21:03');
-INSERT INTO `activities` VALUES (17, '社区读书会', '9', '一起分享读书心得,探讨有趣的文学作品。', '2023-07-25 19:30:00', '2023-07-25 21:00:00', '社区图书馆', 20, 7, 1, '2025-03-13 18:17:14', '2025-03-30 19:21:03');
-INSERT INTO `activities` VALUES (18, '社区摄影展', '9', '展示社区居民的摄影作品,欣赏生活中的美好瞬间。', '2023-08-01 14:00:00', '2023-08-01 17:00:00', '社区文化中心', 50, 8, 1, '2025-03-13 18:17:14', '2025-03-30 19:21:03');
-INSERT INTO `activities` VALUES (19, '社区烹饪大赛', '9', '展示大家的厨艺,品尝各种美味佳肴。', '2023-08-05 19:00:00', '2023-08-05 21:30:00', '社区活动中心', 40, 9, 1, '2025-03-13 18:17:14', '2025-03-30 19:21:03');
-INSERT INTO `activities` VALUES (20, '社区户外探险', '9', '一起探索大自然,体验户外运动的乐趣。', '2023-08-10 09:00:00', '2023-08-10 16:00:00', '社区公园', 60, 10, 1, '2025-03-13 18:17:14', '2025-03-30 19:21:03');
-INSERT INTO `activities` VALUES (21, '社区音乐会', '1', '欣赏各种精彩的音乐表演,享受美好的音乐时光。', '2023-06-25 19:30:00', '2023-06-25 21:30:00', '社区文化中心', 80, 1, 1, '2025-03-13 18:17:30', '2025-03-30 19:21:03');
-INSERT INTO `activities` VALUES (22, '社区绘画展', '1', '欣赏社区居民的绘画作品,感受艺术的魅力。', '2023-07-01 14:00:00', '2023-07-01 17:00:00', '社区文化中心', 50, 2, 1, '2025-03-13 18:17:30', '2025-03-30 19:21:03');
-INSERT INTO `activities` VALUES (23, '社区舞蹈课', '3', '学习各种流行舞蹈,展现自己的舞蹈才能。', '2023-07-05 19:00:00', '2023-07-05 21:00:00', '社区活动中心', 40, 3, 1, '2025-03-13 18:17:30', '2025-03-30 19:21:03');
-INSERT INTO `activities` VALUES (24, '社区趣味运动会', '3', '参加各种有趣的运动项目,增强身体素质。', '2023-07-10 09:00:00', '2023-07-10 12:00:00', '社区体育场', 80, 4, 1, '2025-03-13 18:17:30', '2025-03-30 19:21:03');
-INSERT INTO `activities` VALUES (25, '社区电影欣赏', '1', '观看精彩的电影作品,享受电影带来的视听盛宴。', '2023-07-15 19:00:00', '2023-07-15 21:30:00', '社区文化中心', 60, 5, 1, '2025-03-13 18:17:30', '2025-03-30 19:21:03');
-INSERT INTO `activities` VALUES (26, '社区园艺培训', '6', '学习园艺知识,种植自己喜欢的花草植物。', '2023-07-20 14:00:00', '2023-07-20 17:00:00', '社区公园', 30, 6, 1, '2025-03-13 18:17:30', '2025-03-30 19:21:03');
-INSERT INTO `activities` VALUES (27, '社区读书会', '9', '一起分享读书心得,探讨有趣的文学作品。', '2023-07-25 19:30:00', '2023-07-25 21:00:00', '社区图书馆', 20, 7, 1, '2025-03-13 18:17:30', '2025-03-30 19:21:03');
-INSERT INTO `activities` VALUES (28, '社区摄影展', '9', '展示社区居民的摄影作品,欣赏生活中的美好瞬间。', '2023-08-01 14:00:00', '2023-08-01 17:00:00', '社区文化中心', 50, 8, 1, '2025-03-13 18:17:30', '2025-03-30 19:21:03');
-INSERT INTO `activities` VALUES (29, '社区烹饪大赛', '9', '展示大家的厨艺,品尝各种美味佳肴。', '2023-08-05 19:00:00', '2023-08-05 21:30:00', '社区活动中心', 40, 9, 1, '2025-03-13 18:17:30', '2025-03-30 19:21:03');
-INSERT INTO `activities` VALUES (30, '社区户外探险', '9', '一起探索大自然,体验户外运动的乐趣。', '2023-08-10 09:00:00', '2023-08-10 16:00:00', '社区公园', 60, 10, 1, '2025-03-13 18:17:30', '2025-03-30 19:21:03');
+INSERT INTO `activities` VALUES (1, '社区烧烤活动', '7', '欢迎大家参加本次社区烧烤活动，一起享受美食、聊天、玩游戏。', NULL, '2023-05-01 18:00:00', '2023-05-01 21:00:00', NULL, NULL, '社区广场', 100, NULL, 1, NULL, 1, 1, '2025-03-13 18:16:28', '2025-03-30 19:21:03');
+INSERT INTO `activities` VALUES (2, '社区健康讲座', '2', '本次讲座将邀请专业医生为大家讲解如何保持健康的生活方式。', NULL, '2023-05-10 19:30:00', '2023-05-10 21:00:00', NULL, NULL, '社区活动中心', 50, NULL, 1, NULL, 2, 1, '2025-03-13 18:16:28', '2025-03-30 19:21:03');
+INSERT INTO `activities` VALUES (3, '社区植树活动', '4', '让我们一起为社区种下更多绿色植被,共建美丽家园。', NULL, '2023-05-15 09:00:00', '2023-05-15 12:00:00', NULL, NULL, '社区公园', 80, NULL, 1, NULL, 3, 1, '2025-03-13 18:16:28', '2025-03-30 19:21:03');
+INSERT INTO `activities` VALUES (4, '社区亲子游戏日', '9', '孩子们快来参加这次有趣的亲子游戏活动吧!', NULL, '2023-05-20 14:00:00', '2023-05-20 17:00:00', NULL, NULL, '社区活动中心', 60, NULL, 1, NULL, 4, 1, '2025-03-13 18:16:28', '2025-03-30 19:21:03');
+INSERT INTO `activities` VALUES (5, '社区篮球赛', '3', '欢迎大家参加本次社区篮球赛,展现你的球技!', NULL, '2023-05-25 19:00:00', '2023-05-25 21:30:00', NULL, NULL, '社区体育馆', 40, NULL, 1, NULL, 5, 1, '2025-03-13 18:16:28', '2025-03-30 19:21:03');
+INSERT INTO `activities` VALUES (6, '社区书籍交换会', '9', '把你家里的旧书带来,和其他人交换心仪的新书吧。', NULL, '2023-06-01 14:00:00', '2023-06-01 17:00:00', NULL, NULL, '社区图书馆', 30, NULL, 1, NULL, 6, 1, '2025-03-13 18:16:28', '2025-03-30 19:21:03');
+INSERT INTO `activities` VALUES (7, '社区环保讲座', '8', '让我们一起学习如何在日常生活中实践环保理念。', NULL, '2023-06-05 19:30:00', '2023-06-05 21:00:00', NULL, NULL, '社区活动中心', 50, NULL, 1, NULL, 7, 1, '2025-03-13 18:16:28', '2025-03-30 19:22:25');
+INSERT INTO `activities` VALUES (8, '社区DIY手工坊', '9', '来学习制作各种有趣的手工艺品吧!', NULL, '2023-06-10 14:00:00', '2023-06-10 17:00:00', NULL, NULL, '社区活动中心', 40, NULL, 1, NULL, 8, 1, '2025-03-13 18:16:28', '2025-03-30 19:21:03');
+INSERT INTO `activities` VALUES (9, '社区烹饪课', '9', '邀请专业厨师为大家讲解美味佳肴的制作方法。', NULL, '2023-06-15 19:00:00', '2023-06-15 21:30:00', NULL, NULL, '社区活动中心', 30, NULL, 1, NULL, 9, 1, '2025-03-13 18:16:28', '2025-03-30 19:21:03');
+INSERT INTO `activities` VALUES (10, '社区户外拓展', '9', '一起来体验户外拓展活动,增强团队合作能力。', NULL, '2023-06-20 09:00:00', '2023-06-20 16:00:00', NULL, NULL, '社区公园', 60, NULL, 1, NULL, 10, 1, '2025-03-13 18:16:28', '2025-03-30 19:21:03');
+INSERT INTO `activities` VALUES (11, '社区音乐会', '1', '欣赏各种精彩的音乐表演,享受美好的音乐时光。', NULL, '2023-06-25 19:30:00', '2023-06-25 21:30:00', NULL, NULL, '社区文化中心', 80, NULL, 1, NULL, 1, 1, '2025-03-13 18:17:14', '2025-03-30 19:21:03');
+INSERT INTO `activities` VALUES (12, '社区绘画展', '1', '欣赏社区居民的绘画作品,感受艺术的魅力。', NULL, '2023-07-01 14:00:00', '2023-07-01 17:00:00', NULL, NULL, '社区文化中心', 50, NULL, 1, NULL, 2, 1, '2025-03-13 18:17:14', '2025-03-30 19:21:03');
+INSERT INTO `activities` VALUES (13, '社区舞蹈课', '3', '学习各种流行舞蹈,展现自己的舞蹈才能。', NULL, '2023-07-05 19:00:00', '2023-07-05 21:00:00', NULL, NULL, '社区活动中心', 40, NULL, 1, NULL, 3, 1, '2025-03-13 18:17:14', '2025-03-30 19:21:03');
+INSERT INTO `activities` VALUES (14, '社区趣味运动会', '3', '参加各种有趣的运动项目,增强身体素质。', NULL, '2023-07-10 09:00:00', '2023-07-10 12:00:00', NULL, NULL, '社区体育场', 80, NULL, 1, NULL, 4, 1, '2025-03-13 18:17:14', '2025-03-30 19:21:03');
+INSERT INTO `activities` VALUES (15, '社区电影欣赏', '1', '观看精彩的电影作品,享受电影带来的视听盛宴。', NULL, '2023-07-15 19:00:00', '2023-07-15 21:30:00', NULL, NULL, '社区文化中心', 60, NULL, 1, NULL, 5, 1, '2025-03-13 18:17:14', '2025-03-30 19:21:03');
+INSERT INTO `activities` VALUES (16, '社区园艺培训', '6', '学习园艺知识,种植自己喜欢的花草植物。', NULL, '2023-07-20 14:00:00', '2023-07-20 17:00:00', NULL, NULL, '社区公园', 30, NULL, 1, NULL, 6, 1, '2025-03-13 18:17:14', '2025-03-30 19:21:03');
+INSERT INTO `activities` VALUES (17, '社区读书会', '9', '一起分享读书心得,探讨有趣的文学作品。', NULL, '2023-07-25 19:30:00', '2023-07-25 21:00:00', NULL, NULL, '社区图书馆', 20, NULL, 1, NULL, 7, 1, '2025-03-13 18:17:14', '2025-03-30 19:21:03');
+INSERT INTO `activities` VALUES (18, '社区摄影展', '9', '展示社区居民的摄影作品,欣赏生活中的美好瞬间。', NULL, '2023-08-01 14:00:00', '2023-08-01 17:00:00', NULL, NULL, '社区文化中心', 50, NULL, 1, NULL, 8, 1, '2025-03-13 18:17:14', '2025-03-30 19:21:03');
+INSERT INTO `activities` VALUES (19, '社区烹饪大赛', '9', '展示大家的厨艺,品尝各种美味佳肴。', NULL, '2023-08-05 19:00:00', '2023-08-05 21:30:00', NULL, NULL, '社区活动中心', 40, NULL, 1, NULL, 9, 1, '2025-03-13 18:17:14', '2025-03-30 19:21:03');
+INSERT INTO `activities` VALUES (20, '社区户外探险', '9', '一起探索大自然,体验户外运动的乐趣。', NULL, '2023-08-10 09:00:00', '2023-08-10 16:00:00', NULL, NULL, '社区公园', 60, NULL, 1, NULL, 10, 1, '2025-03-13 18:17:14', '2025-03-30 19:21:03');
+INSERT INTO `activities` VALUES (21, '社区音乐会', '1', '欣赏各种精彩的音乐表演,享受美好的音乐时光。', NULL, '2023-06-25 19:30:00', '2023-06-25 21:30:00', NULL, NULL, '社区文化中心', 80, NULL, 1, NULL, 1, 1, '2025-03-13 18:17:30', '2025-03-30 19:21:03');
+INSERT INTO `activities` VALUES (22, '社区绘画展', '1', '欣赏社区居民的绘画作品,感受艺术的魅力。', NULL, '2023-07-01 14:00:00', '2023-07-01 17:00:00', NULL, NULL, '社区文化中心', 50, NULL, 1, NULL, 2, 1, '2025-03-13 18:17:30', '2025-03-30 19:21:03');
+INSERT INTO `activities` VALUES (23, '社区舞蹈课', '3', '学习各种流行舞蹈,展现自己的舞蹈才能。', NULL, '2023-07-05 19:00:00', '2023-07-05 21:00:00', NULL, NULL, '社区活动中心', 40, NULL, 1, NULL, 3, 1, '2025-03-13 18:17:30', '2025-03-30 19:21:03');
+INSERT INTO `activities` VALUES (24, '社区趣味运动会', '3', '参加各种有趣的运动项目,增强身体素质。', NULL, '2023-07-10 09:00:00', '2023-07-10 12:00:00', NULL, NULL, '社区体育场', 80, NULL, 1, NULL, 4, 1, '2025-03-13 18:17:30', '2025-03-30 19:21:03');
+INSERT INTO `activities` VALUES (25, '社区电影欣赏', '1', '观看精彩的电影作品,享受电影带来的视听盛宴。', NULL, '2023-07-15 19:00:00', '2023-07-15 21:30:00', NULL, NULL, '社区文化中心', 60, NULL, 1, NULL, 5, 1, '2025-03-13 18:17:30', '2025-03-30 19:21:03');
+INSERT INTO `activities` VALUES (26, '社区园艺培训', '6', '学习园艺知识,种植自己喜欢的花草植物。', NULL, '2023-07-20 14:00:00', '2023-07-20 17:00:00', NULL, NULL, '社区公园', 30, NULL, 1, NULL, 6, 1, '2025-03-13 18:17:30', '2025-03-30 19:21:03');
+INSERT INTO `activities` VALUES (27, '社区读书会', '9', '一起分享读书心得,探讨有趣的文学作品。', NULL, '2023-07-25 19:30:00', '2023-07-25 21:00:00', NULL, NULL, '社区图书馆', 20, NULL, 1, NULL, 7, 1, '2025-03-13 18:17:30', '2025-03-30 19:21:03');
+INSERT INTO `activities` VALUES (28, '社区摄影展', '9', '展示社区居民的摄影作品,欣赏生活中的美好瞬间。', NULL, '2023-08-01 14:00:00', '2023-08-01 17:00:00', NULL, NULL, '社区文化中心', 50, NULL, 1, NULL, 8, 1, '2025-03-13 18:17:30', '2025-03-30 19:21:03');
+INSERT INTO `activities` VALUES (29, '社区烹饪大赛', '9', '展示大家的厨艺,品尝各种美味佳肴。', NULL, '2023-08-05 19:00:00', '2023-08-05 21:30:00', NULL, NULL, '社区活动中心', 40, NULL, 1, NULL, 9, 1, '2025-03-13 18:17:30', '2025-03-30 19:21:03');
+INSERT INTO `activities` VALUES (30, '社区户外探险', '9', '一起探索大自然,体验户外运动的乐趣。', NULL, '2023-08-10 09:00:00', '2023-08-10 16:00:00', NULL, NULL, '社区公园', 60, NULL, 1, NULL, 10, 1, '2025-03-13 18:17:30', '2025-03-30 19:21:03');
 
 -- ----------------------------
--- Table structure for activityparticipate
+-- Table structure for activity_check_in
 -- ----------------------------
-DROP TABLE IF EXISTS `activityparticipate`;
-CREATE TABLE `activityparticipate`  (
-  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '参与ID',
-  `activity_id` bigint NOT NULL COMMENT '活动ID',
-  `elder_id` bigint NOT NULL COMMENT '老人ID',
-  `status` tinyint NOT NULL DEFAULT 0 COMMENT '状态：0-已报名，1-已签到，2-已取消',
-  `sign_time` datetime NULL DEFAULT NULL COMMENT '签到时间',
-  `is_deleted` tinyint(1) NOT NULL DEFAULT 0 COMMENT '是否已删除',
-  PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE INDEX `uk_activity_elder`(`activity_id` ASC, `elder_id` ASC) USING BTREE,
-  UNIQUE INDEX `uk_elder_id`(`elder_id` ASC) USING BTREE,
-  INDEX `idx_elder_id`(`elder_id` ASC) USING BTREE,
-  INDEX `idx_status`(`status` ASC) USING BTREE,
-  INDEX `idx_is_deleted`(`is_deleted` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 14 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '活动参与表' ROW_FORMAT = Dynamic;
-
--- ----------------------------
--- Records of activityparticipate
--- ----------------------------
-INSERT INTO `activityparticipate` VALUES (1, 101, 1, 0, NULL, 0);
-INSERT INTO `activityparticipate` VALUES (2, 102, 2, 1, '2023-04-15 10:30:00', 0);
-INSERT INTO `activityparticipate` VALUES (3, 103, 3, 0, NULL, 0);
-INSERT INTO `activityparticipate` VALUES (4, 104, 4, 2, '2023-04-16 14:00:00', 0);
-INSERT INTO `activityparticipate` VALUES (5, 105, 5, 0, NULL, 0);
-INSERT INTO `activityparticipate` VALUES (6, 106, 6, 1, '2023-04-17 09:45:00', 0);
-INSERT INTO `activityparticipate` VALUES (7, 107, 7, 0, NULL, 0);
-INSERT INTO `activityparticipate` VALUES (8, 108, 8, 2, '2023-04-18 16:20:00', 0);
-INSERT INTO `activityparticipate` VALUES (9, 109, 9, 0, NULL, 0);
-INSERT INTO `activityparticipate` VALUES (10, 110, 10, 1, '2023-04-19 11:00:00', 0);
-INSERT INTO `activityparticipate` VALUES (11, 1, 101, 1, '2023-10-01 08:30:00', 0);
-INSERT INTO `activityparticipate` VALUES (12, 1, 102, 1, '2023-10-01 08:45:00', 0);
-INSERT INTO `activityparticipate` VALUES (13, 1, 103, 1, '2023-10-01 09:00:00', 0);
-
--- ----------------------------
--- Table structure for activitysignin
--- ----------------------------
-DROP TABLE IF EXISTS `activitysignin`;
-CREATE TABLE `activitysignin`  (
+DROP TABLE IF EXISTS `activity_check_in`;
+CREATE TABLE `activity_check_in`  (
   `id` bigint NOT NULL AUTO_INCREMENT COMMENT '签到ID',
+  `register_id` bigint NOT NULL COMMENT '报名ID',
   `activity_id` bigint NOT NULL COMMENT '活动ID',
   `elder_id` bigint NOT NULL COMMENT '老人ID',
+  `check_in_user_id` bigint NULL DEFAULT NULL COMMENT '签到人ID（老人本人或家属）',
+  `check_in_type` tinyint NULL DEFAULT NULL COMMENT '签到类型：0-老人自己签到，1-家属代签到',
   `sign_in_time` datetime NOT NULL COMMENT '签到时间',
   `sign_out_time` datetime NULL DEFAULT NULL COMMENT '签退时间',
   `remarks` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '备注信息',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `is_deleted` tinyint(1) NOT NULL DEFAULT 0 COMMENT '是否已删除',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `uk_register_id`(`register_id` ASC) USING BTREE,
+  INDEX `idx_activity_id`(`activity_id` ASC) USING BTREE,
+  INDEX `idx_elder_id`(`elder_id` ASC) USING BTREE,
+  INDEX `idx_check_in_user_id`(`check_in_user_id` ASC) USING BTREE,
+  INDEX `idx_sign_in_time`(`sign_in_time` ASC) USING BTREE,
+  INDEX `idx_is_deleted`(`is_deleted` ASC) USING BTREE,
+  CONSTRAINT `fk_activity_check_in_activity` FOREIGN KEY (`activity_id`) REFERENCES `activities` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_activity_check_in_elder` FOREIGN KEY (`elder_id`) REFERENCES `user` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_activity_check_in_register` FOREIGN KEY (`register_id`) REFERENCES `activity_register` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_activity_check_in_user` FOREIGN KEY (`check_in_user_id`) REFERENCES `user` (`user_id`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '活动签到表' ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
+-- Records of activity_check_in
+-- ----------------------------
+
+-- ----------------------------
+-- Table structure for activity_register
+-- ----------------------------
+DROP TABLE IF EXISTS `activity_register`;
+CREATE TABLE `activity_register`  (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '报名ID',
+  `activity_id` bigint NOT NULL COMMENT '活动ID',
+  `elder_id` bigint NOT NULL COMMENT '老人ID',
+  `register_user_id` bigint NULL DEFAULT NULL COMMENT '报名人ID（老人本人或家属）',
+  `register_type` tinyint NOT NULL DEFAULT 0 COMMENT '报名类型：0-老人自己报名，1-家属代报名',
+  `register_time` datetime NOT NULL COMMENT '报名时间',
+  `status` tinyint NOT NULL DEFAULT 0 COMMENT '状态：0-待审核，1-已通过，2-已拒绝，3-已取消',
+  `remark` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '备注',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   `is_deleted` tinyint(1) NOT NULL DEFAULT 0 COMMENT '是否已删除',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uk_activity_elder`(`activity_id` ASC, `elder_id` ASC) USING BTREE,
   INDEX `idx_activity_id`(`activity_id` ASC) USING BTREE,
   INDEX `idx_elder_id`(`elder_id` ASC) USING BTREE,
+  INDEX `idx_register_user_id`(`register_user_id` ASC) USING BTREE,
+  INDEX `idx_status`(`status` ASC) USING BTREE,
+  INDEX `idx_register_time`(`register_time` ASC) USING BTREE,
   INDEX `idx_is_deleted`(`is_deleted` ASC) USING BTREE,
-  CONSTRAINT `fk_activity_id` FOREIGN KEY (`activity_id`) REFERENCES `activities` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
-  CONSTRAINT `fk_elder_id` FOREIGN KEY (`elder_id`) REFERENCES `activityparticipate` (`elder_id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 7 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '社区活动签到表' ROW_FORMAT = Dynamic;
+  CONSTRAINT `fk_activity_register_activity` FOREIGN KEY (`activity_id`) REFERENCES `activities` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_activity_register_elder` FOREIGN KEY (`elder_id`) REFERENCES `user` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_activity_register_register_user` FOREIGN KEY (`register_user_id`) REFERENCES `user` (`user_id`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE = InnoDB AUTO_INCREMENT = 14 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '活动报名表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
--- Records of activitysignin
+-- Records of activity_register
 -- ----------------------------
-INSERT INTO `activitysignin` VALUES (4, 1, 101, '2023-10-01 08:30:00', '2023-10-01 11:00:00', '无', 0);
-INSERT INTO `activitysignin` VALUES (5, 1, 102, '2023-10-01 08:45:00', '2023-10-01 11:15:00', '无', 0);
-INSERT INTO `activitysignin` VALUES (6, 1, 103, '2023-10-01 09:00:00', '2023-10-01 11:30:00', '无', 0);
+
+-- ----------------------------
+-- Table structure for activity_review
+-- ----------------------------
+DROP TABLE IF EXISTS `activity_review`;
+CREATE TABLE `activity_review`  (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '评价ID',
+  `activity_id` bigint NOT NULL COMMENT '活动ID',
+  `elder_id` bigint NOT NULL COMMENT '老人ID',
+  `register_id` bigint NOT NULL COMMENT '报名ID',
+  `rating` int NOT NULL COMMENT '评分（1-5）',
+  `content` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '评价内容',
+  `review_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '评价时间',
+  `is_anonymous` tinyint(1) NOT NULL DEFAULT 0 COMMENT '是否匿名：0-否，1-是',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `is_deleted` tinyint(1) NOT NULL DEFAULT 0 COMMENT '是否已删除',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `uk_register_id`(`register_id` ASC) USING BTREE,
+  INDEX `idx_activity_id`(`activity_id` ASC) USING BTREE,
+  INDEX `idx_elder_id`(`elder_id` ASC) USING BTREE,
+  INDEX `idx_is_deleted`(`is_deleted` ASC) USING BTREE,
+  CONSTRAINT `fk_activity_review_activity` FOREIGN KEY (`activity_id`) REFERENCES `activities` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_activity_review_elder` FOREIGN KEY (`elder_id`) REFERENCES `user` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_activity_review_register` FOREIGN KEY (`register_id`) REFERENCES `activity_register` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '活动评价表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of activity_review
+-- ----------------------------
 
 -- ----------------------------
 -- Table structure for config
@@ -193,12 +234,12 @@ CREATE TABLE `dict_data`  (
   `update_time` datetime NULL DEFAULT NULL COMMENT '更新时间',
   `remark` varchar(500) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '备注',
   PRIMARY KEY (`dict_code`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 100 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '字典数据表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 111 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '字典数据表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of dict_data
 -- ----------------------------
-INSERT INTO `dict_data` VALUES (1, 1, '男', '0', 'user_sex', '', '', 'Y', '0', 'admin', '2025-03-19 10:18:55', '', NULL, '性别男');
+INSERT INTO `dict_data` VALUES (1, 1, '男', '0', 'user_sex', '', '', 'Y', '0', 'admin', '2025-03-19 10:18:55', '', '2025-04-01 14:48:01', '性别男');
 INSERT INTO `dict_data` VALUES (2, 2, '女', '1', 'user_sex', '', '', 'N', '0', 'admin', '2025-03-19 10:18:55', '', NULL, '性别女');
 INSERT INTO `dict_data` VALUES (3, 3, '未知', '2', 'user_sex', '', '', 'N', '0', 'admin', '2025-03-19 10:18:55', '', NULL, '性别未知');
 INSERT INTO `dict_data` VALUES (4, 1, '显示', '0', 'show_hide', '', 'primary', 'Y', '0', 'admin', '2025-03-19 10:18:55', '', NULL, '显示菜单');
@@ -236,6 +277,15 @@ INSERT INTO `dict_data` VALUES (35, 6, '技能培训', '6', 'activity_type', '',
 INSERT INTO `dict_data` VALUES (36, 7, '社交联谊', '7', 'activity_type', '', 'success', 'N', '0', 'admin', '2025-03-30 01:41:55', '', NULL, '社交联谊类活动');
 INSERT INTO `dict_data` VALUES (37, 8, '公益慈善', '8', 'activity_type', '', 'warning', 'N', '0', 'admin', '2025-03-30 01:41:55', '', NULL, '公益慈善类活动');
 INSERT INTO `dict_data` VALUES (38, 9, '其他活动', '9', 'activity_type', '', 'info', 'N', '0', 'admin', '2025-03-30 01:41:55', '', NULL, '其他类型活动');
+INSERT INTO `dict_data` VALUES (102, 1, '医疗服务', 'medical', 'service_type', '', 'primary', 'Y', '0', 'admin', '2025-04-05 02:10:48', 'admin', '2025-04-05 02:10:48', '医疗类服务');
+INSERT INTO `dict_data` VALUES (103, 2, '清洁服务', 'cleaning', 'service_type', '', 'success', 'N', '0', 'admin', '2025-04-05 02:10:48', 'admin', '2025-04-05 02:10:48', '清洁类服务');
+INSERT INTO `dict_data` VALUES (104, 3, '维修服务', 'repair', 'service_type', '', 'warning', 'N', '0', 'admin', '2025-04-05 02:10:48', 'admin', '2025-04-05 02:10:48', '维修类服务');
+INSERT INTO `dict_data` VALUES (105, 1, '待审核', '0', 'order_status', '', 'info', 'Y', '0', 'admin', '2025-04-05 02:10:48', 'admin', '2025-04-05 02:10:48', '工单待审核状态');
+INSERT INTO `dict_data` VALUES (106, 2, '已派单', '1', 'order_status', '', 'primary', 'N', '0', 'admin', '2025-04-05 02:10:48', 'admin', '2025-04-05 02:10:48', '工单已派单状态');
+INSERT INTO `dict_data` VALUES (107, 3, '服务中', '2', 'order_status', '', 'warning', 'N', '0', 'admin', '2025-04-05 02:10:48', 'admin', '2025-04-05 02:10:48', '工单服务中状态');
+INSERT INTO `dict_data` VALUES (108, 4, '已完成', '3', 'order_status', '', 'success', 'N', '0', 'admin', '2025-04-05 02:10:48', 'admin', '2025-04-05 02:10:48', '工单已完成状态');
+INSERT INTO `dict_data` VALUES (109, 5, '已取消', '4', 'order_status', '', 'danger', 'N', '0', 'admin', '2025-04-05 02:10:48', 'admin', '2025-04-05 02:10:48', '工单已取消状态');
+INSERT INTO `dict_data` VALUES (110, 6, '已拒绝', '5', 'order_status', '', 'danger', 'N', '0', 'admin', '2025-04-05 02:10:48', 'admin', '2025-04-05 02:10:48', '工单已拒绝状态');
 
 -- ----------------------------
 -- Table structure for dict_type
@@ -253,21 +303,22 @@ CREATE TABLE `dict_type`  (
   `remark` varchar(500) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '备注',
   PRIMARY KEY (`dict_id`) USING BTREE,
   UNIQUE INDEX `dict_type`(`dict_type` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 100 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '字典类型表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 103 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '字典类型表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of dict_type
 -- ----------------------------
-INSERT INTO `dict_type` VALUES (1, '用户性别', 'user_sex', '1', 'admin', '2025-03-19 10:20:20', '', NULL, '用户性别列表');
-INSERT INTO `dict_type` VALUES (2, '菜单状态', 'show_hide', '1', 'admin', '2025-03-19 10:20:20', '', NULL, '菜单状态列表');
-INSERT INTO `dict_type` VALUES (3, '系统开关', 'normal_disable', '1', 'admin', '2025-03-19 10:20:20', '', NULL, '系统开关列表');
-INSERT INTO `dict_type` VALUES (6, '系统是否', 'yes_no', '1', 'admin', '2025-03-19 10:20:20', '', NULL, '系统是否列表');
-INSERT INTO `dict_type` VALUES (7, '通知类型', 'notice_type', '1', 'admin', '2025-03-19 10:20:20', '', NULL, '通知类型列表');
-INSERT INTO `dict_type` VALUES (8, '通知状态', 'notice_status', '1', 'admin', '2025-03-19 10:20:20', '', NULL, '通知状态列表');
-INSERT INTO `dict_type` VALUES (9, '操作类型', 'oper_type', '1', 'admin', '2025-03-19 10:20:20', '', NULL, '操作类型列表');
-INSERT INTO `dict_type` VALUES (10, '系统状态', 'common_status', '1', 'admin', '2025-03-19 10:20:20', '', NULL, '登录状态列表');
-INSERT INTO `dict_type` VALUES (11, '服务类型', 'service_type', '1', 'admin', '2025-03-30 01:41:22', '', '2025-03-30 01:41:22', '服务类型列表');
-INSERT INTO `dict_type` VALUES (12, '活动类型', 'activity_type', '1', 'admin', '2025-03-30 01:41:55', '', '2025-03-30 01:41:55', '活动类型列表');
+INSERT INTO `dict_type` VALUES (1, '用户性别', 'user_sex', '0', 'admin', '2025-04-01 10:49:39', '', '2025-04-01 10:49:39', '用户性别列表');
+INSERT INTO `dict_type` VALUES (2, '菜单状态', 'show_hide', '0', 'admin', '2025-04-01 10:49:39', '', '2025-04-01 10:49:39', '菜单状态列表');
+INSERT INTO `dict_type` VALUES (3, '系统开关', 'normal_disable', '0', 'admin', '2025-04-01 10:49:39', '', '2025-04-01 10:49:39', '系统开关列表');
+INSERT INTO `dict_type` VALUES (6, '系统状态', 'yes_no', '0', 'admin', '2025-04-01 10:49:39', '', '2025-04-01 10:49:39', '系统是否列表');
+INSERT INTO `dict_type` VALUES (7, '通知类型', 'notice_type', '0', 'admin', '2025-04-01 10:49:39', '', '2025-04-01 10:49:39', '通知类型列表');
+INSERT INTO `dict_type` VALUES (8, '通知状态', 'notice_status', '0', 'admin', '2025-04-01 10:49:39', '', '2025-04-01 10:49:39', '通知状态列表');
+INSERT INTO `dict_type` VALUES (9, '操作类型', 'oper_type', '0', 'admin', '2025-04-01 10:49:39', '', '2025-04-01 10:49:39', '操作类型列表');
+INSERT INTO `dict_type` VALUES (10, '系统状态', 'common_status', '0', 'admin', '2025-04-01 10:49:39', '', '2025-04-01 10:49:39', '登录状态列表');
+INSERT INTO `dict_type` VALUES (11, '服务类型', 'service_type', '0', 'admin', '2025-04-05 02:09:58', 'admin', '2025-04-05 02:09:58', '服务项目的类型');
+INSERT INTO `dict_type` VALUES (12, '活动类型', 'activity_type', '0', 'admin', '2025-04-01 10:49:39', '', '2025-04-01 10:49:39', '活动类型列表');
+INSERT INTO `dict_type` VALUES (101, '工单状态', 'order_status', '0', 'admin', '2025-04-05 02:09:40', 'admin', '2025-04-05 02:09:40', '服务工单的状态');
 
 -- ----------------------------
 -- Table structure for elder_kin_relation
@@ -283,6 +334,41 @@ CREATE TABLE `elder_kin_relation`  (
 
 -- ----------------------------
 -- Records of elder_kin_relation
+-- ----------------------------
+
+-- ----------------------------
+-- Table structure for health_monitoring
+-- ----------------------------
+DROP TABLE IF EXISTS `health_monitoring`;
+CREATE TABLE `health_monitoring`  (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '监测记录ID',
+  `elder_id` bigint NOT NULL COMMENT '老人ID',
+  `monitoring_type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '监测类型(血压/血糖/心率等)',
+  `monitoring_value` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '监测值',
+  `monitoring_unit` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '监测单位',
+  `monitoring_time` datetime NOT NULL COMMENT '监测时间',
+  `device_id` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '设备ID',
+  `monitoring_status` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT 'normal' COMMENT '监测状态(normal/abnormal)',
+  `abnormal_level` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '异常等级(low/medium/high)',
+  `abnormal_description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '异常描述',
+  `is_processed` tinyint(1) NULL DEFAULT 0 COMMENT '是否已处理',
+  `processed_time` datetime NULL DEFAULT NULL COMMENT '处理时间',
+  `processed_by` bigint NULL DEFAULT NULL COMMENT '处理人ID',
+  `processed_result` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '处理结果',
+  `health_record_id` bigint NULL DEFAULT NULL COMMENT '关联的健康档案ID',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_elder_id`(`elder_id` ASC) USING BTREE,
+  INDEX `idx_monitoring_time`(`monitoring_time` ASC) USING BTREE,
+  INDEX `idx_device_id`(`device_id` ASC) USING BTREE,
+  INDEX `idx_health_record_id`(`health_record_id` ASC) USING BTREE,
+  CONSTRAINT `fk_health_monitoring_elder` FOREIGN KEY (`elder_id`) REFERENCES `user` (`user_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `fk_health_monitoring_health_record` FOREIGN KEY (`health_record_id`) REFERENCES `health_records` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '健康监测表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of health_monitoring
 -- ----------------------------
 
 -- ----------------------------
@@ -362,7 +448,7 @@ INSERT INTO `menu` VALUES (103, '字典管理', 1, 6, 'dict', 'system/dict/index
 INSERT INTO `menu` VALUES (104, '系统设置', 1, 9, 'config', 'system/config/index', '', '', 1, 1, 'M', '1', '0', '', 'log', 'admin', '2025-03-20 03:44:24', 'admin', NULL, '日志管理菜单');
 INSERT INTO `menu` VALUES (107, '仪表盘', 2, 1, 'dashboard', 'analysis/dashboard/index', '', '', 1, 1, 'C', '1', '0', 'monitor:online:list', 'online', 'admin', '2025-03-20 03:44:24', 'admin', NULL, '仪表盘');
 INSERT INTO `menu` VALUES (108, '服务项目管理', 3, 0, 'service', 'services/service', NULL, '', 1, 1, 'C', '1', '0', 'services:service:list', 'service', 'admin', '2025-03-20 03:44:24', 'admin', NULL, '');
-INSERT INTO `menu` VALUES (109, '服务工单管理', 3, 1, 'appointment', 'services/appointment', NULL, '', 1, 1, 'C', '1', '0', NULL, 'service', 'admin', '2025-03-20 03:44:24', 'admin', NULL, '');
+INSERT INTO `menu` VALUES (109, '服务工单管理', 3, 1, 'order', 'services/order', NULL, '', 1, 1, 'C', '1', '0', NULL, 'service', 'admin', '2025-04-05 01:16:24', 'admin', '2025-04-05 01:16:24', '');
 INSERT INTO `menu` VALUES (110, '服务评价管理', 3, 2, 'evaluation', 'services/evaluation', NULL, '', 1, 1, 'C', '1', '0', NULL, 'service', 'admin', '2025-03-20 03:44:24', 'admin', NULL, '');
 INSERT INTO `menu` VALUES (1000, '用户查询', 100, 1, '', '', '', '', 1, 1, 'F', '1', '0', 'system:user:query', '#', 'admin', '2025-03-20 03:44:25', 'admin', NULL, '');
 INSERT INTO `menu` VALUES (1001, '用户新增', 100, 2, '', '', '', '', 1, 1, 'F', '1', '0', 'system:user:add', '#', 'admin', '2025-03-20 03:44:25', 'admin', NULL, '');
@@ -392,6 +478,7 @@ INSERT INTO `menu` VALUES (1020, '字典导出', 103, 5, '', '', '', '', 1, 1, '
 DROP TABLE IF EXISTS `notification`;
 CREATE TABLE `notification`  (
   `id` bigint NOT NULL AUTO_INCREMENT COMMENT '通知ID',
+  `user_id` bigint NOT NULL COMMENT '用户ID',
   `title` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '通知标题',
   `content` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '通知内容',
   `status` tinyint NOT NULL DEFAULT 0 COMMENT '状态：0-草稿 1-已发布 2-已撤回',
@@ -401,19 +488,24 @@ CREATE TABLE `notification`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_status`(`status` ASC) USING BTREE,
   INDEX `idx_publish_time`(`publish_time` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 9 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '通知公告表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 14 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '通知公告表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of notification
 -- ----------------------------
-INSERT INTO `notification` VALUES (1, '社区健康讲座通知', '计划于下月举办老年人健康知识讲座，具体时间待定', 0, '2023-03-27 09:00:00', '2025-03-28 16:40:54', '2025-03-28 16:41:46');
-INSERT INTO `notification` VALUES (2, '端午节活动筹备', '端午节包粽子活动正在筹备中，需要志愿者报名', 0, '2023-03-27 10:00:00', '2025-03-28 16:41:56', '2023-05-15 14:30:00');
-INSERT INTO `notification` VALUES (3, '系统维护通知', '系统将于今晚23:00-24:00进行维护升级，期间暂停服务', 1, '2023-03-27 11:00:00', '2025-03-28 16:42:07', '2023-05-20 15:00:00');
-INSERT INTO `notification` VALUES (4, '老年体检安排', '6月1日-6月5日社区医院为65岁以上老人提供免费体检', 1, '2023-03-27 11:00:00', '2025-03-28 16:42:13', '2023-05-25 09:00:00');
-INSERT INTO `notification` VALUES (5, '防诈骗知识讲座', '5月30日下午2点社区活动中心举办老年人防诈骗讲座', 1, '2023-03-27 10:00:00', '2025-03-28 16:42:03', '2023-05-28 10:30:00');
-INSERT INTO `notification` VALUES (6, '错误通知示例', '此通知内容有误，已撤回', 2, '2023-03-27 10:00:00', '2025-03-28 16:42:03', '2023-05-18 08:00:00');
-INSERT INTO `notification` VALUES (7, '活动取消通知', '原定于5月22日的书法班因故取消，时间另行通知', 2, '2023-03-27 10:00:00', '2025-03-28 16:42:03', '2023-05-21 13:00:00');
-INSERT INTO `notification` VALUES (8, '重要：医保政策更新', '2023年最新医保报销政策已更新，请及时查看', 1, '2023-03-27 10:00:00', '2025-03-28 16:42:03', '2023-06-01 09:00:00');
+INSERT INTO `notification` VALUES (1, 0, '社区健康讲座通知', '计划于下月举办老年人健康知识讲座，具体时间待定', 0, '2023-03-27 09:00:00', '2025-03-28 16:40:54', '2025-03-28 16:41:46');
+INSERT INTO `notification` VALUES (2, 0, '端午节活动筹备', '端午节包粽子活动正在筹备中，需要志愿者报名', 0, '2023-03-27 10:00:00', '2025-03-28 16:41:56', '2023-05-15 14:30:00');
+INSERT INTO `notification` VALUES (3, 0, '系统维护通知', '系统将于今晚23:00-24:00进行维护升级，期间暂停服务', 1, '2023-03-27 11:00:00', '2025-03-28 16:42:07', '2023-05-20 15:00:00');
+INSERT INTO `notification` VALUES (4, 0, '老年体检安排', '6月1日-6月5日社区医院为65岁以上老人提供免费体检', 1, '2023-03-27 11:00:00', '2025-03-28 16:42:13', '2023-05-25 09:00:00');
+INSERT INTO `notification` VALUES (5, 0, '防诈骗知识讲座', '5月30日下午2点社区活动中心举办老年人防诈骗讲座', 1, '2023-03-27 10:00:00', '2025-03-28 16:42:03', '2023-05-28 10:30:00');
+INSERT INTO `notification` VALUES (6, 0, '错误通知示例', '此通知内容有误，已撤回', 2, '2023-03-27 10:00:00', '2025-03-28 16:42:03', '2023-05-18 08:00:00');
+INSERT INTO `notification` VALUES (7, 0, '活动取消通知', '原定于5月22日的书法班因故取消，时间另行通知', 2, '2023-03-27 10:00:00', '2025-03-28 16:42:03', '2023-05-21 13:00:00');
+INSERT INTO `notification` VALUES (8, 0, '重要：医保政策更新', '2023年最新医保报销政策已更新，请及时查看', 1, '2023-03-27 10:00:00', '2025-03-28 16:42:03', '2023-06-01 09:00:00');
+INSERT INTO `notification` VALUES (9, 2, '服务预约通知', '尊敬的刘大毛用户，您的服务预约（预约号：2）预约已创建，等待审核。预约时间：2025-04-29 08:33:00，服务项目：null。', 0, '2025-04-05 00:33:49', '2025-04-05 00:33:49', '2025-04-05 00:33:49');
+INSERT INTO `notification` VALUES (10, 2, '服务预约通知', '尊敬的刘大毛用户，您的服务预约（预约号：3）预约已创建，等待审核。预约时间：2025-04-29 10:40:00，服务项目：null。', 0, '2025-04-05 00:39:10', '2025-04-05 00:39:10', '2025-04-05 00:39:10');
+INSERT INTO `notification` VALUES (11, 2, '服务预约通知', '尊敬的刘大毛用户，您的服务预约（预约号：4）预约已创建，等待审核。预约时间：2025-04-29 08:54:00，服务项目：null。', 0, '2025-04-05 00:54:48', '2025-04-05 00:54:48', '2025-04-05 00:54:48');
+INSERT INTO `notification` VALUES (12, 2, '服务预约通知', '尊敬的刘大毛用户，您的服务预约（预约号：4）预约审核通过。预约时间：2025-04-29 08:54:00，服务项目：null。', 0, '2025-04-05 01:43:34', '2025-04-05 01:43:34', '2025-04-05 01:43:34');
+INSERT INTO `notification` VALUES (13, 2, '服务预约通知', '尊敬的刘大毛用户，您的服务预约（预约号：3）预约审核通过。预约时间：2025-04-29 10:40:00，服务项目：null。', 0, '2025-04-05 01:45:06', '2025-04-05 01:45:06', '2025-04-05 01:45:06');
 
 -- ----------------------------
 -- Table structure for role
@@ -501,26 +593,27 @@ CREATE TABLE `service_order`  (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `user_id` bigint NOT NULL COMMENT '预约用户',
   `service_item_id` bigint NOT NULL COMMENT '服务项目',
-  `status` tinyint NOT NULL COMMENT '状态(0-待审核 1-已派单 2-服务中 3-已完成)',
-  `apply_reason` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '申请理由',
+  `status` tinyint NOT NULL COMMENT '状态(0-待审核 1-已派单 2-服务中 3-已完成 4-已取消 5-已拒绝)',
+  `apply_reason` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '预约理由',
   `review_remark` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '审核备注',
   `schedule_time` datetime NULL DEFAULT NULL COMMENT '预约时间',
+  `actual_fee` decimal(10, 2) NULL DEFAULT NULL COMMENT '实际费用',
   `actual_duration` int NULL DEFAULT NULL COMMENT '实际服务时长(分钟)',
   `create_by` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '创建者',
+  `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `update_by` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '更新者',
+  `update_time` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   `remark` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '备注',
-  `createBy` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '创建者',
-  `createTime` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  `updateBy` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '更新者',
-  `updateTime` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_user_status`(`user_id` ASC, `status` ASC) USING BTREE,
   CONSTRAINT `service_order_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '服务工单表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '服务工单表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of service_order
 -- ----------------------------
+INSERT INTO `service_order` VALUES (3, 2, 1001, 1, '13433432', '1', '2025-04-29 10:40:00', NULL, NULL, NULL, '2025-04-05 00:39:10', NULL, '2025-04-05 00:39:10', NULL);
+INSERT INTO `service_order` VALUES (4, 2, 3002, 1, '要求认真仔细一点的阿姨', '1', '2025-04-29 08:54:00', NULL, NULL, NULL, '2025-04-05 00:54:48', NULL, '2025-04-05 00:54:48', NULL);
 
 -- ----------------------------
 -- Table structure for service_review
@@ -633,5 +726,27 @@ CREATE TABLE `warning_record`  (
 -- ----------------------------
 -- Records of warning_record
 -- ----------------------------
+
+-- ----------------------------
+-- Triggers structure for table activity_check_in
+-- ----------------------------
+DROP TRIGGER IF EXISTS `trg_activity_check_in_after_insert`;
+delimiter ;;
+CREATE TRIGGER `trg_activity_check_in_after_insert` AFTER INSERT ON `activity_check_in` FOR EACH ROW BEGIN
+  UPDATE `activity_register` SET `status` = 4 WHERE `id` = NEW.register_id;
+END
+;;
+delimiter ;
+
+-- ----------------------------
+-- Triggers structure for table activity_check_in
+-- ----------------------------
+DROP TRIGGER IF EXISTS `trg_activity_check_in_after_delete`;
+delimiter ;;
+CREATE TRIGGER `trg_activity_check_in_after_delete` AFTER DELETE ON `activity_check_in` FOR EACH ROW BEGIN
+  UPDATE `activity_register` SET `status` = 1 WHERE `id` = OLD.register_id;
+END
+;;
+delimiter ;
 
 SET FOREIGN_KEY_CHECKS = 1;

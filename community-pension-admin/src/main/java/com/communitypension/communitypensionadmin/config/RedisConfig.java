@@ -32,6 +32,10 @@ public class RedisConfig {
         template.setValueSerializer(jsonSerializer);
         template.setHashValueSerializer(jsonSerializer);
         
+        // 可以添加的配置（根据需求）
+        template.setEnableTransactionSupport(true); // 启用事务支持
+        template.setEnableDefaultSerializer(false); // 明确禁用默认序列化
+
         template.afterPropertiesSet();
         return template;
     }

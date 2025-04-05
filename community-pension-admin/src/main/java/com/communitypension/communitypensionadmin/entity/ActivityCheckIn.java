@@ -1,10 +1,7 @@
 package com.communitypension.communitypensionadmin.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 import java.time.LocalDateTime;
 
@@ -12,43 +9,60 @@ import java.time.LocalDateTime;
  * 活动签到实体类
  */
 @Data
-@EqualsAndHashCode(callSuper = true)
 @TableName("activity_check_in")
-public class ActivityCheckIn extends BaseEntity {
-    
+public class ActivityCheckIn {
+
     /**
      * 签到ID
      */
-    @TableId(value = "check_in_id", type = IdType.AUTO)
-    private Long checkInId;
-    
-    /**
-     * 活动ID
-     */
-    private Long activityId;
-    
-    /**
-     * 用户ID
-     */
-    private Long userId;
-    
+    @TableId(type = IdType.AUTO)
+    private Long id;
+
     /**
      * 报名ID
      */
-    private Long participateId;
-    
+    private Long registerId;
+
+    /**
+     * 签到人ID（老人本人或家属）
+     */
+    private Long checkInUserId;
+
+    /**
+     * 是否代签：0-本人签到，1-他人代签
+     */
+    private Integer isProxyCheckIn;
+
     /**
      * 签到时间
      */
-    private LocalDateTime checkInTime;
-    
+    private LocalDateTime signInTime;
+
     /**
-     * 签到状态：0-未签到，1-已签到
+     * 签退时间
      */
-    private Integer status;
-    
+    private LocalDateTime signOutTime;
+
     /**
-     * 备注
+     * 备注信息
      */
-    private String remark;
+    private String remarks;
+
+    /**
+     * 创建时间
+     */
+    @TableField(fill = FieldFill.INSERT)
+    private LocalDateTime createdAt;
+
+    /**
+     * 更新时间
+     */
+    @TableField(fill = FieldFill.INSERT_UPDATE)
+    private LocalDateTime updatedAt;
+
+    /**
+     * 是否已删除
+     */
+    @TableLogic
+    private Integer isDeleted;
 }

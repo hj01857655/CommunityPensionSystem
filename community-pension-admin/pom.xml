@@ -190,7 +190,7 @@
             <artifactId>caffeine</artifactId>
             <version>3.1.8</version>
         </dependency>
-        
+
         <!-- Spring Cache -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -243,6 +243,13 @@
             <version>2.0.2</version>
         </dependency>
 
+        <!-- MapStruct -->
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct</artifactId>
+            <version>1.6.3</version>
+        </dependency>
+
     </dependencies>
 
     <build>
@@ -265,6 +272,11 @@
                             <artifactId>mapstruct-processor</artifactId>
                             <version>1.6.3</version>
                         </path>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok-mapstruct-binding</artifactId>
+                            <version>0.2.0</version>
+                        </path>
                     </annotationProcessorPaths>
                 </configuration>
 
@@ -283,7 +295,8 @@
                 </configuration>
             </plugin>
 
-            <!-- Vue SSR Plugin -->
+            <!-- Vue SSR Plugin (Disabled) -->
+            <!--
             <plugin>
                 <groupId>com.github.eirslett</groupId>
                 <artifactId>frontend-maven-plugin</artifactId>
@@ -323,6 +336,7 @@
                     </execution>
                 </executions>
             </plugin>
+            -->
         </plugins>
     </build>
 

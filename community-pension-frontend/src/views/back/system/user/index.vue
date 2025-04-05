@@ -111,11 +111,11 @@
     </el-table>
 
     <!-- 分页组件 -->
-    <pagination
+    <Pagination
       v-if="total > 0"
       :total="total"
-      v-model:page="queryParams.pageNum"
-      v-model:limit="queryParams.pageSize"
+      :page="queryParams.current"
+      :limit="queryParams.size"
       @pagination="getList"
     />
 
@@ -227,15 +227,15 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, reactive } from 'vue';
-import { ElMessage, ElMessageBox } from 'element-plus';
-import { Search, Delete, Edit, Plus, Upload, Download, Refresh, ArrowDown } from '@element-plus/icons-vue';
-import { formatDate } from '@/utils/date';
-import { useUserStore } from '@/stores/back/userStore';
-import { storeToRefs } from 'pinia';
+import {onMounted, reactive, ref, watch} from 'vue';
+import {ElMessage, ElMessageBox} from 'element-plus';
+import {ArrowDown, Delete, Download, Edit, Plus, Refresh, Search, Upload} from '@element-plus/icons-vue';
+import {formatDate} from '@/utils/date';
+import {useUserStore} from '@/stores/back/userStore';
+import {storeToRefs} from 'pinia';
 import RightToolbar from '@/components/RightToolbar/index.vue';
 import Pagination from '@/components/common/Pagination.vue';
-import { pinyin } from 'pinyin-pro';
+import {pinyin} from 'pinyin-pro';
 
 const userStore = useUserStore();
 const { userList, total, loading } = storeToRefs(userStore);
@@ -487,8 +487,7 @@ watch(() => form.value.idCard, (newIdCard) => {
     const day = newIdCard.substring(12, 14);
     
     // 构造符合后端LocalDate格式的日期字符串 YYYY-MM-DD
-    const birthDateStr = `${year}-${month}-${day}`;
-    form.value.birthday = birthDateStr;
+    form.value.birthday = `${year}-${month}-${day}`;
     
     // 计算年龄
     const currentYear = new Date().getFullYear();
@@ -826,8 +825,8 @@ const getElderIdsByKin = async (kinId) => {
 onMounted(() => {
   getList();
 });
-</script>
 
+</script>
 <style scoped>
 .app-container {
   padding: 20px;

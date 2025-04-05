@@ -1,20 +1,30 @@
 package com.communitypension.communitypensionadmin.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.util.List;
+
+/**
+ * 家属用户数据传输对象
+ */
 @Data
 @EqualsAndHashCode(callSuper = true)
+@Schema(description = "家属用户DTO")
 public class KinDTO extends UserDTO {
     /**
-     * 家属绑定的老人Id
+     * 要绑定的老人ID列表
      */
-    private Integer elderId;
+    @Schema(description = "要绑定的老人ID列表")
+    private List<Long> bindElderIds;
 
     /**
-     * 家属与老人关系
+     * 与老人的关系类型
      */
-    private String relationship;
-
-
+    @NotBlank(message = "与老人的关系类型不能为空")
+    @Schema(description = "与老人的关系类型", required = true)
+    private String relationType;
 }

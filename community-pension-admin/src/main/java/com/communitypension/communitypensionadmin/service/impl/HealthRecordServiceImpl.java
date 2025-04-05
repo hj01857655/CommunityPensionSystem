@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -46,13 +47,12 @@ public class HealthRecordServiceImpl extends ServiceImpl<HealthRecordMapper, Hea
             throw new BusinessException("老人不存在");
         }
 
-        // 检查是否已有健康档案
-        LambdaQueryWrapper<HealthRecord> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(HealthRecord::getElderId, recordDTO.getElderId());
-        wrapper.eq(HealthRecord::getIsDeleted, 0);
-        int count = count(wrapper);
-        if (count > 0) {
-            throw new BusinessException("该老人已有健康档案，请使用更新功能");
+        // 设置记录时间和记录类型
+        if (recordDTO.getRecordTime() == null) {
+            recordDTO.setRecordTime(LocalDateTime.now());
+        }
+        if (!StringUtils.hasText(recordDTO.getRecordType())) {
+            recordDTO.setRecordType("常规记录");
         }
 
         // 转换为实体并保存
@@ -78,6 +78,11 @@ public class HealthRecordServiceImpl extends ServiceImpl<HealthRecordMapper, Hea
         User elder = userService.getById(recordDTO.getElderId());
         if (elder == null) {
             throw new BusinessException("老人不存在");
+        }
+
+        // 设置记录时间
+        if (recordDTO.getRecordTime() == null) {
+            recordDTO.setRecordTime(LocalDateTime.now());
         }
 
         // 更新档案
@@ -114,8 +119,14 @@ public class HealthRecordServiceImpl extends ServiceImpl<HealthRecordMapper, Hea
         // 获取老人信息
         User elder = userService.getById(record.getElderId());
 
+        // 获取记录人信息
+        User recorder = null;
+        if (record.getRecorderId() != null) {
+            recorder = userService.getById(record.getRecorderId());
+        }
+
         // 转换为VO
-        return HealthRecordConverter.toVO(record, elder);
+        return HealthRecordConverter.toVO(record, elder, recorder);
     }
 
     /**
@@ -129,18 +140,25 @@ public class HealthRecordServiceImpl extends ServiceImpl<HealthRecordMapper, Hea
             throw new BusinessException("老人不存在");
         }
 
-        // 查询健康档案
+        // 查询最新的健康档案
         LambdaQueryWrapper<HealthRecord> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(HealthRecord::getElderId, elderId);
-        wrapper.eq(HealthRecord::getIsDeleted, 0);
+        wrapper.orderByDesc(HealthRecord::getRecordTime);
+        wrapper.last("LIMIT 1");
         HealthRecord record = getOne(wrapper);
 
         if (record == null) {
             return null;
         }
 
+        // 获取记录人信息
+        User recorder = null;
+        if (record.getRecorderId() != null) {
+            recorder = userService.getById(record.getRecorderId());
+        }
+
         // 转换为VO
-        return HealthRecordConverter.toVO(record, elder);
+        return HealthRecordConverter.toVO(record, elder, recorder);
     }
 
     /**
@@ -153,7 +171,7 @@ public class HealthRecordServiceImpl extends ServiceImpl<HealthRecordMapper, Hea
         if (StringUtils.hasText(elderName)) {
             LambdaQueryWrapper<User> userWrapper = new LambdaQueryWrapper<>();
             userWrapper.like(User::getUsername, elderName);
-            userWrapper.eq(User::getIsDeleted, 0);
+            userWrapper.eq(User::getIsActive, 0);
             List<User> users = userService.list(userWrapper);
             elderIds = users.stream().map(User::getUserId).collect(Collectors.toList());
             if (elderIds.isEmpty()) {
@@ -169,8 +187,7 @@ public class HealthRecordServiceImpl extends ServiceImpl<HealthRecordMapper, Hea
         if (!elderIds.isEmpty()) {
             wrapper.in(HealthRecord::getElderId, elderIds);
         }
-        wrapper.eq(HealthRecord::getIsDeleted, 0);
-        wrapper.orderByDesc(HealthRecord::getUpdatedAt);
+        wrapper.orderByDesc(HealthRecord::getRecordTime);
 
         // 分页查询
         Page<HealthRecord> page = new Page<>(pageNum, pageSize);
@@ -181,6 +198,12 @@ public class HealthRecordServiceImpl extends ServiceImpl<HealthRecordMapper, Hea
                 .map(HealthRecord::getElderId)
                 .collect(Collectors.toList());
 
+        // 获取记录人ID列表
+        List<Long> recorderIds = page.getRecords().stream()
+                .map(HealthRecord::getRecorderId)
+                .filter(id -> id != null)
+                .collect(Collectors.toList());
+
         // 获取老人信息
         Map<Long, User> elderMap = new HashMap<>();
         if (!recordElderIds.isEmpty()) {
@@ -188,8 +211,15 @@ public class HealthRecordServiceImpl extends ServiceImpl<HealthRecordMapper, Hea
             elderMap = elders.stream().collect(Collectors.toMap(User::getUserId, user -> user));
         }
 
+        // 获取记录人信息
+        Map<Long, User> userMap = new HashMap<>();
+        if (!recorderIds.isEmpty()) {
+            List<User> recorders = userService.listByIds(recorderIds);
+            userMap = recorders.stream().collect(Collectors.toMap(User::getUserId, user -> user));
+        }
+
         // 转换为VO
-        List<HealthRecordVO> voList = HealthRecordConverter.toVOList(page.getRecords(), elderMap);
+        List<HealthRecordVO> voList = HealthRecordConverter.toVOList(page.getRecords(), elderMap, userMap);
 
         // 构建返回结果
         Page<HealthRecordVO> resultPage = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());

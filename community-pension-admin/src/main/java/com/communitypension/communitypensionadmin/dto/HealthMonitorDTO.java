@@ -1,8 +1,7 @@
 package com.communitypension.communitypensionadmin.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
@@ -16,7 +15,7 @@ import java.time.LocalDateTime;
 public class HealthMonitorDTO {
 
     /**
-     * 监测ID（更新时使用）
+     * 监测记录ID（更新时使用）
      */
     private Long id;
 
@@ -27,75 +26,79 @@ public class HealthMonitorDTO {
     private Long elderId;
 
     /**
-     * 监测类型：1-血压，2-血糖，3-体温，4-心率，5-血氧，6-体重，7-其他
+     * 监测类型(血压/血糖/心率等)
      */
-    @NotNull(message = "监测类型不能为空")
-    @Min(value = 1, message = "监测类型不正确")
-    @Max(value = 7, message = "监测类型不正确")
-    private Integer monitorType;
+    @NotBlank(message = "监测类型不能为空")
+    @Size(max = 50, message = "监测类型长度不能超过50个字符")
+    private String monitoringType;
 
     /**
-     * 收缩压（mmHg）
+     * 监测值
      */
-    private Integer systolicPressure;
+    @NotBlank(message = "监测值不能为空")
+    @Size(max = 50, message = "监测值长度不能超过50个字符")
+    private String monitoringValue;
 
     /**
-     * 舒张压（mmHg）
+     * 监测单位
      */
-    private Integer diastolicPressure;
-
-    /**
-     * 血糖值（mmol/L）
-     */
-    private Double bloodSugar;
-
-    /**
-     * 血糖类型：1-空腹，2-餐后，3-随机
-     */
-    private Integer bloodSugarType;
-
-    /**
-     * 体温（℃）
-     */
-    private Double temperature;
-
-    /**
-     * 心率（次/分）
-     */
-    private Integer heartRate;
-
-    /**
-     * 血氧饱和度（%）
-     */
-    private Integer bloodOxygen;
-
-    /**
-     * 体重（kg）
-     */
-    private Double weight;
-
-    /**
-     * 其他监测值
-     */
-    @Size(max = 100, message = "其他监测值长度不能超过100个字符")
-    private String otherValue;
+    @Size(max = 20, message = "监测单位长度不能超过20个字符")
+    private String monitoringUnit;
 
     /**
      * 监测时间
      */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime monitorTime;
+    private LocalDateTime monitoringTime;
 
     /**
-     * 监测结果：1-正常，2-偏高，3-偏低，4-异常
+     * 设备ID
      */
-    @Min(value = 1, message = "监测结果不正确")
-    @Max(value = 4, message = "监测结果不正确")
-    private Integer monitorResult;
+    @Size(max = 50, message = "设备ID长度不能超过50个字符")
+    private String deviceId;
 
     /**
-     * 备注
+     * 监测状态(normal/abnormal)
      */
-    @Size(max = 500, message = "备注长度不能超过500个字符")
-    private String remarks;
+    @Size(max = 20, message = "监测状态长度不能超过20个字符")
+    private String monitoringStatus;
+
+    /**
+     * 异常等级(low/medium/high)
+     */
+    @Size(max = 20, message = "异常等级长度不能超过20个字符")
+    private String abnormalLevel;
+
+    /**
+     * 异常描述
+     */
+    @Size(max = 500, message = "异常描述长度不能超过500个字符")
+    private String abnormalDescription;
+
+    /**
+     * 是否已处理
+     */
+    private Boolean isProcessed;
+
+    /**
+     * 处理时间
+     */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime processedTime;
+
+    /**
+     * 处理人ID
+     */
+    private Long processedBy;
+
+    /**
+     * 处理结果
+     */
+    @Size(max = 500, message = "处理结果长度不能超过500个字符")
+    private String processedResult;
+
+    /**
+     * 关联的健康档案ID
+     */
+    private Long healthRecordId;
 }

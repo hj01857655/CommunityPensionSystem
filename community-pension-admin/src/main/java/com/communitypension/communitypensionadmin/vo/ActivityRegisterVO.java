@@ -25,24 +25,39 @@ public class ActivityRegisterVO {
     private String activityTitle;
 
     /**
-     * 用户ID
+     * 老人ID
      */
-    private Long userId;
+    private Long elderId;
 
     /**
-     * 用户姓名
+     * 老人姓名
      */
-    private String userName;
+    private String elderName;
+
+    /**
+     * 报名人ID（老人本人或家属）
+     */
+    private Long registerUserId;
+
+    /**
+     * 报名人姓名
+     */
+    private String registerUserName;
+
+    /**
+     * 报名类型：0-老人自己报名，1-家属代报名
+     */
+    private Integer registerType;
+
+    /**
+     * 报名类型名称
+     */
+    private String registerTypeName;
 
     /**
      * 报名时间
      */
     private LocalDateTime registerTime;
-
-    /**
-     * 签到时间
-     */
-    private LocalDateTime checkInTime;
 
     /**
      * 状态：0-待审核，1-已通过，2-已拒绝，3-已取消，4-已签到
@@ -68,4 +83,9 @@ public class ActivityRegisterVO {
      * 更新时间
      */
     private LocalDateTime updatedAt;
+
+    /**
+     * 是否已签到
+     */
+    private Boolean hasCheckedIn;
 }

@@ -38,17 +38,18 @@ export const createServiceOrder = (data) => {
 
 /**
  * 审核工单
+ * @param {number} orderId - 工单ID
  * @param {Object} data - 审核数据
- * @param {number} data.id - 工单ID
  * @param {number} data.status - 状态：1-通过 2-拒绝
  * @param {string} [data.reviewRemark] - 审核备注
  * @returns {Promise<{code: number, msg: string}>}
  */
-export const reviewServiceOrder = (data) => {
-  const { id, status, reviewRemark } = data;
-  return axios.put(`/api/service/order/${id}/review`, {
-    status,
-    reviewRemark
+export const reviewServiceOrder = (orderId, data) => {
+  return axios.post(`/api/service/order/${orderId}/review`, null, {
+    params: {
+      status: data.status,
+      remark: data.reviewRemark
+    }
   });
 };
 

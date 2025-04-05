@@ -5,7 +5,6 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.communitypension.communitypensionadmin.dto.ServiceItemDTO;
 import com.communitypension.communitypensionadmin.entity.ServiceItem;
 import com.communitypension.communitypensionadmin.vo.ServiceItemVO;
-import jakarta.servlet.http.HttpServletResponse;
 
 import java.util.List;
 
@@ -13,7 +12,7 @@ import java.util.List;
  * 服务项目Service接口
  */
 public interface ServiceItemService extends IService<ServiceItem> {
-    
+
     /**
      * 分页查询服务项目列表
      *
@@ -63,13 +62,7 @@ public interface ServiceItemService extends IService<ServiceItem> {
      */
     boolean batchDeleteServiceItems(List<Long> serviceIds);
 
-    /**
-     * 导出服务项目列表
-     *
-     * @param response HTTP响应对象
-     * @param serviceItem 查询条件
-     */
-    void exportServiceItems(HttpServletResponse response, ServiceItem serviceItem);
+
 
     /**
      * 更新服务项目状态
@@ -79,4 +72,4 @@ public interface ServiceItemService extends IService<ServiceItem> {
      * @return 是否成功
      */
     boolean updateServiceItemStatus(Long serviceId, String status);
-} 
+}

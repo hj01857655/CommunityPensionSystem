@@ -1,9 +1,12 @@
 package com.communitypension.communitypensionadmin.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 /**
  * 健康档案数据传输对象
@@ -12,7 +15,7 @@ import lombok.Data;
 public class HealthRecordDTO {
 
     /**
-     * 档案ID（更新时使用）
+     * 记录ID（更新时使用）
      */
     private Long id;
 
@@ -23,80 +26,85 @@ public class HealthRecordDTO {
     private Long elderId;
 
     /**
-     * 血型：A型、B型、AB型、O型、其他
+     * 血压值
      */
-    @Size(max = 10, message = "血型长度不能超过10个字符")
-    private String bloodType;
+    private String bloodPressure;
 
     /**
-     * 身高（cm）
+     * 心率
      */
-    private Double height;
+    private Integer heartRate;
 
     /**
-     * 体重（kg）
+     * 血糖值
      */
-    private Double weight;
+    private BigDecimal bloodSugar;
+
+    /**
+     * 体温
+     */
+    private BigDecimal temperature;
+
+    /**
+     * 体重(kg)
+     */
+    private BigDecimal weight;
+
+    /**
+     * 身高(cm)
+     */
+    private BigDecimal height;
+
+    /**
+     * BMI指数
+     */
+    private BigDecimal bmi;
+
+    /**
+     * 病史
+     */
+    @Size(max = 500, message = "病史长度不能超过500个字符")
+    private String medicalHistory;
 
     /**
      * 过敏史
      */
     @Size(max = 500, message = "过敏史长度不能超过500个字符")
-    private String allergies;
+    private String allergy;
 
     /**
-     * 家族病史
+     * 症状描述
      */
-    @Size(max = 500, message = "家族病史长度不能超过500个字符")
-    private String familyHistory;
+    @Size(max = 500, message = "症状描述长度不能超过500个字符")
+    private String symptoms;
 
     /**
-     * 既往病史
+     * 症状记录时间
      */
-    @Size(max = 500, message = "既往病史长度不能超过500个字符")
-    private String medicalHistory;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime symptomsRecordTime;
 
     /**
-     * 手术史
+     * 用药情况
      */
-    @Size(max = 500, message = "手术史长度不能超过500个字符")
-    private String surgicalHistory;
+    @Size(max = 500, message = "用药情况长度不能超过500个字符")
+    private String medication;
 
     /**
-     * 长期用药情况
+     * 记录时间
      */
-    @Size(max = 500, message = "长期用药情况长度不能超过500个字符")
-    private String medicationHistory;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime recordTime;
 
     /**
-     * 生活习惯
+     * 记录人ID
      */
-    @Size(max = 500, message = "生活习惯长度不能超过500个字符")
-    private String lifestyle;
+    private Long recorderId;
 
     /**
-     * 饮食习惯
+     * 记录类型
      */
-    @Size(max = 500, message = "饮食习惯长度不能超过500个字符")
-    private String dietaryHabits;
-
-    /**
-     * 紧急联系人姓名
-     */
-    @Size(max = 50, message = "紧急联系人姓名长度不能超过50个字符")
-    private String emergencyContactName;
-
-    /**
-     * 紧急联系人电话
-     */
-    @Pattern(regexp = "^1[3-9]\\d{9}$", message = "紧急联系人电话格式不正确")
-    private String emergencyContactPhone;
-
-    /**
-     * 紧急联系人关系
-     */
-    @Size(max = 50, message = "紧急联系人关系长度不能超过50个字符")
-    private String emergencyContactRelation;
+    private String recordType;
 
     /**
      * 备注

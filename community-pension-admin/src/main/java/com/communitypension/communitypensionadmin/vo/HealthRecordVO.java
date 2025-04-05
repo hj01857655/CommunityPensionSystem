@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
@@ -14,9 +15,9 @@ import java.time.LocalDateTime;
 public class HealthRecordVO {
 
     /**
-     * 档案ID
+     * 记录ID
      */
-    @Schema(description = "档案ID")
+    @Schema(description = "记录ID")
     private Long id;
 
     /**
@@ -44,88 +45,102 @@ public class HealthRecordVO {
     private String elderGender;
 
     /**
-     * 血型：A型、B型、AB型、O型、其他
+     * 血压值
      */
-    @Schema(description = "血型：A型、B型、AB型、O型、其他")
-    private String bloodType;
+    @Schema(description = "血压值")
+    private String bloodPressure;
 
     /**
-     * 身高（cm）
+     * 心率
      */
-    @Schema(description = "身高（cm）")
-    private Double height;
+    @Schema(description = "心率")
+    private Integer heartRate;
 
     /**
-     * 体重（kg）
+     * 血糖值
      */
-    @Schema(description = "体重（kg）")
-    private Double weight;
+    @Schema(description = "血糖值")
+    private BigDecimal bloodSugar;
+
+    /**
+     * 体温
+     */
+    @Schema(description = "体温")
+    private BigDecimal temperature;
+
+    /**
+     * 体重(kg)
+     */
+    @Schema(description = "体重(kg)")
+    private BigDecimal weight;
+
+    /**
+     * 身高(cm)
+     */
+    @Schema(description = "身高(cm)")
+    private BigDecimal height;
 
     /**
      * BMI指数
      */
     @Schema(description = "BMI指数")
-    private Double bmi;
+    private BigDecimal bmi;
+
+    /**
+     * 病史
+     */
+    @Schema(description = "病史")
+    private String medicalHistory;
 
     /**
      * 过敏史
      */
     @Schema(description = "过敏史")
-    private String allergies;
+    private String allergy;
 
     /**
-     * 家族病史
+     * 症状描述
      */
-    @Schema(description = "家族病史")
-    private String familyHistory;
+    @Schema(description = "症状描述")
+    private String symptoms;
 
     /**
-     * 既往病史
+     * 症状记录时间
      */
-    @Schema(description = "既往病史")
-    private String medicalHistory;
+    @Schema(description = "症状记录时间")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime symptomsRecordTime;
 
     /**
-     * 手术史
+     * 用药情况
      */
-    @Schema(description = "手术史")
-    private String surgicalHistory;
+    @Schema(description = "用药情况")
+    private String medication;
 
     /**
-     * 长期用药情况
+     * 记录时间
      */
-    @Schema(description = "长期用药情况")
-    private String medicationHistory;
+    @Schema(description = "记录时间")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime recordTime;
 
     /**
-     * 生活习惯
+     * 记录人ID
      */
-    @Schema(description = "生活习惯")
-    private String lifestyle;
+    @Schema(description = "记录人ID")
+    private Long recorderId;
 
     /**
-     * 饮食习惯
+     * 记录人姓名
      */
-    @Schema(description = "饮食习惯")
-    private String dietaryHabits;
+    @Schema(description = "记录人姓名")
+    private String recorderName;
 
     /**
-     * 紧急联系人姓名
+     * 记录类型
      */
-    @Schema(description = "紧急联系人姓名")
-    private String emergencyContactName;
-
-    /**
-     * 紧急联系人电话
-     */
-    @Schema(description = "紧急联系人电话")
-    private String emergencyContactPhone;
-
-    /**
-     * 紧急联系人关系
-     */
-    @Schema(description = "紧急联系人关系")
-    private String emergencyContactRelation;
+    @Schema(description = "记录类型")
+    private String recordType;
 
     /**
      * 备注

@@ -28,7 +28,17 @@ public class MyMetaObjectHandler implements MetaObjectHandler {
         this.strictInsertFill(metaObject, "createTime", LocalDateTime::now, LocalDateTime.class);
         // 更新时间
         this.strictInsertFill(metaObject, "updateTime", LocalDateTime::now, LocalDateTime.class);
-        
+        // 审核时间
+        this.strictInsertFill(metaObject, "reviewTime", LocalDateTime::now, LocalDateTime.class);
+        // 发布时间
+        this.strictInsertFill(metaObject, "publishTime", LocalDateTime::now, LocalDateTime.class);
+        // 创建时间（createdAt）
+        this.strictInsertFill(metaObject, "createdAt", LocalDateTime::now, LocalDateTime.class);
+        // 更新时间（updatedAt）
+        this.strictInsertFill(metaObject, "updatedAt", LocalDateTime::now, LocalDateTime.class);
+        // 参与时间
+        this.strictInsertFill(metaObject, "participateTime", LocalDateTime::now, LocalDateTime.class);
+
         // 获取当前登录用户
         String username = getCurrentUsername();
         if (username != null) {
@@ -43,7 +53,9 @@ public class MyMetaObjectHandler implements MetaObjectHandler {
     public void updateFill(MetaObject metaObject) {
         // 更新时间
         this.strictUpdateFill(metaObject, "updateTime", LocalDateTime::now, LocalDateTime.class);
-        
+        // 更新时间（updatedAt）
+        this.strictUpdateFill(metaObject, "updatedAt", LocalDateTime::now, LocalDateTime.class);
+
         // 获取当前登录用户
         String username = getCurrentUsername();
         if (username != null) {

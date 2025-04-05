@@ -100,7 +100,7 @@
   - 基础服务操作（新增、编辑、删除）
 - 预约记录管理
 
-#### 3. 健康记录管理
+#### 3. 健康监测管理
 - 健康档案管理
   - 基础档案管理
   - 健康记录查看
@@ -126,7 +126,6 @@
 - RBAC权限控制
 - 服务预约管理
 - 健康记录管理
-
 ### 后端技术栈
 - **核心框架**: Spring Boot 3.x
 - **数据库**: MySQL 8.4.0
@@ -153,13 +152,43 @@
 community-pension-system/
 ├── community-pension-admin/          # 后端服务
 │   ├── src/
-│   ├── pom.xml                      # Maven配置
-│   ├── application.yml              # 应用配置
-│   ├── application-dev.yml          # 开发环境配置
-│   ├── application-prod.yml         # 生产环境配置
+│   |   ├── main/
+│   |   │   ├── java/
+│   │   │   │   ├── com/
+│   │   │   │   │   ├── community/
+│   │   │   │   │   │   ├── admin/
+│   │   │   │   │   │   │   ├── config/
+│   │   │   │   │   │   │   ├── controller/
+│   │   │   │   │   │   │   ├── dto/
+│   │   │   │   │   │   │   ├── entity/
+│   │   │   │   │   │   │   ├── enums/
+│   │   │   │   │   │   │   ├── exception/
+│   │   │   │   │   │   │   ├── mapper/
+│   │   │   │   │   │   │   ├── query/
+│   │   │   │   │   │   │   ├── service/
+│   │   │   │   │   │   │   ├── utils/
+│   │   │   │   │   │   │   ├── vo/
+│   |   │   ├── resources/
+│   |   │   │   ├── mapper/
+│   |   │   │   ├── static/
+│   |   │   │   │   ├── sql/
+│   |   │   │   │   │   ├── community_pension.sql
+│   |   │   │   ├── templates/
+│   |   │   │   ├── application.yml
+│   |   │   │   ├── application-dev.yml
+│   |   ├── test/
 │
 ├── community-pension-frontend/       # 前端项目
 │   ├── src/
+│   |  ├── api/
+│   |  ├── assets/
+│   |  ├── components/
+│   |  ├── router/
+│   |  ├── stores/
+│   |  ├── utils/
+│   |  ├── views/
+│   |  ├── App.vue
+│   |  ├── main.js
 │   ├── public/
 │   ├── package.json
 │   ├── vite.config.ts

@@ -41,7 +41,7 @@ public class ActivityRegisterServiceImpl extends ServiceImpl<ActivityRegisterMap
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean registerActivity(Long activityId, Long userId) {
+    public boolean registerActivity(Long activityId, Long elderId, Long registerUserId, Integer registerType) {
         // 检查活动是否存在
         Activity activity = activityService.getById(activityId);
         if (activity == null) {
@@ -53,10 +53,10 @@ public class ActivityRegisterServiceImpl extends ServiceImpl<ActivityRegisterMap
             throw new BusinessException("活动不在报名阶段");
         }
 
-        // 检查用户是否已报名
-        Integer status = getUserActivityStatus(activityId, userId);
+        // 检查老人是否已报名
+        Integer status = getElderActivityStatus(activityId, elderId);
         if (status != null) {
-            throw new BusinessException("您已报名此活动");
+            throw new BusinessException("老人已报名此活动");
         }
 
         // 检查报名人数是否已满
@@ -68,7 +68,9 @@ public class ActivityRegisterServiceImpl extends ServiceImpl<ActivityRegisterMap
         // 创建报名记录
         ActivityRegister register = new ActivityRegister();
         register.setActivityId(activityId);
-        register.setUserId(userId);
+        register.setElderId(elderId);
+        register.setRegisterUserId(registerUserId);
+        register.setRegisterType(registerType);
         register.setStatus(0); // 默认待审核
         register.setRegisterTime(LocalDateTime.now());
 
@@ -76,8 +78,13 @@ public class ActivityRegisterServiceImpl extends ServiceImpl<ActivityRegisterMap
     }
 
     @Override
-    public Integer getUserActivityStatus(Long activityId, Long userId) {
-        return baseMapper.getUserActivityStatus(activityId, userId);
+    public Integer getElderActivityStatus(Long activityId, Long elderId) {
+        return baseMapper.getElderActivityStatus(activityId, elderId);
+    }
+
+    @Override
+    public Long getRegisterIdByActivityAndElder(Long activityId, Long elderId) {
+        return baseMapper.getRegisterIdByActivityAndElder(activityId, elderId);
     }
 
     @Override
@@ -104,10 +111,10 @@ public class ActivityRegisterServiceImpl extends ServiceImpl<ActivityRegisterMap
     }
 
     @Override
-    public Page<ActivityRegisterVO> getUserRegisterList(Long userId, Integer pageNum, Integer pageSize) {
+    public Page<ActivityRegisterVO> getElderRegisterList(Long elderId, Integer pageNum, Integer pageSize) {
         Page<ActivityRegister> page = new Page<>(pageNum, pageSize);
         LambdaQueryWrapper<ActivityRegister> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(ActivityRegister::getUserId, userId)
+        wrapper.eq(ActivityRegister::getElderId, elderId)
                .orderByDesc(ActivityRegister::getCreatedAt);
 
         Page<ActivityRegister> registerPage = page(page, wrapper);
@@ -138,14 +145,14 @@ public class ActivityRegisterServiceImpl extends ServiceImpl<ActivityRegisterMap
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean cancelRegister(Long id, Long userId) {
+    public boolean cancelRegister(Long id, Long elderId) {
         ActivityRegister register = getById(id);
         if (register == null) {
             throw new BusinessException("报名记录不存在");
         }
 
-        // 验证是否是当前用户的报名记录
-        if (!register.getUserId().equals(userId)) {
+        // 验证是否是当前老人的报名记录
+        if (!register.getElderId().equals(elderId)) {
             throw new BusinessException("无权操作此报名记录");
         }
 
@@ -198,163 +205,19 @@ public class ActivityRegisterServiceImpl extends ServiceImpl<ActivityRegisterMap
     }
 
     /**
-     * 签到
+     * 检查老人是否已签到
      */
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public boolean checkIn(Long id) {
-        ActivityRegister register = getById(id);
-        if (register == null) {
-            throw new BusinessException("报名记录不存在");
-        }
-
-        // 只有已通过状态的报名可以签到
-        if (register.getStatus() != 1) {
-            throw new BusinessException("只有已通过审核的报名可以签到");
-        }
-
-        // 更新状态为已签到
-        register.setStatus(4); // 4-已签到
-        register.setCheckInTime(LocalDateTime.now());
-        return updateById(register);
+    public boolean checkElderCheckedIn(Long activityId, Long elderId) {
+        Integer count = baseMapper.checkElderCheckedIn(activityId, elderId);
+        return count != null && count > 0;
     }
 
-    /**
-     * 批量签到
-     */
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public boolean batchCheckIn(List<Long> ids) {
-        if (ids == null || ids.isEmpty()) {
-            return false;
-        }
 
-        boolean allSuccess = true;
-        for (Long id : ids) {
-            try {
-                if (!checkIn(id)) {
-                    allSuccess = false;
-                }
-            } catch (Exception e) {
-                // 记录异常但继续处理其他ID
-                log.error("签到失败，ID: {}, 原因: {}", id, e.getMessage());
-                allSuccess = false;
-            }
-        }
 
-        return allSuccess;
-    }
 
-    /**
-     * 获取活动签到统计
-     */
-    @Override
-    public Map<String, Object> getCheckInStats(Long activityId) {
-        // 检查活动是否存在
-        Activity activity = activityService.getById(activityId);
-        if (activity == null) {
-            throw new BusinessException("活动不存在");
-        }
 
-        // 查询已通过审核的报名记录
-        LambdaQueryWrapper<ActivityRegister> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(ActivityRegister::getActivityId, activityId)
-               .in(ActivityRegister::getStatus, 1, 4); // 1-已通过，4-已签到
-        List<ActivityRegister> registers = list(wrapper);
 
-        // 统计签到情况
-        int totalCount = registers.size();
-        int checkedInCount = 0;
-        int notCheckedInCount = 0;
-
-        for (ActivityRegister register : registers) {
-            if (register.getStatus() == 4) { // 4-已签到
-                checkedInCount++;
-            } else {
-                notCheckedInCount++;
-            }
-        }
-
-        // 计算签到率
-        double checkInRate = totalCount > 0 ? (double) checkedInCount / totalCount * 100 : 0;
-
-        // 构建统计结果
-        Map<String, Object> stats = new HashMap<>();
-        stats.put("activityId", activityId);
-        stats.put("activityTitle", activity.getTitle());
-        stats.put("totalCount", totalCount);
-        stats.put("checkedInCount", checkedInCount);
-        stats.put("notCheckedInCount", notCheckedInCount);
-        stats.put("checkInRate", String.format("%.2f%%", checkInRate));
-
-        return stats;
-    }
-
-    /**
-     * 分页查询活动签到记录
-     */
-    @Override
-    public Page<ActivityRegisterVO> getCheckInList(Long activityId, Integer pageNum, Integer pageSize) {
-        Page<ActivityRegister> page = new Page<>(pageNum, pageSize);
-        LambdaQueryWrapper<ActivityRegister> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(ActivityRegister::getActivityId, activityId)
-               .in(ActivityRegister::getStatus, 1, 4) // 1-已通过，4-已签到
-               .orderByDesc(ActivityRegister::getUpdatedAt);
-
-        Page<ActivityRegister> registerPage = page(page, wrapper);
-
-        // 转换为VO
-        List<ActivityRegisterVO> voList = registerPage.getRecords().stream()
-                .map(this::convertToVO)
-                .collect(Collectors.toList());
-
-        // 构建返回结果
-        Page<ActivityRegisterVO> resultPage = new Page<>(registerPage.getCurrent(), registerPage.getSize(), registerPage.getTotal());
-        resultPage.setRecords(voList);
-
-        return resultPage;
-    }
-
-    /**
-     * 导出活动签到记录
-     */
-    @Override
-    public void exportCheckInList(Long activityId, HttpServletResponse response) {
-        try {
-            // 检查活动是否存在
-            Activity activity = activityService.getById(activityId);
-            if (activity == null) {
-                throw new BusinessException("活动不存在");
-            }
-
-            // 查询活动签到记录
-            LambdaQueryWrapper<ActivityRegister> wrapper = new LambdaQueryWrapper<>();
-            wrapper.eq(ActivityRegister::getActivityId, activityId)
-                   .in(ActivityRegister::getStatus, 1, 4) // 1-已通过，4-已签到
-                   .orderByDesc(ActivityRegister::getUpdatedAt);
-            List<ActivityRegister> registers = list(wrapper);
-
-            // 设置响应头
-            response.setContentType("application/vnd.ms-excel");
-            response.setCharacterEncoding("utf-8");
-            String fileName = "activity_checkin_" + activityId + "_" +
-                    LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss")) + ".xlsx";
-            response.setHeader("Content-disposition", "attachment;filename=" + fileName);
-
-            // TODO: 使用Excel导出工具（如EasyExcel）导出数据
-            // 这里需要添加相关依赖并实现导出逻辑
-            // 例如：
-            // EasyExcel.write(response.getOutputStream(), ActivityCheckInExportVO.class)
-            //          .sheet("活动签到记录")
-            //          .doWrite(convertToExportVOList(registers));
-
-            // 暂时返回简单的文本信息
-            response.getWriter().write("导出功能待实现，需要添加Excel导出相关依赖");
-        } catch (IOException e) {
-            log.error("导出活动签到记录失败: {}", e.getMessage(), e);
-            throw new BusinessException("导出失败: " + e.getMessage());
-        }
-    }
 
     /**
      * 将实体转换为VO
@@ -369,16 +232,46 @@ public class ActivityRegisterServiceImpl extends ServiceImpl<ActivityRegisterMap
             vo.setActivityTitle(activity.getTitle());
         }
 
-        // 设置用户姓名
-        User user = userService.getById(register.getUserId());
-        if (user != null) {
-            vo.setUserName(user.getUsername());
+        // 设置老人姓名
+        User elder = userService.getById(register.getElderId());
+        if (elder != null) {
+            vo.setElderName(elder.getUsername());
         }
+
+        // 设置报名人姓名
+        User registerUser = userService.getById(register.getRegisterUserId());
+        if (registerUser != null) {
+            vo.setRegisterUserName(registerUser.getUsername());
+        }
+
+        // 设置报名类型名称
+        vo.setRegisterTypeName(getRegisterTypeName(register.getRegisterType()));
+
+        // 设置是否已签到
+        vo.setHasCheckedIn(register.getStatus() == 4);
 
         // 设置状态名称
         vo.setStatusName(getStatusName(register.getStatus()));
 
         return vo;
+    }
+
+
+
+
+    /**
+     * 获取报名类型名称
+     */
+    private String getRegisterTypeName(Integer registerType) {
+        if (registerType == null) {
+            return "未知类型";
+        }
+
+        return switch (registerType) {
+            case 0 -> "老人自己报名";
+            case 1 -> "家属代报名";
+            default -> "未知类型";
+        };
     }
 
     /**

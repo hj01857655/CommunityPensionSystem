@@ -11,17 +11,17 @@ import org.apache.ibatis.annotations.Select;
  */
 @Mapper
 public interface ActivityRegisterMapper extends BaseMapper<ActivityRegister> {
-    
+
     /**
-     * 获取用户对特定活动的报名状态
+     * 获取老人对特定活动的报名状态
      *
      * @param activityId 活动ID
-     * @param userId 用户ID
+     * @param elderId 老人ID
      * @return 报名状态，如果未报名则返回null
      */
-    @Select("SELECT status FROM activity_register WHERE activity_id = #{activityId} AND user_id = #{userId} LIMIT 1")
-    Integer getUserActivityStatus(@Param("activityId") Long activityId, @Param("userId") Long userId);
-    
+    @Select("SELECT status FROM activity_register WHERE activity_id = #{activityId} AND elder_id = #{elderId} LIMIT 1")
+    Integer getElderActivityStatus(@Param("activityId") Long activityId, @Param("elderId") Long elderId);
+
     /**
      * 获取活动当前报名人数
      *
@@ -30,4 +30,24 @@ public interface ActivityRegisterMapper extends BaseMapper<ActivityRegister> {
      */
     @Select("SELECT COUNT(*) FROM activity_register WHERE activity_id = #{activityId} AND status = 1")
     Integer getCurrentRegisters(@Param("activityId") Long activityId);
+
+    /**
+     * 获取老人对特定活动的报名ID
+     *
+     * @param activityId 活动ID
+     * @param elderId 老人ID
+     * @return 报名ID，如果未报名则返回null
+     */
+    @Select("SELECT id FROM activity_register WHERE activity_id = #{activityId} AND elder_id = #{elderId} LIMIT 1")
+    Long getRegisterIdByActivityAndElder(@Param("activityId") Long activityId, @Param("elderId") Long elderId);
+
+    /**
+     * 检查老人是否已签到
+     *
+     * @param activityId 活动ID
+     * @param elderId 老人ID
+     * @return 是否已签到（0-未签到，1-已签到）
+     */
+    @Select("SELECT COUNT(*) FROM activity_register ar JOIN activity_check_in ac ON ar.id = ac.register_id WHERE ar.activity_id = #{activityId} AND ar.elder_id = #{elderId}")
+    Integer checkElderCheckedIn(@Param("activityId") Long activityId, @Param("elderId") Long elderId);
 }

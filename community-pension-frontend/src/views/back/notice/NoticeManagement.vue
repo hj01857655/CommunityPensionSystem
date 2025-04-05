@@ -275,7 +275,7 @@ const handleDelete = async (row) => {
         });
         
         loading.value = true;
-        await noticeStore.deleteNotice(row.id);
+        await noticeStore.removeNotice(row.id);
         ElMessage.success('删除成功');
         loading.value = false;
         

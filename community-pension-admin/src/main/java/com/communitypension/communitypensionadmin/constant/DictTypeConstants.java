@@ -2,8 +2,8 @@ package com.communitypension.communitypensionadmin.constant;
 
 /**
  * 字典类型常量
- *
- * @date 2024-03-26
+ * <p>
+ *  @ Date :  2023/11/10
  */
 public class DictTypeConstants {
     

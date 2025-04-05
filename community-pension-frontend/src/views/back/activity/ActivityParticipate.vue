@@ -3,7 +3,7 @@
     <el-card>
       <template #header>
         <div class="card-header">
-          <span>活动参与管理</span>
+          <span>活动报名管理</span>
           <div class="header-right">
             <el-button type="primary" @click="handleExport">导出</el-button>
           </div>
@@ -22,7 +22,7 @@
             />
           </el-select>
         </el-form-item>
-        <el-form-item label="参与状态">
+        <el-form-item label="报名状态">
           <el-select v-model="queryParams.status" placeholder="请选择状态">
             <el-option label="已报名" :value="0" />
             <el-option label="已签到" :value="1" />
@@ -35,10 +35,10 @@
         </el-form-item>
       </el-form>
 
-      <!-- 参与记录列表 -->
+      <!-- 报名记录列表 -->
       <el-table :data="participateList" v-loading="loading">
         <el-table-column prop="activityTitle" label="活动名称" />
-        <el-table-column prop="elderName" label="参与人" />
+        <el-table-column prop="elderName" label="报名人" />
         <el-table-column prop="status" label="状态">
           <template #default="{ row }">
             <el-tag :type="getStatusType(row.status)">
@@ -81,7 +81,7 @@
     <!-- 审核对话框 -->
     <el-dialog
       v-model="auditDialogVisible"
-      title="参与审核"
+      title="报名审核"
       width="500px"
     >
       <el-form ref="auditFormRef" :model="auditForm" :rules="auditRules" label-width="100px">

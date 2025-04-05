@@ -1,12 +1,14 @@
 package com.communitypension.communitypensionadmin.controller;
 
-import com.communitypension.communitypensionadmin.dto.UserDTO;
+import com.communitypension.communitypensionadmin.converter.UserConverter;
 import com.communitypension.communitypensionadmin.entity.User;
 import com.communitypension.communitypensionadmin.enums.RoleEnum;
+import com.communitypension.communitypensionadmin.pojo.dto.LoginDTO;
 import com.communitypension.communitypensionadmin.service.TokenBlacklistService;
 import com.communitypension.communitypensionadmin.service.UserService;
 import com.communitypension.communitypensionadmin.utils.JwtTokenUtil;
 import com.communitypension.communitypensionadmin.utils.Result;
+import com.communitypension.communitypensionadmin.vo.UserVO;
 import io.jsonwebtoken.Claims;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -15,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Date;
@@ -37,7 +40,13 @@ public class AuthController {
      * 注入UserService
      */
     @Autowired
-    private   UserService userService;
+    private UserService userService;
+
+    /**
+     * 注入UserConverter
+     */
+    @Autowired
+    private UserConverter userConverter;
     /**
      * 注入TokenBlacklistService
      */
@@ -50,21 +59,15 @@ public class AuthController {
     /**
      * 用户登录
      *
-     * @param loginData 登录数据
+     * @param loginDTO 登录数据
      * @return 登录结果
      */
     @Operation(summary = "用户登录")
     @PostMapping("/login")
-    public Result<Map<String, Object>> userLogin(@RequestBody Map<String, Object> loginData) {
-        // 1. 首先验证请求数据完整性
-        if (loginData.get("username") == null || loginData.get("password") == null || loginData.get("roleId") == null) {
-            logger.warn("[前台]请求数据不完整，请提供用户名、密码和角色ID");
-            return Result.error(404, "[前台]请求数据不完整，请提供用户名、密码和角色ID");
-        }
-
-        String username = (String) loginData.get("username");
-        String password = (String) loginData.get("password");
-        long roleId = Long.parseLong(loginData.get("roleId").toString());
+    public Result<Map<String, Object>> userLogin(@RequestBody @Validated LoginDTO loginDTO) {
+        String username = loginDTO.getUsername();
+        String password = loginDTO.getPassword();
+        Long roleId = loginDTO.getRoleId();
 
         try {
             // 1. 根据用户名获取用户信息
@@ -76,6 +79,8 @@ public class AuthController {
             }
 
             // 3. 验证密码
+            // TODO: 在实际项目中应该使用加密算法比较密码，而不是明文比较
+            // 例如：if (!passwordEncoder.matches(password, user.getPassword()))
             if (!Objects.equals(user.getPassword(), password)) {
                 logger.warn("[前台]密码错误: {}", username);
                 return Result.error(401, "[前台]用户名或密码错误");
@@ -109,15 +114,10 @@ public class AuthController {
             Map<String, Object> response = new HashMap<>();
             response.put("accessToken", tokenPair.accessToken());
             response.put("refreshToken", tokenPair.refreshToken());
-            UserDTO userDTO = new UserDTO();
-            BeanUtils.copyProperties(user, userDTO);
-            // 额外设置角色信息
-            userDTO.setRoles(userService.getUserRoles(user.getUserId()));
-            // 设置角色ID和名称
-            userDTO.setRoleIds(userService.getUserRoleIds(user.getUserId()));
-            // 设置角色名称
-            userDTO.setRoleNames(userService.getUserRoleNames(user.getUserId()));
-            response.put("user", userDTO);
+
+            // 根据用户角色返回对应的VO对象
+            Object userVO = userConverter.toRoleSpecificVO(user, roleId, userService);
+            response.put("user", userVO);
 
             logger.info("[前台]用户登录成功: {} (角色ID: {})", username, roleId);
             return Result.success("[前台]登录成功", response);
@@ -130,22 +130,16 @@ public class AuthController {
     /**
      * 管理员登录
      *
-     * @param loginData 登录数据
+     * @param loginDTO 登录数据
      * @return 登录结果
      */
     @Operation(summary = "管理员登录")
     @PostMapping("/adminLogin")
-    public ResponseEntity<Result<Map<String, Object>>> adminLogin(@RequestBody Map<String, Object> loginData) {
+    public ResponseEntity<Result<Map<String, Object>>> adminLogin(@RequestBody @Validated LoginDTO loginDTO) {
         try {
-            // 1. 验证请求数据完整性
-            if(loginData.get("username") == null || loginData.get("password") == null || loginData.get("roleId") == null) {
-                logger.warn("[后台]请求数据不完整");
-                return ResponseEntity.status(400).body(Result.error("[后台]请求数据不完整，请提供用户名、密码和角色ID"));
-            }
-
-            String username = (String) loginData.get("username");
-            String password = (String) loginData.get("password");
-            long roleId = Long.parseLong(loginData.get("roleId").toString());
+            String username = loginDTO.getUsername();
+            String password = loginDTO.getPassword();
+            Long roleId = loginDTO.getRoleId();
 
             // 2. 验证是否为后台角色
             if(!RoleEnum.isBackendRole(roleId)){
@@ -161,6 +155,8 @@ public class AuthController {
             }
 
             // 4. 验证密码
+            // TODO: 在实际项目中应该使用加密算法比较密码，而不是明文比较
+            // 例如：if (!passwordEncoder.matches(password, user.getPassword()))
             if (!user.getPassword().equals(password)) {
                 logger.warn("[后台]密码错误: {}", username);
                 return ResponseEntity.status(401).body(Result.error("用户名或密码错误"));
@@ -183,12 +179,10 @@ public class AuthController {
             Map<String, Object> response = new HashMap<>();
             response.put("accessToken", tokenPair.accessToken());
             response.put("refreshToken", tokenPair.refreshToken());
-            UserDTO userDTO = new UserDTO();
-            BeanUtils.copyProperties(user, userDTO);
-            userDTO.setRoles(userService.getUserRoles(user.getUserId()));
-            userDTO.setRoleIds(userService.getUserRoleIds(user.getUserId()));
-            userDTO.setRoleNames(userService.getUserRoleNames(user.getUserId()));
-            response.put("user", userDTO);
+
+            // 根据用户角色返回对应的VO对象
+            Object userVO = userConverter.toRoleSpecificVO(user, roleId, userService);
+            response.put("user", userVO);
 
             logger.info("[后台]管理员登录成功: 用户名={}, 角色ID={}", username, roleId);
             return ResponseEntity.ok(Result.ok(response));
@@ -272,14 +266,14 @@ public class AuthController {
         try {
             // 清理token前缀
             String cleanedAccessToken = jwtTokenUtil.cleanToken(accessToken);
-            
+
             // 解析访问令牌，获取过期时间
             Claims accessClaims = jwtTokenUtil.getClaimsFromToken(cleanedAccessToken);
             Date accessExpiration = accessClaims.getExpiration();
-            
+
             // 将访问令牌加入黑名单
             tokenBlacklistService.addToBlacklist(cleanedAccessToken, accessExpiration.getTime());
-            
+
             // 如果提供了刷新令牌，也将其加入黑名单
             if (refreshToken != null && !refreshToken.isEmpty()) {
                 String cleanedRefreshToken = jwtTokenUtil.cleanToken(refreshToken);
@@ -287,7 +281,7 @@ public class AuthController {
                 Date refreshExpiration = refreshClaims.getExpiration();
                 tokenBlacklistService.addToBlacklist(cleanedRefreshToken, refreshExpiration.getTime());
             }
-            
+
             logger.info("令牌已成功失效");
             return ResponseEntity.ok(Result.success("令牌已成功失效"));
         } catch (Exception e) {
@@ -297,6 +291,58 @@ public class AuthController {
     }
 
     @Operation(summary = "用户退出")
+    /**
+     * 处理登录验证和令牌生成的公共方法
+     * @param user 用户实体
+     * @param password 密码
+     * @param roleId 角色ID
+     * @param isAdmin 是否是管理员登录
+     * @return 登录结果
+     */
+    private Result<Map<String, Object>> processLogin(User user, String password, Long roleId, boolean isAdmin) {
+        String logPrefix = isAdmin ? "[后台]" : "[前台]";
+        String username = user.getUsername();
+
+        // 1. 验证密码
+        // TODO: 在实际项目中应该使用加密算法比较密码，而不是明文比较
+        if (!Objects.equals(user.getPassword(), password)) {
+            logger.warn(logPrefix + "密码错误: {}", username);
+            return Result.error(401, "用户名或密码错误");
+        }
+
+        // 2. 验证用户状态
+        if (user.getIsActive() == 0) {
+            logger.warn(logPrefix + "用户已被禁用: {}", username);
+            return Result.error(403, "用户已被禁用");
+        }
+
+        // 3. 验证用户是否拥有该角色
+        if (!userService.hasRole(user.getUserId(), roleId)) {
+            logger.warn(logPrefix + "用户角色不匹配: {} (尝试使用角色: {})", username, RoleEnum.getDescription(roleId));
+            return Result.error(403, "您没有权限使用此角色登录");
+        }
+
+        // 4. 生成令牌
+        JwtTokenUtil.TokenPair tokenPair = jwtTokenUtil.generateTokenPair(username, roleId);
+
+        // 5. 构建响应
+        Map<String, Object> response = new HashMap<>();
+        response.put("accessToken", tokenPair.accessToken());
+        response.put("refreshToken", tokenPair.refreshToken());
+
+        // 6. 使用UserConverter将User转换为UserVO，并设置角色信息
+        UserVO userVO = userConverter.toUserVOWithRoles(
+            user,
+            userService.getUserRoles(user.getUserId()),
+            userService.getUserRoleIds(user.getUserId()),
+            userService.getUserRoleNames(user.getUserId())
+        );
+        response.put("user", userVO);
+
+        logger.info(logPrefix + "用户登录成功: {}, 角色: {}", username, RoleEnum.getDescription(roleId));
+        return Result.success(response);
+    }
+
     @PostMapping("/logout")
     public ResponseEntity<Result<Object>> logout(
             @RequestHeader("Authorization") String accessToken,
@@ -304,16 +350,16 @@ public class AuthController {
         try {
             // 清理token前缀
             String cleanedAccessToken = jwtTokenUtil.cleanToken(accessToken);
-            
+
             // 解析访问令牌，获取用户信息和过期时间
             Claims accessClaims = jwtTokenUtil.getClaimsFromToken(cleanedAccessToken);
             String username = accessClaims.getSubject();
             Long roleId = accessClaims.get("roleId", Long.class);
             Date accessExpiration = accessClaims.getExpiration();
-            
+
             // 将访问令牌加入黑名单
             tokenBlacklistService.addToBlacklist(cleanedAccessToken, accessExpiration.getTime());
-            
+
             // 如果提供了刷新令牌，也将其加入黑名单
             if (refreshToken != null && !refreshToken.isEmpty()) {
                 String cleanedRefreshToken = jwtTokenUtil.cleanToken(refreshToken);
@@ -321,7 +367,7 @@ public class AuthController {
                 Date refreshExpiration = refreshClaims.getExpiration();
                 tokenBlacklistService.addToBlacklist(cleanedRefreshToken, refreshExpiration.getTime());
             }
-            
+
             logger.info("用户退出成功: 用户={}, 角色ID={}", username, roleId);
             return ResponseEntity.ok(Result.success("退出成功"));
         } catch (Exception e) {

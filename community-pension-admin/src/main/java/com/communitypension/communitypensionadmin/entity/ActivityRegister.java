@@ -23,20 +23,25 @@ public class ActivityRegister {
     private Long activityId;
 
     /**
-     * 用户ID
+     * 老人ID
      */
-    private Long userId;
+    private Long elderId;
+
+    /**
+     * 报名人ID（老人本人或家属）
+     */
+    private Long registerUserId;
+
+    /**
+     * 报名类型：0-老人自己报名，1-家属代报名
+     */
+    private Integer registerType;
 
     /**
      * 报名时间
      */
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime registerTime;
-
-    /**
-     * 签到时间
-     */
-    private LocalDateTime checkInTime;
 
     /**
      * 状态：0-待审核，1-已通过，2-已拒绝，3-已取消，4-已签到
@@ -59,4 +64,10 @@ public class ActivityRegister {
      */
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updatedAt;
+
+    /**
+     * 是否已删除
+     */
+    @TableLogic
+    private Integer isDeleted;
 }

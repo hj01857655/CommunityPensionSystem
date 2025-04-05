@@ -22,14 +22,13 @@ public class WebMvcConfig implements WebMvcConfigurer {
         registry.addInterceptor(jwtInterceptor)
                 .addPathPatterns("/**")  // 拦截所有请求
                 .excludePathPatterns(    // 不拦截的路径
-                    "/api/auth/login",
-                    "/api/auth/adminLogin",
-                    "/api/auth/refresh",
+                    "/api/auth/**",
                     "/error",
                     "/swagger-ui/**",
                     "/v3/api-docs/**",
                     "/static/**",
-                    "/public/**"
+                    "/public/**",
+                     "/actuator/**"
                 );
     }
 }

@@ -1,7 +1,9 @@
 package com.communitypension.communitypensionadmin.entity;
 
-import com.baomidou.mybatisplus.annotation.*;
-import com.communitypension.communitypensionadmin.enums.ServiceOrderStatus;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -10,9 +12,8 @@ import java.time.LocalDateTime;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @TableName("service_order")
-
-
 public class ServiceOrder extends BaseEntity {
+
     /**
      * 服务工单ID
      */
@@ -26,11 +27,12 @@ public class ServiceOrder extends BaseEntity {
      * 服务项目ID
      */
     private Long serviceItemId;
-    
+
     /**
      * 状态
+     * 0-待审核，1-已派单，2-服务中，3-已完成，4-已取消，5-已拒绝
      */
-    private ServiceOrderStatus status;
+    private Integer status;
     /**
      * 申请原因
      */
@@ -53,21 +55,9 @@ public class ServiceOrder extends BaseEntity {
      */
     @TableField("actual_fee")
     private Double actualFee;
-    /**
-     * 实际费用
-     */
     @TableField(exist = false)
     private String userName;
-    
+
     @TableField(exist = false)
     private String serviceName;
-    
-    @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createTime;
-    
-    @TableField(fill = FieldFill.INSERT_UPDATE)
-    private LocalDateTime updateTime;
-
-    @TableField("create_by")
-    private String createBy;
-} 
+}

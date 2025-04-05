@@ -13,13 +13,13 @@ import org.apache.ibatis.annotations.Select;
  */
 @Mapper
 public interface ActivityMapper extends BaseMapper<Activity> {
-    
+
     /**
      * 获取活动当前参与人数
      *
      * @param activityId 活动ID
      * @return 参与人数
      */
-    @Select("SELECT COUNT(*) FROM activityparticipate WHERE activity_id = #{activityId} AND status = 1")
-    Integer getCurrentParticipants(@Param("activityId") Long activityId);
-} 
+    @Select("SELECT COUNT(*) FROM activity_register WHERE activity_id = #{activityId} AND status = 1")
+    Integer getCurrentRegisters(@Param("activityId") Long activityId);
+}

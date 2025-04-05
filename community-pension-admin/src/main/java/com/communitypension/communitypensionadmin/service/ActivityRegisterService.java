@@ -16,22 +16,24 @@ import java.util.Map;
 public interface ActivityRegisterService extends IService<ActivityRegister> {
 
     /**
-     * 用户报名活动
+     * 老人报名活动
      *
      * @param activityId 活动ID
-     * @param userId 用户ID
+     * @param elderId 老人ID
+     * @param registerUserId 报名人ID（老人本人或家属）
+     * @param registerType 报名类型：0-老人自己报名，1-家属代报名
      * @return 报名结果
      */
-    boolean registerActivity(Long activityId, Long userId);
+    boolean registerActivity(Long activityId, Long elderId, Long registerUserId, Integer registerType);
 
     /**
-     * 获取用户对特定活动的报名状态
+     * 获取老人对特定活动的报名状态
      *
      * @param activityId 活动ID
-     * @param userId 用户ID
+     * @param elderId 老人ID
      * @return 报名状态，如果未报名则返回null
      */
-    Integer getUserActivityStatus(Long activityId, Long userId);
+    Integer getElderActivityStatus(Long activityId, Long elderId);
 
     /**
      * 分页查询活动报名记录
@@ -44,14 +46,14 @@ public interface ActivityRegisterService extends IService<ActivityRegister> {
     Page<ActivityRegisterVO> getActivityRegisterList(Long activityId, Integer pageNum, Integer pageSize);
 
     /**
-     * 分页查询用户报名记录
+     * 分页查询老人报名记录
      *
-     * @param userId 用户ID
+     * @param elderId 老人ID
      * @param pageNum 页码
      * @param pageSize 每页大小
      * @return 分页结果
      */
-    Page<ActivityRegisterVO> getUserRegisterList(Long userId, Integer pageNum, Integer pageSize);
+    Page<ActivityRegisterVO> getElderRegisterList(Long elderId, Integer pageNum, Integer pageSize);
 
     /**
      * 更新报名状态
@@ -66,10 +68,10 @@ public interface ActivityRegisterService extends IService<ActivityRegister> {
      * 取消报名
      *
      * @param id 报名ID
-     * @param userId 用户ID
+     * @param elderId 老人ID
      * @return 取消结果
      */
-    boolean cancelRegister(Long id, Long userId);
+    boolean cancelRegister(Long id, Long elderId);
 
     /**
      * 审核报名
@@ -92,48 +94,6 @@ public interface ActivityRegisterService extends IService<ActivityRegister> {
     boolean batchAuditRegister(List<Long> ids, Integer status, String remark);
 
     /**
-     * 签到
-     *
-     * @param id 报名ID
-     * @return 签到结果
-     */
-    boolean checkIn(Long id);
-
-    /**
-     * 批量签到
-     *
-     * @param ids 报名ID列表
-     * @return 签到结果
-     */
-    boolean batchCheckIn(List<Long> ids);
-
-    /**
-     * 获取活动签到统计
-     *
-     * @param activityId 活动ID
-     * @return 统计结果
-     */
-    Map<String, Object> getCheckInStats(Long activityId);
-
-    /**
-     * 分页查询活动签到记录
-     *
-     * @param activityId 活动ID
-     * @param pageNum 页码
-     * @param pageSize 每页大小
-     * @return 分页结果
-     */
-    Page<ActivityRegisterVO> getCheckInList(Long activityId, Integer pageNum, Integer pageSize);
-
-    /**
-     * 导出活动签到记录
-     *
-     * @param activityId 活动ID
-     * @param response HTTP响应
-     */
-    void exportCheckInList(Long activityId, HttpServletResponse response);
-
-    /**
      * 获取活动报名统计
      *
      * @param activityId 活动ID
@@ -148,4 +108,22 @@ public interface ActivityRegisterService extends IService<ActivityRegister> {
      * @param response HTTP响应
      */
     void exportRegisterList(Long activityId, HttpServletResponse response);
+
+    /**
+     * 检查老人是否已签到
+     *
+     * @param activityId 活动ID
+     * @param elderId 老人ID
+     * @return 是否已签到
+     */
+    boolean checkElderCheckedIn(Long activityId, Long elderId);
+
+    /**
+     * 获取老人对特定活动的报名ID
+     *
+     * @param activityId 活动ID
+     * @param elderId 老人ID
+     * @return 报名ID，如果未报名则返回null
+     */
+    Long getRegisterIdByActivityAndElder(Long activityId, Long elderId);
 }

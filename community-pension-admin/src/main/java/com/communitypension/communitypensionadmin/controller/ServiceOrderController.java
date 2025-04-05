@@ -25,11 +25,11 @@ import java.util.Map;
 @RequestMapping("/api/service/order")
 @RequiredArgsConstructor
 public class ServiceOrderController {
-    
+
     private final ServiceOrderService serviceOrderService;
-    
+
     @Operation(summary = "分页查询预约列表")
-    @GetMapping
+    @GetMapping("/list")
     public Result<Page<ServiceOrderVO>> getOrderList(
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "10") Integer pageSize,
@@ -37,25 +37,30 @@ public class ServiceOrderController {
         Page<ServiceOrder> page = new Page<>(pageNum, pageSize);
         return Result.success(serviceOrderService.getOrderList(page, order));
     }
-    
+
+    /**
+     * 获取预约详情
+     * @param orderId 预约ID
+     * @return Result<ServiceOrderVO>
+     */
     @Operation(summary = "获取预约详情")
     @GetMapping("/{orderId}")
     public Result<ServiceOrderVO> getOrderById(@PathVariable Long orderId) {
         return Result.success(serviceOrderService.getOrderById(orderId));
     }
-    
+
     @Operation(summary = "创建预约")
     @PostMapping
     public Result<Boolean> createOrder(@Valid @RequestBody ServiceOrderDTO orderDTO) {
         return Result.success(serviceOrderService.createOrder(orderDTO));
     }
-    
+
     @Operation(summary = "修改预约")
     @PutMapping
     public Result<Boolean> updateOrder(@Valid @RequestBody ServiceOrderDTO orderDTO) {
         return Result.success(serviceOrderService.updateOrder(orderDTO));
     }
-    
+
     @Operation(summary = "取消预约")
     @PostMapping("/{orderId}/cancel")
     public Result<Boolean> cancelOrder(
@@ -63,7 +68,7 @@ public class ServiceOrderController {
             @RequestParam(required = false) String reason) {
         return Result.success(serviceOrderService.cancelOrder(orderId, reason));
     }
-    
+
     @Operation(summary = "审核预约")
     @PostMapping("/{orderId}/review")
     public Result<Boolean> reviewOrder(
@@ -72,13 +77,13 @@ public class ServiceOrderController {
             @RequestParam(required = false) String remark) {
         return Result.success(serviceOrderService.reviewOrder(orderId, status, remark));
     }
-    
+
     @Operation(summary = "开始服务")
     @PostMapping("/{orderId}/start")
     public Result<Boolean> startService(@PathVariable Long orderId) {
         return Result.success(serviceOrderService.startService(orderId));
     }
-    
+
     @Operation(summary = "完成服务")
     @PostMapping("/{orderId}/complete")
     public Result<Boolean> completeService(
@@ -87,7 +92,7 @@ public class ServiceOrderController {
             @RequestParam Double fee) {
         return Result.success(serviceOrderService.completeService(orderId, duration, fee));
     }
-    
+
     @Operation(summary = "检查时间冲突")
     @GetMapping("/check-conflict")
     public Result<Boolean> checkTimeConflict(
@@ -96,13 +101,13 @@ public class ServiceOrderController {
             @RequestParam Integer duration) {
         return Result.success(serviceOrderService.checkTimeConflict(serviceItemId, scheduleTime, duration));
     }
-    
+
     @Operation(summary = "导出预约列表")
     @GetMapping("/export")
     public void exportOrders(HttpServletResponse response, ServiceOrder order) {
         serviceOrderService.exportOrders(response, order);
     }
-    
+
     @Operation(summary = "获取用户预约列表")
     @GetMapping("/user/{userId}")
     public Result<List<ServiceOrderVO>> getUserOrders(
@@ -110,7 +115,7 @@ public class ServiceOrderController {
             @RequestParam(required = false) Integer status) {
         return Result.success(serviceOrderService.getUserOrders(userId, status));
     }
-    
+
     @Operation(summary = "获取服务项目预约统计")
     @GetMapping("/stats/{serviceItemId}")
     public Result<Map<String, Object>> getOrderStats(
@@ -119,4 +124,4 @@ public class ServiceOrderController {
             @RequestParam LocalDateTime endTime) {
         return Result.success(serviceOrderService.getOrderStats(serviceItemId, startTime, endTime));
     }
-} 
+}

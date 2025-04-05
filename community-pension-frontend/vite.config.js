@@ -46,6 +46,11 @@ export default defineConfig({
         target: 'http://localhost:9000',
         changeOrigin: true,
         rewrite: (path) => path
+      },
+      '/holiday': {
+        target: 'https://api.jiejiariapi.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/holiday/, '')
       }
     }
   },

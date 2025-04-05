@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.communitypension.communitypensionadmin.dto.PasswordDTO;
 import com.communitypension.communitypensionadmin.dto.UserDTO;
+import com.communitypension.communitypensionadmin.dto.UserRoleInfo;
 import com.communitypension.communitypensionadmin.entity.User;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -41,6 +42,13 @@ public interface UserService extends IService<User> {
      * @return 角色列表
      */
     List<String> getUserRoles(Long userId);
+
+    /**
+     * 一次性获取用户的所有角色信息，减少数据库查询次数
+     * @param userId 用户ID
+     * @return 用户角色信息对象，包含角色列表、角色ID列表和角色名称列表
+     */
+    UserRoleInfo getUserRoleInfo(Long userId);
 
     User getUserByUsername(String username);
 
@@ -116,7 +124,7 @@ public interface UserService extends IService<User> {
      * @return 是否绑定成功
      */
     boolean bindElderKinRelation(Long elderId, Long kinId, String relationType);
-    
+
     /**
      * 解绑老人和家属关系
      *
@@ -125,7 +133,7 @@ public interface UserService extends IService<User> {
      * @return 是否解绑成功
      */
     boolean unbindElderKinRelation(Long elderId, Long kinId, String relationType);
-    
+
     /**
      * 获取老人的所有家属ID
      *
@@ -133,7 +141,7 @@ public interface UserService extends IService<User> {
      * @return 家属ID列表
      */
     List<Long> getKinIdsByElderId(Long elderId);
-    
+
     /**
      * 获取家属的所有老人ID
      *

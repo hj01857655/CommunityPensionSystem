@@ -71,7 +71,7 @@ public class HealthMonitoringConverter {
 
             // 计算年龄
             if (elder.getBirthday() != null) {
-                LocalDate birthDate = elder.getBirthday().toLocalDate();
+                LocalDate birthDate = elder.getBirthday();
                 LocalDate currentDate = LocalDate.now();
                 vo.setElderAge(Period.between(birthDate, currentDate).getYears());
             }

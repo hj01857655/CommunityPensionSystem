@@ -76,13 +76,13 @@ public class User extends BaseEntity {
      * 家属绑定的老人Id
      */
     @TableField(exist = false)
-    private Integer elderId;
+    private Long elderId;
 
     /**
      * 家属与老人关系
      */
     @TableField(exist = false)
-    private String relationship;
+    private String relationType;
 
     /**
      * 社区工作人员所在部门

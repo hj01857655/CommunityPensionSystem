@@ -8,25 +8,20 @@ import com.communitypension.communitypensionadmin.dto.NotificationDTO;
 import com.communitypension.communitypensionadmin.entity.Notification;
 import com.communitypension.communitypensionadmin.entity.ServiceOrder;
 import com.communitypension.communitypensionadmin.entity.User;
+import com.communitypension.communitypensionadmin.enums.ServiceOrderStatus;
 import com.communitypension.communitypensionadmin.mapper.NotificationMapper;
+import com.communitypension.communitypensionadmin.query.NotificationQuery;
 import com.communitypension.communitypensionadmin.service.NotificationService;
 import com.communitypension.communitypensionadmin.utils.DictUtils;
-import com.communitypension.communitypensionadmin.query.NotificationQuery;
-import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StreamUtils;
 
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Map;
 
 /**
  * 通知服务实现类
@@ -35,40 +30,45 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Notification> implements NotificationService {
-    
-    private final JavaMailSender mailSender;
+
+    // 自注入，用于解决事务问题
+    @Lazy
+    @Autowired
+    private NotificationService self;
+
     private final NotificationMapper notificationMapper;
-    
-    @Value("${spring.mail.username}")
-    private String fromEmail;
-    
+
     @Override
     public IPage<Notification> getNotificationList(NotificationQuery query) {
         Page<Notification> page = new Page<>(query.getPageNum(), query.getPageSize());
         return notificationMapper.selectNotificationList(page, query);
     }
-    
+
     @Override
     public Notification getNotificationById(Long id) {
         return notificationMapper.selectNotificationById(id);
     }
-    
+
     @Override
     public void saveNotification(Notification notification) {
         notification.setStatus(0); // 设置为草稿状态
         notificationMapper.insert(notification);
     }
-    
+
     @Override
     public void updateNotification(Notification notification) {
         notificationMapper.updateById(notification);
     }
-    
+
     @Override
     public void deleteNotification(Long id) {
         notificationMapper.deleteById(id);
     }
-    
+
+    /**
+     * 发布通知
+     * @param id 通知ID
+     */
     @Override
     public void publishNotification(Long id) {
         Notification notification = new Notification();
@@ -77,7 +77,7 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
         notification.setUpdateTime(LocalDateTime.now());
         notificationMapper.updateById(notification);
     }
-    
+
     @Override
     public void revokeNotification(Long id) {
         Notification notification = new Notification();
@@ -85,7 +85,7 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
         notification.setStatus(2); // 设置为已撤回状态
         notificationMapper.updateById(notification);
     }
-    
+
     /**
      * 发送系统消息
      *
@@ -99,7 +99,7 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
     public void sendSystemMessage(Long userId, String title, String content, String type) {
         // 获取通知类型标签
         String typeLabel = DictUtils.getDictLabel(DictTypeConstants.NOTIFICATION_TYPE, type);
-        
+
         // 构建通知DTO
         NotificationDTO notificationDTO = NotificationDTO.builder()
             .userId(userId)
@@ -107,7 +107,7 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
             .content(content)
             .status(0)  // 未读状态
             .build();
-        
+
         // 转换为实体
         Notification notification = Notification.builder()
             .userId(notificationDTO.getUserId())
@@ -116,55 +116,24 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
             .status(notificationDTO.getStatus())
             .createTime(LocalDateTime.now())
             .build();
-        
+
         // 保存通知
         this.save(notification);
-        
+
         log.info("发送{}通知给用户{}: {}", typeLabel, userId, title);
     }
 
     /**
-     * 将通知类型字符串转换为整数
-     *
-     * @param type 类型字符串
-     * @return 类型整数
-     */
-    private Integer convertTypeToInteger(String type) {
-        switch (type.toLowerCase()) {
-            case "system":
-                return 1;
-            case "activity":
-                return 2;
-            case "service":
-                return 3;
-            default:
-                return 1;  // 默认为系统通知
-        }
-    }
-
-    /**
-     * 发送邮件
+     * 发送邮件 - 已经废弃，改为使用系统内通知
      * @param to 收件人邮箱
      * @param subject 邮件主题
      * @param content 邮件内容
      */
     @Override
+    @Deprecated
     public void sendEmail(String to, String subject, String content) {
-        try {
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-            
-            helper.setFrom(fromEmail);
-            helper.setTo(to);
-            helper.setSubject(subject);
-            helper.setText(content, true);
-            
-            mailSender.send(message);
-            log.info("邮件发送成功: {}", to);
-        } catch (Exception e) {
-            log.error("发送邮件失败: {}", e.getMessage(), e);
-            throw new RuntimeException("发送邮件失败", e);
-        }
+        // 不再发送邮件，改为使用系统内通知
+        log.info("邮件发送功能已经废弃，改为使用系统内通知");
     }
     /**
      * 发送预约相关通知
@@ -174,103 +143,62 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
         // 构建通知内容
         String title = "服务预约通知";
         String content = buildOrderNotificationContent(order, user, message);
-        
-        // 发送系统消息
-        sendSystemMessage(user.getUserId(), title, content, DictTypeConstants.NOTIFICATION_TYPE_SYSTEM);
-        
-        // 如果用户有邮箱,发送邮件通知
-        if (user.getEmail() != null && !user.getEmail().isEmpty()) {
-            String emailSubject = "社区养老服务预约通知";
-            String emailContent = buildOrderEmailContent(order, user, message);
-            sendEmail(user.getEmail(), emailSubject, emailContent);
-        }
+
+        // 使用self调用事务方法，确保事务生效
+        self.sendSystemMessage(user.getUserId(), title, content, DictTypeConstants.NOTIFICATION_TYPE_SYSTEM);
+
+        // 不再发送邮件通知
     }
-    
+
     /**
      * 构建预约通知内容
      */
     private String buildOrderNotificationContent(ServiceOrder order, User user, String message) {
-        return String.format("尊敬的%s用户，您的服务预约（预约号：%s）%s。预约时间：%s，服务项目：%s。",
-                user.getName(),
-                order.getId(),
-                message,
-                order.getScheduleTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
-                order.getServiceName());
-    }
-    
-    /**
-     * 构建预约邮件内容
-     */
-    private String buildOrderEmailContent(ServiceOrder order, User user, String message) {
-        try {
-            // 读取Vue模板
-            ClassPathResource resource = new ClassPathResource("templates/email/OrderNotification.vue");
-            String template = StreamUtils.copyToString(resource.getInputStream(), StandardCharsets.UTF_8);
-            
-            // 准备模板数据
-            Map<String, Object> data = Map.of(
-                "userName", user.getName(),
-                "orderId", order.getId(),
-                "message", message,
-                "scheduleTime", order.getScheduleTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
-                "serviceName", order.getServiceName()
-            );
-            
-            // 使用Vue模板引擎渲染内容
-            return renderVueTemplate(template, data);
-        } catch (Exception e) {
-            log.error("生成邮件内容失败: {}", e.getMessage(), e);
-            return buildOrderNotificationContent(order, user, message);
+        // 构建更丰富的通知内容
+        StringBuilder sb = new StringBuilder();
+        sb.append("尊敬的").append(user.getName()).append("用户，\n\n");
+        sb.append("您的服务预约（预约号：").append(order.getId()).append("）").append(message).append("。\n\n");
+        sb.append("预约详情：\n");
+        sb.append("- 服务项目：").append(order.getServiceName()).append("\n");
+
+        // 添加预约时间，防止空指针
+        if (order.getScheduleTime() != null) {
+            sb.append("- 预约时间：").append(order.getScheduleTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))).append("\n");
         }
+
+        // 根据订单状态添加不同的提示信息
+        if (order.getStatus() != null) {
+            if (order.getStatus().equals(ServiceOrderStatus.ASSIGNED.getCode())) { // 已派单
+                sb.append("\n您的预约已通过审核，服务人员将按预约时间上门服务，请保持电话畅通。");
+            } else if (order.getStatus().equals(ServiceOrderStatus.PENDING.getCode())) { // 待审核
+                sb.append("\n您的预约正在审核中，请耐心等待。审核结果将以系统通知的形式告知您。");
+            } else if (order.getStatus().equals(ServiceOrderStatus.IN_PROGRESS.getCode())) { // 服务中
+                sb.append("\n您的服务正在进行中，如有问题请联系客服。");
+            } else if (order.getStatus().equals(ServiceOrderStatus.COMPLETED.getCode())) { // 已完成
+                sb.append("\n您的服务已完成，感谢您的使用，欢迎对本次服务进行评价。");
+
+                // 添加实际时长和费用信息（如果有）
+                if (order.getActualDuration() != null) {
+                    sb.append("\n- 实际服务时长：").append(order.getActualDuration()).append("分钟");
+                }
+                if (order.getActualFee() != null) {
+                    sb.append("\n- 实际服务费用：").append(order.getActualFee()).append("元");
+                }
+            } else if (order.getStatus().equals(ServiceOrderStatus.CANCELLED.getCode())) { // 已取消
+                sb.append("\n您的预约已取消。");
+            } else if (order.getStatus().equals(ServiceOrderStatus.REJECTED.getCode())) { // 已拒绝
+                sb.append("\n很抱歉，您的预约未能通过审核。");
+                if (order.getReviewRemark() != null && !order.getReviewRemark().isEmpty()) {
+                    sb.append("原因：").append(order.getReviewRemark());
+                }
+            }
+        }
+
+        // 添加底部提示信息
+        sb.append("\n\n如有疑问，请联系客服中心。");
+
+        return sb.toString();
     }
-    
-    /**
-     * 渲染Vue模板
-     */
-    private String renderVueTemplate(String template, Map<String, Object> data) {
-        // 这里需要集成Vue的模板引擎
-        // 可以使用vue-server-renderer或其他Vue SSR工具
-        // 暂时返回简单的HTML内容
-        return String.format("""
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <title>社区养老服务预约通知</title>
-                <style>
-                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                    .header { background-color: #f8f9fa; padding: 20px; text-align: center; }
-                    .content { padding: 20px; }
-                    .footer { text-align: center; color: #6c757d; }
-                    .highlight { color: #007bff; font-weight: bold; }
-                </style>
-            </head>
-            <body>
-                <div class="header">
-                    <h2>社区养老服务预约通知</h2>
-                </div>
-                <div class="content">
-                    <p>尊敬的 <span class="highlight">%s</span>：</p>
-                    <p>您的服务预约信息如下：</p>
-                    <ul>
-                        <li>预约编号：<span class="highlight">%s</span></li>
-                        <li>预约状态：<span class="highlight">%s</span></li>
-                        <li>预约时间：<span class="highlight">%s</span></li>
-                        <li>服务项目：<span class="highlight">%s</span></li>
-                    </ul>
-                    <p>如有任何疑问，请联系我们的客服人员。</p>
-                </div>
-                <div class="footer">
-                    <p>此邮件由系统自动发送，请勿回复。</p>
-                </div>
-            </body>
-            </html>
-            """,
-            data.get("userName"),
-            data.get("orderId"),
-            data.get("message"),
-            data.get("scheduleTime"),
-            data.get("serviceName")
-        );
-    }
-} 
+
+
+}

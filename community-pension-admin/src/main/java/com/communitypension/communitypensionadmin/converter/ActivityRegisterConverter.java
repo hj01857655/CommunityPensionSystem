@@ -11,7 +11,6 @@ import org.springframework.beans.BeanUtils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -39,29 +38,35 @@ public class ActivityRegisterConverter {
      *
      * @param entity 实体对象
      * @param activity 活动对象
-     * @param user 用户对象
+     * @param elder 老人对象
      * @return VO对象
      */
-    public static ActivityRegisterVO toVO(ActivityRegister entity, Activity activity, User user) {
+    public static ActivityRegisterVO toVO(ActivityRegister entity, Activity activity, User elder) {
         if (entity == null) {
             return null;
         }
         ActivityRegisterVO vo = new ActivityRegisterVO();
         BeanUtils.copyProperties(entity, vo);
-        
+
         // 设置活动信息
         if (activity != null) {
             vo.setActivityTitle(activity.getTitle());
         }
-        
-        // 设置用户信息
-        if (user != null) {
-            vo.setUserName(user.getUsername());
+
+        // 设置老人信息
+        if (elder != null) {
+            vo.setElderName(elder.getUsername());
         }
-        
+
+        // 设置报名类型名称
+        vo.setRegisterTypeName(getRegisterTypeName(entity.getRegisterType()));
+
         // 设置状态名称
         vo.setStatusName(getStatusName(entity.getStatus()));
-        
+
+        // 设置是否已签到
+        vo.setHasCheckedIn(false); // 默认为未签到
+
         return vo;
     }
 
@@ -80,8 +85,8 @@ public class ActivityRegisterConverter {
         return entities.stream()
                 .map(entity -> {
                     Activity activity = activityMap.get(entity.getActivityId());
-                    User user = userMap.get(entity.getUserId());
-                    return toVO(entity, activity, user);
+                    User elder = userMap.get(entity.getElderId());
+                    return toVO(entity, activity, elder);
                 })
                 .collect(Collectors.toList());
     }
@@ -91,32 +96,41 @@ public class ActivityRegisterConverter {
      *
      * @param entity 实体对象
      * @param activity 活动对象
-     * @param user 用户对象
+     * @param elder 老人对象
+     * @param registerUser 报名人对象
      * @return 导出VO对象
      */
-    public static ActivityRegisterExportVO toExportVO(ActivityRegister entity, Activity activity, User user) {
+    public static ActivityRegisterExportVO toExportVO(ActivityRegister entity, Activity activity, User elder, User registerUser) {
         if (entity == null) {
             return null;
         }
         ActivityRegisterExportVO vo = new ActivityRegisterExportVO();
         vo.setId(entity.getId());
-        
+
         // 设置活动信息
         if (activity != null) {
             vo.setActivityTitle(activity.getTitle());
         }
-        
-        // 设置用户信息
-        if (user != null) {
-            vo.setUserName(user.getUsername());
-            vo.setUserPhone(user.getPhone());
+
+        // 设置老人信息
+        if (elder != null) {
+            vo.setElderName(elder.getUsername());
+            vo.setElderPhone(elder.getPhone());
         }
-        
+
+        // 设置报名人信息
+        if (registerUser != null) {
+            vo.setRegisterUserName(registerUser.getUsername());
+        }
+
+        // 设置报名类型名称
+        vo.setRegisterTypeName(getRegisterTypeName(entity.getRegisterType()));
+
         vo.setRegisterTime(entity.getRegisterTime());
-        vo.setCheckInTime(entity.getCheckInTime());
+        // 签到时间已移至ActivityCheckIn实体类中，这里不再设置
         vo.setStatusName(getStatusName(entity.getStatus()));
         vo.setRemark(entity.getRemark());
-        
+
         return vo;
     }
 
@@ -135,10 +149,29 @@ public class ActivityRegisterConverter {
         return entities.stream()
                 .map(entity -> {
                     Activity activity = activityMap.get(entity.getActivityId());
-                    User user = userMap.get(entity.getUserId());
-                    return toExportVO(entity, activity, user);
+                    User elder = userMap.get(entity.getElderId());
+                    User registerUser = userMap.get(entity.getRegisterUserId());
+                    return toExportVO(entity, activity, elder, registerUser);
                 })
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * 获取报名类型名称
+     *
+     * @param registerType 报名类型
+     * @return 报名类型名称
+     */
+    private static String getRegisterTypeName(Integer registerType) {
+        if (registerType == null) {
+            return "未知类型";
+        }
+
+        return switch (registerType) {
+            case 0 -> "老人自己报名";
+            case 1 -> "家属代报名";
+            default -> "未知类型";
+        };
     }
 
     /**
@@ -151,7 +184,7 @@ public class ActivityRegisterConverter {
         if (status == null) {
             return "未知状态";
         }
-        
+
         return switch (status) {
             case 0 -> "待审核";
             case 1 -> "已通过";

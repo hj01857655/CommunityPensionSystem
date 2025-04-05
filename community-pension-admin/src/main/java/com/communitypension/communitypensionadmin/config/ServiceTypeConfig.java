@@ -2,7 +2,6 @@ package com.communitypension.communitypensionadmin.config;
 
 import org.springframework.context.annotation.Configuration;
 
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -17,7 +16,7 @@ public class ServiceTypeConfig {
      * 简单服务类型集合
      * 这些服务类型可以自动审核通过
      */
-    private static final Set<String> SIMPLE_SERVICE_TYPES = new HashSet<>(Arrays.asList(
+    private static final Set<String> SIMPLE_SERVICE_TYPES = new HashSet<>(Set.of(
             "cleaning"  // 清洁服务
             // 可以根据需要添加更多简单服务类型
     ));
@@ -26,10 +25,9 @@ public class ServiceTypeConfig {
      * 复杂服务类型集合
      * 这些服务类型需要人工审核
      */
-    private static final Set<String> COMPLEX_SERVICE_TYPES = new HashSet<>(Arrays.asList(
+    private static final Set<String> COMPLEX_SERVICE_TYPES = new HashSet<>(Set.of(
             "medical",  // 医疗服务
             "repair"    // 维修服务
-            // 可以根据需要添加更多复杂服务类型
     ));
 
     /**
@@ -42,13 +40,5 @@ public class ServiceTypeConfig {
         return SIMPLE_SERVICE_TYPES.contains(serviceType);
     }
 
-    /**
-     * 判断服务类型是否为复杂服务
-     *
-     * @param serviceType 服务类型
-     * @return 是否为复杂服务
-     */
-    public static boolean isComplexService(String serviceType) {
-        return COMPLEX_SERVICE_TYPES.contains(serviceType);
-    }
+    // 删除未使用的 isComplexService 方法
 }

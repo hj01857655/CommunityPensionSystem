@@ -42,14 +42,14 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, Activity> implements ActivityService {
-    
+
     private final DictDataService dictDataService;
-    
+
     @Override
     public Page<ActivityVO> getActivityList(ActivityQuery query) {
         Page<Activity> page = new Page<>(query.getPageNum(), query.getPageSize());
         LambdaQueryWrapper<Activity> wrapper = new LambdaQueryWrapper<>();
-        
+
         // 构建查询条件
         wrapper.like(StringUtils.hasText(query.getTitle()), Activity::getTitle, query.getTitle())
                .eq(query.getStatus() != null, Activity::getStatus, query.getStatus())
@@ -57,26 +57,26 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, Activity> i
                .ge(query.getStartTime() != null, Activity::getStartTime, query.getStartTime())
                .le(query.getEndTime() != null, Activity::getEndTime, query.getEndTime())
                .orderByDesc(Activity::getCreatedAt);
-        
+
         // 执行分页查询
         Page<Activity> activityPage = page(page, wrapper);
-        
+
         // 转换为VO
         List<ActivityVO> voList = activityPage.getRecords().stream()
                 .map(this::convertToVO)
                 .collect(Collectors.toList());
-        
+
         // 构建返回结果
         Page<ActivityVO> resultPage = new Page<>(activityPage.getCurrent(), activityPage.getSize(), activityPage.getTotal());
         resultPage.setRecords(voList);
-        
+
         return resultPage;
     }
-    
+
     private ActivityVO convertToVO(Activity activity) {
         ActivityVO vo = new ActivityVO();
         BeanUtils.copyProperties(activity, vo);
-        
+
         // 设置活动类型名称
         if (StringUtils.hasText(activity.getType())) {
             DictDataVO dictDatavVO =  dictDataService.getDictDataByTypeAndValue("activity_type", activity.getType());
@@ -88,13 +88,13 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, Activity> i
         } else {
             vo.setTypeName("未设置类型");
         }
-        
+
         // 设置状态名称
         vo.setStatusName(getStatusName(activity.getStatus()));
-        
+
         return vo;
     }
-    
+
     private String getStatusName(Integer status) {
         return switch (status) {
             case 0 -> "筹备中";
@@ -124,11 +124,11 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, Activity> i
     public void createActivity(ActivityDTO dto) {
         // 验证活动时间
         validateActivityTime(dto.getStartTime(), dto.getEndTime());
-        
+
         Activity activity = new Activity();
         BeanUtils.copyProperties(dto, activity);
         activity.setStatus(0); // 默认为筹备中状态
-        
+
         save(activity);
     }
     /**
@@ -141,10 +141,10 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, Activity> i
         if (activity == null) {
             throw new BusinessException("活动不存在");
         }
-        
+
         // 验证活动时间
         validateActivityTime(dto.getStartTime(), dto.getEndTime());
-        
+
         BeanUtils.copyProperties(dto, activity);
         updateById(activity);
     }
@@ -169,10 +169,10 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, Activity> i
         if (activity == null) {
             throw new BusinessException("活动不存在");
         }
-        
+
         // 验证状态转换是否合法
         validateStatusTransition(activity.getStatus(), status);
-        
+
         activity.setStatus(status);
         updateById(activity);
     }
@@ -188,7 +188,7 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, Activity> i
         allowedTransitions.put(0, Set.of(1, 4)); // 筹备中 -> 报名中/已取消
         allowedTransitions.put(1, Set.of(2, 4)); // 报名中 -> 进行中/已取消
         allowedTransitions.put(2, Set.of(3, 4)); // 进行中 -> 已结束/已取消
-        
+
         Set<Integer> allowedStatuses = allowedTransitions.get(currentStatus);
         if (allowedStatuses == null || !allowedStatuses.contains(newStatus)) {
             throw new BusinessException("非法的状态转换");
@@ -206,15 +206,15 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, Activity> i
         if (activity == null) {
             throw new BusinessException("活动不存在");
         }
-        
+
         // 只有已结束或已取消的活动可以删除
         if (activity.getStatus() != 3 && activity.getStatus() != 4) {
             throw new BusinessException("只能删除已结束或已取消的活动");
         }
-        
+
         removeById(id);
     }
-    
+
     /**
      * 获取活动统计信息
      */
@@ -224,15 +224,15 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, Activity> i
         if (activity == null) {
             throw new RuntimeException("活动不存在");
         }
-        
+
         Map<String, Object> stats = new HashMap<>();
-        stats.put("totalParticipants", baseMapper.getCurrentParticipants(id));
+        stats.put("totalParticipants", baseMapper.getCurrentRegisters(id));
         stats.put("maxParticipants", activity.getMaxParticipants());
-        stats.put("remainingSlots", activity.getMaxParticipants() - baseMapper.getCurrentParticipants(id));
-        
+        stats.put("remainingSlots", activity.getMaxParticipants() - baseMapper.getCurrentRegisters(id));
+
         return stats;
     }
-    
+
     /**
      * 导出活动列表
      */
@@ -246,14 +246,14 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, Activity> i
             .ge(StringUtils.hasText(startTime), Activity::getStartTime, parseDateTime(startTime))
             .le(StringUtils.hasText(endTime), Activity::getEndTime, parseDateTime(endTime))
             .orderByDesc(Activity::getCreatedAt);
-        
+
         // 查询数据
         List<Activity> activities = baseMapper.selectList(wrapper);
-        
+
         // 创建工作簿
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("活动列表");
-        
+
         // 创建标题行
         Row headerRow = sheet.createRow(0);
         String[] headers = {"活动ID", "活动标题", "活动类型", "活动内容", "开始时间", "结束时间", "状态", "参与人数"};
@@ -261,7 +261,7 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, Activity> i
             Cell cell = headerRow.createCell(i);
             cell.setCellValue(headers[i]);
         }
-        
+
         // 填充数据
         int rowNum = 1;
         for (Activity activity : activities) {
@@ -275,13 +275,13 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, Activity> i
             row.createCell(4).setCellValue(activity.getStartTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
             row.createCell(5).setCellValue(activity.getEndTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
             row.createCell(6).setCellValue(getStatusName(activity.getStatus()));
-            row.createCell(7).setCellValue(baseMapper.getCurrentParticipants(activity.getId()));
+            row.createCell(7).setCellValue(baseMapper.getCurrentRegisters(activity.getId()));
         }
-        
+
         // 设置响应头
         response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         response.setHeader("Content-Disposition", "attachment; filename=activities.xlsx");
-        
+
         // 写入响应流
         try {
             workbook.write(response.getOutputStream());
@@ -290,7 +290,7 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, Activity> i
             throw new RuntimeException("导出Excel失败", e);
         }
     }
-    
+
     /**
      * 解析日期时间字符串
      */
@@ -304,4 +304,4 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, Activity> i
             throw new RuntimeException("日期时间格式错误，应为：yyyy-MM-dd HH:mm:ss", e);
         }
     }
-} 
+}

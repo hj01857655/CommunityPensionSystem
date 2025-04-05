@@ -81,9 +81,12 @@ export const useUserStore = defineStore('user', () => {
         try {
             loading.value = true;
             const res = await getUserList({
-                current: params.page,
-                size: params.limit,
-                ...params.query
+                current: params.current,
+                size: params.size,
+                username: params.username,
+                isActive: params.isActive,
+                startTime: params.startTime,
+                endTime: params.endTime
             });
             if (res.code === 200) {
                 userList.value = res.data.records;

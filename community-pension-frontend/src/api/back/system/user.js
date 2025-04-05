@@ -10,6 +10,9 @@ import axios from '@/utils/axios';
  * @param {number} [query.current=1] - 当前页码
  * @param {number} [query.size=10] - 每页显示条数
  * @param {string} [query.username] - 用户名（可选）
+ * @param {boolean} [query.isActive] - 是否激活（可选）
+ * @param {string} [query.startTime] - 开始时间（可选）
+ * @param {string} [query.endTime] - 结束时间（可选）
  * @returns {Promise<{code: number, data: {records: Array<{userId: number, username: string, nickName: string, email: string, phone: string, status: number, createTime: string}>, total: number}, msg: string}>}
  */
 export const getUserList = query => {
@@ -18,8 +21,9 @@ export const getUserList = query => {
       current: query.current || 1,
       size: query.size || 10,
       username: query.username || '',
-      phone: query.phone || '',
-      name: query.name || ''
+      isActive: query.isActive,
+      startTime: query.startTime || '',
+      endTime: query.endTime || ''
     }
   });
 };
