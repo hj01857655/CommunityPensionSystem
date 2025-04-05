@@ -137,17 +137,34 @@ const emitMore = () => {
 <style scoped>
 .preview-card {
     min-height: 220px;
+    height: 100%;
+    width: 100%;
+    min-width: 320px;
     border-radius: 8px;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     background-color: #fff;
     overflow: hidden;
     border: 1px solid #e0e0e0;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+}
+
+/* 添加暗黑主题支持 */
+:root.dark .preview-card {
+    background-color: #2a2a2a;
+    border-color: #3a3a3a;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .preview-card:hover {
     transform: translateY(-4px);
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+}
+
+/* 添加暗黑主题支持 */
+:root.dark .preview-card:hover {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
 }
 
 .preview-card.is-loading {
@@ -161,18 +178,32 @@ const emitMore = () => {
     align-items: center;
     font-size: 16px;
     font-weight: bold;
-    padding: 16px;
+    padding: 16px 20px;
     border-bottom: 1px solid #ebeef5;
+    flex-shrink: 0;
+}
+
+/* 添加暗黑主题支持 */
+:root.dark .card-header {
+    border-bottom-color: #3a3a3a;
+    color: #eee;
+    background-color: #252525 !important; /* 覆盖props中的headerBgColor */
 }
 
 .card-title {
     display: flex;
     align-items: center;
     gap: 8px;
+    font-size: 16px; /* 恢复标题字体大小 */
+}
+
+/* 添加图标颜色适配 */
+:root.dark .card-title .el-icon {
+    color: #66b1ff;
 }
 
 .card-badge {
-    margin-left: 8px;
+    margin-left: 0px;
 }
 
 .more-btn {
@@ -182,6 +213,11 @@ const emitMore = () => {
     align-items: center;
     gap: 4px;
     transition: all 0.3s ease;
+}
+
+/* 添加暗黑主题支持 */
+:root.dark .more-btn {
+    color: #66b1ff;
 }
 
 .more-btn:hover {
@@ -194,10 +230,20 @@ const emitMore = () => {
 }
 
 .card-content {
-    padding: 16px;
+    padding: 16px 20px;
     overflow-y: auto;
     scrollbar-width: thin;
     scrollbar-color: #909399 #f4f4f5;
+    min-height: 120px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 添加暗黑主题支持 */
+:root.dark .card-content {
+    color: #ddd;
+    scrollbar-color: #666 #333;
 }
 
 .card-content::-webkit-scrollbar {
@@ -209,30 +255,94 @@ const emitMore = () => {
     border-radius: 3px;
 }
 
+/* 添加暗黑主题支持 */
+:root.dark .card-content::-webkit-scrollbar-track {
+    background: #333;
+}
+
 .card-content::-webkit-scrollbar-thumb {
     background: #909399;
     border-radius: 3px;
 }
 
+/* 添加暗黑主题支持 */
+:root.dark .card-content::-webkit-scrollbar-thumb {
+    background: #666;
+}
+
 .card-footer {
-    padding: 12px 16px;
+    padding: 12px 20px;
     border-top: 1px solid #ebeef5;
     background-color: #fafafa;
+    flex-shrink: 0;
+}
+
+/* 添加暗黑主题支持 */
+:root.dark .card-footer {
+    border-top-color: #3a3a3a;
+    background-color: #252525;
+    color: #aaa;
 }
 
 /* 添加响应式设计 */
+@media screen and (min-width: 1600px) {
+    .preview-card {
+        min-height: 240px;
+        min-width: 360px;
+    }
+    
+    .card-header {
+        padding: 18px 22px;
+        font-size: 17px;
+    }
+    
+    .card-content {
+        padding: 18px 22px;
+    }
+    
+    .card-footer {
+        padding: 14px 22px;
+    }
+}
+
+@media screen and (max-width: 1366px) {
+    .preview-card {
+        min-height: 200px;
+        min-width: 300px;
+    }
+    
+    .card-header {
+        padding: 14px 18px;
+        font-size: 15px;
+    }
+    
+    .card-content {
+        padding: 14px 18px;
+    }
+    
+    .card-footer {
+        padding: 12px 18px;
+    }
+}
+
 @media screen and (max-width: 768px) {
     .preview-card {
         min-height: 180px;
+        min-width: 280px;
     }
 
     .card-header {
-        padding: 12px;
+        padding: 12px 16px;
         font-size: 14px;
     }
 
     .card-content {
-        padding: 12px;
+        padding: 12px 16px;
+        min-height: 100px;
+    }
+    
+    .card-footer {
+        padding: 10px 16px;
     }
 }
 </style>

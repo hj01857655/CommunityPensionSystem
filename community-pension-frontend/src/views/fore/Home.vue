@@ -89,10 +89,7 @@
             <el-dropdown-menu>
               <el-dropdown-item command="profile">个人信息</el-dropdown-item>
               <el-dropdown-item command="changePassword">修改密码</el-dropdown-item>
-              <el-dropdown-item divided command="help">
-                <el-icon><QuestionFilled /></el-icon>
-                帮助中心
-              </el-dropdown-item>
+              
               <el-dropdown-item command="theme">
                 <el-icon><Moon v-if="isDarkTheme" /><Sunny v-else /></el-icon>
                 切换主题
@@ -192,6 +189,14 @@ const handleUpdateActiveIndex = (event) => {
 onMounted(() => {
   if (!isLoggedIn.value) {
     router.push('/login');
+  }
+  
+  // 检查本地存储中的主题设置并应用
+  const savedTheme = localStorage.getItem('fore-theme')
+  if (savedTheme === 'dark' && !document.documentElement.classList.contains('dark')) {
+    document.documentElement.classList.add('dark')
+  } else if (savedTheme !== 'dark' && document.documentElement.classList.contains('dark')) {
+    document.documentElement.classList.remove('dark')
   }
   
   // 添加自定义事件监听器
@@ -312,10 +317,6 @@ const handleCommand = async (command) => {
     case 'changePassword':
       activeIndex.value = command;
       break;
-    case 'help':
-      // TODO: 打开帮助中心
-      ElMessage.info('帮助中心功能开发中...');
-      break;
     case 'theme':
       toggleTheme();
       break;
@@ -410,12 +411,23 @@ const handleSearch = () => {
 }
 
 // 主题相关
-const isDarkTheme = ref(false)
+const isDarkTheme = ref(localStorage.getItem('fore-theme') === 'dark')
 const toggleTheme = () => {
   isDarkTheme.value = !isDarkTheme.value
-  // TODO: 实现主题切换逻辑
+  // 更新文档根元素类名
   document.documentElement.classList.toggle('dark')
-
+  
+  // 更新本地存储中的主题设置
+  if (isDarkTheme.value) {
+    localStorage.setItem('fore-theme', 'dark')
+  } else {
+    localStorage.setItem('fore-theme', 'light')
+  }
+  
+  // 触发自定义事件，通知子组件主题已更改
+  window.dispatchEvent(new CustomEvent('fore-theme-changed', {
+    detail: { isDark: isDarkTheme.value }
+  }))
 }
 </script>
 
@@ -640,6 +652,21 @@ const toggleTheme = () => {
   --bg-color: #1a1a1a;
   --text-color: #ffffff;
   --border-color: #333333;
+  --card-bg: #2a2a2a;
+  --card-border: #333333;
+  --hover-bg: #363636;
+  --primary-color: #66b1ff;
+  --secondary-color: #a0cfff;
+  --info-color: #8896b3;
+  --success-color: #67c23a;
+  --warning-color: #e6a23c;
+  --danger-color: #f56c6c;
+  --disabled-color: #606266;
+  --disabled-bg: #252525;
+}
+
+:root.dark .home-container {
+  background: linear-gradient(135deg, #1a1a1a 0%, #2c3e50 100%);
 }
 
 :root.dark .header {
@@ -652,6 +679,16 @@ const toggleTheme = () => {
 
 :root.dark .username {
   color: #ffffff;
+}
+
+:root.dark .main {
+  background-color: #1f1f1f;
+  color: var(--text-color);
+}
+
+:root.dark .footer {
+  background-color: #1a1a1a;
+  color: #999;
 }
 
 :root.dark .notification-item {
@@ -676,6 +713,92 @@ const toggleTheme = () => {
 
 :root.dark .notification-time {
   color: #666666;
+}
+
+:root.dark .notification-container,
+:root.dark .notification-header,
+:root.dark .notification-footer {
+  background-color: #2a2a2a;
+  border-color: var(--border-color);
+}
+
+:root.dark :deep(.el-menu) {
+  background-color: transparent;
+  border-bottom-color: var(--border-color);
+}
+
+:root.dark :deep(.el-menu-item) {
+  color: #aaa;
+}
+
+:root.dark :deep(.el-menu-item.is-active) {
+  color: var(--primary-color);
+}
+
+:root.dark :deep(.el-menu-item:hover) {
+  background-color: #2a2a2a;
+}
+
+:root.dark :deep(.el-input__wrapper) {
+  background-color: #2a2a2a;
+  border-color: var(--border-color);
+}
+
+:root.dark :deep(.el-input__inner) {
+  color: var(--text-color);
+}
+
+:root.dark :deep(.el-tabs__item) {
+  color: #aaa;
+}
+
+:root.dark :deep(.el-tabs__item.is-active) {
+  color: var(--primary-color);
+}
+
+:root.dark :deep(.el-tabs__active-bar) {
+  background-color: var(--primary-color);
+}
+
+:root.dark :deep(.el-dropdown-menu) {
+  background-color: #2a2a2a;
+  border-color: var(--border-color);
+}
+
+:root.dark :deep(.el-dropdown-menu__item) {
+  color: var(--text-color);
+}
+
+:root.dark :deep(.el-dropdown-menu__item:hover) {
+  background-color: #363636;
+}
+
+:root.dark :deep(.el-dropdown-menu__item.is-disabled) {
+  color: var(--disabled-color);
+}
+
+:root.dark :deep(.el-breadcrumb__item) {
+  color: #aaa;
+}
+
+:root.dark :deep(.el-breadcrumb__inner.is-link:hover) {
+  color: var(--primary-color);
+}
+
+:root.dark :deep(.el-breadcrumb__separator) {
+  color: #666;
+}
+
+:root.dark :deep(.el-avatar) {
+  border: 1px solid var(--border-color);
+}
+
+:root.dark .tool-icon {
+  color: #aaa;
+}
+
+:root.dark .tool-icon:hover {
+  color: var(--primary-color);
 }
 
 :deep(.el-dropdown-menu__item) {

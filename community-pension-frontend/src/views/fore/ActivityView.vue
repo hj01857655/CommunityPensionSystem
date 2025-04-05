@@ -158,7 +158,7 @@
   </template>
   
   <script setup>
-  import { ref, computed, onMounted, watch, nextTick, onBeforeUnmount } from 'vue'
+  import { ref, computed, onMounted, watch, nextTick, onBeforeUnmount, onUnmounted } from 'vue'
   import { useRouter, useRoute } from 'vue-router'
   import { ElMessage, ElMessageBox } from 'element-plus'
   import { Calendar, Location, User, List, Plus } from '@element-plus/icons-vue'
@@ -591,6 +591,9 @@
         ensureDataLoaded('onMounted', true);
       });
     }
+    
+    // 添加主题变化事件监听
+    window.addEventListener('fore-theme-changed', handleThemeChange);
   });
   
   // 修改 onBeforeUnmount 钩子，确保移除所有事件监听器
@@ -598,6 +601,17 @@
     window.removeEventListener('refresh-activity-data', handleRefreshEvent);
     window.removeEventListener('activity-data-reset', handleResetEvent);
   });
+  
+  // 修改 onUnmounted 钩子，确保移除所有事件监听器
+  onUnmounted(() => {
+    // 移除主题变化事件监听
+    window.removeEventListener('fore-theme-changed', handleThemeChange);
+  });
+  
+  // 处理主题变化
+  const handleThemeChange = () => {
+    console.log('[活动页面] 接收到主题变化事件');
+  };
   </script>
   
   <style scoped>
@@ -715,5 +729,173 @@
   /* 表格样式 */
   :deep(.el-table) {
     border-radius: 4px;
+  }
+  
+  /* 暗色主题样式 */
+  :root.dark .activity-container {
+    background-color: #1f1f1f;
+    color: #fff;
+  }
+  
+  :root.dark .activity-tabs {
+    background-color: #2a2a2a;
+    border-color: #333;
+  }
+  
+  :root.dark :deep(.el-tabs__item) {
+    color: #aaa;
+  }
+  
+  :root.dark :deep(.el-tabs__item.is-active) {
+    color: #66b1ff;
+  }
+  
+  :root.dark :deep(.el-tabs__active-bar) {
+    background-color: #66b1ff;
+  }
+  
+  :root.dark .activity-card {
+    background-color: #2a2a2a;
+    border-color: #333;
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.2);
+  }
+  
+  :root.dark .activity-card:hover {
+    box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.3);
+  }
+  
+  :root.dark .activity-title {
+    color: #eee;
+  }
+  
+  :root.dark .activity-description {
+    color: #bbb;
+  }
+  
+  :root.dark .activity-info {
+    color: #999;
+  }
+  
+  :root.dark .activity-tag {
+    background-color: #3a3a3a;
+    color: #bbb;
+  }
+  
+  :root.dark .activity-status {
+    background-color: #333;
+  }
+  
+  :root.dark .activity-status.enrolled {
+    background-color: #1d3712;
+    color: #85ce61;
+  }
+  
+  :root.dark .activity-status.available {
+    background-color: #213d50;
+    color: #79bbff;
+  }
+  
+  :root.dark .activity-status.full {
+    background-color: #3d2c14;
+    color: #ebb563;
+  }
+  
+  :root.dark .activity-status.passed {
+    background-color: #2d2d30;
+    color: #a6a9ad;
+  }
+  
+  :root.dark .activity-detail-content {
+    background-color: #2a2a2a;
+    border-color: #333;
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.2);
+  }
+  
+  :root.dark .detail-section-title {
+    color: #eee;
+    border-bottom-color: #333;
+  }
+  
+  :root.dark .activity-attendees {
+    background-color: #2a2a2a;
+    border-color: #333;
+  }
+  
+  :root.dark .attendee-item {
+    background-color: #333;
+    color: #eee;
+  }
+  
+  :root.dark .attendee-avatar {
+    border-color: #444;
+  }
+  
+  :root.dark .empty-text {
+    color: #999;
+  }
+  
+  :root.dark :deep(.el-pagination) {
+    --el-pagination-button-bg-color: #2a2a2a;
+    --el-pagination-button-color: #aaa;
+    --el-pagination-button-disabled-bg-color: #222;
+    --el-pagination-button-disabled-color: #666;
+    --el-pagination-hover-color: #66b1ff;
+  }
+  
+  :root.dark :deep(.el-pagination .el-pager li) {
+    background-color: #2a2a2a;
+    color: #aaa;
+  }
+  
+  :root.dark :deep(.el-pagination .el-pager li:hover) {
+    color: #66b1ff;
+  }
+  
+  :root.dark :deep(.el-pagination .el-pager li.is-active) {
+    background-color: #66b1ff;
+    color: #fff;
+  }
+  
+  :root.dark :deep(.el-dialog) {
+    background-color: #2a2a2a;
+    border-color: #333;
+  }
+  
+  :root.dark :deep(.el-dialog__title) {
+    color: #eee;
+  }
+  
+  :root.dark :deep(.el-form-item__label) {
+    color: #bbb;
+  }
+  
+  :root.dark :deep(.el-input__wrapper) {
+    background-color: #333;
+    box-shadow: 0 0 0 1px #444 inset;
+  }
+  
+  :root.dark :deep(.el-input__inner) {
+    color: #eee;
+  }
+  
+  :root.dark :deep(.el-textarea__inner) {
+    background-color: #333;
+    border-color: #444;
+    color: #eee;
+  }
+  
+  :root.dark :deep(.el-button--primary) {
+    --el-button-hover-bg-color: #4a88c7;
+    --el-button-hover-border-color: #4a88c7;
+  }
+  
+  :root.dark :deep(.el-button--default) {
+    --el-button-bg-color: #333;
+    --el-button-border-color: #444;
+    --el-button-hover-bg-color: #444;
+    --el-button-hover-border-color: #555;
+    --el-button-active-bg-color: #3a3a3a;
+    --el-button-active-border-color: #444;
+    color: #bbb;
   }
   </style>

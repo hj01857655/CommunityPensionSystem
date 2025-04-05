@@ -17,7 +17,7 @@
             </div>
             <el-row :gutter="20" class="dashboard-grid">
                 <!-- Health Card -->
-                <el-col :span="12" :md="6">
+                <el-col :span="24" :md="8">
                     <home-card title="健康监测" icon="FirstAidKit" class="health-card" :moreRouteName="'HealthView'" @more="handleMenuSelect">
                         <div v-if="isLoggedIn">
                             <div v-if="healthData">
@@ -50,7 +50,7 @@
                 </el-col>
 
                 <!-- Services Card -->
-                <el-col :span="12" :md="6">
+                <el-col :span="24" :md="8">
                     <home-card title="服务预约" icon="Calendar" class="service-card" :moreRouteName="'ServiceView'" @more="handleMenuSelect">
                         <div v-if="isLoggedIn">
                             <div v-if="servicesLoading" class="loading-container">
@@ -90,7 +90,7 @@
                 </el-col>
 
                 <!-- Activities Card -->
-                <el-col :span="12" :md="6">
+                <el-col :span="24" :md="8">
                     <home-card title="社区活动" icon="Flag" class="activity-card" :moreRouteName="'ActivityView'" @more="handleMenuSelect">
                         <div v-if="activitiesLoading" class="loading-container">
                             <el-skeleton :rows="3" animated />
@@ -108,10 +108,10 @@
                                         </el-tag>
                                     </div>
                                     <div class="activity-time">
-                                        <i class="el-icon-time"></i> {{ formatDate(activity.date) }}
+                                        <el-icon><Clock /></el-icon> {{ formatActivityDate(activity.date) }}
                                     </div>
                                     <div class="activity-location">
-                                        <i class="el-icon-location"></i> {{ getActivityInfoDisplay(activity) }}
+                                        <el-icon><Location /></el-icon> {{ getActivityInfoDisplay(activity) }}
                                     </div>
                                 </div>
                                 <div v-if="activity.isComingSoon" class="activity-badge">
@@ -131,7 +131,7 @@
                 </el-col>
 
                 <!-- Notices Card -->
-                <el-col :span="12" :md="6">
+                <el-col :span="24" :md="8">
                     <home-card title="通知公告" icon="Bell" class="notice-card" :moreRouteName="'NoticeView'" @more="handleMenuSelect">
                         <div class="notice-list">
                             <div v-for="notice in recentNotices" :key="notice.date" class="notice-item"
@@ -146,7 +146,7 @@
                 </el-col>
 
                 <!-- Weather Card -->
-                <el-col :span="12" :md="6">
+                <el-col :span="24" :md="8">
                     <home-card title="当前天气" icon="Cloudy" class="weather-card">
                         <div v-if="weatherData">
                             <p>温度: {{ weatherData.temperature }}°C</p>
@@ -160,7 +160,7 @@
                 </el-col>
 
                 <!-- Emergency Card -->
-                <el-col :span="12" :md="6">
+                <el-col :span="24" :md="8">
                     <home-card title="紧急求助" icon="Warning" class="emergency-card" :show-more="false">
                         <div class="emergency-content">
                             <el-button type="danger" size="large" :icon="Phone" @click="handleEmergencyCall">
@@ -179,12 +179,12 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch, onUnmounted } from 'vue';
+import { ref, onMounted, computed, watch, onUnmounted, onBeforeUnmount } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
 import { getHealthData } from '@/api/fore/health';
 import HomeCard from '@/components/front/HomeCard.vue';
-import { Phone, Warning, Refresh } from '@element-plus/icons-vue';
+import { Phone, Warning, Refresh, Clock, Location } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
 import { formatDateTime, formatDate } from '@/utils/date';
 import { getMyAppointments, cancelAppointment } from '@/api/fore/service';
@@ -891,7 +891,21 @@ onMounted(async () => {
     await initializeData();
     // 设置自动刷新
     setupAutoRefresh();
+    
+    // 监听主题变化事件
+    window.addEventListener('fore-theme-changed', handleThemeChange);
 });
+
+onBeforeUnmount(() => {
+    // 移除主题变化事件监听
+    window.removeEventListener('fore-theme-changed', handleThemeChange);
+});
+
+// 处理主题变化
+const handleThemeChange = () => {
+    // 此处可以添加主题变化时需要执行的特定操作
+    console.log('[仪表盘] 接收到主题变化事件');
+};
 
 const viewNoticeDetail = (notice) => {
     console.log(notice);
@@ -959,273 +973,268 @@ const registerActivity = async (activityId) => {
         ElMessage.error('活动报名失败');
     }
 };
+
+// 格式化活动日期（添加安全处理）
+const formatActivityDate = (date) => {
+    if (!date) return '日期待定';
+    
+    try {
+        return formatDate(date);
+    } catch (error) {
+        console.error('格式化活动日期出错:', error, date);
+        // 返回原始日期字符串或默认值
+        return String(date) || '日期有误';
+    }
+};
 </script>
 
 <style scoped>
+/* 基础布局样式 */
 .dashboard {
     width: 100%;
     height: 100%;
     background-color: #f0f2f5;
     padding: 20px;
+    overflow-x: hidden;
+}
+
+:root.dark .dashboard {
+    background-color: #1f1f1f;
+    color: #fff;
 }
 
 .content-card {
-    padding: 20px;
+    width: 100%;
+    margin-bottom: 20px;
+    background-color: #fff;
     border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    background: linear-gradient(135deg, #ffffff 0%, #f9f9f9 100%);
-}
-
-.dashboard-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 20px;
-}
-
-.refresh-button {
-    margin-top: 10px;
-    transition: transform 0.3s ease;
-}
-
-.refresh-button:hover {
-    transform: rotate(180deg);
-}
-
-.info-card {
-    text-align: center;
-    transition: transform 0.3s ease;
-}
-
-.info-card:hover {
-    transform: translateY(-5px);
-}
-
-.info-card h3 {
-    margin-bottom: 10px;
-    color: #2c3e50;
-    font-weight: 600;
-}
-
-.info-card p {
-    margin-bottom: 20px;
-    color: #606266;
-}
-
-.data-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
-    padding: 8px;
-    background: rgba(0, 0, 0, 0.02);
-    border-radius: 4px;
-}
-
-/* 健康数据异常值样式 */
-.data-abnormal {
-    background-color: rgba(245, 108, 108, 0.05);
-    border-left: 3px solid #F56C6C;
-}
-
-.data-item .label {
-    color: #666;
-    font-size: 14px;
-}
-
-.data-item .value {
-    font-weight: 600;
-    color: #2c3e50;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-}
-
-.value-abnormal {
-    color: #F56C6C;
-}
-
-.warning-icon {
-    color: #E6A23C;
-    font-size: 16px;
-}
-
-.update-time {
-    margin-top: 12px;
-    font-size: 12px;
-    color: #999;
-    text-align: right;
-}
-
-.service-list,
-.activity-list,
-.notice-list {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.service-item,
-.activity-item,
-.notice-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px;
-    background: rgba(0, 0, 0, 0.02);
-    border-radius: 4px;
-    transition: all 0.3s ease;
-    position: relative;
-}
-
-.service-item:hover,
-.activity-item:hover,
-.notice-item:hover {
-    background: rgba(0, 0, 0, 0.05);
-}
-
-/* 服务预约样式增强 */
-.service-info {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-}
-
-.service-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.service-name {
-    font-weight: 500;
-    margin-bottom: 4px;
-}
-
-.service-time {
-    font-size: 12px;
-    color: #909399;
-}
-
-.service-time-soon {
-    color: #e6a23c;
-    font-weight: 500;
-}
-
-.service-upcoming {
-    border-left: 3px solid #e6a23c;
-    background-color: rgba(230, 162, 60, 0.05);
-}
-
-/* 活动样式增强 */
-.activity-info {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    gap: 2px;
-}
-
-.activity-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 4px;
-}
-
-.activity-name {
-    font-weight: 500;
-    margin-right: 8px;
-}
-
-.activity-time, 
-.activity-location {
-    font-size: 12px;
-    color: #909399;
-}
-
-.activity-coming-soon {
-    border-left: 3px solid #409EFF;
-    background-color: rgba(64, 158, 255, 0.05);
-}
-
-.activity-badge {
-    position: absolute;
-    top: -6px;
-    right: -6px;
-    background-color: #409EFF;
-    color: white;
-    border-radius: 10px;
-    padding: 2px 8px;
-    font-size: 10px;
-    font-weight: bold;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.loading-container {
-    padding: 8px;
-}
-
-.notice-title {
-    flex: 1;
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    margin-right: 8px;
 }
 
-.notice-date {
-    color: #999;
-    font-size: 0.9em;
+:root.dark .content-card {
+    background-color: #2a2a2a;
+    color: #eee;
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.3);
 }
 
-.emergency-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 16px;
+/* 网格布局优化 */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-top: 20px;
 }
 
-.emergency-info {
-    text-align: center;
-    color: #666;
+/* 响应式布局优化 */
+@media (max-width: 1366px) {
+    .dashboard-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+    }
+    
+    .dashboard {
+        padding: 16px;
+    }
 }
 
-/* Card variations */
+@media (max-width: 768px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    
+    .dashboard {
+        padding: 12px;
+    }
+    
+    .content-card {
+        margin-bottom: 12px;
+    }
+}
+
+/* 通用卡片内容样式 */
+:deep(.el-card__body) {
+    padding: 20px;
+}
+
+:deep(.el-empty) {
+    padding: 32px;
+}
+
+:deep(.el-skeleton) {
+    padding: 20px;
+}
+
+/* 健康卡片样式优化 */
 .health-card {
-    border-left: 4px solid var(--el-color-success);
+    .data-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px;
+        margin-bottom: 10px;
+        border-radius: 4px;
+        background-color: #f8f9fa;
+        
+        &:last-child {
+            margin-bottom: 0;
+        }
+        
+        .label {
+            color: #606266;
+            font-size: 14px;
+            min-width: 60px;
+        }
+        
+        .value {
+            font-weight: 500;
+            color: #303133;
+            text-align: right;
+            flex: 1;
+            margin-left: 16px;
+        }
+        
+        &.data-abnormal {
+            background-color: #fff3f3;
+        }
+    }
 }
 
+:root.dark .health-card .data-item {
+    background-color: #333;
+    
+    .label {
+        color: #aaa;
+    }
+    
+    .value {
+        color: #eee;
+    }
+    
+    &.data-abnormal {
+        background-color: #3d1d1d;
+    }
+}
+
+/* 服务预约卡片样式优化 */
 .service-card {
-    border-left: 4px solid var(--el-color-primary);
+    .service-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .service-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px;
+        background-color: #f8f9fa;
+        border-radius: 4px;
+        
+        .service-info {
+            flex: 1;
+            min-width: 0;
+            margin-right: 16px;
+            
+            .service-name {
+                font-weight: 500;
+                margin-bottom: 6px;
+                color: #303133;
+                font-size: 14px;
+            }
+            
+            .service-time {
+                font-size: 12px;
+                color: #909399;
+            }
+        }
+        
+        .service-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+    }
 }
 
+:root.dark .service-card {
+    .service-item {
+        background-color: #333;
+        
+        .service-info {
+            .service-name {
+                color: #eee;
+            }
+            
+            .service-time {
+                color: #888;
+            }
+        }
+    }
+}
+
+/* 活动卡片样式优化 */
 .activity-card {
-    border-left: 4px solid var(--el-color-warning);
+    .activity-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .activity-item {
+        padding: 12px;
+        background-color: #f8f9fa;
+        border-radius: 4px;
+        position: relative;
+        
+        .activity-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            
+            .activity-name {
+                font-weight: 500;
+                color: #303133;
+                flex: 1;
+                margin-right: 16px;
+                font-size: 14px;
+            }
+        }
+        
+        .activity-time,
+        .activity-location {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: #909399;
+            margin-top: 6px;
+            
+            .el-icon {
+                font-size: 14px;
+            }
+        }
+    }
 }
 
-.notice-card {
-    border-left: 4px solid var(--el-color-info);
-}
-
-.weather-card {
-    border-left: 4px solid var(--el-color-info);
-}
-
-.emergency-card {
-    border-left: 4px solid var(--el-color-danger);
-}
-
-/* 添加一些动画效果 */
-.data-item {
-    transition: all 0.3s ease;
-}
-
-.data-item:hover {
-    background: rgba(64, 158, 255, 0.1);
-}
-
-/* 已经有异常标记的不改变悬停背景 */
-.data-abnormal:hover {
-    background-color: rgba(245, 108, 108, 0.1);
+:root.dark .activity-card {
+    .activity-item {
+        background-color: #333;
+        
+        .activity-header {
+            .activity-name {
+                color: #eee;
+            }
+        }
+        
+        .activity-time,
+        .activity-location {
+            color: #888;
+        }
+    }
 }
 </style>

@@ -1,0 +1,210 @@
+/* 前台页面暗色主题全局样式 */
+
+:root.dark {
+  /* 基础色彩变量 */
+  --bg-color: #1a1a1a;
+  --bg-color-light: #2a2a2a;
+  --bg-color-lighter: #333333;
+  --text-color: #ffffff;
+  --text-color-light: #cccccc;
+  --text-color-lighter: #999999;
+  --border-color: #333333;
+  --border-color-light: #444444;
+  
+  /* 组件色彩变量 */
+  --card-bg: #2a2a2a;
+  --card-border: #333333;
+  --hover-bg: #363636;
+  
+  /* 主题色彩变量 */
+  --primary-color: #66b1ff;
+  --secondary-color: #a0cfff;
+  --info-color: #8896b3;
+  --success-color: #67c23a;
+  --warning-color: #e6a23c;
+  --danger-color: #f56c6c;
+  --disabled-color: #606266;
+  --disabled-bg: #252525;
+  
+  /* 遮罩和阴影 */
+  --overlay-bg: rgba(0, 0, 0, 0.6);
+  --box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.3);
+  --box-shadow-light: 0 2px 8px 0 rgba(0, 0, 0, 0.2);
+  --box-shadow-hover: 0 4px 16px 0 rgba(0, 0, 0, 0.4);
+}
+
+/* 基础元素样式 */
+:root.dark body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+}
+
+/* 链接样式 */
+:root.dark a {
+  color: var(--primary-color);
+}
+
+:root.dark a:hover {
+  color: var(--secondary-color);
+}
+
+/* Element Plus 组件样式覆盖 */
+:root.dark .el-card {
+  background-color: var(--card-bg);
+  border-color: var(--border-color);
+  color: var(--text-color);
+}
+
+:root.dark .el-button--default {
+  background-color: var(--bg-color-light);
+  border-color: var(--border-color);
+  color: var(--text-color);
+}
+
+:root.dark .el-button--default:hover,
+:root.dark .el-button--default:focus {
+  background-color: var(--hover-bg);
+  border-color: var(--border-color-light);
+  color: var(--text-color);
+}
+
+:root.dark .el-input__wrapper {
+  background-color: var(--bg-color-light);
+  box-shadow: 0 0 0 1px var(--border-color) inset;
+}
+
+:root.dark .el-input__inner {
+  color: var(--text-color);
+}
+
+:root.dark .el-textarea__inner {
+  background-color: var(--bg-color-light);
+  border-color: var(--border-color);
+  color: var(--text-color);
+}
+
+:root.dark .el-select-dropdown {
+  background-color: var(--bg-color-light);
+  border-color: var(--border-color);
+}
+
+:root.dark .el-select-dropdown__item {
+  color: var(--text-color);
+}
+
+:root.dark .el-select-dropdown__item.hover,
+:root.dark .el-select-dropdown__item:hover {
+  background-color: var(--hover-bg);
+}
+
+:root.dark .el-table {
+  background-color: var(--card-bg);
+  color: var(--text-color);
+}
+
+:root.dark .el-table tr {
+  background-color: var(--card-bg);
+}
+
+:root.dark .el-table th {
+  background-color: var(--bg-color);
+}
+
+:root.dark .el-table td,
+:root.dark .el-table th.is-leaf {
+  border-bottom-color: var(--border-color);
+}
+
+:root.dark .el-table--border::after,
+:root.dark .el-table--border::before,
+:root.dark .el-table--border .el-table__inner-wrapper::after {
+  background-color: var(--border-color);
+}
+
+:root.dark .el-table--striped .el-table__body tr.el-table__row--striped td {
+  background-color: var(--bg-color-lighter);
+}
+
+:root.dark .el-pagination {
+  color: var(--text-color-light);
+}
+
+:root.dark .el-pagination .el-pagination__total,
+:root.dark .el-pagination .el-pagination__jump {
+  color: var(--text-color-light);
+}
+
+:root.dark .el-pagination .btn-prev,
+:root.dark .el-pagination .btn-next {
+  background-color: var(--bg-color-light);
+  color: var(--text-color-light);
+}
+
+:root.dark .el-pagination .el-pager li {
+  background-color: var(--bg-color-light);
+  color: var(--text-color-light);
+}
+
+:root.dark .el-pagination .el-pager li.is-active {
+  background-color: var(--primary-color);
+  color: var(--text-color);
+}
+
+:root.dark .el-dialog {
+  background-color: var(--bg-color-light);
+}
+
+:root.dark .el-dialog__title {
+  color: var(--text-color);
+}
+
+:root.dark .el-dialog__body {
+  color: var(--text-color-light);
+}
+
+:root.dark .el-form-item__label {
+  color: var(--text-color-light);
+}
+
+:root.dark .el-menu {
+  background-color: var(--bg-color);
+  border-right-color: var(--border-color);
+}
+
+:root.dark .el-menu-item {
+  color: var(--text-color-light);
+}
+
+:root.dark .el-menu-item:hover,
+:root.dark .el-menu-item:focus {
+  background-color: var(--hover-bg);
+}
+
+:root.dark .el-menu-item.is-active {
+  color: var(--primary-color);
+}
+
+:root.dark .el-submenu__title {
+  color: var(--text-color-light);
+}
+
+:root.dark .el-submenu__title:hover,
+:root.dark .el-submenu__title:focus {
+  background-color: var(--hover-bg);
+}
+
+:root.dark .el-tabs__item {
+  color: var(--text-color-light);
+}
+
+:root.dark .el-tabs__item.is-active {
+  color: var(--primary-color);
+}
+
+:root.dark .el-tabs__active-bar {
+  background-color: var(--primary-color);
+}
+
+:root.dark .el-tabs__nav-wrap::after {
+  background-color: var(--border-color);
+} 
