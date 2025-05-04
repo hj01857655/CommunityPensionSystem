@@ -38,3 +38,5 @@ build/
 ### Project Specific ###
 docs/
 community-pension-admin/docs/
+community-pension-frontend/docs/
+community-pension-frontend/.cursorrules
