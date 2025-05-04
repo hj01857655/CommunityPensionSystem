@@ -36,10 +36,19 @@ build/
 .community-pension-frontend/.cursor/rules/vue.mdc
 
 ### Project Specific ###
+.lingma/
 docs/
+.cursor/rules/
+.cursorrules
+.cursorignore
 community-pension-admin/docs/
+community-pension-admin/.cursor/rules/
+community-pension-admin/.cursorrules
+community-pension-admin/.cursorignore
+
 community-pension-frontend/docs/
 community-pension-frontend/.cursorrules
-.cursor/
+community-pension-frontend/.cursorignore
+community-pension-frontend/.cursor/rules/
 **/.cursor/
 
