@@ -120,62 +120,57 @@
 
             <!-- 根据角色显示不同的表单项 -->
             <template v-if="isElder">
-              <el-divider content-position="left">绑定家属信息</el-divider>
+              <el-divider content-position="left">已绑定家属信息</el-divider>
               <el-row :gutter="20">
                 <el-col :span="12">
-                  <el-form-item label="绑定家属">
-                    <el-select v-model="profileForm.bindKinIds" placeholder="请选择绑定家属" class="full-width" multiple>
-                      <el-option
-                        v-for="kin in kinList"
-                        :key="kin.id"
-                        :label="kin.name"
-                        :value="kin.id"
-                      />
-                    </el-select>
-                    <div v-if="!kinList || kinList.length === 0" class="no-data">
-                      暂无可绑定的家属
+                  <el-form-item label="已绑定家属">
+                    <template v-if="profileForm.bindKinIds && profileForm.bindKinIds.length > 0">
+                      <el-tag
+                          v-for="kinId in profileForm.bindKinIds"
+                          :key="kinId"
+                          :closable="false"
+                          class="tag-item"
+                      >
+                        {{ getKinName(kinId) }}
+                      </el-tag>
+                    </template>
+                    <div v-else class="no-data">
+                      暂未绑定家属
                     </div>
                   </el-form-item>
                 </el-col>
                 <el-col :span="12">
                   <el-form-item label="与家属关系">
-                    <el-select v-model="profileForm.relationType" placeholder="请选择与家属关系" class="full-width">
-                      <el-option label="子女" value="子女" />
-                      <el-option label="配偶" value="配偶" />
-                      <el-option label="兄弟姐妹" value="兄弟姐妹" />
-                      <el-option label="其他亲属" value="其他亲属" />
-                    </el-select>
+                    <el-input v-model="profileForm.relationType" disabled/>
                   </el-form-item>
                 </el-col>
               </el-row>
             </template>
 
             <template v-if="isKin">
-              <el-divider content-position="left">绑定老人信息</el-divider>
+              <el-divider content-position="left">已绑定老人信息</el-divider>
               <el-row :gutter="20">
                 <el-col :span="12">
-                  <el-form-item label="绑定老人">
-                    <el-select v-model="profileForm.bindElderIds" placeholder="请选择绑定老人" class="full-width" multiple>
-                      <el-option
-                        v-for="elder in elderList"
-                        :key="elder.id"
-                        :label="elder.name"
-                        :value="elder.id"
-                      />
-                    </el-select>
-                    <div v-if="!elderList || elderList.length === 0" class="no-data">
-                      暂无可绑定的老人
+                  <el-form-item label="已绑定老人">
+                    <template v-if="profileForm.bindElderIds && profileForm.bindElderIds.length > 0">
+                      <el-tag
+                          v-for="elderId in profileForm.bindElderIds"
+                          :key="elderId"
+                          class="tag-item"
+                          closable
+                          @close="handleUnbindElder(elderId)"
+                      >
+                        {{ getElderName(elderId) }}
+                      </el-tag>
+                    </template>
+                    <div v-else class="no-data">
+                      暂未绑定老人
                     </div>
                   </el-form-item>
                 </el-col>
                 <el-col :span="12">
                   <el-form-item label="与老人关系">
-                    <el-select v-model="profileForm.relationType" placeholder="请选择与老人关系" class="full-width">
-                      <el-option label="子女" value="子女" />
-                      <el-option label="配偶" value="配偶" />
-                      <el-option label="兄弟姐妹" value="兄弟姐妹" />
-                      <el-option label="其他亲属" value="其他亲属" />
-                    </el-select>
+                    <el-input v-model="profileForm.relationType" disabled/>
                   </el-form-item>
                 </el-col>
               </el-row>
@@ -194,11 +189,11 @@
 </template>
 
 <script setup>
-import { onMounted, ref, computed } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { UserFilled, Plus } from '@element-plus/icons-vue'
-import { useUserStore } from '@/stores/fore/useUserStore';
-import { TokenManager } from '@/utils/axios';
+import {computed, onMounted, ref} from 'vue'
+import {ElMessage, ElMessageBox} from 'element-plus'
+import {Plus} from '@element-plus/icons-vue'
+import {useUserStore} from '@/stores/fore/userStore';
+import {TokenManager} from '@/utils/axios';
 
 const userStore = useUserStore();
 
@@ -234,8 +229,8 @@ const openBindDialog = async () => {
 const handleBindFamily = async () => {
   try {
     const success = await userStore.bindElderKin(
-      bindForm.value.elderId, 
-      userStore.userInfo.id, 
+        bindForm.value.elderId,
+        userStore.userInfo.id,
       bindForm.value.relationType
     );
     if (success) {
@@ -265,15 +260,162 @@ const handleUnbindFamily = async (kin) => {
 
 // 获取用户角色
 const userRole = computed(() => {
-  return userStore.roles?.[0];
-});
+  const role = userStore.userInfo?.roleId || userStore.userInfo?.roles?.[0]
+  console.log('当前用户角色:', role)
+  return role
+})
 
 // 判断是否为老人角色
-const isElder = computed(() => userRole.value === 'elder');
-const isKin = computed(() => userRole.value === 'kin');
+const isElder = computed(() => {
+  const role = userRole.value
+  console.log('判断是否为老人角色:', role)
+  return role === 'elder' || role === 1 || userStore.userInfo?.roleIds?.includes(1)
+})
 
-// 初始化老人姓名
-const elderName = ref('未绑定老人');
+// 判断是否为家属角色
+const isKin = computed(() => {
+  const role = userRole.value
+  console.log('判断是否为家属角色:', role)
+  return role === 'kin' || role === 2 || userStore.userInfo?.roleIds?.includes(2)
+})
+
+// 加载状态
+const isLoadingKinList = ref(false);
+const isLoadingElderList = ref(false);
+
+// 获取家属列表
+const kinList = ref([]);
+const getKinList = async () => {
+  try {
+    isLoadingKinList.value = true;
+    if (!profileForm.value.id) {
+      console.warn('用户ID为空，无法获取家属列表');
+      kinList.value = [];
+      return;
+    }
+
+    console.log('开始获取家属列表，用户ID:', profileForm.value.id);
+    const response = await userStore.fetchKinListByElderId(profileForm.value.id);
+    console.log('获取到的家属列表原始数据:', response);
+
+    if (!response) {
+      console.warn('获取家属列表响应为空');
+      kinList.value = [];
+      return;
+    }
+
+    let data = [];
+    if (Array.isArray(response)) {
+      data = response;
+    } else if (response.data && Array.isArray(response.data)) {
+      data = response.data;
+    } else if (response.code === 200 && Array.isArray(response.data)) {
+      data = response.data;
+    }
+
+    // 处理数据，确保每个家属对象都有必要的字段
+    kinList.value = data.map(kin => {
+      if (!kin) {
+        console.warn('家属数据为空，跳过处理');
+        return null;
+      }
+
+      const id = kin.id || kin.userId;
+      if (!id) {
+        console.warn('家属ID为空，跳过处理:', kin);
+        return null;
+      }
+
+      return {
+        id,
+        name: kin.name || '未知家属',
+        userId: kin.userId || id,
+        relationType: kin.relationType || '未知关系'
+      };
+    }).filter(kin => kin !== null);
+
+    // 更新绑定家属ID列表和关系类型
+    if (kinList.value.length > 0) {
+      profileForm.value.bindKinIds = kinList.value.map(kin => kin.id);
+      profileForm.value.relationType = kinList.value[0].relationType;
+      console.log('更新后的绑定家属ID列表:', profileForm.value.bindKinIds);
+      console.log('更新后的关系类型:', profileForm.value.relationType);
+    }
+  } catch (error) {
+    console.error('获取家属列表失败:', error);
+    ElMessage.error('获取家属列表失败');
+    kinList.value = [];
+  } finally {
+    isLoadingKinList.value = false;
+  }
+};
+
+// 获取老人列表
+const elderList = ref([]);
+const getElderList = async () => {
+  try {
+    isLoadingElderList.value = true;
+    if (!profileForm.value.id) {
+      console.warn('用户ID为空，无法获取老人列表');
+      elderList.value = [];
+      return;
+    }
+
+    console.log('开始获取老人列表，用户ID:', profileForm.value.id);
+    const response = await userStore.fetchElderListByKinId(profileForm.value.id);
+    console.log('获取到的老人列表原始数据:', response);
+
+    if (!response) {
+      console.warn('获取老人列表响应为空');
+      elderList.value = [];
+      return;
+    }
+
+    let data = [];
+    if (Array.isArray(response)) {
+      data = response;
+    } else if (response.data && Array.isArray(response.data)) {
+      data = response.data;
+    } else if (response.code === 200 && Array.isArray(response.data)) {
+      data = response.data;
+    }
+
+    // 处理数据，确保每个老人对象都有必要的字段
+    elderList.value = data.map(elder => {
+      if (!elder) {
+        console.warn('老人数据为空，跳过处理');
+        return null;
+      }
+
+      const id = elder.id || elder.userId;
+      if (!id) {
+        console.warn('老人ID为空，跳过处理:', elder);
+        return null;
+      }
+
+      return {
+        id,
+        name: elder.name || '未知老人',
+        userId: elder.userId || id,
+        relationType: elder.relationType || '未知关系'
+      };
+    }).filter(elder => elder !== null);
+
+    // 更新绑定老人ID列表和关系类型
+    if (elderList.value.length > 0) {
+      profileForm.value.bindElderIds = elderList.value.map(elder => elder.id);
+      profileForm.value.relationType = elderList.value[0].relationType;
+      console.log('更新后的绑定老人ID列表:', profileForm.value.bindElderIds);
+      console.log('更新后的关系类型:', profileForm.value.relationType);
+    }
+  } catch (error) {
+    console.error('获取老人列表失败:', error);
+    ElMessage.error('获取老人列表失败');
+    elderList.value = [];
+  } finally {
+    isLoadingElderList.value = false;
+  }
+};
 
 // 个人信息表单
 const profileForm = ref({
@@ -324,73 +466,70 @@ const toggleEditMode = () => {
   }
 }
 
-// 初始化表单数据
-// 添加家属列表数据
-const familyMembers = ref([])
+// 获取健康档案
+const getHealthRecord = async () => {
+  try {
+    const response = await userStore.getHealthRecordByElderId(profileForm.value.id)
+    console.log('获取到的健康档案:', response)
 
-// 修改 initFormData 方法
+    if (response.code === 200 && response.data) {
+      const healthRecord = response.data
+      profileForm.value.allergy = healthRecord.allergy || ''
+      profileForm.value.medicalHistory = healthRecord.medicalHistory || ''
+    }
+  } catch (error) {
+    console.error('获取健康档案失败:', error)
+  }
+}
+
+// 初始化表单数据
 const initFormData = async () => {
   try {
-    const response = await userStore.getUserInfo();
-    if (!response || !response.data) {
-      ElMessage.error('获取个人信息失败');
-      return;
+    // 获取用户信息
+    const userInfo = await userStore.getUserInfo()
+    if (!userInfo || userInfo.code !== 200) {
+      ElMessage.error('获取用户信息失败')
+      return
     }
 
-    const userData = response.data;
+    // 保存原始表单数据
+    const originalFormData = {...profileForm.value}
 
-    // 填充表单数据
+    // 更新表单数据，保留原有值作为后备
     profileForm.value = {
-      id: userData.userId || '',
-      name: userData.name || '',
-      gender: userData.gender || '',
-      birthday: userData.birthday || '',
-      idCard: userData.idCard || '',
-      phone: userData.phone || '',
-      address: userData.address || '',
-      email: userData.email || '',
-      emergencyContactName: userData.emergencyContactName || '',
-      emergencyContactPhone: userData.emergencyContactPhone || '',
-      healthCondition: userData.healthCondition || '',
-      avatar: userData.avatar || '',
-      remark: userData.remark || '',
-      age: userData.age || 0,
-      department: userData.department || '',
-      position: userData.position || '',
-      isActive: userData.isActive || 1,
-      roleIds: userData.roleIds || [],
-      roles: userData.roles || [],
-      roleNames: userData.roleNames || [],
-      bindElderIds: userData.bindElderIds || null,
-      bindKinIds: userData.bindKinIds || null,
-      relationType: userData.relationType || null
-    };
-
-    // 如果是家属并且有绑定老人，获取老人信息
-    if (isKin.value && userData.bindElderIds && userData.bindElderIds.length > 0) {
-      try {
-        const elderResponse = await userStore.getElderInfo(userData.bindElderIds[0]);
-        if (elderResponse && elderResponse.data) {
-          elderName.value = elderResponse.data.name || '未知老人';
-        }
-      } catch (error) {
-        console.error('获取老人信息失败:', error);
-      }
+      id: userInfo.data.userId || originalFormData.id,
+      name: userInfo.data.name || originalFormData.name,
+      gender: userInfo.data.gender || originalFormData.gender,
+      phone: userInfo.data.phone || originalFormData.phone,
+      email: userInfo.data.email || originalFormData.email,
+      avatar: userInfo.data.avatar || originalFormData.avatar,
+      roles: userInfo.data.roles || originalFormData.roles,
+      isActive: userInfo.data.isActive || originalFormData.isActive,
+      // 老人特有字段
+      idCard: userInfo.data.idCard || originalFormData.idCard,
+      birthday: userInfo.data.birthday || originalFormData.birthday,
+      age: userInfo.data.age || originalFormData.age,
+      healthCondition: userInfo.data.healthCondition || originalFormData.healthCondition,
+      emergencyContactName: userInfo.data.emergencyContactName || originalFormData.emergencyContactName,
+      emergencyContactPhone: userInfo.data.emergencyContactPhone || originalFormData.emergencyContactPhone,
+      // 家属特有字段
+      elderId: userInfo.data.elderId || originalFormData.elderId,
+      elderName: userInfo.data.elderName || originalFormData.elderName,
+      relationType: userInfo.data.relationType || originalFormData.relationType,
+      // 绑定关系
+      bindKinIds: userInfo.data.bindKinIds || originalFormData.bindKinIds,
+      bindElderIds: userInfo.data.bindElderIds || originalFormData.bindElderIds
     }
 
-    // 保存原始数据，用于取消编辑
-    originalData.value = { ...profileForm.value };
-
-    // 根据角色获取对应的绑定列表
+    // 根据角色加载相关列表
     if (isElder.value) {
-      await getKinList();
+      await getKinList()
     } else if (isKin.value) {
-      await getElderList();
+      await getElderList()
     }
-
   } catch (error) {
-    console.error('初始化表单数据失败:', error);
-    ElMessage.error('获取个人信息失败');
+    console.error('初始化表单数据失败:', error)
+    ElMessage.error('初始化表单数据失败')
   }
 }
 
@@ -422,32 +561,6 @@ const saveProfile = async () => {
   }
 }
 
-// 获取未绑定的家属列表
-const kinList = ref([]);
-const getKinList = async () => {
-  try {
-    const response = await userStore.fetchKinListByElderId(profileForm.value.id);
-    kinList.value = response || [];
-    console.log('获取到的家属列表:', kinList.value);
-  } catch (error) {
-    console.error('获取家属列表失败:', error);
-    ElMessage.error('获取家属列表失败');
-  }
-};
-
-// 获取未绑定的老人列表
-const elderList = ref([]);
-const getElderList = async () => {
-  try {
-    const response = await userStore.fetchUnboundElders();
-    elderList.value = response || [];
-    console.log('获取到的老人列表:', elderList.value);
-  } catch (error) {
-    console.error('获取老人列表失败:', error);
-    ElMessage.error('获取老人列表失败');
-  }
-};
-
 // 添加头像上传前的验证方法
 const beforeAvatarUpload = (file) => {
   const isJPG = file.type === 'image/jpeg' || file.type === 'image/png' || file.type === 'image/gif';
@@ -473,6 +586,96 @@ const avatarStyle = {
 onMounted(async () => {
   await initFormData();
 });
+
+// 获取家属名称
+const getKinName = (kinId) => {
+  console.log('获取家属名称，kinId:', kinId);
+  console.log('当前家属列表:', kinList.value);
+
+  if (!kinId) {
+    console.warn('家属ID为空');
+    return '未知家属';
+  }
+
+  const kin = kinList.value.find(k => k.id === kinId || k.userId === kinId);
+  console.log('找到的家属信息:', kin);
+
+  if (!kin) {
+    console.warn('未找到对应的家属信息');
+    return '未知家属';
+  }
+
+  return kin.name || '未知家属';
+};
+
+// 获取老人名称
+const getElderName = (elderId) => {
+  console.log('获取老人名称，elderId:', elderId);
+  console.log('当前老人列表:', elderList.value);
+
+  if (!elderId) {
+    console.warn('老人ID为空');
+    return '未知老人';
+  }
+
+  const elder = elderList.value.find(e => e.id === elderId || e.userId === elderId);
+  console.log('找到的老人信息:', elder);
+
+  if (!elder) {
+    console.warn('未找到对应的老人信息');
+    return '未知老人';
+  }
+
+  return elder.name || '未知老人';
+};
+
+// 解绑家属
+const handleUnbindKin = async (kinId) => {
+  try {
+    await ElMessageBox.confirm('确定要解绑该家属吗？', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    });
+
+    const success = await userStore.unbindElderKin(profileForm.value.id, kinId);
+    if (success) {
+      ElMessage.success('解绑成功');
+      // 更新绑定列表
+      profileForm.value.bindKinIds = profileForm.value.bindKinIds.filter(id => id !== kinId);
+    } else {
+      ElMessage.error('解绑失败');
+    }
+  } catch (error) {
+    if (error !== 'cancel') {
+      ElMessage.error('解绑失败');
+    }
+  }
+};
+
+// 解绑老人
+const handleUnbindElder = async (elderId) => {
+  try {
+    await ElMessageBox.confirm('确定要解绑该老人吗？', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    });
+
+    const success = await userStore.unbindElderKin(elderId, profileForm.value.id);
+    if (success) {
+      ElMessage.success('解绑成功');
+      // 更新绑定列表
+      profileForm.value.bindElderIds = profileForm.value.bindElderIds.filter(id => id !== elderId);
+    } else {
+      ElMessage.error('解绑失败');
+    }
+  } catch (error) {
+    if (error !== 'cancel') {
+      ElMessage.error('解绑失败');
+    }
+  }
+};
 
 </script>
 
@@ -550,5 +753,28 @@ h3 {
   padding: 10px;
   background-color: #f5f7fa;
   border-radius: 4px;
+}
+
+.loading-tip {
+  margin-top: 8px;
+  color: #909399;
+  font-size: 14px;
+  text-align: center;
+  padding: 10px;
+  background-color: #f5f7fa;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.loading-tip .el-icon {
+  font-size: 16px;
+}
+
+.tag-item {
+  margin-right: 8px;
+  margin-bottom: 8px;
 }
 </style>

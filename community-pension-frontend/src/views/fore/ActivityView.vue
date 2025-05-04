@@ -11,7 +11,7 @@
             </div>
             <!-- 活动列表展示 -->
             <el-row v-else :gutter="20">
-              <el-col :span="8" v-for="activity in activities" :key="activity.id">
+              <el-col v-for="activity in activityList" :key="activity.id" :span="8">
                 <el-card shadow="hover" class="activity-card">
                   <!-- 活动标题和类型 -->
                   <div class="activity-header">
@@ -42,13 +42,20 @@
                   </div>
                   <!-- 操作按钮 -->
                   <div class="actions">
-                    <el-button 
-                      :type="canJoin(activity.status) ? 'primary' : ''"
-                      :link="!canJoin(activity.status)"
+                    <el-button
+                        v-if="canJoin(activity.status)"
+                        type="primary"
                       size="small"
                       :loading="activity.loading"
-                      :disabled="!canJoin(activity.status)"
                       @click="handleRegister(activity)"
+                    >
+                      {{ getButtonText(activity.status) }}
+                    </el-button>
+                    <el-button
+                        v-else
+                        disabled
+                        size="small"
+                        type="info"
                     >
                       {{ getButtonText(activity.status) }}
                     </el-button>
@@ -57,9 +64,9 @@
               </el-col>
             </el-row>
             <!-- 无数据状态 -->
-            <el-empty v-if="!loading && activities.length === 0" description="暂无活动" />
+            <el-empty v-if="!loading && activityList.length === 0" description="暂无活动"/>
           </el-tab-pane>
-          
+
           <!-- 我的活动报名标签页 -->
           <el-tab-pane label="我的活动报名" name="myActivities">
             <!-- 加载状态显示 -->
@@ -76,7 +83,7 @@
               :empty-text="emptyText"
             >
               <!-- 活动名称列 -->
-              <el-table-column prop="title" label="活动名称" min-width="150">
+              <el-table-column label="活动名称" min-width="150">
                 <template #default="{ row }">
                   <div class="activity-title">
                     <span>{{ row.title }}</span>
@@ -84,9 +91,9 @@
                   </div>
                 </template>
               </el-table-column>
-              
+
               <!-- 活动时间列 -->
-              <el-table-column prop="time" label="活动时间" min-width="180">
+              <el-table-column label="活动时间" min-width="180">
                 <template #default="{ row }">
                   <div class="time-info">
                     <el-icon><Calendar /></el-icon>
@@ -94,9 +101,9 @@
                   </div>
                 </template>
               </el-table-column>
-              
+
               <!-- 活动地点列 -->
-              <el-table-column prop="location" label="活动地点" min-width="120">
+              <el-table-column label="活动地点" min-width="120">
                 <template #default="{ row }">
                   <div class="location-info">
                     <el-icon><Location /></el-icon>
@@ -104,32 +111,32 @@
                   </div>
                 </template>
               </el-table-column>
-              
+
               <!-- 活动状态列 -->
-              <el-table-column prop="status" label="活动状态" width="100">
+              <el-table-column label="活动状态" width="100">
                 <template #default="{ row }">
                   <el-tag :type="getStatusType(row.status)" effect="dark">
                     {{ getStatusText(row.status) }}
                   </el-tag>
                 </template>
               </el-table-column>
-              
+
               <!-- 报名状态列 -->
-              <el-table-column prop="participateStatus" label="报名状态" width="100">
+              <el-table-column label="报名状态" width="100">
                 <template #default="{ row }">
                   <el-tag :type="getParticipateStatusType(row.participateStatus)" effect="dark">
                     {{ getParticipateStatusText(row.participateStatus) }}
                   </el-tag>
                 </template>
               </el-table-column>
-              
+
               <!-- 操作列 -->
-              <el-table-column prop="actions" label="操作" width="120" align="center">
+              <el-table-column align="center" label="操作" width="120">
                 <template #default="{ row }">
-                  <el-button 
+                  <el-button
                     link
-                    type="danger" 
-                    size="small" 
+                    size="small"
+                    type="danger"
                     :disabled="!canCancel(row.status, row.participateStatus)"
                     @click="handleCancel(row)"
                   >
@@ -138,7 +145,7 @@
                 </template>
               </el-table-column>
             </el-table>
-            
+
             <!-- 分页组件 -->
             <div class="pagination-container" v-if="total > 0">
               <el-pagination
@@ -156,38 +163,48 @@
       </el-card>
     </div>
   </template>
-  
+
   <script setup>
-  import { ref, computed, onMounted, watch, nextTick, onBeforeUnmount, onUnmounted } from 'vue'
-  import { useRouter, useRoute } from 'vue-router'
-  import { ElMessage, ElMessageBox } from 'element-plus'
-  import { Calendar, Location, User, List, Plus } from '@element-plus/icons-vue'
-  import { useActivityStore } from '@/stores/fore/activityStore'
-  import { useUserStore } from '@/stores/fore/useUserStore'
-  
+  import {computed, onBeforeUnmount, onMounted, onUnmounted, ref, watch} from 'vue'
+  import {useRoute, useRouter} from 'vue-router'
+  import {ElMessage, ElMessageBox} from 'element-plus'
+  import {Calendar, Location, User} from '@element-plus/icons-vue'
+  import {useActivityStore} from '@/stores/fore/activityStore'
+  import {useUserStore} from '@/stores/fore/userStore'
+
   // 使用路由
   const router = useRouter()
   const route = useRoute()
-  
+
   // 添加路由路径计算属性
   const routeBasePath = computed(() => {
     const basePath = route.path.split('/').slice(0, 3).join('/');
     return basePath;
   });
-  
+
   // 添加初始路由路径标记
   const initialRoutePath = ref('');
-  
+
   // 使用store
   const activityStore = useActivityStore() // 活动相关的状态管理
   const userStore = useUserStore() // 用户认证相关的状态管理
-  
+
+  // 添加活动列表的计算属性
+  const activityList = computed(() => activityStore.activities);
+
   // Tab页管理
   const activeTab = ref('activities') // 当前激活的标签页，默认为活动列表
-  
+
+  // 监听标签页切换
+  watch(activeTab, (newTab) => {
+    console.log('标签页切换:', newTab);
+    if (newTab === 'myActivities') {
+      fetchUserActivities();
+    }
+  });
+
   // 从store中获取状态和方法
-  const { 
-    activities, // 活动列表数据
+  const {
     loading, // 加载状态
     getStatusText, // 获取活动状态文本
     getStatusType, // 获取活动状态类型（用于标签颜色）
@@ -196,43 +213,57 @@
     fetchActivities, // 获取活动列表方法
     registerActivityAction, // 活动报名方法
     getUserRegisteredActivitiesAction, // 获取用户已报名活动方法
-    cancelActivityRegistrationAction // 取消报名方法
+    cancelActivityRegistrationAction,
+    fetchUserRegisteredActivities // 添加从 store 获取用户活动列表的方法
   } = activityStore
-  
+
   // 添加加载状态追踪变量
   const dataLoadAttempted = ref(false);
   const dataLoadTriggerCount = ref(0);
-  
+
   // 修改 ensureDataLoaded 函数，接受一个强制刷新参数
   const ensureDataLoaded = async (source = 'unknown', forceReload = false) => {
     dataLoadTriggerCount.value++;
     console.log(`[活动数据] 加载触发源: ${source}, 次数: ${dataLoadTriggerCount.value}, 强制刷新: ${forceReload}`);
-    
+
+    // 如果正在加载，等待加载完成
+    if (loading.value) {
+      console.log('[活动数据] 数据正在加载中，等待加载完成');
+      // 等待当前加载完成
+      await new Promise(resolve => {
+        const unwatch = watch(() => loading.value, (newValue) => {
+          if (!newValue) {
+            unwatch();
+            resolve();
+          }
+        });
+      });
+      return activityList.value;
+    }
+
     // 第一次加载、强制刷新、或强制重载
     if (!dataLoadAttempted.value || source === 'force' || forceReload) {
       console.log('[活动数据] 开始获取活动列表数据...');
       dataLoadAttempted.value = true;
-      
-      // 延迟100ms，确保组件和路由状态已稳定
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
+
       try {
         // 调用 store 中的方法，强制刷新
         const result = await fetchActivities(true);
-        console.log(`[活动数据] 加载完成，当前活动数量: ${activities.length}`, result);
-        return result; // 返回结果方便调用者使用
+        console.log(`[活动数据] 加载完成，当前活动数量: ${activityList.value.length}`, result);
+        return result;
       } catch (err) {
         console.error('[活动数据] 加载失败:', err);
         // 加载失败后允许再次尝试
         dataLoadAttempted.value = false;
-        return []; // 返回空数组表示失败
+        ElMessage.error('加载活动列表失败，请刷新页面重试');
+        return [];
       }
     } else {
-      console.log('[活动数据] 数据已加载，跳过本次加载, 当前数据量:', activities.length);
-      return activities; // 返回当前缓存数据
+      console.log('[活动数据] 数据已加载，跳过本次加载, 当前数据量:', activityList.value.length);
+      return activityList.value;
     }
   };
-  
+
   // 我的活动报名列表数据
   const myActivitiesLoading = ref(false) // 我的活动报名列表加载状态
   const myActivitiesList = ref([]) // 我的活动报名列表数据
@@ -240,7 +271,7 @@
   const pageSize = ref(10) // 每页显示条数
   const total = ref(0) // 总记录数
   const emptyText = ref('暂无报名记录') // 无数据时显示的文本
-  
+
   // 报名状态映射
   const PARTICIPATE_STATUS_MAP = {
     0: '待审核',
@@ -248,7 +279,7 @@
     2: '已拒绝',
     3: '已取消'
   }
-  
+
   /**
    * 获取报名状态文字
    * @param {number} status - 报名状态码
@@ -257,7 +288,7 @@
   const getParticipateStatusText = (status) => {
     return PARTICIPATE_STATUS_MAP[status] || '未知状态'
   }
-  
+
   /**
    * 获取报名状态类型（用于标签颜色）
    * @param {number} status - 报名状态码
@@ -270,9 +301,9 @@
       2: 'danger',   // 已拒绝 - 红色
       3: 'warning'   // 已取消 - 黄色
     }
-    return types[status] || 'default'
+    return types[status] || 'info'  // 将默认值从 'default' 改为 'info'
   }
-  
+
   /**
    * 判断是否可以取消报名
    * @param {number} activityStatus - 活动状态码
@@ -281,10 +312,10 @@
    */
   const canCancel = (activityStatus, participateStatus) => {
     // 只有活动状态为"筹备中"或"报名中"，且报名状态为"待审核"或"已通过"时才能取消
-    return (activityStatus === 0 || activityStatus === 1) && 
+    return (activityStatus === 0 || activityStatus === 1) &&
            (participateStatus === 0 || participateStatus === 1)
   }
-  
+
   /**
    * 格式化日期时间
    * @param {string|Date} date - 日期时间
@@ -293,7 +324,7 @@
    */
   const formatDateTime = (date, format = 'YYYY-MM-DD HH:mm:ss') => {
     if (!date) return ''
-    
+
     const d = new Date(date)
     if (isNaN(d.getTime())) return ''
 
@@ -310,47 +341,19 @@
       .replace('HH', hours)
       .replace('mm', minutes)
   }
-  
+
   /**
    * 处理活动报名
    * @param {Object} activity - 活动对象
    */
   const handleRegister = async (activity) => {
-    console.log('----活动报名调试信息开始----');
-    // 检查用户是否登录
-    const userInfo = userStore.userInfo || JSON.parse(localStorage.getItem('userInfo') || '{}');
-    const isLoggedIn = userStore.isLoggedIn || localStorage.getItem('isLoggedIn') === 'true';
-    
-    console.log('当前用户信息:', userInfo);
-    console.log('登录状态:', isLoggedIn);
-    console.log('本地存储role:', localStorage.getItem('role'));
-    console.log('本地存储roleId:', localStorage.getItem('roleId'));
-    console.log('本地存储userId:', localStorage.getItem('userId'));
-    
-    if (!isLoggedIn && !userInfo.id && !userInfo.userId) {
-      console.log('----活动报名调试信息结束：用户未登录----');
-      ElMessage.warning('请先登录后再报名活动');
-      return;
-    }
-    
-    // 获取报名活动所需的老人ID
     try {
       // 直接调用store的报名方法，让其内部处理老人ID获取
       console.log('准备报名活动:', activity);
-      
-      // 为报名活动添加额外信息，帮助调试
-      const activityWithDebugInfo = {
-        ...activity,
-        _debug: {
-          userInfo: userInfo,
-          localStorageRole: localStorage.getItem('role'),
-          localStorageUserId: localStorage.getItem('userId')
-        }
-      };
-      
-      const success = await registerActivityAction(activityWithDebugInfo);
+
+      const success = await registerActivityAction(activity);
       console.log('报名活动结果:', success);
-      
+
       if (success && activeTab.value === 'myActivities') {
         // 如果在"我的活动"标签页，报名成功后刷新列表
         fetchUserActivities();
@@ -358,80 +361,60 @@
       console.log('----活动报名调试信息结束：操作完成----');
     } catch (error) {
       console.error('报名活动过程中发生错误:', error);
-      ElMessage.error('报名活动过程中发生错误，请稍后重试');
+      // 优化错误提示
+      if (error.response?.data?.msg) {
+        ElMessage.error(error.response.data.msg);
+      } else if (error.message) {
+        ElMessage.error(error.message);
+      } else {
+        ElMessage.error('报名活动过程中发生错误，请稍后重试');
+      }
       console.log('----活动报名调试信息结束：发生错误----');
     }
   }
-  
+
   /**
    * 获取用户报名的活动列表
    */
   const fetchUserActivities = async () => {
+    console.log('开始获取用户活动报名列表...');
     myActivitiesLoading.value = true;
     emptyText.value = '加载中...';
-    
+
     try {
       // 获取用户信息
       const userInfo = userStore.userInfo || JSON.parse(localStorage.getItem('userInfo') || '{}');
-      
-      // 确定老人ID
-      let elderId = null;
-      
-      // 从不同来源尝试获取老人ID
-      // 1. 如果用户是老人，直接使用用户ID
-      if (userInfo.roles && userInfo.roles.includes('elder')) {
-        elderId = userInfo.userId || userInfo.id;
-      } 
-      // 2. 如果是家属且绑定了老人
-      else if (userInfo.roles && userInfo.roles.includes('kin') && userInfo.bindElder) {
-        elderId = userInfo.bindElder.id;
-      }
-      // 3. 根据本地存储的角色判断
-      else {
-        const role = localStorage.getItem('role');
-        if (role === '1') { // 老人角色
-          elderId = userInfo.userId || userInfo.id || localStorage.getItem('userId');
-        } else if (role === '2') { // 家属角色
-          const bindElderStr = localStorage.getItem('bindElder');
-          if (bindElderStr) {
-            try {
-              const bindElder = JSON.parse(bindElderStr);
-              elderId = bindElder.id;
-            } catch (error) {
-              console.error('解析bindElder失败:', error);
-            }
-          }
-        }
-      }
-      
-      console.log('用户信息:', userInfo);
-      console.log('确定的老人ID:', elderId);
-      
-      // 检查是否获取到老人ID
-      if (!elderId) {
-        emptyText.value = '无法确定老人身份，请确认您是老人或已绑定老人';
-        myActivitiesLoading.value = false;
-        return;
-      }
-      
-      // 设置查询参数
-      const params = {
+      console.log('当前用户信息:', userInfo);
+
+      // 通过 store 获取用户报名的活动列表
+      const result = await fetchUserRegisteredActivities({
         pageNum: currentPage.value,
-        pageSize: pageSize.value,
-        userId: elderId // 使用老人ID作为查询参数（API使用userId参数，但实际上是老人ID）
-      };
-      
-      console.log('请求参数:', params); // 添加日志，方便调试
-      
-      // 调用API获取数据
-      const result = await getUserRegisteredActivitiesAction(params);
-      
+        pageSize: pageSize.value
+      });
+
+      console.log('获取到的活动报名列表原始数据:', result);
+
       // 处理返回结果
       if (result && result.records) {
-        myActivitiesList.value = result.records;
+        // 确保每条记录都包含必要的字段
+        myActivitiesList.value = result.records.map(record => {
+          console.log('处理单条记录:', record);
+          return {
+            ...record,
+            title: record.title || '未知活动',
+            typeName: record.typeName || '其他',
+            startTime: record.startTime || '',
+            endTime: record.endTime || '',
+            location: record.location || '未指定',
+            status: record.status ?? 0,
+            participateStatus: record.participateStatus ?? 0
+          };
+        });
         total.value = result.total;
         emptyText.value = '暂无报名记录';
+        console.log('处理后的活动报名列表:', myActivitiesList.value);
       } else {
+        console.warn('返回数据格式不正确:', result);
         myActivitiesList.value = [];
         total.value = 0;
         emptyText.value = '暂无报名记录';
@@ -446,7 +429,7 @@
       myActivitiesLoading.value = false;
     }
   }
-  
+
   /**
    * 处理取消报名
    * @param {Object} activity - 活动对象
@@ -466,7 +449,7 @@
         // 获取用户信息，确定老人ID
         const userInfo = userStore.userInfo || JSON.parse(localStorage.getItem('userInfo') || '{}');
         let elderId = null;
-        
+
         // 确定老人ID的逻辑
         if (userInfo.roles && userInfo.roles.includes('elder')) {
           elderId = userInfo.userId || userInfo.id;
@@ -485,18 +468,18 @@
             }
           }
         }
-        
+
         if (!elderId) {
           ElMessage.warning('无法确定老人身份，请确认您是老人或已绑定老人');
           return;
         }
-        
+
         // 调用API取消报名
         const success = await cancelActivityRegistrationAction(activity.id, elderId);
         if (success) {
           // 刷新列表
           fetchUserActivities();
-          
+
           // 如果活动已经在首页中显示，可能也需要刷新首页活动列表
           if (activeTab.value === 'myActivities') {
             fetchActivities();
@@ -510,7 +493,7 @@
       // 用户点击取消按钮，不做任何操作
     });
   }
-  
+
   /**
    * 处理每页显示条数变化
    * @param {number} size - 每页显示条数
@@ -519,7 +502,7 @@
     pageSize.value = size
     fetchUserActivities()
   }
-  
+
   /**
    * 处理页码变化
    * @param {number} page - 当前页码
@@ -528,13 +511,13 @@
     currentPage.value = page
     fetchUserActivities()
   }
-  
+
   // 添加数据重置事件处理函数
   const handleResetEvent = () => {
     console.log('[活动页面] 收到重置事件');
     dataLoadAttempted.value = false;
   };
-  
+
   // 修改刷新事件处理函数
   const handleRefreshEvent = (event) => {
     console.log('[活动页面] 收到刷新事件', event.detail);
@@ -543,100 +526,96 @@
     const source = event.detail?.source || 'unknown';
     ensureDataLoaded(`refreshEvent:${source}`, forceRefresh);
   };
-  
+
   // 修改路由监听器
   watch(
     () => route.path,
-    async (newPath) => {
+      async (newPath, oldPath) => {
+        console.log('[活动页面] 路由变化:', {
+          newPath,
+          oldPath,
+          initialPath: initialRoutePath.value,
+          currentBasePath: routeBasePath.value
+        });
+
       if (newPath.includes('/activity') || newPath.includes('/home/activity')) {
-        console.log('[活动页面] 检测到活动页面路由变化:', newPath);
-        
-        // 判断是否是首次加载或路由真正变化
-        const isNewNavigation = initialRoutePath.value !== routeBasePath.value;
-        
-        await nextTick();
-        ensureDataLoaded('routeChange', isNewNavigation);
-        
-        // 更新初始路径
-        initialRoutePath.value = routeBasePath.value;
+        // 强制刷新数据
+        await ensureDataLoaded('routeChange', true);
       }
     },
-    { immediate: true }
+      {immediate: true} // 添加immediate: true，确保首次进入时也触发
   );
-  
+
   // 修改 onMounted 钩子
-  onMounted(() => {
+  onMounted(async () => {
     console.log('[活动页面] 组件已挂载');
-    
+
     // 记录初始路径
     initialRoutePath.value = routeBasePath.value;
-    
+
     // 每次组件挂载时重置数据加载标记
     dataLoadAttempted.value = false;
-    
+
     // 添加事件监听器
     window.addEventListener('refresh-activity-data', handleRefreshEvent);
     window.addEventListener('activity-data-reset', handleResetEvent);
-    
-    // 检查URL中是否有tab参数，用于直接定位到指定标签页
+
+    // 检查URL中是否有tab参数
     const tabParam = route.query.tab;
     if (tabParam === 'myActivities') {
       // URL中指定了my-activities标签页
       activeTab.value = 'myActivities';
-      fetchUserActivities();
-    } else {
-      // 默认加载活动列表，使用nextTick确保组件已渲染
-      nextTick(() => {
-        // 强制刷新数据，不考虑缓存
-        ensureDataLoaded('onMounted', true);
-      });
+      await fetchUserActivities();
     }
-    
+
+    // 无论是否有tab参数，都加载活动列表
+    await ensureDataLoaded('onMounted', true);
+
     // 添加主题变化事件监听
     window.addEventListener('fore-theme-changed', handleThemeChange);
   });
-  
+
   // 修改 onBeforeUnmount 钩子，确保移除所有事件监听器
   onBeforeUnmount(() => {
     window.removeEventListener('refresh-activity-data', handleRefreshEvent);
     window.removeEventListener('activity-data-reset', handleResetEvent);
   });
-  
+
   // 修改 onUnmounted 钩子，确保移除所有事件监听器
   onUnmounted(() => {
     // 移除主题变化事件监听
     window.removeEventListener('fore-theme-changed', handleThemeChange);
   });
-  
+
   // 处理主题变化
   const handleThemeChange = () => {
     console.log('[活动页面] 接收到主题变化事件');
   };
   </script>
-  
-  <style scoped>
+
+<style scoped>
   /* 活动视图容器样式 */
   .activity-view {
     width: 100%;
   }
-  
+
   /* 内容卡片样式 */
   .content-card {
     margin-bottom: 20px;
   }
-  
+
   /* 活动卡片样式 */
   .activity-card {
     margin-bottom: 20px;
     transition: all 0.3s ease;
   }
-  
+
   /* 活动卡片悬停效果 */
   .activity-card:hover {
     transform: translateY(-4px);
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
   }
-  
+
   /* 活动标题区域样式 */
   .activity-header {
     display: flex;
@@ -644,7 +623,7 @@
     align-items: center;
     margin-bottom: 12px;
   }
-  
+
   /* 活动标题样式 */
   h4 {
     margin: 0;
@@ -653,7 +632,7 @@
     flex: 1;
     margin-right: 12px;
   }
-  
+
   /* 时间和地点信息样式 */
   .time, .location, .time-info, .location-info {
     display: flex;
@@ -662,7 +641,7 @@
     color: #666;
     margin: 8px 0;
   }
-  
+
   /* 活动描述样式 */
   .description {
     margin: 12px 0;
@@ -676,7 +655,7 @@
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
   }
-  
+
   /* 活动信息区域样式 */
   .activity-info {
     display: flex;
@@ -684,7 +663,7 @@
     align-items: center;
     margin: 12px 0;
   }
-  
+
   /* 参与人数和活动标题样式 */
   .participants, .activity-title {
     display: flex;
@@ -693,26 +672,26 @@
     color: #666;
     font-size: 14px;
   }
-  
+
   /* 操作按钮区域样式 */
   .actions {
     display: flex;
     justify-content: flex-end;
     margin-top: 16px;
   }
-  
+
   /* 加载中容器样式 */
   .loading-container {
     padding: 20px;
   }
-  
+
   /* 分页容器样式 */
   .pagination-container {
     margin-top: 20px;
     display: flex;
     justify-content: center;
   }
-  
+
   /* 骨架屏样式 */
   :deep(.el-skeleton) {
     padding: 20px;
@@ -720,120 +699,120 @@
     border-radius: 4px;
     margin-bottom: 20px;
   }
-  
+
   /* 标签样式 */
   :deep(.el-tag) {
     margin-left: 8px;
   }
-  
+
   /* 表格样式 */
   :deep(.el-table) {
     border-radius: 4px;
   }
-  
+
   /* 暗色主题样式 */
   :root.dark .activity-container {
     background-color: #1f1f1f;
     color: #fff;
   }
-  
+
   :root.dark .activity-tabs {
     background-color: #2a2a2a;
     border-color: #333;
   }
-  
+
   :root.dark :deep(.el-tabs__item) {
     color: #aaa;
   }
-  
+
   :root.dark :deep(.el-tabs__item.is-active) {
     color: #66b1ff;
   }
-  
+
   :root.dark :deep(.el-tabs__active-bar) {
     background-color: #66b1ff;
   }
-  
+
   :root.dark .activity-card {
     background-color: #2a2a2a;
     border-color: #333;
     box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.2);
   }
-  
+
   :root.dark .activity-card:hover {
     box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.3);
   }
-  
+
   :root.dark .activity-title {
     color: #eee;
   }
-  
+
   :root.dark .activity-description {
     color: #bbb;
   }
-  
+
   :root.dark .activity-info {
     color: #999;
   }
-  
+
   :root.dark .activity-tag {
     background-color: #3a3a3a;
     color: #bbb;
   }
-  
+
   :root.dark .activity-status {
     background-color: #333;
   }
-  
+
   :root.dark .activity-status.enrolled {
     background-color: #1d3712;
     color: #85ce61;
   }
-  
+
   :root.dark .activity-status.available {
     background-color: #213d50;
     color: #79bbff;
   }
-  
+
   :root.dark .activity-status.full {
     background-color: #3d2c14;
     color: #ebb563;
   }
-  
+
   :root.dark .activity-status.passed {
     background-color: #2d2d30;
     color: #a6a9ad;
   }
-  
+
   :root.dark .activity-detail-content {
     background-color: #2a2a2a;
     border-color: #333;
     box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.2);
   }
-  
+
   :root.dark .detail-section-title {
     color: #eee;
     border-bottom-color: #333;
   }
-  
+
   :root.dark .activity-attendees {
     background-color: #2a2a2a;
     border-color: #333;
   }
-  
+
   :root.dark .attendee-item {
     background-color: #333;
     color: #eee;
   }
-  
+
   :root.dark .attendee-avatar {
     border-color: #444;
   }
-  
+
   :root.dark .empty-text {
     color: #999;
   }
-  
+
   :root.dark :deep(.el-pagination) {
     --el-pagination-button-bg-color: #2a2a2a;
     --el-pagination-button-color: #aaa;
@@ -841,54 +820,54 @@
     --el-pagination-button-disabled-color: #666;
     --el-pagination-hover-color: #66b1ff;
   }
-  
+
   :root.dark :deep(.el-pagination .el-pager li) {
     background-color: #2a2a2a;
     color: #aaa;
   }
-  
+
   :root.dark :deep(.el-pagination .el-pager li:hover) {
     color: #66b1ff;
   }
-  
+
   :root.dark :deep(.el-pagination .el-pager li.is-active) {
     background-color: #66b1ff;
     color: #fff;
   }
-  
+
   :root.dark :deep(.el-dialog) {
     background-color: #2a2a2a;
     border-color: #333;
   }
-  
+
   :root.dark :deep(.el-dialog__title) {
     color: #eee;
   }
-  
+
   :root.dark :deep(.el-form-item__label) {
     color: #bbb;
   }
-  
+
   :root.dark :deep(.el-input__wrapper) {
     background-color: #333;
     box-shadow: 0 0 0 1px #444 inset;
   }
-  
+
   :root.dark :deep(.el-input__inner) {
     color: #eee;
   }
-  
+
   :root.dark :deep(.el-textarea__inner) {
     background-color: #333;
     border-color: #444;
     color: #eee;
   }
-  
+
   :root.dark :deep(.el-button--primary) {
     --el-button-hover-bg-color: #4a88c7;
     --el-button-hover-border-color: #4a88c7;
   }
-  
+
   :root.dark :deep(.el-button--default) {
     --el-button-bg-color: #333;
     --el-button-border-color: #444;

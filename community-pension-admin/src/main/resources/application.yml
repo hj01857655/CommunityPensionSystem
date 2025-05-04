@@ -9,7 +9,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://127.0.0.1:3306/community_pension?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: root
-    password: root
+    password: 123456
     hikari:
       # 连接池名称
       pool-name: HikariCP
@@ -69,22 +69,7 @@ spring:
     caffeine:
       spec: maximumSize=500,expireAfterWrite=3600s
 
-  # 邮件配置
-  mail:
-    host: smtp.qq.com  # 邮件服务器地址
-    port: 587
-    username: ${MAIL_USERNAME:1292548381@qq.com}  # 发件人邮箱
-    password: ${MAIL_PASSWORD:kejxhibrhnqrijgh}  # 邮箱授权码
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
-            required: true
-        socketFactory:
-          port: 587
-          class: javax.net.ssl.SSLSocketFactory
+  # 邮件配置已移除，改为使用WebSocket实时通知
 
 jwt:
   secret: "cB7ChF1y4Aegk+p9KNkFz0GQeY2e+ZgeIW6EVJbiR9Y="
@@ -140,5 +125,3 @@ logging:
   level:
     com.communitypension.communitypensionadmin: DEBUG
     org.springframework.transaction: DEBUG
-
-

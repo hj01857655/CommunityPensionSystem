@@ -49,5 +49,5 @@ export const listHealthRecords = (page, size) => {
 
 // 获取所有老人列表(用于下拉选择)
 export const getElders = () => {
-    return axios.get('/api/elders/list');
+    return axios.get('/api/system/user/elders');
 };

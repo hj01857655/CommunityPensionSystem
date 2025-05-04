@@ -52,10 +52,10 @@ public class WebSocketController {
             @Parameter(description = "消息标题") @RequestParam String title,
             @Parameter(description = "消息内容") @RequestParam String content,
             @Parameter(description = "消息类型") @RequestParam(defaultValue = "SYSTEM") String type) {
-        
+
         try {
             WebSocketMessage.MessageType messageType = WebSocketMessage.MessageType.valueOf(type);
-            
+
             WebSocketMessage message = WebSocketMessage.builder()
                     .type(messageType)
                     .title(title)
@@ -63,7 +63,7 @@ public class WebSocketController {
                     .timestamp(LocalDateTime.now())
                     .source("admin")
                     .build();
-            
+
             boolean isOnline = WebSocketServer.isOnline(userId);
             if (isOnline) {
                 WebSocketServer.sendMessage(userId, message);
@@ -88,10 +88,10 @@ public class WebSocketController {
             @Parameter(description = "消息标题") @RequestParam String title,
             @Parameter(description = "消息内容") @RequestParam String content,
             @Parameter(description = "消息类型") @RequestParam(defaultValue = "SYSTEM") String type) {
-        
+
         try {
             WebSocketMessage.MessageType messageType = WebSocketMessage.MessageType.valueOf(type);
-            
+
             WebSocketMessage message = WebSocketMessage.builder()
                     .type(messageType)
                     .title(title)
@@ -99,7 +99,7 @@ public class WebSocketController {
                     .timestamp(LocalDateTime.now())
                     .source("admin")
                     .build();
-            
+
             WebSocketServer.broadcastMessage(message);
             return Result.success("广播成功");
         } catch (IllegalArgumentException e) {
@@ -120,7 +120,7 @@ public class WebSocketController {
         info.put("onlineCount", WebSocketServer.getOnlineCount());
         info.put("websocketUrl", "/websocket/{token}");
         info.put("supportedMessageTypes", WebSocketMessage.MessageType.values());
-        
+
         return Result.success("获取成功", info);
     }
 }

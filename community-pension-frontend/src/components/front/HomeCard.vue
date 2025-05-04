@@ -58,7 +58,7 @@
 </template>
 
 <script setup>
-import { ArrowRight } from '@element-plus/icons-vue';
+import {ArrowRight} from '@element-plus/icons-vue';
 
 const props = defineProps({
     title: {
@@ -139,7 +139,7 @@ const emitMore = () => {
     min-height: 220px;
     height: 100%;
     width: 100%;
-    min-width: 320px;
+  min-width: 380px;
     border-radius: 8px;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     background-color: #fff;
@@ -288,61 +288,61 @@ const emitMore = () => {
 @media screen and (min-width: 1600px) {
     .preview-card {
         min-height: 240px;
-        min-width: 360px;
+      min-width: 420px;
     }
     
     .card-header {
-        padding: 18px 22px;
+      padding: 18px 24px;
         font-size: 17px;
     }
     
     .card-content {
-        padding: 18px 22px;
+      padding: 18px 24px;
     }
     
     .card-footer {
-        padding: 14px 22px;
+      padding: 14px 24px;
     }
 }
 
 @media screen and (max-width: 1366px) {
     .preview-card {
         min-height: 200px;
-        min-width: 300px;
+      min-width: 360px;
     }
     
     .card-header {
-        padding: 14px 18px;
+      padding: 14px 20px;
         font-size: 15px;
     }
     
     .card-content {
-        padding: 14px 18px;
+      padding: 14px 20px;
     }
     
     .card-footer {
-        padding: 12px 18px;
+      padding: 12px 20px;
     }
 }
 
 @media screen and (max-width: 768px) {
     .preview-card {
         min-height: 180px;
-        min-width: 280px;
+      min-width: 320px;
     }
 
     .card-header {
-        padding: 12px 16px;
+      padding: 12px 18px;
         font-size: 14px;
     }
 
     .card-content {
-        padding: 12px 16px;
+      padding: 12px 18px;
         min-height: 100px;
     }
     
     .card-footer {
-        padding: 10px 16px;
+      padding: 10px 18px;
     }
 }
 </style>

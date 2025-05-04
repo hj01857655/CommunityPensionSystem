@@ -3,11 +3,10 @@ package com.communitypension.communitypensionadmin.service;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.communitypension.communitypensionadmin.entity.Notification;
-import com.communitypension.communitypensionadmin.query.NotificationQuery;
 import com.communitypension.communitypensionadmin.entity.ServiceOrder;
 import com.communitypension.communitypensionadmin.entity.User;
-
-import java.lang.Deprecated;
+import com.communitypension.communitypensionadmin.query.NotificationQuery;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 public interface NotificationService extends IService<Notification> {
 
@@ -56,16 +55,7 @@ public interface NotificationService extends IService<Notification> {
      */
     void sendSystemMessage(Long userId, String title, String content, String type);
 
-    /**
-     * 发送邮件 - 已经废弃，改为使用系统内通知
-     *
-     * @param to 收件人邮箱
-     * @param subject 邮件主题
-     * @param content 邮件内容
-     * @deprecated 邮件通知功能已经废弃，改为使用系统内通知
-     */
-    @Deprecated
-    void sendEmail(String to, String subject, String content);
+    // 邮件发送方法已移除，改为使用WebSocket实时通知
 
     /**
      * 发送预约相关通知
@@ -75,4 +65,20 @@ public interface NotificationService extends IService<Notification> {
      * @param message 通知消息
      */
     void sendOrderNotification(ServiceOrder order, User user, String message);
+
+    /**
+     * 添加SSE发射器
+     *
+     * @param userId  用户ID
+     * @param emitter SSE发射器
+     */
+    void addEmitter(Long userId, SseEmitter emitter);
+
+    /**
+     * 移除SSE发射器
+     *
+     * @param userId  用户ID
+     * @param emitter SSE发射器
+     */
+    void removeEmitter(Long userId, SseEmitter emitter);
 }

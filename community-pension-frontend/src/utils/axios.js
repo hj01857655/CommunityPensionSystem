@@ -1,5 +1,5 @@
 import axios from "axios";
-import { jwtDecode } from 'jwt-decode';
+import {jwtDecode} from 'jwt-decode';
 
 const instance = axios.create({
     baseURL: "/",  // 使用代理路径
@@ -26,10 +26,8 @@ const storageConfig = {
     }
 };
 
-
-
 // Token管理器
-const TokenManager = {
+export const TokenManager = {
     // 用户相关的token管理（使用本地存储）
     user: {
         getAccessToken: () => storageConfig.getStorage(storageConfig.user).getItem("user-access-token"),
@@ -117,7 +115,10 @@ const refreshAdminToken = async () => {
         });
         
         if(response.status==200 && response.data.code==200){
-            return response.data.accessToken;
+            const {accessToken, refreshToken: newRefreshToken} = response.data;
+            // 更新本地存储的 token
+            TokenManager.admin.set(accessToken, newRefreshToken);
+            return accessToken;
         }else{
             throw new Error(response.data.message || '刷新令牌失败');
         }
@@ -267,8 +268,5 @@ instance.interceptors.response.use(
         return Promise.reject(new Error(message));
     }
 );
-
-// 导出token管理器
-export { TokenManager };
 
 export default instance;

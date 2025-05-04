@@ -34,10 +34,11 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue';
-import { ElMessage } from 'element-plus';
-import { useRouter } from 'vue-router';
-import { useUserStore } from '@/stores/fore/useUserStore';
+import {onMounted, ref, watch} from 'vue';
+import {ElMessage} from 'element-plus';
+import {useRouter} from 'vue-router';
+import {useUserStore} from '@/stores/fore/userStore';
+
 const router = useRouter();
 const userStore = useUserStore();
 
@@ -80,7 +81,7 @@ const submitForm = async () => {
       try {
         console.log("开始登录，表单数据：", loginForm.value);
         const success = await userStore.login(loginForm.value);
-        
+
         if (success) {
           console.log("登录成功，准备跳转");
           try {

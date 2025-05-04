@@ -126,9 +126,9 @@
           <span>{{ currentService.duration }} 分钟</span>
         </el-form-item>
         <el-form-item label="预约日期" prop="appointmentDate">
-          <el-date-picker 
-            v-model="bookingForm.appointmentDate" 
-            type="date" 
+          <el-date-picker
+              v-model="bookingForm.appointmentDate"
+              type="date"
             placeholder="选择日期"
             :disabled-date="disabledDate"
             format="YYYY-MM-DD"
@@ -214,13 +214,13 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, watch } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { formatDateTime } from '@/utils/date'
-import { Search } from '@element-plus/icons-vue'
+import {computed, onMounted, reactive, ref, watch} from 'vue'
+import {ElMessage, ElMessageBox} from 'element-plus'
+import {formatDateTime} from '@/utils/date'
+import {Search} from '@element-plus/icons-vue'
 import useServiceStore from '@/stores/fore/serviceStore'
-import useUserStore from '@/stores/fore/useUserStore'
-import { checkHoliday, getHolidayName, isHolidayOffDay } from '@/api/fore/holiday'
+import useUserStore from '@/stores/fore/userStore'
+import {checkHoliday} from '@/api/fore/holiday'
 
 const serviceStore = useServiceStore()
 const userStore = useUserStore()
@@ -344,7 +344,7 @@ const getDateTip = async (date) => {
   if (holidayCache.value.has(dateKey)) {
     return holidayCache.value.get(dateKey)
   }
-  
+
   try {
     const isHoliday = await checkHoliday(dateObj)
     const tip = isHoliday ? '节假日' : ''
@@ -366,17 +366,17 @@ watch(() => bookingForm.appointmentDate, async (newDate) => {
 // 修改禁用时间函数
 const disabledTime = (date) => {
   if (!date) return { hours: [], minutes: [] }
-  
+
   const dateObj = typeof date === 'string' ? new Date(date) : date
   const hours = []
   const minutes = []
-  
+
   // 获取当前时间
   const now = new Date()
-  
+
   // 如果是今天，则禁用当前时间之前的时间
-  if (dateObj.getDate() === now.getDate() && 
-      dateObj.getMonth() === now.getMonth() && 
+  if (dateObj.getDate() === now.getDate() &&
+      dateObj.getMonth() === now.getMonth() &&
       dateObj.getFullYear() === now.getFullYear()) {
     for (let i = 0; i <= now.getHours(); i++) {
       hours.push(i)
@@ -385,7 +385,7 @@ const disabledTime = (date) => {
       minutes.push(i)
     }
   }
-  
+
   // 禁用非工作时间（8:00-18:00）
   for (let i = 0; i < 8; i++) {
     hours.push(i)
@@ -393,7 +393,7 @@ const disabledTime = (date) => {
   for (let i = 18; i < 24; i++) {
     hours.push(i)
   }
-  
+
   return {
     hours,
     minutes
@@ -421,7 +421,7 @@ const getUserInfo = () => {
   if (userStore.userInfo?.userId) {
     return userStore.userInfo
   }
-  
+
   // 如果 store 中没有，尝试从本地存储获取
   const storedUserInfo = localStorage.getItem('userInfo')
   if (storedUserInfo) {
@@ -433,7 +433,7 @@ const getUserInfo = () => {
       console.error('解析用户信息失败:', error)
     }
   }
-  
+
   return null
 }
 
@@ -503,22 +503,37 @@ const openBookingDialog = (service) => {
     ElMessage.warning('请先登录后再进行预约')
     return
   }
-  
+
   // 确保service对象包含必要的字段
-  if (!service || !service.serviceId || !service.serviceTypeId) {
-    console.error('服务信息不完整:', service)
+  const requiredFields = ['serviceId', 'serviceName', 'serviceType', 'serviceTypeName', 'price', 'duration']
+  const missingFields = requiredFields.filter(field => !service?.[field])
+
+  if (missingFields.length > 0) {
+    console.error('服务信息不完整，缺少字段:', missingFields)
+    console.error('当前服务信息:', service)
     ElMessage.error('服务信息不完整，请刷新页面重试')
     return
   }
-  
+
   // 打印服务信息以便调试
   console.log('打开预约对话框，服务信息:', service)
-  
-  currentService.value = service
+
+  // 将serviceType映射为serviceTypeId
+  const serviceTypeMap = {
+    'medical': 1,
+    'cleaning': 2,
+    'repair': 3
+  }
+
+  currentService.value = {
+    ...service,
+    serviceTypeId: serviceTypeMap[service.serviceType]
+  }
+
   bookingForm.appointmentDate = null
   bookingForm.appointmentTime = null
   bookingForm.remark = ''
-  bookingForm.serviceTypeId = service.serviceTypeId
+  bookingForm.serviceTypeId = serviceTypeMap[service.serviceType]
   bookingDialogVisible.value = true
 }
 
@@ -531,7 +546,7 @@ const viewServiceDetail = (service) => {
 // 提交预约
 const submitBooking = async () => {
   if (!bookingFormRef.value) return
-  
+
   try {
     const userInfo = getUserInfo()
     if (!userInfo?.userId) {
@@ -540,36 +555,36 @@ const submitBooking = async () => {
     }
 
     await bookingFormRef.value.validate()
-    
+
     // 验证currentService
-    if (!currentService.value || !currentService.value.serviceId || !currentService.value.serviceTypeId) {
+    if (!currentService.value || !currentService.value.serviceId || !currentService.value.serviceType) {
       console.error('服务信息不完整:', currentService.value)
       ElMessage.error('服务信息不完整，请刷新页面重试')
       return
     }
-    
+
     submitting.value = true
-    
+
     // 构建预约时间
     const appointmentTime = new Date(bookingForm.appointmentDate)
     const timeDate = new Date(bookingForm.appointmentTime)
     appointmentTime.setHours(timeDate.getHours())
     appointmentTime.setMinutes(timeDate.getMinutes())
-    
+
     // 检查时间是否在服务时间内（8:00-18:00）
     const hours = appointmentTime.getHours()
     if (hours < 8 || hours >= 18) {
       ElMessage.warning('预约时间必须在8:00-18:00之间')
       return
     }
-    
+
     // 检查是否是未来时间
     const now = new Date()
     if (appointmentTime <= now) {
       ElMessage.warning('预约时间必须大于当前时间')
       return
     }
-    
+
     // 确保applyReason满足长度要求
     const applyReason = bookingForm.remark?.trim() || '服务预约'
     if (applyReason.length < 5) {
@@ -580,23 +595,23 @@ const submitBooking = async () => {
       ElMessage.warning('备注信息不能超过500个字符')
       return
     }
-    
+
     // 构建请求数据
     const data = {
       userId: Number(userInfo.userId),
       serviceItemId: Number(currentService.value.serviceId),
-      serviceTypeId: Number(currentService.value.serviceTypeId),
+      serviceTypeId: Number(bookingForm.serviceTypeId),
       scheduleTime: new Date(appointmentTime.getTime() + 8 * 60 * 60 * 1000).toISOString().split('.')[0], // 转换为东八区时间
       applyReason: applyReason
     }
-    
+
     // 添加日志输出
     console.log('提交预约数据:', data)
-    
+
     await serviceStore.createServiceAppointment(data)
     ElMessage.success('预约成功')
     bookingDialogVisible.value = false
-    
+
     // 切换到我的预约标签页并刷新列表
     activeTab.value = 'my'
     fetchMyAppointments()
@@ -618,13 +633,13 @@ const handleCancel = async (appointment) => {
       ElMessage.warning('只有待审核或已派单状态的预约可以取消')
       return
     }
-    
+
     await ElMessageBox.confirm('确定要取消该预约吗？', '提示', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
       type: 'warning'
     })
-    
+
     await serviceStore.cancelServiceAppointment(appointment.id)
     ElMessage.success('取消预约成功')
     fetchMyAppointments()
@@ -668,10 +683,10 @@ const openEvaluationDialog = (appointment) => {
 // 提交评价
 const submitEvaluation = async () => {
   if (!evaluationFormRef.value) return
-  
+
   try {
     await evaluationFormRef.value.validate()
-    
+
     submittingEvaluation.value = true
     await serviceStore.handleEvaluateService(currentAppointment.value.id, evaluationForm)
     ElMessage.success('评价成功')
@@ -709,7 +724,7 @@ onMounted(async () => {
       console.error('解析用户信息失败:', error)
     }
   }
-  
+
   await fetchServices()
 })
 

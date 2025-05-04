@@ -11,8 +11,16 @@
  Target Server Version : 80400 (8.4.0)
  File Encoding         : 65001
 
- Date: 05/04/2025 15:34:57
+ Date: 16/04/2025 21:48:15
 */
+
+-- 创建数据库
+CREATE
+DATABASE IF NOT EXISTS `community_pension` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+
+-- 使用数据库
+USE
+`community_pension`;
 
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
@@ -144,11 +152,13 @@ CREATE TABLE `activity_register`  (
   CONSTRAINT `fk_activity_register_activity` FOREIGN KEY (`activity_id`) REFERENCES `activities` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_activity_register_elder` FOREIGN KEY (`elder_id`) REFERENCES `user` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_activity_register_register_user` FOREIGN KEY (`register_user_id`) REFERENCES `user` (`user_id`) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE = InnoDB AUTO_INCREMENT = 14 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '活动报名表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 15 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '活动报名表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of activity_register
 -- ----------------------------
+INSERT INTO `activity_register`
+VALUES (14, 21, 2, 2, 0, '2025-04-05 22:22:57', 0, NULL, '2025-04-05 22:22:57', '2025-04-05 22:22:57', 0);
 
 -- ----------------------------
 -- Table structure for activity_review
@@ -335,6 +345,10 @@ CREATE TABLE `elder_kin_relation`  (
 -- ----------------------------
 -- Records of elder_kin_relation
 -- ----------------------------
+INSERT INTO `elder_kin_relation`
+VALUES (2, 3, '父子');
+INSERT INTO `elder_kin_relation`
+VALUES (25, 26, '子女');
 
 -- ----------------------------
 -- Table structure for health_monitoring
@@ -398,11 +412,14 @@ CREATE TABLE `health_records`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_elder_id`(`elder_id` ASC) USING BTREE,
   INDEX `idx_recorder_id`(`recorder_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 15 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '健康档案表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 16 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '健康档案表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of health_records
 -- ----------------------------
+INSERT INTO `health_records`
+VALUES (15, 2, '120/80', 75, 5.60, 36.5, 65.00, 170.00, NULL, '', '', '轻度感冒', '2025-04-08 05:05:08', '阿莫西林',
+        '2025-04-08 05:05:08', 2, '初始记录', '2025-04-08 13:01:17', '2025-04-08 13:05:07');
 
 -- ----------------------------
 -- Table structure for menu
@@ -640,7 +657,7 @@ CREATE TABLE `service_review`  (
   INDEX `idx_user`(`user_id` ASC) USING BTREE,
   CONSTRAINT `service_review_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `service_order` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `service_review_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '服务评价表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '服务评价表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of service_review
@@ -678,7 +695,7 @@ CREATE TABLE `user`  (
   UNIQUE INDEX `username`(`username` ASC) USING BTREE,
   INDEX `idx_user_status`(`is_active` ASC) USING BTREE,
   INDEX `idx_user_id`(`user_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 26 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '用户表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 27 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '用户表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of user
@@ -687,6 +704,9 @@ INSERT INTO `user` VALUES (1, 'admin', '123456', '超级管理员', '女', '1380
 INSERT INTO `user` VALUES (2, 'Ldamao', '123456', '刘大毛', '女', '13800000002', 'mao.builder@hotmail.com', '深圳市南山区科技园中区', '/avatar/zhangdaye.jpg', 1, '', '', '340881199005204216', '1990-05-20', 35, '张伟', '13812345678', '中等，需定期监测血压、血糖，并注意饮食控制。', 'staff', '2025-03-22 19:46:06', NULL, '2025-03-28 15:22:26', '');
 INSERT INTO `user` VALUES (3, 'Lxiaomao', '123456', '刘小毛', '男', '13800000004', 'mao.builder@hotmail.com', '深圳市南山区科技园中区', '/avatar/zhangdaye.jpg', 1, '', '', '', NULL, NULL, '', '', '', 'staff', '2025-03-27 15:38:04', NULL, '2025-03-28 15:22:21', '');
 INSERT INTO `user` VALUES (25, 'Lshumei', '123456', '刘淑梅', '未知', '15349545835', 'yopsu@mailto.plus', NULL, NULL, 1, '', '', '12345619900101123X', '1990-01-01', 35, '王小明', '13987654321  ', '慢性咳嗽', NULL, NULL, NULL, NULL, '');
+INSERT INTO `user`
+VALUES (26, 'Wdaniu', '123456', '王大牛', '未知', '13458684687', '23468746@qq.com', NULL, NULL, 1, '', '', '', NULL,
+        NULL, '', '', '', 'admin', '2025-04-06 14:59:16', 'admin', '2025-04-06 14:59:16', '');
 
 -- ----------------------------
 -- Table structure for user_role
@@ -705,6 +725,8 @@ INSERT INTO `user_role` VALUES (1, 4);
 INSERT INTO `user_role` VALUES (2, 1);
 INSERT INTO `user_role` VALUES (3, 2);
 INSERT INTO `user_role` VALUES (25, 1);
+INSERT INTO `user_role`
+VALUES (26, 2);
 
 -- ----------------------------
 -- Table structure for warning_record
@@ -721,7 +743,7 @@ CREATE TABLE `warning_record`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `user_id`(`user_id` ASC) USING BTREE,
   CONSTRAINT `warning_record_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '预警记录表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '预警记录表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of warning_record

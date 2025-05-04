@@ -2,14 +2,12 @@ package com.communitypension.communitypensionadmin.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.communitypension.communitypensionadmin.dto.PasswordDTO;
-import com.communitypension.communitypensionadmin.dto.StatusDTO;
-import com.communitypension.communitypensionadmin.dto.UserDTO;
-import com.communitypension.communitypensionadmin.dto.UserQueryDTO;
+import com.communitypension.communitypensionadmin.dto.*;
 import com.communitypension.communitypensionadmin.entity.User;
 import com.communitypension.communitypensionadmin.enums.RoleEnum;
 import com.communitypension.communitypensionadmin.service.UserService;
 import com.communitypension.communitypensionadmin.utils.Result;
+import com.communitypension.communitypensionadmin.vo.ElderKinVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -115,12 +113,29 @@ public class UserController {
             dto.setRoleIds(userService.getUserRoleIds(user.getUserId()));
             dto.setRoleNames(userService.getUserRoleNames(user.getUserId()));
             dto.setRoles(userService.getUserRoles(user.getUserId()));
+
+            // 设置绑定关系
+            if (dto.getRoleIds().contains(RoleEnum.ELDER.getId())) {
+                // 如果是老人，获取绑定的家属列表
+                dto.setBindKinIds(userService.getKinIdsByElderId(userId));
+            } else if (dto.getRoleIds().contains(RoleEnum.KIN.getId())) {
+                // 如果是家属，获取绑定的老人列表
+                dto.setBindElderIds(userService.getElderIdsByKinId(userId));
+            }
+
+            // 设置其他必要字段
+            dto.setBirthday(user.getBirthday());
+            dto.setIdCard(user.getIdCard());
+            dto.setEmergencyContactName(user.getEmergencyContactName());
+            dto.setEmergencyContactPhone(user.getEmergencyContactPhone());
+            dto.setHealthCondition(user.getHealthCondition());
+            dto.setRemark(user.getRemark());
+            
             return Result.success("查询成功", dto);
         } catch (Exception e) {
-
+            logger.error("获取用户信息失败: {}", e.getMessage());
             return Result.error("查询失败: " + e.getMessage());
         }
-
     }
 
     /**
@@ -138,15 +153,15 @@ public class UserController {
             if (user == null) {
                 return Result.error("用户不存在");
             }
-            
+
             UserDTO dto = new UserDTO();
             BeanUtils.copyProperties(user, dto);
-            
+
             // 设置角色信息
             dto.setRoleIds(userService.getUserRoleIds(user.getUserId()));
             dto.setRoleNames(userService.getUserRoleNames(user.getUserId()));
             dto.setRoles(userService.getUserRoles(user.getUserId()));
-            
+
             // 设置绑定关系
             if (dto.getRoleIds().contains(RoleEnum.ELDER.getId())) {
                 // 如果是老人，获取绑定的家属列表
@@ -155,7 +170,7 @@ public class UserController {
                 // 如果是家属，获取绑定的老人列表
                 dto.setBindElderIds(userService.getElderIdsByKinId(userId));
             }
-            
+
             return Result.success("查询成功", dto);
         } catch (Exception e) {
             logger.error("获取用户详情失败: {}", e.getMessage());
@@ -184,13 +199,13 @@ public class UserController {
             // 验证绑定关系
             if (userDTO.getRoleIds().contains(RoleEnum.KIN.getId())) {
                 // 如果是家属，验证绑定的老人
-                if (userDTO.getBindElderIds() != null && !userDTO.getBindElderIds().isEmpty() 
+                if (userDTO.getBindElderIds() != null && !userDTO.getBindElderIds().isEmpty()
                     && !StringUtils.hasText(userDTO.getRelationType())) {
                     return Result.error("绑定老人时必须指定关系类型");
                 }
             } else if (userDTO.getRoleIds().contains(RoleEnum.ELDER.getId())) {
                 // 如果是老人，验证绑定的家属
-                if (userDTO.getBindKinIds() != null && !userDTO.getBindKinIds().isEmpty() 
+                if (userDTO.getBindKinIds() != null && !userDTO.getBindKinIds().isEmpty()
                     && !StringUtils.hasText(userDTO.getRelationType())) {
                     return Result.error("绑定家属时必须指定关系类型");
                 }
@@ -214,21 +229,21 @@ public class UserController {
             if (userDTO == null) {
                 return Result.error("用户信息不能为空");
             }
-            
+
             // 确保userId一致
             userDTO.setUserId(userId);
-            
+
             // 确保roleIds不为null
             if (userDTO.getRoleIds() == null) {
                 userDTO.setRoleIds(new ArrayList<>());
             }
-            
+
             // 验证角色组合
             userService.validateRoleCombination(userDTO.getRoleIds());
-            
+
             // 更新用户信息
             userService.updateUser(userDTO);
-            
+
             return Result.success("更新用户成功");
         } catch (Exception e) {
             logger.error("更新用户失败: {}", e.getMessage());
@@ -354,7 +369,7 @@ public class UserController {
     /**
      * 获取未绑定家属的老人列表
      */
-    @GetMapping("/unbound/elders")  
+    @GetMapping("/unbound/elders")
     @Operation(summary = "获取未绑定家属的老人列表")
     public Result<List<UserDTO>> getUnboundElders() {
         try {
@@ -412,7 +427,7 @@ public class UserController {
         boolean success = userService.bindElderKinRelation(elderId, kinId, relationType);
         return Result.success(success);
     }
-    
+
     @Operation(summary = "解绑老人和家属关系")
     @PostMapping("/unbind-relation")
     public Result<Boolean> unbindElderKinRelation(
@@ -422,22 +437,135 @@ public class UserController {
         boolean success = userService.unbindElderKinRelation(elderId, kinId, relationType);
         return Result.success(success);
     }
-    
-    @Operation(summary = "获取老人的所有家属ID")
-    @GetMapping("/kin-ids/{elderId}")
-    public Result<List<Long>> getKinIdsByElderId(
-            @Parameter(description = "老人ID") @PathVariable Long elderId) {
-        List<Long> kinIds = userService.getKinIdsByElderId(elderId);
-        return Result.success(kinIds);
+
+
+    /**
+     * 获取老人的家属列表
+     */
+    @GetMapping("/kins/{elderId}")
+    @Operation(summary = "获取老人的家属列表")
+    public Result<List<UserSimpleDTO>> getKinsByElderId(@PathVariable Long elderId) {
+        try {
+            // 验证老人是否存在
+            User elder = userService.getById(elderId);
+            if (elder == null) {
+                return Result.error("老人不存在");
+            }
+
+            List<User> kins = userService.getKinsByElderId(elderId);
+            List<UserSimpleDTO> kinDTOs = new ArrayList<>();
+
+            for (User kin : kins) {
+                UserSimpleDTO dto = new UserSimpleDTO();
+                dto.setUserId(kin.getUserId());
+                dto.setUsername(kin.getUsername());
+                dto.setName(kin.getName());
+                // 获取关系类型
+                String relationType = userService.getRelationType(elderId, kin.getUserId());
+                dto.setRelationType(relationType);
+                kinDTOs.add(dto);
+            }
+
+            return Result.success("查询成功", kinDTOs);
+        } catch (Exception e) {
+            logger.error("获取老人的家属列表失败: {}", e.getMessage());
+            return Result.error("查询失败: " + e.getMessage());
+        }
     }
-    
-    @Operation(summary = "获取家属的所有老人ID")
-    @GetMapping("/elder-ids/{kinId}")
-    public Result<List<Long>> getElderIdsByKinId(
-            @Parameter(description = "家属ID") @PathVariable Long kinId) {
-        List<Long> elderIds = userService.getElderIdsByKinId(kinId);
-        return Result.success(elderIds);
+
+    /**
+     * 获取家属的老人列表
+     */
+    @GetMapping("/elders/{kinId}")
+    @Operation(summary = "获取家属的老人列表")
+    public Result<List<UserSimpleDTO>> getEldersByKinId(@PathVariable Long kinId) {
+        try {
+            // 验证家属是否存在
+            User kin = userService.getById(kinId);
+            if (kin == null) {
+                return Result.error("家属不存在");
+            }
+
+            List<User> elders = userService.getEldersByKinId(kinId);
+            List<UserSimpleDTO> elderDTOs = new ArrayList<>();
+
+            for (User elder : elders) {
+                UserSimpleDTO dto = new UserSimpleDTO();
+                dto.setUserId(elder.getUserId());
+                dto.setUsername(elder.getUsername());
+                dto.setName(elder.getName());
+                // 获取关系类型
+                String relationType = userService.getRelationType(elder.getUserId(), kinId);
+                dto.setRelationType(relationType);
+                elderDTOs.add(dto);
+            }
+
+            return Result.success("查询成功", elderDTOs);
+        } catch (Exception e) {
+            logger.error("获取家属的老人列表失败: {}", e.getMessage());
+            return Result.error("查询失败: " + e.getMessage());
+        }
     }
+
+    /**
+     * 获取老人和家属的关系详情
+     */
+    @GetMapping("/relation-detail")
+    @Operation(summary = "获取老人和家属的关系详情")
+    public Result<ElderKinVO> getRelationDetail(
+            @Parameter(description = "老人ID") @RequestParam Long elderId,
+            @Parameter(description = "家属ID") @RequestParam Long kinId) {
+        try {
+            // 验证用户是否存在
+            User elder = userService.getById(elderId);
+            User kin = userService.getById(kinId);
+
+            if (elder == null || kin == null) {
+                return Result.error("用户不存在");
+            }
+
+            // 验证关系是否存在
+            String relationType = userService.getRelationType(elderId, kinId);
+            if (relationType == null) {
+                return Result.error("该老人和家属未绑定关系");
+            }
+
+            // 构建关系详情
+            ElderKinVO vo = new ElderKinVO();
+
+            // 设置老人信息
+            vo.setElderId(elder.getUserId());
+            vo.setElderUsername(elder.getUsername());
+            vo.setElderName(elder.getName());
+            vo.setElderGender(elder.getGender());
+            vo.setElderPhone(elder.getPhone());
+            vo.setElderIdCard(elder.getIdCard());
+            vo.setElderBirthday(elder.getBirthday());
+            vo.setElderAge(elder.getAge());
+            vo.setElderAddress(elder.getAddress());
+            vo.setElderHealthCondition(elder.getHealthCondition());
+            vo.setElderEmergencyContactName(elder.getEmergencyContactName());
+            vo.setElderEmergencyContactPhone(elder.getEmergencyContactPhone());
+
+            // 设置家属信息
+            vo.setKinId(kin.getUserId());
+            vo.setKinUsername(kin.getUsername());
+            vo.setKinName(kin.getName());
+            vo.setKinGender(kin.getGender());
+            vo.setKinPhone(kin.getPhone());
+            vo.setKinEmail(kin.getEmail());
+            vo.setKinAddress(kin.getAddress());
+
+            // 设置关系信息
+            vo.setRelationType(relationType);
+
+            return Result.success("查询成功", vo);
+        } catch (Exception e) {
+            logger.error("获取老人和家属的关系详情失败: {}", e.getMessage());
+            return Result.error("查询失败: " + e.getMessage());
+        }
+    }
+
     /**
      * 获取用户角色列表
      */
@@ -456,6 +584,31 @@ public class UserController {
         }
     }
 
+    /**
+     * 获取所有老人列表
+     */
+    @GetMapping("/elders")
+    @Operation(summary = "获取所有老人列表")
+    public Result<List<UserDTO>> getAllElders() {
+        try {
+            List<User> users = userService.getAllElders();
+            List<UserDTO> elders = users.stream()
+                    .map(user -> {
+                        UserDTO dto = new UserDTO();
+                        BeanUtils.copyProperties(user, dto);
+
+                        dto.setRoleIds(userService.getUserRoleIds(user.getUserId()));
+                        dto.setRoles(userService.getUserRoles(user.getUserId()));
+                        dto.setRoleNames(userService.getUserRoleNames(user.getUserId()));
+                        return dto;
+                    })
+                    .collect(Collectors.toList());
+            return Result.success("查询成功", elders);
+        } catch (Exception e) {
+            logger.error("获取老人列表失败: {}", e.getMessage());
+            return Result.error("查询失败: " + e.getMessage());
+        }
+    }
 
 }
 

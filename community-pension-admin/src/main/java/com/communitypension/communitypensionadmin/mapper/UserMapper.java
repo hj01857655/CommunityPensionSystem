@@ -40,6 +40,15 @@ public interface UserMapper extends BaseMapper<User> {
             "WHERE ur.role_id =2 " +  // 家属角色ID
             "AND ek.elder_id IS NULL")  // 没有绑定老人
     List<User> selectUnboundKins();
+
+    /**
+     * 查询所有老人列表
+     */
+    @Select("SELECT DISTINCT u.* FROM user u " +
+            "JOIN user_role ur ON u.user_id = ur.user_id " +
+            "WHERE ur.role_id = 1")
+    // 老人角色ID
+    List<User> selectAllElders();
 }
 
 

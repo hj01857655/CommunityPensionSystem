@@ -15,7 +15,7 @@ import axios from '@/utils/axios';
  * @param {string} [query.endTime] - 结束时间（可选）
  * @returns {Promise<{code: number, data: {records: Array<{userId: number, username: string, nickName: string, email: string, phone: string, status: number, createTime: string}>, total: number}, msg: string}>}
  */
-export const getUserList = query => {
+export const getUserList = async (query) => {
   return axios.get('/api/system/user/list', {
     params: {
       current: query.current || 1,
@@ -32,7 +32,7 @@ export const getUserList = query => {
  * 获取用户详细信息
  * @param {number} userId - 用户ID
  */
-export const getUserInfo = userId => {
+export const getUserInfo = async (userId) => {
   return axios.get(`/api/system/user/${userId}`);
 };
 
@@ -75,8 +75,8 @@ export function updateUserPassword(userId, data) {
 
 /**
  * 上传头像
- * @param {[*]} file 
- * @returns 
+ * @param {[*]} file
+ * @returns
  */
 export function uploadAvatar(file) {
   const formData = new FormData()
@@ -184,10 +184,12 @@ export const getUnboundKins = () => {
  * @returns {Promise<{code: number, msg: string}>}
  */
 export const bindElderKinRelation = (elderId, kinId, relationType) => {
-  return axios.post('/api/system/user/bind-relation', {
-    elderId,
-    kinId,
-    relationType
+    return axios.post('/api/system/user/bind-relation', null, {
+        params: {
+            elderId,
+            kinId,
+            relationType
+        }
   });
 };
 
@@ -205,21 +207,21 @@ export const unbindElderKinRelation = (elderId, kinId) => {
 };
 
 /**
- * 获取老人的所有家属ID
+ * 获取老人的家属列表
  * @param {number} elderId - 老人ID
- * @returns {Promise<{code: number, data: Array<number>, msg: string}>}
+ * @returns {Promise<{code: number, data: Array<{userId: number, username: string, name: string, relationType: string}>, msg: string}>}
  */
-export const getKinIdsByElderId = (elderId) => {
-  return axios.get(`/api/system/user/kin-ids/${elderId}`);
+export const getKinsByElderId = (elderId) => {
+    return axios.get(`/api/system/user/kins/${elderId}`);
 };
 
 /**
- * 获取家属的所有老人ID
+ * 获取家属的老人列表
  * @param {number} kinId - 家属ID
- * @returns {Promise<{code: number, data: Array<number>, msg: string}>}
+ * @returns {Promise<{code: number, data: Array<{userId: number, username: string, name: string, relationType: string}>, msg: string}>}
  */
-export const getElderIdsByKinId = (kinId) => {
-  return axios.get(`/api/system/user/elder-ids/${kinId}`);
+export const getEldersByKinId = (kinId) => {
+    return axios.get(`/api/system/user/elders/${kinId}`);
 };
 
 

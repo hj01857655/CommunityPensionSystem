@@ -1,4 +1,4 @@
-import { defineStore } from 'pinia';
+import {defineStore} from 'pinia';
 
 export const useTagsViewStore = defineStore('tagsView', {
   state: () => ({
@@ -13,32 +13,38 @@ export const useTagsViewStore = defineStore('tagsView', {
       if (['/admin', '/admin/home', '/admin/index'].includes(view.path)) {
         return;
       }
-      // 如果标签已存在，不重复添加
-      if (this.visitedViews.some(v => v.path === view.path)) {
+
+        // 如果标签已存在，更新它
+        const index = this.visitedViews.findIndex(v => v.path === view.path);
+        if (index > -1) {
+            // 更新标签信息
+            this.visitedViews[index] = {
+                ...this.visitedViews[index],
+                title: view.meta?.title || 'no-name'
+            };
         return;
       }
-      this.visitedViews.push(
-        Object.assign({}, view, {
-          title: view.meta?.title || 'no-name',
-          closable: true
-        })
-      );
+
+        // 添加新标签
+        this.visitedViews.push({
+            ...view,
+            title: view.meta?.title || 'no-name',
+            closable: !view.meta?.affix
+        });
+
+        // 如果是需要缓存的组件，添加到缓存列表
+        if (view.name && !this.cachedViews.includes(view.name)) {
+            this.cachedViews.push(view.name);
+        }
     },
 
     // 移除标签
     removeVisitedView(view) {
-      const index = this.visitedViews.indexOf(view);
+        const index = this.visitedViews.findIndex(v => v.path === view.path);
       if (index > -1) {
         this.visitedViews.splice(index, 1);
       }
-    },
-
-    // 添加缓存视图
-    addCachedView(view) {
-      if (this.cachedViews.includes(view.name)) {
-        return;
-      }
-      this.cachedViews.push(view.name);
+        this.removeCachedView(view);
     },
 
     // 移除缓存视图
@@ -51,59 +57,82 @@ export const useTagsViewStore = defineStore('tagsView', {
 
     // 关闭其他标签
     closeOthersTags(view) {
-      this.visitedViews = this.visitedViews.filter(v => v.path === view.path || v.meta?.affix);
-      this.cachedViews = this.cachedViews.filter(name => name === view.name || name === 'Index');
-    },
-
-    // 关闭左侧标签
-    closeLeftTags(view) {
-      const index = this.visitedViews.indexOf(view);
-      if (index > 0) {
-        this.visitedViews = this.visitedViews.filter(v => v.meta?.affix || this.visitedViews.indexOf(v) >= index);
-        this.cachedViews = this.cachedViews.filter(name => name === 'Index' || this.visitedViews.some(v => v.name === name));
-      }
-    },
-
-    // 关闭右侧标签
-    closeRightTags(view) {
-      const index = this.visitedViews.indexOf(view);
-      if (index < this.visitedViews.length - 1) {
-        this.visitedViews = this.visitedViews.filter(v => v.meta?.affix || this.visitedViews.indexOf(v) <= index);
-        this.cachedViews = this.cachedViews.filter(name => name === 'Index' || this.visitedViews.some(v => v.name === name));
-      }
+        this.visitedViews = this.visitedViews.filter(v =>
+            v.path === view.path || v.meta?.affix || v.path === '/admin/home'
+        );
+        this.cachedViews = this.cachedViews.filter(name =>
+            name === view.name || name === 'Home'
+        );
     },
 
     // 关闭所有标签
     closeAllTags() {
-      this.visitedViews = this.visitedViews.filter(v => v.meta?.affix);
-      this.cachedViews = this.cachedViews.filter(name => name === 'Index');
+        // 保留首页和固定标签
+        this.visitedViews = this.visitedViews.filter(v =>
+            v.meta?.affix || v.path === '/admin/home'
+        );
+        this.cachedViews = ['Home'];
     },
 
-    // 刷新标签
-    refreshTag(view) {
-      const index = this.visitedViews.indexOf(view);
+      // 更新标签
+      updateVisitedView(view) {
+          const index = this.visitedViews.findIndex(v => v.path === view.path);
       if (index > -1) {
-        this.visitedViews.splice(index, 1, { ...view });
+          this.visitedViews[index] = {
+              ...this.visitedViews[index],
+              title: view.meta?.title || this.visitedViews[index].title
+          };
       }
     },
 
     // 初始化首页标签
-    initDashboardTab() {
-      const dashboardTab = {
+      initHomeTab() {
+          const homeTab = {
         title: '首页',
         path: '/admin/home',
-        name: 'Index',
+              name: 'Home',
         meta: { title: '首页', affix: true },
         closable: false
       };
       
       // 清空现有标签
-      this.visitedViews = [];
-      this.cachedViews = [];
-      
-      // 添加首页标签
-      this.visitedViews.push(dashboardTab);
-      this.cachedViews.push(dashboardTab.name);
+          this.visitedViews = [homeTab];
+          this.cachedViews = ['Home'];
+      },
+
+      // 关闭左侧标签
+      closeLeftTags(view) {
+          const index = this.visitedViews.findIndex(v => v.path === view.path);
+          if (index > 0) {
+              this.visitedViews = this.visitedViews.filter(v =>
+                  v.meta?.affix || v.path === '/admin/home' || this.visitedViews.indexOf(v) >= index
+              );
+          }
+      },
+
+      // 关闭右侧标签
+      closeRightTags(view) {
+          const index = this.visitedViews.findIndex(v => v.path === view.path);
+          if (index < this.visitedViews.length - 1) {
+              this.visitedViews = this.visitedViews.filter(v =>
+                  v.meta?.affix || v.path === '/admin/home' || this.visitedViews.indexOf(v) <= index
+              );
+          }
+      },
+
+      // 刷新标签
+      refreshTag(view) {
+          const index = this.visitedViews.findIndex(v => v.path === view.path);
+          if (index > -1) {
+              this.visitedViews[index] = {...view};
+          }
+      },
+
+      // 添加缓存视图
+      addCachedView(view) {
+          if (view.name && !this.cachedViews.includes(view.name)) {
+              this.cachedViews.push(view.name);
+          }
     }
   },
 

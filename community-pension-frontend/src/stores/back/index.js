@@ -1,12 +1,12 @@
-import { createPinia } from 'pinia';
+import {createPinia} from 'pinia';
 
 const store = createPinia();
 
 export default store;
 
-export { useAuthStore } from './authStore'
-export { useUserStore } from './userStore'
-export { useAdminStore } from './adminStore'
-export { useRoleStore } from './roleStore'
-export { useHealthStore } from './healthStore'
-export { useNoticeStore } from './noticeStore' 
+export {useAuthStore} from '@/stores/back/authStore'
+export {useUserStore} from '@/stores/back/userStore'
+export {useAdminStore} from '@/stores/back/adminStore'
+export {useRoleStore} from '@/stores/back/roleStore'
+export {useHealthStore} from '@/stores/back/healthStore'
+export {useNoticeStore} from '@/stores/back/noticeStore'

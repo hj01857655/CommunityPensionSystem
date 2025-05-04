@@ -11,9 +11,24 @@ import { TokenManager } from '@/utils/axios';
 import { getAvatarUrl } from '@/utils/avatarUtils';  // 导入头像工具函数
 import axios from '@/utils/axios';
 import { ElMessage } from 'element-plus';
-import { getHealthRecords } from '@/api/fore/health';
 
-export const useUserStore = defineStore('user', () => {
+/**
+ * 前台用户状态管理
+ * 用于管理普通用户（老人、家属）的状态
+ * @module stores/fore/foregroundUserStore
+ */
+
+/**
+ * 前台用户 Store
+ * @typedef {Object} ForegroundUserStore
+ * @property {Ref<Object|null>} userInfo - 用户信息
+ * @property {Ref<Object|null>} elderInfo - 老人信息
+ * @property {Ref<Object|null>} kinInfo - 家属信息
+ * @property {Ref<boolean>} isLoggedIn - 登录状态
+ * @property {Ref<number|null>} roleId - 角色ID
+ * @property {Ref<Array>} roles - 角色列表
+ */
+export const useUserStore = defineStore('foreground-user', () => {
   // 状态定义
   const userInfo = ref(null);
   const elderInfo = ref(null);
@@ -33,22 +48,35 @@ export const useUserStore = defineStore('user', () => {
       userInfo.value = user;
       isLoggedIn.value = true;
       roleId.value = user.roleId;
-      roles.value = [user.role];
+      roles.value = user.roles || [user.role];
       
-      // 保存到本地存储
-      localStorage.setItem("userInfo", JSON.stringify(user));
-      localStorage.setItem("userId", user.id);
-      localStorage.setItem("username", user.username);
-      localStorage.setItem("name", user.name);
-      localStorage.setItem("roleId", user.roleIds[0]);
-      localStorage.setItem("role", user.roleIds[0]);
-      localStorage.setItem("roleName", user.roleNames[0]);
+      // 使用 localStorage 存储前台用户基本信息
+      localStorage.setItem("userInfo", JSON.stringify({
+        userId: user.userId,
+        username: user.username,
+        name: user.name,
+        avatar: user.avatar,
+        roleId: user.roleId,
+        roles: user.roles || [user.role],
+        permissions: user.permissions || [],
+        phone: user.phone,
+        email: user.email,
+        gender: user.gender,
+        isActive: user.isActive,
+        // 基本信息
+        birthday: user.birthday,
+        idCard: user.idCard,
+        address: user.address,
+        emergencyContactName: user.emergencyContactName,
+        emergencyContactPhone: user.emergencyContactPhone,
+        healthCondition: user.healthCondition,
+        // 绑定ID列表
+        kinIds: user.kinIds || [],
+        elderIds: user.elderIds || []
+      }));
       localStorage.setItem("isLoggedIn", "true");
-
-      // 如果是家属，保存关联的老人信息
-      if (user.role === 'kin' && user.bindElder) {
-        localStorage.setItem("bindElder", JSON.stringify(user.bindElder));
-      }
+      localStorage.setItem("roleId", user.roleId);
+      localStorage.setItem("roles", JSON.stringify(user.roles || [user.role]));
     }
   };
 
@@ -57,7 +85,7 @@ export const useUserStore = defineStore('user', () => {
       const response = await userLogin(loginForm);
       
       if (response.code === 200) {
-        console.log("useUserStore登录成功响应", response);
+        console.log("前台登录成功响应", response);
         setUserInfo(response.data.user);
 
         // 保存token
@@ -71,59 +99,46 @@ export const useUserStore = defineStore('user', () => {
 
         return true;
       } else {
-        ElMessage.error(response.message || '登录失败');
+        console.log("前台登录失败响应", response);
+        ElMessage.error('登录失败');
         return false;
       }
     } catch (error) {
-      console.error('登录错误:', error);
-      ElMessage.error('登录过程中发生错误，请稍后再试');
+      console.error('登录错误:', error.message);
+      ElMessage.error(error.message || '登录失败');
       return false;
     }
   };
 
   const getUserInfo = async () => {
     try {
-      // 如果已经有用户信息，直接返回
-      if (userInfo.value) {
-        return { code: 200, data: userInfo.value };
-      }
-      
       // 从本地存储获取用户信息
-      const userInfoStr = localStorage.getItem('userInfo');
-      if (!userInfoStr) {
-        return { code: 401, message: '用户未登录' };
-      }
-      
-      try {
-        const parsedUserInfo = JSON.parse(userInfoStr);
-        userInfo.value = parsedUserInfo;
-        
-        // 如果是老人，获取老人信息
-        if (roleId.value === 1) {
-          const elderInfoStr = localStorage.getItem('elderInfo');
-          if (elderInfoStr) {
-            elderInfo.value = JSON.parse(elderInfoStr);
-            Object.assign(userInfo.value, elderInfo.value);
-          }
+      const userInfo = localStorage.getItem('userInfo')
+      if (userInfo) {
+        const parsedUserInfo = JSON.parse(userInfo)
+        // 确保角色ID存在
+        if (!parsedUserInfo.roleId && parsedUserInfo.roleIds && parsedUserInfo.roleIds.length > 0) {
+          parsedUserInfo.roleId = parsedUserInfo.roleIds[0]
         }
-        
-        // 如果是家属，获取家属信息
-        if (roleId.value === 2) {
-          const kinInfoStr = localStorage.getItem('kinInfo');
-          if (kinInfoStr) {
-            kinInfo.value = JSON.parse(kinInfoStr);
-            Object.assign(userInfo.value, kinInfo.value);
-          }
-        }
-        
-        return { code: 200, data: userInfo.value };
-      } catch (error) {
-        console.error('解析用户信息失败:', error);
-        return { code: 500, message: '获取用户信息失败' };
+        return parsedUserInfo
       }
+
+      // 从API获取用户信息
+      const response = await axios.get('/user/info')
+      if (response.code === 200 && response.data) {
+        const userData = response.data
+        // 确保角色ID存在
+        if (!userData.roleId && userData.roleIds && userData.roleIds.length > 0) {
+          userData.roleId = userData.roleIds[0]
+        }
+        // 存储到本地
+        localStorage.setItem('userInfo', JSON.stringify(userData))
+        return userData
+      }
+      return null
     } catch (error) {
-      console.error('获取用户信息失败:', error);
-      return { code: 500, message: '获取用户信息失败' };
+      console.error('获取用户信息失败:', error)
+      return null
     }
   };
 
@@ -136,12 +151,11 @@ export const useUserStore = defineStore('user', () => {
     roleId.value = null;
     roles.value = [];
     
-    // 清除本地存储
+    // 清除 localStorage 存储
     localStorage.removeItem('userInfo');
-    localStorage.removeItem('elderInfo');
-    localStorage.removeItem('kinInfo');
     localStorage.removeItem('isLoggedIn');
     localStorage.removeItem('roleId');
+    localStorage.removeItem('roles');
     
     // 清除token
     TokenManager.user.clear();
@@ -156,7 +170,7 @@ export const useUserStore = defineStore('user', () => {
       
       // 更新本地存储
       userInfo.value = { ...userInfo.value, ...userData };
-      localStorage.setItem('userInfo', JSON.stringify(userInfo.value));
+      localStorage.setItem('fore-userInfo', JSON.stringify(userInfo.value));
       
       // 根据角色更新特定信息
       if (roleId.value === 1) { // 老人
@@ -215,10 +229,16 @@ export const useUserStore = defineStore('user', () => {
   const fetchKinListByElderId = async (elderId) => {
     try {
       const response = await getKinListByElderId(elderId);
-      if (response.code === 200) {
+      console.log('获取家属列表响应:', response);
+      
+      if (response && response.code === 200) {
+        return response.data;
+      } else if (response && Array.isArray(response)) {
+        return response;
+      } else if (response && response.data && Array.isArray(response.data)) {
         return response.data;
       } else {
-        throw new Error(response.message || '获取家属列表失败');
+        throw new Error(response?.message || '获取家属列表失败');
       }
     } catch (error) {
       console.error('获取家属列表失败:', error);
@@ -256,9 +276,11 @@ export const useUserStore = defineStore('user', () => {
 
   const getHealthRecords = async (elderId) => {
     try {
-      const response = await getHealthRecords(elderId);
-      if (response.code === 200) {
-        return response;
+      const response = await axios.get('/api/health-records/getHealthRecords', {
+        params: { elderId }
+      });
+      if (response.data.code === 200) {
+        return response.data;
       }
       return null;
     } catch (error) {
@@ -293,4 +315,10 @@ export const useUserStore = defineStore('user', () => {
     getHealthRecords
   };
 });
+
+// 为了向后兼容，保留原来的导出名称
+/** @deprecated 请使用 useUserStore 替代 */
+export const useForegroundUserStore = useUserStore;
+
+// 默认导出
 export default useUserStore;

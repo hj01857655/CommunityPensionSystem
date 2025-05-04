@@ -6,38 +6,29 @@ import axios from '@/utils/axios'
  * @returns {Promise<{code: number, data: Array, message: string}>}
  */
 export const getHealthRecords = (elderId) => {
-  return axios.get(`/api/health/records/${elderId}`)
+    return axios.get(`/api/health/record/getHealthRecords`, {
+        params: {elderId}
+    })
 }
 
 /**
- * 获取健康档案
- * @param {number} elderId - 老人ID
- * @returns {Promise<{code: number, data: Object, message: string}>}
+ * 获取用户健康数据
+ * @param {string|number} userId - 用户ID
+ * @returns {Promise} 返回健康数据
  */
 export const getHealthData = (elderId) => {
-  return axios.get(`/api/health/data/${elderId}`)
+    return axios.get(`/api/health/record/getHealthRecords`, {
+        params: {elderId}
+    })
 }
 
 /**
- * 更新健康档案
- * @param {Object} data - 健康档案数据
- * @param {number} data.id - 记录ID
- * @param {number} data.elderId - 老人ID
- * @param {string} data.bloodPressure - 血压值
- * @param {number} data.heartRate - 心率
- * @param {number} data.bloodSugar - 血糖值
- * @param {number} data.temperature - 体温
- * @param {number} data.weight - 体重
- * @param {number} data.height - 身高
- * @param {number} data.bmi - BMI指数
- * @param {string} data.medicalHistory - 病史
- * @param {string} data.allergy - 过敏史
- * @param {string} data.symptoms - 症状描述
- * @param {string} data.medication - 用药情况
- * @returns {Promise<{code: number, data: Object, message: string}>}
+ * 更新用户健康数据
+ * @param {Object} data - 健康数据
+ * @returns {Promise} 更新结果
  */
-export const updateHealthData = (data) => {
-  return axios.put('/api/health/data', data)
+export function updateHealthData(data) {
+    return axios.put(`/api/health/record/updateHealthRecords`, data)
 }
 
 /**
@@ -60,7 +51,34 @@ export const updateHealthData = (data) => {
  * @returns {Promise<{code: number, data: Object, message: string}>}
  */
 export const addHealthData = (data) => {
-  return axios.post('/api/health/records', data)
+    // 计算BMI
+    if (data.height && data.weight) {
+        const heightInMeters = data.height / 100
+        data.bmi = +(data.weight / (heightInMeters * heightInMeters)).toFixed(1)
+    }
+
+    return axios.post('/api/health/record/addHealthRecords', {
+        ...data,
+        recordTime: new Date().toISOString(),
+        symptomsRecordTime: new Date().toISOString()
+    })
+}
+
+/**
+ * 检查用户是否有健康档案
+ * @param {string|number} elderId - 老人ID
+ * @returns {Promise<boolean>} 是否存在健康档案
+ */
+export const checkHealthRecordExists = async (elderId) => {
+    try {
+        const response = await getHealthRecords(elderId)
+        return response.code === 200 && response.data != null
+    } catch (error) {
+        if (error.response && error.response.status === 404) {
+            return false
+        }
+        throw error
+    }
 }
 
 // 统一的错误处理函数

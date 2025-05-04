@@ -365,11 +365,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             throw new BusinessException("用户不存在");
         }
 
+        // 获取用户角色列表
+        List<Long> elderRoleIds = getUserRoleIds(elderId);
+        List<Long> kinRoleIds = getUserRoleIds(kinId);
+
         // 验证角色
-        if (!elder.getRoleIds().contains(RoleEnum.ELDER.getId())) {
+        if (elderRoleIds == null || !elderRoleIds.contains(RoleEnum.ELDER.getId())) {
             throw new BusinessException("第一个用户必须是老人角色");
         }
-        if (!kin.getRoleIds().contains(RoleEnum.KIN.getId())) {
+        if (kinRoleIds == null || !kinRoleIds.contains(RoleEnum.KIN.getId())) {
             throw new BusinessException("第二个用户必须是家属角色");
         }
 
@@ -392,6 +396,20 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         return elderKinRelationService.getElderIdsByKinId(kinId);
     }
 
+    @Override
+    public List<User> getKinsByElderId(Long elderId) {
+        return elderKinRelationService.getKinsByElderId(elderId);
+    }
+
+    @Override
+    public List<User> getEldersByKinId(Long kinId) {
+        return elderKinRelationService.getEldersByKinId(kinId);
+    }
+
+    @Override
+    public String getRelationType(Long elderId, Long kinId) {
+        return elderKinRelationService.getRelationType(elderId, kinId);
+    }
 
     /**
      * 更新用户角色关系
@@ -426,5 +444,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 .roleIds(roleIds)
                 .roleNames(roleNames)
                 .build();
+    }
+
+    @Override
+    public List<User> getAllElders() {
+        return userMapper.selectAllElders();
     }
 }

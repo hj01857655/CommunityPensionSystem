@@ -8,7 +8,7 @@ import instance from '@/utils/axios'
  * @returns {Promise} - 返回Promise对象
  */
 export function getNoticeList(params) {
-  return instance.get('/api/notice/list', {
+    return instance.get('/api/notifications/list', {
     params
   })
 }
@@ -19,7 +19,7 @@ export function getNoticeList(params) {
  * @returns {Promise} - 返回Promise对象
  */
 export function getNoticeDetail(id) {
-  return instance.get(`/api/notice/${id}`)
+    return instance.get(`/api/notifications/${id}`)
 }
 
 // 标记通知为已读

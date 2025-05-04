@@ -1,5 +1,4 @@
-import axios from '@/utils/axios';
-import { TokenManager } from '@/utils/axios';
+import axios, {TokenManager} from '@/utils/axios';
 
 /**
  * 用户登录
@@ -73,7 +72,7 @@ export const getUnboundElders = () => {
  * @returns {Promise<{code: number, data: Array, message: string}>}
  */
 export const getKinListByElderId = (elderId) => {
-  return axios.get(`/api/user/kin/list/${elderId}`);
+    return axios.get(`/api/system/user/kins/${elderId}`);
 };
 
 /**

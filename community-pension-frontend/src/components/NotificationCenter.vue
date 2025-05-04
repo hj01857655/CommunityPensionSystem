@@ -1,42 +1,42 @@
 <template>
   <div class="notification-center">
     <el-popover
-      placement="bottom-end"
-      :width="320"
-      trigger="click"
-      popper-class="notification-popover"
+        :width="320"
+        placement="bottom-end"
+        popper-class="notification-popover"
+        trigger="click"
     >
       <template #reference>
-        <el-badge :value="unreadCount" :max="99" :hidden="unreadCount === 0">
-          <el-button class="notification-btn" :icon="Bell" circle />
+        <el-badge :hidden="unreadCount === 0" :max="99" :value="unreadCount">
+          <el-button :icon="Bell" circle class="notification-btn"/>
         </el-badge>
       </template>
-      
+
       <div class="notification-header">
         <h3>通知中心</h3>
         <div class="notification-actions">
-          <el-button type="primary" link @click="markAllAsRead" :disabled="notifications.length === 0">
+          <el-button :disabled="notifications.length === 0" link type="primary" @click="markAllAsRead">
             全部已读
           </el-button>
-          <el-button type="danger" link @click="clearAll" :disabled="notifications.length === 0">
+          <el-button :disabled="notifications.length === 0" link type="danger" @click="clearAll">
             清空
           </el-button>
         </div>
       </div>
-      
-      <el-divider />
-      
-      <div class="notification-list" v-if="notifications.length > 0">
+
+      <el-divider/>
+
+      <div v-if="notifications.length > 0" class="notification-list">
         <div
-          v-for="notification in notifications"
-          :key="notification.id"
-          class="notification-item"
-          :class="{ 'notification-unread': notification.status === 0 }"
-          @click="handleNotificationClick(notification)"
+            v-for="notification in notifications"
+            :key="notification.id"
+            :class="{ 'notification-unread': notification.status === 0 }"
+            class="notification-item"
+            @click="handleNotificationClick(notification)"
         >
           <div class="notification-icon">
-            <el-icon :size="20" :color="getIconColor(notification.type)">
-              <component :is="getIconComponent(notification.type)" />
+            <el-icon :color="getIconColor(notification.type)" :size="20">
+              <component :is="getIconComponent(notification.type)"/>
             </el-icon>
           </div>
           <div class="notification-content">
@@ -46,38 +46,42 @@
           </div>
           <div class="notification-actions">
             <el-button
-              v-if="notification.status === 0"
-              type="primary"
-              size="small"
-              circle
-              @click.stop="markAsRead(notification)"
+                v-if="notification.status === 0"
+                circle
+                size="small"
+                type="primary"
+                @click.stop="markAsRead(notification)"
             >
-              <el-icon><Check /></el-icon>
+              <el-icon>
+                <Check/>
+              </el-icon>
             </el-button>
             <el-button
-              type="danger"
-              size="small"
-              circle
-              @click.stop="removeNotification(notification)"
+                circle
+                size="small"
+                type="danger"
+                @click.stop="removeNotification(notification)"
             >
-              <el-icon><Delete /></el-icon>
+              <el-icon>
+                <Delete/>
+              </el-icon>
             </el-button>
           </div>
         </div>
       </div>
-      
+
       <div v-else class="notification-empty">
-        <el-empty description="暂无通知" />
+        <el-empty description="暂无通知"/>
       </div>
-      
-      <div class="notification-footer" v-if="notifications.length > 0">
+
+      <div v-if="notifications.length > 0" class="notification-footer">
         <el-pagination
-          small
-          layout="prev, pager, next"
-          :total="total"
-          :page-size="pageSize"
-          :current-page="currentPage"
-          @current-change="handlePageChange"
+            :current-page="currentPage"
+            :page-size="pageSize"
+            :total="total"
+            layout="prev, pager, next"
+            small
+            @current-change="handlePageChange"
         />
       </div>
     </el-popover>
@@ -85,13 +89,13 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
-import { Bell, Check, Delete, Warning, InfoFilled, SuccessFilled, CircleCheckFilled } from '@element-plus/icons-vue';
-import { ElMessage, ElMessageBox } from 'element-plus';
-import { useRouter } from 'vue-router';
+import {computed, onMounted, onUnmounted, ref} from 'vue';
+import {Bell, Check, CircleCheckFilled, Delete, InfoFilled, SuccessFilled, Warning} from '@element-plus/icons-vue';
+import {ElMessage, ElMessageBox} from 'element-plus';
+import {useRouter} from 'vue-router';
 import sseClient from '@/utils/sseClient';
-import { formatDistanceToNow } from 'date-fns';
-import { zhCN } from 'date-fns/locale';
+import {formatDistanceToNow} from 'date-fns';
+import {zhCN} from 'date-fns/locale';
 
 // 通知列表
 const notifications = ref([]);
@@ -138,7 +142,7 @@ const fetchNotifications = async () => {
         total: 2
       }
     };
-    
+
     if (response.code === 200) {
       notifications.value = response.data.records;
       total.value = response.data.total;
@@ -157,7 +161,7 @@ const markAsRead = async (notification) => {
     const response = {
       code: 200
     };
-    
+
     if (response.code === 200) {
       notification.status = 1;
       ElMessage.success('标记已读成功');
@@ -176,7 +180,7 @@ const markAllAsRead = async () => {
     const response = {
       code: 200
     };
-    
+
     if (response.code === 200) {
       notifications.value.forEach(item => {
         item.status = 1;
@@ -197,7 +201,7 @@ const removeNotification = async (notification) => {
     const response = {
       code: 200
     };
-    
+
     if (response.code === 200) {
       const index = notifications.value.findIndex(item => item.id === notification.id);
       if (index !== -1) {
@@ -219,13 +223,13 @@ const clearAll = async () => {
       cancelButtonText: '取消',
       type: 'warning'
     });
-    
+
     // 这里应该调用API清空所有通知
     // 示例代码，实际应该替换为真实API调用
     const response = {
       code: 200
     };
-    
+
     if (response.code === 200) {
       notifications.value = [];
       total.value = 0;
@@ -245,7 +249,7 @@ const handleNotificationClick = (notification) => {
   if (notification.status === 0) {
     markAsRead(notification);
   }
-  
+
   // 根据通知类型跳转到不同页面
   switch (notification.type) {
     case 'HEALTH':
@@ -272,9 +276,9 @@ const handlePageChange = (page) => {
 // 格式化时间
 const formatTime = (time) => {
   if (!time) return '';
-  
+
   try {
-    return formatDistanceToNow(new Date(time), { addSuffix: true, locale: zhCN });
+    return formatDistanceToNow(new Date(time), {addSuffix: true, locale: zhCN});
   } catch (error) {
     return time;
   }
@@ -311,7 +315,7 @@ const getIconColor = (type) => {
 // 处理SSE通知消息
 const handleNotificationMessage = (notification) => {
   if (!notification) return;
-  
+
   // 添加新通知到列表
   notifications.value.unshift({
     id: notification.id || Date.now(),
@@ -321,12 +325,12 @@ const handleNotificationMessage = (notification) => {
     type: notification.type,
     createTime: notification.createTime || new Date().toISOString()
   });
-  
+
   // 如果超过页面大小，移除最后一条
   if (notifications.value.length > pageSize.value) {
     notifications.value.pop();
   }
-  
+
   // 更新总数
   total.value += 1;
 };
@@ -334,7 +338,7 @@ const handleNotificationMessage = (notification) => {
 // 组件挂载时获取通知列表并连接SSE
 onMounted(() => {
   fetchNotifications();
-  
+
   // 添加SSE通知监听
   sseClient.addEventListener('notification', handleNotificationMessage);
 });

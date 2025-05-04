@@ -1,29 +1,48 @@
-import { defineStore } from 'pinia';
-import { ref } from 'vue';
-import { ElMessage } from 'element-plus';
+import {defineStore} from 'pinia';
+import {ref} from 'vue';
+import {ElMessage} from 'element-plus';
 import {
+    addUser,
+    assignRole,
+    bindElderKinRelation,
+    deleteUser,
+    getAuthRole,
+    getEldersByKinId,
+    getKinsByElderId,
+    getUnboundElders,
+    getUnboundKins,
     getUserInfo,
     getUserList,
-    addUser,
+    getUserRoles,
+    resetUserPassword,
+    unbindElderKinRelation,
+    updateAuthRole,
     updateUser,
     updateUserPassword,
-    resetUserPassword,
+    updateUserStatus,
     uploadAvatar,
-    deleteUser,
-    getUserRoles,//获取用户角色
-    assignRole,//分配角色
-    updateUserStatus,//更新用户状态
-    getUnboundElders,//获取未绑定家属的老人列表
-    getAuthRole,//获取用户角色授权信息
-    updateAuthRole,//更新用户角色授权信息
-    getUnboundKins,//获取未绑定老人的家属列表
-    bindElderKinRelation,//绑定老人和家属关系
-    unbindElderKinRelation,
-    getKinIdsByElderId,
-    getElderIdsByKinId,
 } from '@/api/back/system/user';
 import axios from 'axios';
+import {TokenManager} from '@/utils/axios';
 
+/**
+ * 后台管理系统用户状态管理
+ * 用于管理后台管理系统的用户状态和操作
+ * 包括用户管理、角色分配、权限控制等管理员功能
+ * @module stores/back/userStore
+ */
+
+/**
+ * 后台用户 Store
+ * @typedef {Object} UserStore
+ * @property {Ref<Object|null>} userInfo - 用户信息
+ * @property {Ref<Array>} roles - 角色列表
+ * @property {Ref<Array>} permissions - 权限列表
+ * @property {Ref<Array>} userList - 用户列表
+ * @property {Ref<number>} total - 总数
+ * @property {Ref<boolean>} loading - 加载状态
+ * @property {Ref<boolean>} isLoggedIn - 登录状态
+ */
 export const useUserStore = defineStore('user', () => {
     // 状态定义
     const userInfo = ref(null);
@@ -32,19 +51,149 @@ export const useUserStore = defineStore('user', () => {
     const userList = ref([]);
     const total = ref(0);
     const loading = ref(false);
+    const isLoggedIn = ref(false);
+
+    // 设置用户信息
+    const setUserInfo = (user) => {
+        if (user) {
+            userInfo.value = user;
+            isLoggedIn.value = true;
+            roles.value = user.roles || [];
+            permissions.value = user.permissions || [];
+
+            // 使用 sessionStorage 存储后台用户信息
+            sessionStorage.setItem("userInfo", JSON.stringify({
+                userId: user.userId,
+                username: user.username,
+                name: user.name,
+                avatar: user.avatar,
+                roleId: user.roleId,
+                roles: user.roles || [],
+                permissions: user.permissions || [],
+                phone: user.phone,
+                email: user.email,
+                gender: user.gender,
+                isActive: user.isActive
+            }));
+            sessionStorage.setItem("isLoggedIn", "true");
+            sessionStorage.setItem("roleId", user.roleId);
+            sessionStorage.setItem("roles", JSON.stringify(user.roles || []));
+            sessionStorage.setItem("permissions", JSON.stringify(user.permissions || []));
+        }
+    };
+
+    // 登录方法
+    const login = async (loginForm) => {
+        try {
+            const response = await userLogin(loginForm);
+
+            if (response.code === 200) {
+                console.log("后台登录成功响应", response);
+                setUserInfo(response.data.user);
+
+                // 保存token
+                if (response.data.accessToken) {
+                    TokenManager.admin.set(response.data.accessToken, response.data.refreshToken);
+                } else {
+                    console.error('登录响应中没有token');
+                    ElMessage.error('登录失败：未获取到token');
+                    return false;
+                }
+
+                return true;
+            } else {
+                console.log("后台登录失败响应", response);
+                ElMessage.error('登录失败');
+                return false;
+            }
+        } catch (error) {
+            console.error('登录错误:', error.message);
+            ElMessage.error(error.message || '登录失败');
+            return false;
+        }
+    };
+
+    // 登出方法
+    const logout = async () => {
+        // 清除状态
+        userInfo.value = null;
+        roles.value = [];
+        permissions.value = [];
+        isLoggedIn.value = false;
+
+        // 清除 sessionStorage 存储
+        sessionStorage.removeItem('userInfo');
+        sessionStorage.removeItem('isLoggedIn');
+        sessionStorage.removeItem('roleId');
+        sessionStorage.removeItem('roles');
+        sessionStorage.removeItem('permissions');
+
+        // 清除token
+        TokenManager.admin.clear();
+
+        return true;
+    };
+
+    // 获取用户列表
+    const fetchUsers = async (queryParams) => {
+        try {
+            loading.value = true;
+            console.log('开始获取用户列表，参数:', queryParams);
+            console.log('当前路径:', window.location.pathname);
+            console.log('管理员token:', TokenManager.admin.getAccessToken());
+
+            const response = await getUserList(queryParams);
+            console.log('获取用户列表响应:', response);
+
+            if (response?.code === 200) {
+                console.log('用户列表数据:', response.data);
+                userList.value = response.data.records || [];
+                total.value = response.data.total || 0;
+                return true;
+            }
+            console.error('获取用户列表失败，响应码:', response?.code);
+            ElMessage.error(response?.message || '获取用户列表失败');
+            return false;
+        } catch (error) {
+            console.error('获取用户列表失败，错误详情:', error);
+            ElMessage.error('获取用户列表失败');
+            return false;
+        } finally {
+            loading.value = false;
+        }
+    };
 
     // 获取用户信息
     const handleGetUserInfo = async (userId) => {
         try {
-            const res = await getUserInfo(userId);
-            if (res.code === 200) {
-                userInfo.value = res.data;
-                roles.value = res.data.roles || [];
-                permissions.value = res.data.permissions || [];
-                return res;
+            // 如果已经有用户信息，直接返回
+            if (userInfo.value) {
+                return {code: 200, data: userInfo.value};
             }
-            ElMessage.error(res.msg || '获取用户信息失败');
-            return null;
+
+            // 从 sessionStorage 获取用户信息
+            const userInfoStr = sessionStorage.getItem('userInfo');
+            if (!userInfoStr) {
+                const res = await getUserInfo(userId);
+                if (res.code === 200) {
+                    setUserInfo(res.data);
+                    return res;
+                }
+                return {code: 401, message: '用户未登录'};
+            }
+
+            try {
+                const parsedUserInfo = JSON.parse(userInfoStr);
+                userInfo.value = parsedUserInfo;
+                isLoggedIn.value = sessionStorage.getItem('isLoggedIn') === 'true';
+                roles.value = JSON.parse(sessionStorage.getItem('roles') || '[]');
+                permissions.value = JSON.parse(sessionStorage.getItem('permissions') || '[]');
+
+                return {code: 200, data: userInfo.value};
+            } catch (error) {
+                console.error('解析用户信息失败:', error);
+                return {code: 500, message: '获取用户信息失败'};
+            }
         } catch (error) {
             console.error('获取用户信息失败:', error);
             throw error;
@@ -69,37 +218,6 @@ export const useUserStore = defineStore('user', () => {
         } catch (error) {
             console.error('修改密码失败:', error);
             throw error;
-        }
-    };
-
-    /**
-     * 获取用户列表
-     * @param {*} params
-     * @returns
-     */
-    const fetchUsers = async (params) => {
-        try {
-            loading.value = true;
-            const res = await getUserList({
-                current: params.current,
-                size: params.size,
-                username: params.username,
-                isActive: params.isActive,
-                startTime: params.startTime,
-                endTime: params.endTime
-            });
-            if (res.code === 200) {
-                userList.value = res.data.records;
-                total.value = res.data.total;
-                return res;
-            }
-            ElMessage.error(res.msg || '获取用户列表失败');
-            return null;
-        } catch (error) {
-            console.error('获取用户列表失败:', error);
-            throw error;
-        } finally {
-            loading.value = false;
         }
     };
 
@@ -414,32 +532,55 @@ export const useUserStore = defineStore('user', () => {
         }
     };
 
-    // 获取老人的所有家属ID
-    const handleGetKinIdsByElderId = async (elderId) => {
+    /**
+     * 获取老人的家属列表
+     * @param {number} elderId
+     * @returns {Promise}
+     */
+    const handleGetKinsByElderId = async (elderId) => {
         try {
-            const res = await getKinIdsByElderId(elderId);
+            const res = await getKinsByElderId(elderId);
             if (res.code === 200) {
                 return res;
             }
-            ElMessage.error(res.msg || '获取老人的所有家属ID失败');
+            ElMessage.error(res.msg || '获取老人的家属列表失败');
             return null;
         } catch (error) {
-            console.error('获取老人的所有家属ID失败:', error);
+            console.error('获取老人的家属列表失败:', error);
             throw error;
         }
     };
 
-    // 获取家属的所有老人ID
-    const handleGetElderIdsByKinId = async (kinId) => {
+    /**
+     * 获取家属的老人列表
+     * @param {number} kinId
+     * @returns {Promise}
+     */
+    const handleGetEldersByKinId = async (kinId) => {
         try {
-            const res = await getElderIdsByKinId(kinId);
+            const res = await getEldersByKinId(kinId);
             if (res.code === 200) {
                 return res;
             }
-            ElMessage.error(res.msg || '获取家属的所有老人ID失败');
+            ElMessage.error(res.msg || '获取家属的老人列表失败');
             return null;
         } catch (error) {
-            console.error('获取家属的所有老人ID失败:', error);
+            console.error('获取家属的老人列表失败:', error);
+            throw error;
+        }
+    };
+
+    // 获取未绑定家属的老人列表
+    const fetchUnboundElders = async () => {
+        try {
+            const res = await getUnboundElders();
+            if (res.code === 200) {
+                return res;
+            }
+            ElMessage.error(res.msg || '获取未绑定家属的老人列表失败');
+            return null;
+        } catch (error) {
+            console.error('获取未绑定家属的老人列表失败:', error);
             throw error;
         }
     };
@@ -451,9 +592,9 @@ export const useUserStore = defineStore('user', () => {
         userList,
         total,
         loading,
+        fetchUsers,
         handleGetUserInfo,
         handleUpdatePwd,
-        fetchUsers,
         handleUploadAvatar,
         resetState,
         handleAddUser,
@@ -467,10 +608,15 @@ export const useUserStore = defineStore('user', () => {
         handleGetAuthRole,
         handleUpdateAuthRole,
         fetchElderName,
+        fetchUnboundElders,
         fetchUnboundKins,
         handleBindElderKinRelation,
         handleUnbindElderKinRelation,
-        handleGetKinIdsByElderId,
-        handleGetElderIdsByKinId,
+        handleGetKinsByElderId,
+        handleGetEldersByKinId,
     };
 });
+
+
+// 默认导出
+export default useUserStore;

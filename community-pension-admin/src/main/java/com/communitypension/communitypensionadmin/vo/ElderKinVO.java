@@ -1,7 +1,8 @@
 package com.communitypension.communitypensionadmin.vo;
 
 import lombok.Data;
-import java.util.Date;
+
+import java.time.LocalDate;
 
 /**
  * 老人家属关联VO
@@ -17,7 +18,7 @@ public class ElderKinVO {
     private String elderGender;
     private String elderPhone;
     private String elderIdCard;
-    private Date elderBirthday;
+    private LocalDate elderBirthday;
     private Integer elderAge;
     private String elderAddress;
     private String elderHealthCondition;

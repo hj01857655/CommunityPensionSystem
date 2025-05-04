@@ -1,8 +1,15 @@
-import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
-import { getActivityList, registerActivity, getActivityDetail, getActivityStatus, getUserRegisteredActivities, cancelActivityRegistration } from '@/api/fore/activity'
-import { ElMessage } from 'element-plus'
-import { useUserStore } from './useUserStore'
+import {defineStore} from 'pinia'
+import {ref, watch} from 'vue'
+import {
+  cancelActivityRegistration,
+  getActivityDetail,
+  getActivityList,
+  getActivityStatus,
+  getUserRegisteredActivities,
+  registerActivity
+} from '@/api/fore/activity'
+import {ElMessage} from 'element-plus'
+import {useUserStore} from '@/stores/fore/userStore'
 
 /**
  * 活动管理状态库
@@ -242,45 +249,65 @@ export const useActivityStore = defineStore('activity', () => {
    */
   const fetchActivities = async (forceRefresh = false) => {
     // 日志输出当前状态
-    console.log('获取活动列表状态:', {
+      console.log('[活动Store] 获取活动列表:', {
       currentCount: activities.value.length,
       isLoading: loading.value,
       forceRefresh: forceRefresh
     });
 
-    // 如果数据已存在且不强制刷新，直接返回
-    if (activities.value.length > 0 && !forceRefresh && !loading.value) {
-      console.log('使用缓存的活动数据，共', activities.value.length, '条');
+      // 如果已有数据且不是强制刷新，直接返回缓存数据
+      if (activities.value.length > 0 && !forceRefresh) {
+          console.log('[活动Store] 使用缓存数据');
       return activities.value;
     }
-    
-    loading.value = true; // 开始加载，设置加载状态
-    console.log('开始获取活动列表...');
-    
+
+      // 如果正在加载中，等待加载完成
+      if (loading.value) {
+          console.log('[活动Store] 正在加载中，等待加载完成');
+          return new Promise(resolve => {
+              const unwatch = watch(() => loading.value, (newValue) => {
+                  if (!newValue) {
+                      unwatch();
+                      resolve(activities.value);
+                  }
+              });
+          });
+      }
+
     try {
-      const response = await getActivityList(); // 调用API获取数据
-      console.log('活动列表API响应状态:', response.code);
-      
-      // 处理分页响应数据
-      if (response.data && response.data.records) {
-        // 更新活动列表，为每个活动添加loading标记
-        activities.value = response.data.records.map(activity => ({
-          ...activity,
-          loading: false // 每个活动的加载状态初始化为false
-        }));
-        console.log('成功获取活动列表，共', activities.value.length, '条');
+        loading.value = true;
+        console.log('[活动Store] 开始请求活动列表数据');
+
+        // 调用API获取活动列表
+        const response = await getActivityList();
+        console.log('[活动Store] 获取活动列表响应:', response);
+
+        if (response?.code === 200) {
+            // 检查response.data是否是对象，并且包含records属性
+            if (response.data && typeof response.data === 'object') {
+                const activityData = response.data.records || response.data;
+                if (Array.isArray(activityData)) {
+                    // 更新状态
+                    activities.value = activityData.map(activity => ({
+                        ...activity,
+                        loading: false // 添加loading状态用于报名操作
+                    }));
+                    console.log('[活动Store] 活动列表数据更新成功，数量:', activities.value.length);
+                    return activities.value;
+                }
+            }
+            console.warn('[活动Store] 活动列表数据格式异常:', response.data);
       } else {
-        console.warn('活动列表数据格式不正确:', response.data);
-        activities.value = []; // 如果没有数据，设置为空数组
+            console.warn('[活动Store] 获取活动列表失败，响应码:', response?.code);
+            ElMessage.error(response?.message || '获取活动列表失败');
       }
       return activities.value;
     } catch (error) {
-      console.error('获取活动列表失败:', error);
+        console.error('[活动Store] 获取活动列表失败:', error);
       ElMessage.error('获取活动列表失败，请稍后重试');
-      activities.value = []; // 发生错误时清空数据
-      return [];
+        return activities.value;
     } finally {
-      loading.value = false; // 结束加载，无论成功或失败
+        loading.value = false;
     }
   }
   
@@ -462,6 +489,65 @@ export const useActivityStore = defineStore('activity', () => {
       return false; // 发生错误时返回失败
     }
   }
+
+    /**
+     * 获取用户报名的活动列表
+     * @param {Object} params - 分页参数
+     * @returns {Promise} 活动列表数据
+     */
+    const fetchUserRegisteredActivities = async (params) => {
+        const userStore = useUserStore();
+        const userInfo = userStore.userInfo || JSON.parse(localStorage.getItem('userInfo') || '{}');
+
+        // 确定老人ID
+        let elderId = null;
+
+        // 从不同来源尝试获取老人ID
+        // 1. 如果用户是老人，直接使用用户ID
+        if (userInfo.roles && userInfo.roles.includes('elder')) {
+            elderId = userInfo.userId || userInfo.id;
+        }
+        // 2. 如果是家属且绑定了老人
+        else if (userInfo.roles && userInfo.roles.includes('kin') && userInfo.bindElder) {
+            elderId = userInfo.bindElder.id;
+        }
+        // 3. 根据本地存储的角色判断
+        else {
+            const role = localStorage.getItem('role');
+            if (role === '1') { // 老人角色
+                elderId = userInfo.userId || userInfo.id || localStorage.getItem('userId');
+            } else if (role === '2') { // 家属角色
+                const bindElderStr = localStorage.getItem('bindElder');
+                if (bindElderStr) {
+                    try {
+                        const bindElder = JSON.parse(bindElderStr);
+                        elderId = bindElder.id;
+                    } catch (error) {
+                        console.error('解析bindElder失败:', error);
+                    }
+                }
+            }
+        }
+
+        console.log('[活动Store] 用户信息:', userInfo);
+        console.log('[活动Store] 确定的老人ID:', elderId);
+
+        // 检查是否获取到老人ID
+        if (!elderId) {
+            throw new Error('无法确定老人身份，请确认您是老人或已绑定老人');
+        }
+
+        // 设置查询参数
+        const queryParams = {
+            ...params,
+            userId: elderId // 使用老人ID作为查询参数
+        };
+
+        console.log('[活动Store] 请求参数:', queryParams);
+
+        // 调用API获取数据
+        return await getUserRegisteredActivitiesAction(queryParams);
+    }
   
   // 返回状态和方法给组件使用
   return {
@@ -481,6 +567,7 @@ export const useActivityStore = defineStore('activity', () => {
     getActivityDetailAction,
     getActivityStatusAction,
     getUserRegisteredActivitiesAction,
-    cancelActivityRegistrationAction
+      cancelActivityRegistrationAction,
+      fetchUserRegisteredActivities
   }
 }) 

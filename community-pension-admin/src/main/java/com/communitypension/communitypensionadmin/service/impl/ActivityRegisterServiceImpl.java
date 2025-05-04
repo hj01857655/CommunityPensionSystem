@@ -12,13 +12,12 @@ import com.communitypension.communitypensionadmin.service.ActivityRegisterServic
 import com.communitypension.communitypensionadmin.service.ActivityService;
 import com.communitypension.communitypensionadmin.service.UserService;
 import com.communitypension.communitypensionadmin.vo.ActivityRegisterVO;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -56,7 +55,16 @@ public class ActivityRegisterServiceImpl extends ServiceImpl<ActivityRegisterMap
         // 检查老人是否已报名
         Integer status = getElderActivityStatus(activityId, elderId);
         if (status != null) {
-            throw new BusinessException("老人已报名此活动");
+            // 如果已报名，返回当前报名状态
+            String statusName = switch (status) {
+                case 0 -> "待审核";
+                case 1 -> "已通过";
+                case 2 -> "已拒绝";
+                case 3 -> "已取消";
+                case 4 -> "已签到";
+                default -> "未知状态";
+            };
+            throw new BusinessException("您已报名此活动，当前状态：" + statusName);
         }
 
         // 检查报名人数是否已满

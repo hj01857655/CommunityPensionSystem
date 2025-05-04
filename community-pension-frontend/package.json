@@ -3,9 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "serve": "vite serve",
-    "build": "vite build",
-    "lint": "vite lint"
+    "serve": "yarn vite serve",
+    "build": "yarn vite build",
+    "lint": "yarn vite lint",
+    "preinstall": "npx only-allow yarn"
   },
   "author": "zhaoyu",
   "license": "MIT",
@@ -34,6 +35,7 @@
     "eslint-plugin-vue": "^8.7.1",
     "fast-glob": "^3.3.3",
     "js-jwt": "^0.2.7",
+    "only-allow": "1.2.1",
     "sass": "^1.85.1",
     "sass-loader": "^16.0.5",
     "vite": "^6.2.1",

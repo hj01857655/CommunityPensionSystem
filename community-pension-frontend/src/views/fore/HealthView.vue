@@ -105,20 +105,23 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
-import { ElMessage } from 'element-plus'
-import { getHealthData, updateHealthData, addHealthData } from '@/api/fore/health'
-import { useUserStore } from '@/stores/fore/useUserStore'
+import {onMounted, ref} from 'vue'
+import {ElMessage} from 'element-plus'
+import {addHealthData, getHealthData, updateHealthData} from '@/api/fore/health'
+import {useForegroundUserStore} from '@/stores/fore/userStore'
+import {useRouter} from 'vue-router'
 
+const router = useRouter()
 const healthFormRef = ref(null)
-const isEditMode = ref(false) // 添加编辑模式状态
-const loading = ref(false) // 添加加载状态
-const healthRecords = ref([]) // 添加健康记录列表
-const totalRecords = ref(0) // 添加总记录数
+const isEditMode = ref(false)
+const loading = ref(false)
+const healthRecords = ref([])
+const totalRecords = ref(0)
 
 const healthForm = ref({
   id: null,
   elderId: null,
+  recorderId: null,
   height: 170,
   weight: 65,
   bloodPressure: '120/80',
@@ -130,7 +133,8 @@ const healthForm = ref({
   symptoms: '',
   medication: '',
   recordType: '日常监测',
-  recordTime: new Date().toISOString()
+  recordTime: new Date().toISOString(),
+  symptomsRecordTime: new Date().toISOString()
 })
 
 const healthRules = {
@@ -148,7 +152,7 @@ const healthRules = {
     { validator: (rule, value, callback) => {
       if (value) {
         const [systolic, diastolic] = value.split('/')
-        if (parseInt(systolic) < 60 || parseInt(systolic) > 200 || 
+        if (parseInt(systolic) < 60 || parseInt(systolic) > 200 ||
             parseInt(diastolic) < 40 || parseInt(diastolic) > 120) {
           callback(new Error('血压数值超出正常范围'))
         } else {
@@ -173,79 +177,60 @@ const healthRules = {
   ]
 }
 
-const userStore = useUserStore()
-
-// 获取用户角色
-const userRole = computed(() => {
-  return userStore.roles?.[0];
-});
-
-// 判断是否为老人角色
-const isElder = computed(() => userRole.value === 'elder');
-
-// 获取用户信息
-const userInfo = computed(() => {
-  return userStore.userInfo;
-});
-
-// 获取老人ID
-const getElderId = () => {
-  return userInfo.value?.userId;
-}
+const userStore = useForegroundUserStore()
 
 // 检查登录状态
 const checkLoginStatus = () => {
-  if (!userInfo.value || !userInfo.value.userId) {
-    // 如果 store 中没有，检查本地存储
-    const localUserInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
-    if (!localUserInfo || !localUserInfo.userId) {
-      ElMessage.warning('请先登录')
-      return false
-    }
-    // 如果本地存储有，但 store 中没有，则重新获取用户信息
-    userStore.getUserInfo();
+  if (!userStore.isLoggedIn || !userStore.userInfo?.userId) {
+    ElMessage.warning('请先登录')
+    router.push('/login')
+    return false
   }
   return true
 }
 
-const handleSave = () => {
-  healthFormRef.value.validate(async (valid) => {
-    if (valid) {
-      try {
-        // 确保表单中有elderId
-        const elderId = getElderId()
-        if (!elderId) {
-          ElMessage.error('无法获取老人ID，请重新登录')
-          return
-        }
-        
-        healthForm.value.elderId = elderId
-        healthForm.value.recordTime = new Date().toISOString()
-        healthForm.value.symptomsRecordTime = new Date().toISOString()
-        
-        // 根据是否有id决定是新增还是更新
-        let response
-        if (healthForm.value.id) {
-          response = await updateHealthData(healthForm.value)
-        } else {
-          response = await addHealthData(healthForm.value)
-        }
-        
-        if (response.code === 200) {
-          ElMessage.success(response.message || '健康数据保存成功')
-          if (response.data && response.data.id) {
-            healthForm.value.id = response.data.id
-          }
-          toggleEditMode() // 保存成功后退出编辑模式
-        } else {
-          ElMessage.error(response.message || '保存失败')
-        }
-      } catch (error) {
-        ElMessage.error('保存失败：' + (error.message || '未知错误'))
-        console.error('保存失败：', error)
-      }
+const handleSave = async () => {
+  if (!checkLoginStatus()) return
+
+  try {
+    loading.value = true
+
+    // 确保有必要的字段
+    const userInfo = userStore.userInfo;
+    const formData = {
+      ...healthForm.value,
+      recorderId: userInfo.userId,
+      elderId: userInfo.userId, // 如果是老人，使用自己的ID
+      recordTime: new Date().toISOString().split('.')[0],
+      symptomsRecordTime: new Date().toISOString().split('.')[0]
     }
-  })
+
+    // 计算 BMI
+    if (formData.height && formData.weight) {
+      const height = parseFloat(formData.height) / 100
+      const weight = parseFloat(formData.weight)
+      formData.bmi = (weight / (height * height)).toFixed(2)
+    }
+
+    console.log('保存健康记录，参数：', JSON.stringify(formData, null, 2))
+
+    const response = await updateHealthData(formData)
+    console.log('保存响应：', response)
+
+    if (response.code === 200) {
+      ElMessage.success('保存成功')
+      isEditMode.value = false
+      // 更新表单数据
+      Object.assign(healthForm.value, response.data)
+    } else {
+      throw new Error(response.message || '保存失败')
+    }
+  } catch (error) {
+    console.error('保存健康记录失败:', error)
+    ElMessage.error(error.response?.data?.message || error.message || '保存失败')
+  } finally {
+    loading.value = false
+  }
 }
 
 const handleReset = () => {
@@ -257,67 +242,117 @@ const toggleEditMode = () => {
   isEditMode.value = !isEditMode.value
 }
 
-// 获取初始健康数据
-const fetchHealthData = async () => {
-  loading.value = true
+// 获取健康记录列表
+const fetchHealthRecords = async () => {
+  if (!checkLoginStatus()) {
+    return;
+  }
+
+  loading.value = true;
   try {
-    const elderId = getElderId()
+    const elderId = userStore.getElderId();
     if (!elderId) {
-      ElMessage.warning('请先登录')
-      return
+      ElMessage.warning('请先登录后再访问健康记录');
+      return;
     }
-    
-    const response = await getHealthData(elderId)
-    
-    if (response.code === 200 && response.data) {
-      // 更新表单数据
-      healthForm.value = {
-        ...healthForm.value,
-        ...response.data,
-        elderId: elderId
-      }
-    } else if (response.code === 404) {
-      // 健康档案不存在，准备创建新档案
-      ElMessage.info('您还没有健康档案，请填写并保存')
-      healthForm.value.elderId = elderId
-      healthForm.value.id = null
+
+    const response = await userStore.getHealthRecords(elderId);
+    if (response && response.data) {
+      healthRecords.value = Array.isArray(response.data) ? response.data : [response.data];
+      totalRecords.value = healthRecords.value.length;
+    } else {
+      healthRecords.value = [];
+      totalRecords.value = 0;
     }
   } catch (error) {
-    ElMessage.error('获取健康数据失败：' + (error.message || '未知错误'))
-    console.error('获取健康数据失败：', error)
+    console.error('获取健康记录失败:', error);
+    ElMessage.error(error.response?.data?.message || error.message || '获取健康记录失败');
+    healthRecords.value = [];
+    totalRecords.value = 0;
+  } finally {
+    loading.value = false;
+  }
+};
+
+const fetchHealthData = async () => {
+  if (!checkLoginStatus()) return
+
+  loading.value = true
+  try {
+    const userInfo = userStore.userInfo;
+    const elderId = userInfo.userId // 如果是老人，使用自己的ID
+
+    if (!elderId) {
+      throw new Error('无法获取用户ID')
+    }
+
+    const response = await getHealthData(elderId)
+    console.log('获取健康数据响应：', response)
+
+    if (response.code === 200) {
+      if (!response.data) {
+        // 如果没有健康记录，创建新的
+        await createNewHealthRecord()
+      } else {
+        Object.assign(healthForm.value, response.data)
+      }
+    } else {
+      throw new Error(response.message || '获取健康数据失败')
+    }
+  } catch (error) {
+    console.error('获取健康数据失败:', error)
+    ElMessage.error(error.response?.data?.message || error.message || '获取健康数据失败')
   } finally {
     loading.value = false
   }
 }
 
-// 获取健康记录列表
-const fetchHealthRecords = async () => {
-  if (!checkLoginStatus()) return
-  
-  loading.value = true
+const createNewHealthRecord = async () => {
   try {
-    const elderId = getElderId()
-    if (!elderId) {
-      ElMessage.warning('无法获取老人信息')
-      return
+    const userInfo = userStore.userInfo;
+    if (!userInfo) {
+      throw new Error('用户未登录')
     }
-    
-    const response = await userStore.getHealthRecords(elderId)
-    if (response && response.data) {
-      healthRecords.value = response.data
-      totalRecords.value = response.data.length
+
+    const recorderId = userInfo.userId
+    const elderId = userStore.getElderId()
+
+    if (!elderId || !recorderId) {
+      throw new Error('无法获取用户ID')
+    }
+
+    const now = new Date().toISOString()
+    const newHealthRecord = {
+      elderId,
+      recorderId,
+      height: '',
+      weight: '',
+      bloodPressure: '',
+      bloodSugar: '',
+      heartRate: '',
+      temperature: '',
+      symptoms: '',
+      recordTime: now,
+      symptomsRecordTime: now
+    }
+
+    const response = await addHealthData(newHealthRecord)
+    if (response.data.code === 200) {
+      ElMessage.success('健康记录创建成功')
+      return response.data.data
+    } else {
+      throw new Error(response.data.message || '创建健康记录失败')
     }
   } catch (error) {
-    console.error('获取健康记录失败:', error)
-    ElMessage.error('获取健康记录失败')
-  } finally {
-    loading.value = false
+    console.error('创建健康记录失败:', error)
+    ElMessage.error(error.message || '创建健康记录失败')
+    throw error
   }
 }
 
 onMounted(async () => {
+  if (!checkLoginStatus()) return
   await fetchHealthData()
-  await fetchHealthRecords()
 })
 </script>
 

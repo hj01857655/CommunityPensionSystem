@@ -156,5 +156,35 @@ public interface UserService extends IService<User> {
      */
     List<User> getUnboundKins();
 
+    /**
+     * 获取老人的家属列表
+     *
+     * @param elderId 老人ID
+     * @return 家属用户列表
+     */
+    List<User> getKinsByElderId(Long elderId);
 
+    /**
+     * 获取家属的老人列表
+     *
+     * @param kinId 家属ID
+     * @return 老人用户列表
+     */
+    List<User> getEldersByKinId(Long kinId);
+
+    /**
+     * 获取老人和家属的关系类型
+     *
+     * @param elderId 老人ID
+     * @param kinId   家属ID
+     * @return 关系类型
+     */
+    String getRelationType(Long elderId, Long kinId);
+
+    /**
+     * 获取所有老人列表
+     *
+     * @return 老人用户列表
+     */
+    List<User> getAllElders();
 }

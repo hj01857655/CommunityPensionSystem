@@ -36,78 +36,6 @@ public class WebSocketServer {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     /**
-     * 连接建立成功调用的方法
-     */
-    @OnOpen
-    public void onOpen(Session session, @PathParam("token") String token) {
-        try {
-            // 验证token并获取用户ID
-            // 修复：创建JwtTokenUtil实例并正确转换返回值
-            JwtTokenUtil jwtTokenUtil = new JwtTokenUtil();
-            String username = jwtTokenUtil.getUsernameFromToken(token);
-            if (username == null) {
-                log.warn("WebSocket连接失败：无效的token");
-                session.close();
-                return;
-            }
-            
-            // 将用户名转换为用户ID
-            Long userId = null;
-            try {
-                userId = Long.parseLong(username);
-            } catch (NumberFormatException e) {
-                log.warn("WebSocket连接失败：用户ID格式不正确");
-                session.close();
-                return;
-            }
-
-            // 存储连接
-            ONLINE_SESSIONS.put(userId, session);
-            SESSION_USER_MAP.put(session, userId);
-            log.info("WebSocket连接成功，用户ID：{}，当前在线人数：{}", userId, ONLINE_SESSIONS.size());
-        } catch (Exception e) {
-            log.error("WebSocket连接异常", e);
-            try {
-                session.close();
-            } catch (IOException ex) {
-                log.error("关闭WebSocket连接异常", ex);
-            }
-        }
-    }
-
-    /**
-     * 连接关闭调用的方法
-     */
-    @OnClose
-    public void onClose(Session session) {
-        Long userId = SESSION_USER_MAP.get(session);
-        if (userId != null) {
-            ONLINE_SESSIONS.remove(userId);
-            SESSION_USER_MAP.remove(session);
-            log.info("WebSocket连接关闭，用户ID：{}，当前在线人数：{}", userId, ONLINE_SESSIONS.size());
-        }
-    }
-
-    /**
-     * 收到客户端消息后调用的方法
-     */
-    @OnMessage
-    public void onMessage(String message, Session session) {
-        Long userId = SESSION_USER_MAP.get(session);
-        log.info("收到用户{}的消息：{}", userId, message);
-        // 这里可以处理客户端发送的消息，例如心跳检测等
-    }
-
-    /**
-     * 发生错误时调用的方法
-     */
-    @OnError
-    public void onError(Session session, Throwable error) {
-        Long userId = SESSION_USER_MAP.get(session);
-        log.error("WebSocket发生错误，用户ID：{}", userId, error);
-    }
-
-    /**
      * 发送消息给指定用户
      *
      * @param userId  用户ID
@@ -170,5 +98,77 @@ public class WebSocketServer {
      */
     public static int getOnlineCount() {
         return ONLINE_SESSIONS.size();
+    }
+
+    /**
+     * 连接建立成功调用的方法
+     */
+    @OnOpen
+    public void onOpen(Session session, @PathParam("token") String token) {
+        try {
+            // 验证token并获取用户ID
+            // 修复：创建JwtTokenUtil实例并正确转换返回值
+            JwtTokenUtil jwtTokenUtil = new JwtTokenUtil();
+            String username = jwtTokenUtil.getUsernameFromToken(token);
+            if (username == null) {
+                log.warn("WebSocket连接失败：无效的token");
+                session.close();
+                return;
+            }
+
+            // 将用户名转换为用户ID
+            Long userId = null;
+            try {
+                userId = Long.parseLong(username);
+            } catch (NumberFormatException e) {
+                log.warn("WebSocket连接失败：用户ID格式不正确");
+                session.close();
+                return;
+            }
+
+            // 存储连接
+            ONLINE_SESSIONS.put(userId, session);
+            SESSION_USER_MAP.put(session, userId);
+            log.info("WebSocket连接成功，用户ID：{}，当前在线人数：{}", userId, ONLINE_SESSIONS.size());
+        } catch (Exception e) {
+            log.error("WebSocket连接异常", e);
+            try {
+                session.close();
+            } catch (IOException ex) {
+                log.error("关闭WebSocket连接异常", ex);
+            }
+        }
+    }
+
+    /**
+     * 连接关闭调用的方法
+     */
+    @OnClose
+    public void onClose(Session session) {
+        Long userId = SESSION_USER_MAP.get(session);
+        if (userId != null) {
+            ONLINE_SESSIONS.remove(userId);
+            SESSION_USER_MAP.remove(session);
+            log.info("WebSocket连接关闭，用户ID：{}，当前在线人数：{}", userId, ONLINE_SESSIONS.size());
+        }
+    }
+
+    /**
+     * 收到客户端消息后调用的方法
+     */
+    @OnMessage
+    public void onMessage(String message, Session session) {
+        Long userId = SESSION_USER_MAP.get(session);
+        log.info("收到用户{}的消息：{}", userId, message);
+        // 这里可以处理客户端发送的消息，例如心跳检测等
+    }
+
+    /**
+     * 发生错误时调用的方法
+     */
+    @OnError
+    public void onError(Session session, Throwable error) {
+        Long userId = SESSION_USER_MAP.get(session);
+        log.error("WebSocket发生错误，用户ID：{}", userId, error);
     }
 }

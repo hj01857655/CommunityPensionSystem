@@ -3,7 +3,7 @@
     <!-- Header -->
     <el-header class="header">
       <div class="header-content">
-        <h1 class="logo">社区养老系统</h1>
+        <h1 class="logo">社区养老系统前台门户</h1>
         <el-menu :default-active="activeIndex" mode="horizontal" class="nav-menu" @select="handleMenuSelect">
           <el-menu-item v-for="(item, index) in menuItems" :key="item.index" :index="item.index">
             {{ item.label }}
@@ -14,7 +14,7 @@
         <div class="search-box">
           <el-input
             v-model="searchQuery"
-            placeholder="搜索服务、活动、通知..."
+            placeholder="搜索服务、活动、通知等"
             class="global-search"
             clearable
             @keyup.enter="handleSearch"
@@ -24,7 +24,7 @@
             </template>
           </el-input>
         </div>
-        
+
         <!-- 通知组件 -->
         <el-popover
           placement="bottom"
@@ -37,18 +37,18 @@
               <el-icon class="notification-icon"><Bell /></el-icon>
             </el-badge>
           </template>
-          
+
           <div class="notification-container">
             <div class="notification-header">
               <span>通知中心</span>
               <el-button link @click="markAllAsRead">全部已读</el-button>
             </div>
-            
+
             <el-tabs v-model="activeNotificationTab">
               <el-tab-pane label="全部" name="all">
                 <div class="notification-list">
-                  <div v-for="notice in notifications" :key="notice.id" 
-                    class="notification-item" 
+                  <div v-for="notice in notifications" :key="notice.id"
+                       class="notification-item"
                     :class="{ 'unread': !notice.read }"
                     @click="handleNotificationClick(notice)">
                     <div class="notification-content">
@@ -61,7 +61,7 @@
               </el-tab-pane>
               <el-tab-pane label="未读" name="unread">
                 <div class="notification-list">
-                  <div v-for="notice in unreadNotifications" :key="notice.id" 
+                  <div v-for="notice in unreadNotifications" :key="notice.id"
                     class="notification-item"
                     @click="handleNotificationClick(notice)">
                     <div class="notification-content">
@@ -73,7 +73,7 @@
                 </div>
               </el-tab-pane>
             </el-tabs>
-            
+
             <div class="notification-footer">
               <el-button link @click="viewAllNotifications">查看全部</el-button>
             </div>
@@ -89,7 +89,7 @@
             <el-dropdown-menu>
               <el-dropdown-item command="profile">个人信息</el-dropdown-item>
               <el-dropdown-item command="changePassword">修改密码</el-dropdown-item>
-              
+
               <el-dropdown-item command="theme">
                 <el-icon><Moon v-if="isDarkTheme" /><Sunny v-else /></el-icon>
                 切换主题
@@ -132,14 +132,14 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, defineAsyncComponent, onMounted, onBeforeUnmount } from 'vue';
-import { useRouter } from 'vue-router';
-import { ElMessage } from 'element-plus';
-import { Bell, Search, QuestionFilled, Document, Guide, Service, Moon, Sunny } from '@element-plus/icons-vue';
+import {computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref, watch} from 'vue';
+import {useRouter} from 'vue-router';
+import {ElMessage} from 'element-plus';
+import {Bell, Moon, Search, Sunny} from '@element-plus/icons-vue';
 import DashBoard from '@/views/fore/DashBoard.vue';
-import { useUserStore } from '@/stores/fore/useUserStore';
-import { getAvatarUrl } from '@/utils/avatarUtils';
-import { formatDateTime } from '@/utils/date';
+import {useUserStore} from '@/stores/fore/userStore';
+import {getAvatarUrl} from '@/utils/avatarUtils';
+import {formatDateTime} from '@/utils/date';
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -150,12 +150,12 @@ const isLoggedIn = computed(() => {
   const localLoginState = localStorage.getItem("isLoggedIn") === "true";
   // 从store获取
   const storeLoginState = userStore.isLoggedIn;
-  
+
   // 如果本地缓存和store状态不一致，同步到store
   if (localLoginState !== storeLoginState) {
     userStore.isLoggedIn = localLoginState;
   }
-  
+
   return localLoginState;
 });
 
@@ -190,7 +190,7 @@ onMounted(() => {
   if (!isLoggedIn.value) {
     router.push('/login');
   }
-  
+
   // 检查本地存储中的主题设置并应用
   const savedTheme = localStorage.getItem('fore-theme')
   if (savedTheme === 'dark' && !document.documentElement.classList.contains('dark')) {
@@ -198,7 +198,7 @@ onMounted(() => {
   } else if (savedTheme !== 'dark' && document.documentElement.classList.contains('dark')) {
     document.documentElement.classList.remove('dark')
   }
-  
+
   // 添加自定义事件监听器
   window.addEventListener('update-active-index', handleUpdateActiveIndex);
 });
@@ -263,33 +263,33 @@ const handleMenuSelect = async (index) => {
     ElMessage.warning('请先登录以访问此功能');
     return;
   }
-  
+
   console.log('[导航] 菜单选择:', index);
   activeIndex.value = index;
-  
+
   // 如果是活动页面，先发送活动数据重置事件
   if(index === 'activity') {
     console.log('[导航] 发送活动数据重置事件');
     // 重置活动视图的数据加载状态
     window.dispatchEvent(new CustomEvent('activity-data-reset'));
   }
-  
+
   // 使用路由导航
   if(index === 'home'){
     await router.push(`/home`);
   }else{
     await router.push(`/home/${index}`);
   }
-  
+
   // 如果是社区活动页面，确保等待路由更新后触发数据刷新
   if(index === 'activity') {
     console.log('[导航] 等待路由更新...');
-    
+
     // 使用延迟确保组件已加载
     setTimeout(() => {
       console.log('[导航] 发送活动数据刷新事件');
-      window.dispatchEvent(new CustomEvent('refresh-activity-data', { 
-        detail: { forceRefresh: true, source: 'navigation' } 
+      window.dispatchEvent(new CustomEvent('refresh-activity-data', {
+        detail: {forceRefresh: true, source: 'navigation'}
       }));
     }, 300); // 延长延迟以确保组件完全挂载
   }
@@ -416,14 +416,14 @@ const toggleTheme = () => {
   isDarkTheme.value = !isDarkTheme.value
   // 更新文档根元素类名
   document.documentElement.classList.toggle('dark')
-  
+
   // 更新本地存储中的主题设置
   if (isDarkTheme.value) {
     localStorage.setItem('fore-theme', 'dark')
   } else {
     localStorage.setItem('fore-theme', 'light')
   }
-  
+
   // 触发自定义事件，通知子组件主题已更改
   window.dispatchEvent(new CustomEvent('fore-theme-changed', {
     detail: { isDark: isDarkTheme.value }

@@ -31,24 +31,19 @@ build/
 
 ### VS Code ###
 .vscode/
-.cursorrules
-.cursorignore
-.community-pension-frontend/.cursor/rules/vue.mdc
 
 ### Project Specific ###
-.lingma/
+# 忽略所有 docs 目录
 docs/
-.cursor/rules/
+**/docs/
+
+# 忽略所有 Cursor 编辑器相关文件
 .cursorrules
 .cursorignore
-community-pension-admin/docs/
-community-pension-admin/.cursor/rules/
-community-pension-admin/.cursorrules
-community-pension-admin/.cursorignore
-
-community-pension-frontend/docs/
-community-pension-frontend/.cursorrules
-community-pension-frontend/.cursorignore
-community-pension-frontend/.cursor/rules/
 **/.cursor/
+**/.cursorrules
+**/.cursorignore
+
+# 特定文件
+.lingma/
 

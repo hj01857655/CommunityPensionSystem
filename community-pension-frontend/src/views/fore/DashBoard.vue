@@ -6,11 +6,11 @@
                     <h1>{{ dashboard.title }}</h1>
                     <p>{{ dashboard.description }}</p>
                 </div>
-                <el-button 
-                    type="primary" 
-                    :icon="Refresh" 
-                    circle 
-                    @click="refreshData" 
+              <el-button
+                  :icon="Refresh"
+                  circle
+                  type="primary"
+                  @click="refreshData"
                     title="刷新数据"
                     class="refresh-button">
                 </el-button>
@@ -21,15 +21,15 @@
                     <home-card title="健康监测" icon="FirstAidKit" class="health-card" :moreRouteName="'HealthView'" @more="handleMenuSelect">
                         <div v-if="isLoggedIn">
                             <div v-if="healthData">
-                                <div v-for="(value, key) in displayHealthData" 
-                                     :key="key" 
+                              <div v-for="(value, key) in displayHealthData"
+                                   :key="key"
                                      class="data-item"
                                      :class="{ 'data-abnormal': getHealthValueType(key, value) === 'abnormal' }">
                                     <span class="label">{{ healthLabels[key] }}</span>
                                     <span class="value" :class="{ 'value-abnormal': getHealthValueType(key, value) === 'abnormal' }">
                                         {{ formatHealthValue(key, value) }}
-                                        <el-tooltip v-if="getHealthValueType(key, value) === 'abnormal'" 
-                                                   :content="`正常范围: ${healthRanges[key].min}-${healthRanges[key].max}${healthRanges[key].unit}`" 
+                                        <el-tooltip v-if="getHealthValueType(key, value) === 'abnormal'"
+                                                    :content="`正常范围: ${healthRanges[key].min}-${healthRanges[key].max}${healthRanges[key].unit}`"
                                                    placement="top">
                                             <el-icon class="warning-icon"><Warning /></el-icon>
                                         </el-tooltip>
@@ -58,8 +58,8 @@
                             </div>
                             <el-empty v-else-if="!services.length" description="暂无预约服务" />
                             <div v-else class="service-list">
-                                <div v-for="service in services" :key="service.id" 
-                                     class="service-item" 
+                              <div v-for="service in services" :key="service.id"
+                                   class="service-item"
                                      :class="{'service-upcoming': service.isUpcoming}">
                                     <div class="service-info">
                                         <div class="service-name">{{ service.name }}</div>
@@ -71,10 +71,10 @@
                                         <el-tag :type="getServiceStatusType(service.status)">
                                             {{ service.status }}
                                         </el-tag>
-                                        <el-button 
+                                      <el-button
                                             v-if="service.status !== '已完成' && service.status !== '已取消' && service.status !== '已拒绝'"
-                                            type="danger" 
-                                            size="small" 
+                                            size="small"
+                                            type="danger"
                                             link
                                             @click="cancelService(service.id)">
                                             取消
@@ -97,7 +97,7 @@
                         </div>
                         <el-empty v-else-if="activities.length === 0" description="暂无活动" />
                         <div v-else class="activity-list">
-                            <div v-for="activity in activities" :key="activity.id" 
+                          <div v-for="activity in activities" :key="activity.id"
                                  class="activity-item"
                                  :class="{'activity-coming-soon': activity.isComingSoon}">
                                 <div class="activity-info">
@@ -117,10 +117,10 @@
                                 <div v-if="activity.isComingSoon" class="activity-badge">
                                     即将开始
                                 </div>
-                                <el-button 
+                            <el-button
                                     v-if="activity.status === 0 && isLoggedIn"
-                                    type="primary" 
-                                    size="small" 
+                                    size="small"
+                                    type="primary"
                                     link
                                     @click="registerActivity(activity.id)">
                                     报名
@@ -179,17 +179,17 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch, onUnmounted, onBeforeUnmount } from 'vue';
-import { useRouter } from 'vue-router';
-import axios from 'axios';
-import { getHealthData } from '@/api/fore/health';
+import {computed, onBeforeUnmount, onMounted, onUnmounted, ref, watch} from 'vue';
+import {useRouter} from 'vue-router';
 import HomeCard from '@/components/front/HomeCard.vue';
-import { Phone, Warning, Refresh, Clock, Location } from '@element-plus/icons-vue';
-import { ElMessage } from 'element-plus';
-import { formatDateTime, formatDate } from '@/utils/date';
-import { getMyAppointments, cancelAppointment } from '@/api/fore/service';
-import { getActivityList, getActivityDetail, registerActivity as apiRegisterActivity } from '@/api/fore/activity';
-import { useUserStore } from '@/stores/fore/useUserStore';
+import {Clock, Location, Phone, Refresh, Warning} from '@element-plus/icons-vue';
+import {ElMessage} from 'element-plus';
+import {formatDate, formatDateTime} from '@/utils/date';
+import {cancelAppointment, getMyAppointments} from '@/api/fore/service';
+import {getActivityDetail, getActivityList, registerActivity as apiRegisterActivity} from '@/api/fore/activity';
+import {useUserStore} from '@/stores/fore/userStore';
+import {useHealthStore} from '@/stores/fore/healthStore'
+import {storeToRefs} from 'pinia';
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -206,11 +206,9 @@ const dashboard = ref({
     description: '欢迎来到社区养老系统，您可以在这里查看和管理您的服务预约、健康档案和社区活动。',
 });
 
-// 健康数据相关
-const healthData = ref(null);
-const healthDataLoading = ref(false); // 添加健康数据加载状态
-const healthDataRetryCount = ref(0); // 添加重试次数计数
-const MAX_RETRY_COUNT = 3; // 最大重试次数
+// 使用健康数据store
+const healthStore = useHealthStore()
+const {healthData, loading: healthLoading} = storeToRefs(healthStore);
 
 // 健康指标标签
 const healthLabels = {
@@ -248,16 +246,16 @@ const displayHealthData = computed(() => {
 // 检查健康指标是否异常
 const isAbnormalValue = (key, value) => {
     if (!value || !healthRanges[key]) return false;
-    
+
     // 血压特殊处理，格式为 "收缩压/舒张压"
     if (key === 'bloodPressure' && value.includes('/')) {
         const [systolic, diastolic] = value.split('/').map(v => parseInt(v.trim(), 10));
         const [minSys, minDia] = healthRanges[key].min.split('/').map(v => parseInt(v.trim(), 10));
         const [maxSys, maxDia] = healthRanges[key].max.split('/').map(v => parseInt(v.trim(), 10));
-        
+
         return systolic < minSys || systolic > maxSys || diastolic < minDia || diastolic > maxDia;
     }
-    
+
     // 其他数值型指标
     const numValue = parseFloat(value);
     return numValue < healthRanges[key].min || numValue > healthRanges[key].max;
@@ -272,7 +270,7 @@ const getHealthValueType = (key, value) => {
 // 格式化健康数据显示
 const formatHealthValue = (key, value) => {
     if (value === null || value === undefined) return '暂无数据';
-    
+
     const units = {
         bloodPressure: 'mmHg',
         heartRate: '次/分',
@@ -281,107 +279,8 @@ const formatHealthValue = (key, value) => {
         height: 'cm',
         weight: 'kg'
     };
-    
+
     return `${value} ${units[key] || ''}`;
-};
-
-// 获取用户ID的工具函数
-const getUserId = () => {
-    try {
-        // 首先尝试从userStore获取用户信息
-        if (userStore.userInfo && (userStore.userInfo.id || userStore.userInfo.userId || userStore.userInfo.elderId)) {
-            const userIdFromStore = userStore.userInfo.id || userStore.userInfo.userId || userStore.userInfo.elderId;
-            console.log('从userStore获取到用户ID:', userIdFromStore);
-            return userIdFromStore;
-        }
-        
-        // 如果从store中获取失败，尝试从localStorage获取
-        const userInfoStr = localStorage.getItem('userInfo');
-        if (!userInfoStr) {
-            console.warn('无法获取用户信息，localStorage中不存在userInfo');
-            return null;
-        }
-        
-        const userInfo = JSON.parse(userInfoStr);
-        console.log('从localStorage解析的用户信息:', userInfo);
-        
-        // 尝试从各种可能的字段中获取用户ID
-        const userId = userInfo.id || userInfo.userId || userInfo.elderId;
-        
-        if (!userId) {
-            console.warn('用户信息中无法找到有效ID:', userInfo);
-            // 尝试从其他可能的存储位置获取
-            const userId = localStorage.getItem('userId');
-            if (userId) {
-                console.log('从localStorage.userId获取到用户ID:', userId);
-                return userId;
-            }
-            return null;
-        }
-        
-        return userId;
-    } catch (error) {
-        console.error('获取用户ID时出错:', error);
-        return null;
-    }
-};
-
-// 获取健康数据
-const fetchHealthData = async () => {
-    if (!props.isLoggedIn || healthDataLoading.value) return; // 如果已经在加载中，则不重复请求
-    
-    // 如果重试次数已达上限，则不再尝试
-    if (healthDataRetryCount.value >= MAX_RETRY_COUNT) {
-        console.warn(`健康数据请求已达最大重试次数 ${MAX_RETRY_COUNT}，不再尝试`);
-        return;
-    }
-    
-    healthDataLoading.value = true;
-    
-    // 设置超时控制
-    const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('请求超时')), 10000); // 10秒超时
-    });
-    
-    try {
-        // 使用工具函数获取用户ID
-        const elderId = getUserId();
-        if (!elderId) {
-            console.error('无法获取有效的用户ID');
-            healthDataLoading.value = false;
-            ElMessage.warning('获取用户信息失败，请尝试重新登录');
-            return;
-        }
-        
-        console.log('健康数据 - 使用elderId:', elderId);
-        
-        // 使用Promise.race实现请求超时控制
-        const response = await Promise.race([
-            getHealthData(elderId),
-            timeoutPromise
-        ]);
-        
-        // 成功获取数据，重置重试计数
-        healthDataRetryCount.value = 0;
-        
-        if (response.code === 200 && response.data) {
-            healthData.value = response.data;
-        } else if (response.code === 404) {
-            console.warn('暂无健康数据');
-            healthData.value = null;
-        } else {
-            console.warn('获取健康数据失败:', response);
-            healthDataRetryCount.value++;
-        }
-    } catch (error) {
-        console.error('获取健康数据失败:', error);
-        healthDataRetryCount.value++;
-        
-        // 记录重试次数并在控制台显示
-        console.warn(`健康数据请求失败，当前重试次数: ${healthDataRetryCount.value}/${MAX_RETRY_COUNT}`);
-    } finally {
-        healthDataLoading.value = false;
-    }
 };
 
 const services = ref([]);
@@ -402,15 +301,15 @@ const createTimeoutPromise = (milliseconds = 10000) => {
 // 获取最近的服务预约
 const fetchRecentServices = async () => {
     if (!props.isLoggedIn || servicesLoading.value) return;
-    
+
     // 重试次数检查
     if (servicesRetryCount.value >= MAX_RETRY_COUNT) {
         console.warn(`服务请求已达最大重试次数 ${MAX_RETRY_COUNT}，不再尝试`);
         return;
     }
-    
+
     servicesLoading.value = true;
-    
+
     try {
         // 使用工具函数获取用户ID
         const userId = getUserId();
@@ -421,27 +320,27 @@ const fetchRecentServices = async () => {
             ElMessage.warning('获取用户信息失败，请尝试重新登录');
             return;
         }
-        
+
         console.log('服务预约 - 使用userId:', userId);
-        
+
         // 调用API获取用户的服务预约列表，添加超时控制
         const response = await Promise.race([
-            getMyAppointments({ 
+          getMyAppointments({
                 userId: userId,
                 size: 10 // 获取多一些记录，以便筛选后仍有足够数据
             }),
             createTimeoutPromise()
         ]);
-        
+
         // 成功获取数据，重置重试计数
         servicesRetryCount.value = 0;
-        
+
         if (response.code === 200 && response.data) {
             // 根据API返回数据结构调整数据处理
-            const appointmentData = Array.isArray(response.data) ? response.data : 
+          const appointmentData = Array.isArray(response.data) ? response.data :
                 (response.data.records ? response.data.records : []);
-                
-            // 获取最近的预约并格式化数据
+
+          // 获取最近的预约并格式化数据
             services.value = appointmentData
                 // 过滤掉已取消和已拒绝的预约
                 .filter(service => service.status !== 4 && service.status !== 5)
@@ -474,25 +373,25 @@ const fetchRecentServices = async () => {
 // 判断一个服务是否即将到期（24小时内）
 const isUpcomingService = (scheduleTime) => {
     if (!scheduleTime) return false;
-    
-    const now = new Date();
+
+  const now = new Date();
     const serviceTime = new Date(scheduleTime);
     const hoursDiff = (serviceTime - now) / (1000 * 60 * 60);
-    
-    // 如果预约时间在24小时内，标记为即将到期
+
+  // 如果预约时间在24小时内，标记为即将到期
     return hoursDiff > 0 && hoursDiff <= 24;
 };
 
 // 获取预约时间的友好显示
 const getServiceTimeDisplay = (scheduleTime) => {
     if (!scheduleTime) return '时间未定';
-    
-    const now = new Date();
+
+  const now = new Date();
     const serviceTime = new Date(scheduleTime);
     const hoursDiff = (serviceTime - now) / (1000 * 60 * 60);
     const daysDiff = Math.floor(hoursDiff / 24);
-    
-    if (hoursDiff < 0) {
+
+  if (hoursDiff < 0) {
         return `已过期 (${formatDate(scheduleTime)})`;
     } else if (hoursDiff < 1) {
         return `即将开始 (不到1小时)`;
@@ -524,7 +423,7 @@ const getServiceStatusType = (status) => {
         '待审核': 'info',
         '已审核': 'success',
         '服务中': 'warning',
-        '已完成': 'success', 
+      '已完成': 'success',
         '已取消': 'danger',
         '已拒绝': 'danger'
     };
@@ -556,26 +455,26 @@ const getActivityStatusText = (status) => {
 // 获取最近的活动
 const fetchRecentActivities = async () => {
     if (activitiesLoading.value) return;
-    
-    // 重试次数检查
+
+  // 重试次数检查
     if (activitiesRetryCount.value >= MAX_RETRY_COUNT) {
         console.warn(`活动请求已达最大重试次数 ${MAX_RETRY_COUNT}，不再尝试`);
         return;
     }
-    
-    activitiesLoading.value = true;
-    
-    try {
+
+  activitiesLoading.value = true;
+
+  try {
         // 调用API获取最近的活动，添加超时控制
         const response = await Promise.race([
             getActivityList({ pageSize: 5 }),
             createTimeoutPromise()
         ]);
-        
-        // 成功获取活动列表，重置重试计数
+
+    // 成功获取活动列表，重置重试计数
         activitiesRetryCount.value = 0;
-        
-        if (response.code === 200 && response.data && response.data.records) {
+
+    if (response.code === 200 && response.data && response.data.records) {
             // 获取活动详情并格式化数据，每个活动详情也添加超时控制
             const activityPromises = response.data.records
                 .slice(0, 3) // 先只取前3条
@@ -586,8 +485,8 @@ const fetchRecentActivities = async () => {
                             getActivityDetail(activity.id),
                             createTimeoutPromise(5000) // 活动详情5秒超时
                         ]);
-                        
-                        if (detailResponse.code === 200 && detailResponse.data) {
+
+                      if (detailResponse.code === 200 && detailResponse.data) {
                             const detail = detailResponse.data;
                             return {
                                 id: activity.id,
@@ -616,8 +515,8 @@ const fetchRecentActivities = async () => {
                         };
                     }
                 });
-                
-            // 使用Promise.allSettled代替Promise.all，确保部分失败不影响整体
+
+      // 使用Promise.allSettled代替Promise.all，确保部分失败不影响整体
             const results = await Promise.allSettled(activityPromises);
             activities.value = results
                 .filter(result => result.status === 'fulfilled' && result.value !== null)
@@ -640,25 +539,25 @@ const fetchRecentActivities = async () => {
 // 判断活动是否即将开始（48小时内开始的活动）
 const isActivityComingSoon = (startTime) => {
     if (!startTime) return false;
-    
-    const now = new Date();
+
+  const now = new Date();
     const activityTime = new Date(startTime);
     const hoursDiff = (activityTime - now) / (1000 * 60 * 60);
-    
-    // 如果活动在48小时内开始且尚未开始
+
+  // 如果活动在48小时内开始且尚未开始
     return hoursDiff > 0 && hoursDiff <= 48;
 };
 
 // 获取活动地点和名额显示
 const getActivityInfoDisplay = (activity) => {
     let result = activity.location || '地点待定';
-    
-    if (activity.maxParticipants > 0) {
+
+  if (activity.maxParticipants > 0) {
         const remaining = activity.maxParticipants - (activity.currentParticipants || 0);
         result += ` | 剩余名额: ${remaining > 0 ? remaining : '已满'}`;
     }
-    
-    return result;
+
+  return result;
 };
 
 // 导航到健康档案页面
@@ -673,11 +572,11 @@ watch(() => props.isLoggedIn, async (newValue, oldValue) => {
     if (loginStateChangeTimer.value) {
         clearTimeout(loginStateChangeTimer.value);
     }
-    
-    loginStateChangeTimer.value = setTimeout(async () => {
+
+  loginStateChangeTimer.value = setTimeout(async () => {
         console.log('登录状态变化:', oldValue, '->', newValue);
-        
-        if (newValue !== oldValue) {
+
+    if (newValue !== oldValue) {
             // 登录状态发生变化，重新初始化数据
             await initializeData();
         }
@@ -710,42 +609,42 @@ const refreshTimer = ref(null);
 // 手动刷新数据
 const refreshData = async () => {
     // 如果已经有请求在进行中，则不重复发起请求
-    if (healthDataLoading.value || servicesLoading.value || activitiesLoading.value) {
+  if (healthLoading || servicesLoading.value || activitiesLoading.value) {
         console.log('有请求正在进行中，请稍后再刷新');
         return;
     }
-    
-    try {
+
+  try {
         // 显示刷新中的提示
         const loadingInstance = ElMessage({
             message: '数据刷新中...',
             type: 'info',
             duration: 0
         });
-        
-        if (props.isLoggedIn) {
+
+    if (props.isLoggedIn) {
             const promises = [];
             // 仅当重试次数未达上限时才发起请求
-            if (healthDataRetryCount.value < MAX_RETRY_COUNT) {
-                promises.push(fetchHealthData());
+      if (healthLoading < MAX_RETRY_COUNT) {
+        promises.push(healthStore.fetchHealthData());
             }
             if (servicesRetryCount.value < MAX_RETRY_COUNT) {
                 promises.push(fetchRecentServices());
             }
-            
-            // 使用allSettled确保部分失败不影响整体
+
+      // 使用allSettled确保部分失败不影响整体
             await Promise.allSettled(promises);
         }
-        
-        // 不管是否登录都刷新活动数据
+
+    // 不管是否登录都刷新活动数据
         if (activitiesRetryCount.value < MAX_RETRY_COUNT) {
             await fetchRecentActivities();
         }
-        
-        // 关闭加载提示
+
+    // 关闭加载提示
         loadingInstance.close();
-        
-        // 打印API请求情况报告
+
+    // 打印API请求情况报告
         printApiStatusReport();
     } catch (error) {
         console.error('刷新数据失败:', error);
@@ -756,7 +655,7 @@ const refreshData = async () => {
 // 打印API请求状态报告
 const printApiStatusReport = () => {
     console.group('API请求状态报告');
-    console.log(`健康数据: ${healthDataLoading.value ? '加载中' : '空闲'}, 重试次数: ${healthDataRetryCount.value}/${MAX_RETRY_COUNT}`);
+  console.log(`健康数据: ${healthLoading ? '加载中' : '空闲'}, 重试次数: ${healthLoading}/${MAX_RETRY_COUNT}`);
     console.log(`服务数据: ${servicesLoading.value ? '加载中' : '空闲'}, 重试次数: ${servicesRetryCount.value}/${MAX_RETRY_COUNT}`);
     console.log(`活动数据: ${activitiesLoading.value ? '加载中' : '空闲'}, 重试次数: ${activitiesRetryCount.value}/${MAX_RETRY_COUNT}`);
     console.groupEnd();
@@ -768,16 +667,16 @@ const setupAutoRefresh = () => {
     if (refreshTimer.value) {
         clearInterval(refreshTimer.value);
     }
-    
-    // 设置新定时器 - 只有在没有任何请求正在进行中且重试次数未达上限时才执行刷新
+
+  // 设置新定时器 - 只有在没有任何请求正在进行中且重试次数未达上限时才执行刷新
     refreshTimer.value = setInterval(() => {
-        const hasActiveRequests = healthDataLoading.value || servicesLoading.value || activitiesLoading.value;
-        const hasMaxRetries = 
-            healthDataRetryCount.value >= MAX_RETRY_COUNT && 
-            servicesRetryCount.value >= MAX_RETRY_COUNT && 
+      const hasActiveRequests = healthLoading || servicesLoading.value || activitiesLoading.value;
+      const hasMaxRetries =
+          healthLoading >= MAX_RETRY_COUNT &&
+          servicesRetryCount.value >= MAX_RETRY_COUNT &&
             activitiesRetryCount.value >= MAX_RETRY_COUNT;
-            
-        if (!hasActiveRequests && !hasMaxRetries) {
+
+      if (!hasActiveRequests && !hasMaxRetries) {
             console.log(`执行定时刷新 (${new Date().toLocaleTimeString()})`);
             refreshData();
         } else if (hasMaxRetries) {
@@ -788,29 +687,29 @@ const setupAutoRefresh = () => {
     }, refreshInterval.value);
 };
 
-// 组件卸载时清除所有定时器和状态
+// 组件卸载时的清理工作
 onUnmounted(() => {
-    console.log('Dashboard组件卸载');
-    
     // 清除刷新定时器
     if (refreshTimer.value) {
         clearInterval(refreshTimer.value);
         refreshTimer.value = null;
     }
-    
-    // 清除登录状态变化定时器
+
+  // 清除登录状态变化定时器
     if (loginStateChangeTimer.value) {
         clearTimeout(loginStateChangeTimer.value);
         loginStateChangeTimer.value = null;
     }
-    
-    // 重置所有loading状态和重试计数
-    healthDataLoading.value = false;
-    healthDataRetryCount.value = 0;
-    servicesLoading.value = false;
+
+  // 重置所有loading状态和重试计数
     servicesRetryCount.value = 0;
     activitiesLoading.value = false;
     activitiesRetryCount.value = 0;
+
+  // 移除事件监听器
+  window.removeEventListener('refresh-dashboard-data', handleRefreshEvent);
+  window.removeEventListener('dashboard-data-reset', handleResetEvent);
+  window.removeEventListener('fore-theme-changed', handleThemeChange);
 });
 
 // 工具函数：主动初始化数据
@@ -829,49 +728,49 @@ const initializeData = async () => {
     try {
         // 先主动获取用户信息
         const userInfoResponse = await userStore.getUserInfo();
-        
-        // 检查用户信息响应
+
+      // 检查用户信息响应
         if (userInfoResponse.code !== 200 || !userInfoResponse.data) {
             console.error('获取用户信息失败:', userInfoResponse);
             ElMessage.error('获取用户信息失败，请尝试重新登录');
             return;
         }
-        
-        console.log('初始化 - 成功获取用户信息:', userInfoResponse.data);
-        
-        // 验证用户ID
+
+      console.log('初始化 - 成功获取用户信息:', userInfoResponse.data);
+
+      // 验证用户ID
         const userId = getUserId();
         if (!userId) {
             console.error('无法获取有效的用户ID');
             ElMessage.error('用户ID无效，请重新登录');
             return;
         }
-        
-        // 显示加载中消息
+
+      // 显示加载中消息
         const loadingMessage = ElMessage({
             message: '正在加载数据...',
             type: 'info',
             duration: 0
         });
-        
-        try {
+
+      try {
             // 并行获取所有数据
             await Promise.allSettled([
-                fetchHealthData(),
+              healthStore.fetchHealthData(),
                 fetchRecentServices(),
                 fetchRecentActivities()
             ]);
-            
-            // 检查是否有数据
-            if (!healthData.value) {
+
+        // 检查是否有数据
+        if (!healthData) {
                 console.warn('未获取到健康数据');
             }
-            
-            if (services.value.length === 0) {
+
+        if (services.value.length === 0) {
                 console.warn('未获取到服务预约数据');
             }
-            
-            if (activities.value.length === 0) {
+
+        if (activities.value.length === 0) {
                 console.warn('未获取到活动数据');
             }
         } finally {
@@ -886,14 +785,16 @@ const initializeData = async () => {
 
 // 修改onMounted钩子
 onMounted(async () => {
-    console.log('Dashboard组件挂载，登录状态:', props.isLoggedIn);
-    // 初始化数据
+  console.log('[仪表盘] 组件已挂载');
     await initializeData();
+
+  // 添加事件监听器
+  window.addEventListener('refresh-dashboard-data', handleRefreshEvent);
+  window.addEventListener('dashboard-data-reset', handleResetEvent);
+  window.addEventListener('fore-theme-changed', handleThemeChange);
+
     // 设置自动刷新
     setupAutoRefresh();
-    
-    // 监听主题变化事件
-    window.addEventListener('fore-theme-changed', handleThemeChange);
 });
 
 onBeforeUnmount(() => {
@@ -932,12 +833,12 @@ const cancelService = async (serviceId) => {
         ElMessage.warning('请先登录');
         return;
     }
-    
-    try {
+
+  try {
         // 调用取消预约的API
         const response = await cancelAppointment(serviceId, '用户从首页取消');
-        
-        if (response.code === 200) {
+
+    if (response.code === 200) {
             ElMessage.success('取消预约成功');
             // 刷新服务列表
             await fetchRecentServices();
@@ -956,12 +857,12 @@ const registerActivity = async (activityId) => {
         ElMessage.warning('请先登录');
         return;
     }
-    
-    try {
+
+  try {
         // 调用活动报名的API
         const response = await apiRegisterActivity(activityId);
-        
-        if (response.code === 200) {
+
+    if (response.code === 200) {
             ElMessage.success('活动报名成功');
             // 刷新活动列表
             await fetchRecentActivities();
@@ -977,8 +878,8 @@ const registerActivity = async (activityId) => {
 // 格式化活动日期（添加安全处理）
 const formatActivityDate = (date) => {
     if (!date) return '日期待定';
-    
-    try {
+
+  try {
         return formatDate(date);
     } catch (error) {
         console.error('格式化活动日期出错:', error, date);
@@ -986,6 +887,36 @@ const formatActivityDate = (date) => {
         return String(date) || '日期有误';
     }
 };
+
+// 工具函数：获取用户ID
+const getUserId = () => {
+  const userInfo = userStore.userInfo;
+  if (!userInfo) {
+    console.warn('未获取到用户信息');
+    return null;
+  }
+  return userInfo.userId || userInfo.id;
+};
+
+// 事件处理函数：处理刷新事件
+const handleRefreshEvent = () => {
+  console.log('[仪表盘] 接收到刷新事件');
+  refreshData();
+};
+
+// 事件处理函数：处理重置事件
+const handleResetEvent = () => {
+  console.log('[仪表盘] 接收到重置事件');
+  // 重置所有数据
+  healthData.value = null;
+  services.value = [];
+  activities.value = [];
+  // 重新初始化
+  initializeData();
+};
+
+// 修改变量访问方式
+const MAX_RETRY_COUNT = 3; // 添加最大重试次数常量
 </script>
 
 <style scoped>
@@ -1032,8 +963,8 @@ const formatActivityDate = (date) => {
         grid-template-columns: repeat(3, 1fr);
         gap: 16px;
     }
-    
-    .dashboard {
+
+  .dashboard {
         padding: 16px;
     }
 }
@@ -1043,12 +974,12 @@ const formatActivityDate = (date) => {
         grid-template-columns: 1fr;
         gap: 12px;
     }
-    
-    .dashboard {
+
+  .dashboard {
         padding: 12px;
     }
-    
-    .content-card {
+
+  .content-card {
         margin-bottom: 12px;
     }
 }
@@ -1076,26 +1007,26 @@ const formatActivityDate = (date) => {
         margin-bottom: 10px;
         border-radius: 4px;
         background-color: #f8f9fa;
-        
-        &:last-child {
+
+      &:last-child {
             margin-bottom: 0;
         }
-        
-        .label {
+
+      .label {
             color: #606266;
             font-size: 14px;
             min-width: 60px;
         }
-        
-        .value {
+
+      .value {
             font-weight: 500;
             color: #303133;
             text-align: right;
             flex: 1;
             margin-left: 16px;
         }
-        
-        &.data-abnormal {
+
+      &.data-abnormal {
             background-color: #fff3f3;
         }
     }
@@ -1103,16 +1034,16 @@ const formatActivityDate = (date) => {
 
 :root.dark .health-card .data-item {
     background-color: #333;
-    
-    .label {
+
+  .label {
         color: #aaa;
     }
-    
-    .value {
+
+  .value {
         color: #eee;
     }
-    
-    &.data-abnormal {
+
+  &.data-abnormal {
         background-color: #3d1d1d;
     }
 }
@@ -1124,34 +1055,34 @@ const formatActivityDate = (date) => {
         flex-direction: column;
         gap: 12px;
     }
-    
-    .service-item {
+
+  .service-item {
         display: flex;
         justify-content: space-between;
         align-items: center;
         padding: 12px;
         background-color: #f8f9fa;
         border-radius: 4px;
-        
-        .service-info {
+
+    .service-info {
             flex: 1;
             min-width: 0;
             margin-right: 16px;
-            
-            .service-name {
+
+      .service-name {
                 font-weight: 500;
                 margin-bottom: 6px;
                 color: #303133;
                 font-size: 14px;
             }
-            
-            .service-time {
+
+      .service-time {
                 font-size: 12px;
                 color: #909399;
             }
         }
-        
-        .service-actions {
+
+    .service-actions {
             display: flex;
             align-items: center;
             gap: 12px;
@@ -1163,13 +1094,13 @@ const formatActivityDate = (date) => {
 :root.dark .service-card {
     .service-item {
         background-color: #333;
-        
-        .service-info {
+
+      .service-info {
             .service-name {
                 color: #eee;
             }
-            
-            .service-time {
+
+        .service-time {
                 color: #888;
             }
         }
@@ -1183,20 +1114,20 @@ const formatActivityDate = (date) => {
         flex-direction: column;
         gap: 12px;
     }
-    
-    .activity-item {
+
+  .activity-item {
         padding: 12px;
         background-color: #f8f9fa;
         border-radius: 4px;
         position: relative;
-        
-        .activity-header {
+
+    .activity-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 8px;
-            
-            .activity-name {
+
+      .activity-name {
                 font-weight: 500;
                 color: #303133;
                 flex: 1;
@@ -1204,8 +1135,8 @@ const formatActivityDate = (date) => {
                 font-size: 14px;
             }
         }
-        
-        .activity-time,
+
+    .activity-time,
         .activity-location {
             display: flex;
             align-items: center;
@@ -1213,8 +1144,8 @@ const formatActivityDate = (date) => {
             font-size: 12px;
             color: #909399;
             margin-top: 6px;
-            
-            .el-icon {
+
+      .el-icon {
                 font-size: 14px;
             }
         }
@@ -1224,14 +1155,14 @@ const formatActivityDate = (date) => {
 :root.dark .activity-card {
     .activity-item {
         background-color: #333;
-        
-        .activity-header {
+
+      .activity-header {
             .activity-name {
                 color: #eee;
             }
         }
-        
-        .activity-time,
+
+      .activity-time,
         .activity-location {
             color: #888;
         }

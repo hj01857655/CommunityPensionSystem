@@ -30,10 +30,10 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, onBeforeUnmount } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import {onBeforeUnmount, onMounted, ref, watch} from 'vue';
+import {useRoute, useRouter} from 'vue-router';
 import ScrollPane from './ScrollPane.vue';
-import { Close, Refresh, CircleClose, ArrowLeft, ArrowRight } from '@element-plus/icons-vue';
+import {ArrowLeft, ArrowRight, CircleClose, Close, Refresh} from '@element-plus/icons-vue';
 
 const props = defineProps({
   visitedViews: {
@@ -157,26 +157,26 @@ onBeforeUnmount(() => {
 });
 
 // 监听路由变化
-watch(() => route, (newRoute) => {
+watch(() => route.path, (newPath) => {
   try {
     // 通用路由处理逻辑
-    const hasTag = props.visitedViews.some(v => v.path === newRoute.path);
-    
-    if (!hasTag && newRoute.meta?.showInTab !== false && !newRoute.meta?.isFirstLevelMenu) {
+    const hasTag = props.visitedViews.some(v => v.path === newPath);
+
+    if (!hasTag && route.meta?.showInTab !== false && !route.meta?.isFirstLevelMenu) {
       emit('add-tab', {
-        path: newRoute.path,
-        title: newRoute.meta?.title || '未命名标签',
-        meta: { affix: newRoute.meta?.affix }
+        path: newPath,
+        title: route.meta?.title || '未命名标签',
+        meta: {affix: route.meta?.affix}
       });
     }
 
     // 滚动到当前激活的标签
     if (scrollPane.value) {
-      scrollPane.value.moveToTarget(newRoute);
+      scrollPane.value.moveToTarget(route);
     }
     
     // 安全更新激活的标签状态
-    const matchedTag = props.visitedViews.find(v => v.path === newRoute.path);
+    const matchedTag = props.visitedViews.find(v => v.path === newPath);
     if (matchedTag) {
       selectedTag.value = matchedTag;
     } else if (props.visitedViews.length > 0) {
@@ -185,7 +185,7 @@ watch(() => route, (newRoute) => {
   } catch (error) {
     console.error('路由监听异常:', error);
   }
-}, { immediate: true, deep: true });
+}, {immediate: true});
 
 // 监听右键菜单显示状态
 watch(visible, (value) => {

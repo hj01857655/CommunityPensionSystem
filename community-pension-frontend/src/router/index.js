@@ -1,11 +1,12 @@
-import { createRouter, createWebHistory } from 'vue-router';
+import {createRouter, createWebHistory} from 'vue-router';
 import HealthView from '@/views/fore/HealthView.vue';
 import ServiceView from '@/views/fore/ServiceView.vue';
 import ActivityView from '@/views/fore/ActivityView.vue'; // 社区活动视图组件
 import NoticeView from '@/views/fore/NoticeView.vue';
 import ProfileView from '@/views/fore/ProfileView.vue';
-import { TokenManager, storageConfig } from '@/utils/axios';
-import { ElMessage } from 'element-plus';
+import {storageConfig, TokenManager} from '@/utils/axios';
+import {ElMessage} from 'element-plus';
+import {useTagsViewStore} from '@/stores/tagsView';
 
 const routes = [
   // 根路径重定向
@@ -287,6 +288,20 @@ const router = createRouter({
 });
 
 router.beforeEach((to, from, next) => {
+    console.log('路由守卫 - 当前路由:', to.path);
+
+    // 获取 tagsView store
+    const tagsViewStore = useTagsViewStore();
+
+    // 如果是后台管理路由，添加到标签视图
+    if (to.path.startsWith('/admin') && to.meta?.title) {
+        tagsViewStore.visitedViews.push({
+            path: to.path,
+            name: to.name,
+            meta: to.meta
+        });
+    }
+
   // 如果是错误页面或登录页面，直接放行
   if (to.path === '/403' || to.path === '/404' || to.path === '/500' ||
     to.path === '/login' || to.path === '/admin/login') {
@@ -294,66 +309,76 @@ router.beforeEach((to, from, next) => {
   }
 
   const isAdminRoute = to.path.startsWith('/admin');
-  const isAdminLoggedIn = TokenManager.admin.getAccessToken();
-  
-  // 根据路由类型获取用户信息
-  let userInfo, isUserLoggedIn, userRole;
-  if (isAdminRoute) {
-    // 后台使用会话存储
-    userInfo = JSON.parse(storageConfig.getStorage(storageConfig.admin).getItem("userInfo") || "{}");
-    isUserLoggedIn = !!TokenManager.admin.getAccessToken();
-  } else {
-    // 前台使用本地存储
-    userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
-    isUserLoggedIn = localStorage.getItem("isLoggedIn") === "true";
-  }
-  
-  userRole = userInfo.roles?.[0];
 
-  console.log("路由守卫 - 当前路由:", to.path);
-  console.log("路由守卫 - 用户登录状态:", isUserLoggedIn);
-  console.log("路由守卫 - 用户角色:", userRole);
-
-  // 处理后台路由认证
+    // 处理后台路由认证
   if (isAdminRoute) {
+      const token = TokenManager.admin.getAccessToken();
+      const isAdminLoggedIn = !!token;
+    
     if (!isAdminLoggedIn) {
       return next('/admin/login');
     }
-    // 检查管理员角色
-    if (userRole !== 'admin' && userRole !== 'staff') {
-      return next('/403');
-    }
+
+      try {
+          const adminUserInfo = JSON.parse(storageConfig.getStorage(storageConfig.admin).getItem("userInfo") || "{}");
+          const adminRole = adminUserInfo.roles?.[0];
+
+          // 检查管理员角色
+          if (!adminRole || (adminRole !== 'admin' && adminRole !== 'staff')) {
+              console.log('用户没有管理员或工作人员角色');
+              return next('/403');
+          }
+      } catch (error) {
+          console.error('解析管理员用户信息失败:', error);
+          return next('/admin/login');
+      }
+
     return next();
   }
 
   // 处理前台路由认证
   if (to.meta.requiresAuth) {
-    // 检查登录状态和用户信息完整性
-    if (!isUserLoggedIn) {
-      console.log("路由守卫 - 未登录，重定向到登录页");
-      ElMessage.warning('请先登录');
-      return next('/login');
-    }
-    
-    if (!userInfo || !userInfo.userId) {
-      console.log("路由守卫 - 用户信息不完整，重定向到登录页");
-      ElMessage.warning('登录信息已失效，请重新登录');
-      return next('/login');
-    }
+      try {
+          // 从 localStorage 获取前台用户登录状态
+          const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+          const userInfoStr = localStorage.getItem('userInfo');
 
-    // 检查用户角色
-    if (userRole !== 'elder' && userRole !== 'kin') {
-      console.log("路由守卫 - 角色不匹配，重定向到403");
-      ElMessage.error('您没有权限访问该页面');
-      return next('/403');
-    }
-  }
+          if (!isLoggedIn || !userInfoStr) {
+              console.log("路由守卫 - 未登录，重定向到登录页");
+              ElMessage.warning('请先登录');
+              return next('/login');
+          }
 
-  // 如果需要特定角色且用户角色不符合要求
-  if (to.meta.roles && !to.meta.roles.includes(userRole)) {
-    console.log("路由守卫 - 角色权限不足，重定向到403");
-    ElMessage.error('您没有权限访问该页面');
-    return next('/403');
+          const userInfo = JSON.parse(userInfoStr);
+          if (!userInfo || !userInfo.userId) {
+              console.log("路由守卫 - 用户信息不完整，重定向到登录页");
+              ElMessage.warning('登录信息已失效，请重新登录');
+              localStorage.removeItem('isLoggedIn');
+              localStorage.removeItem('userInfo');
+              return next('/login');
+          }
+
+          // 检查用户角色
+          const roles = userInfo.roles || [];
+          if (!roles.includes('elder') && !roles.includes('kin')) {
+              console.log("路由守卫 - 角色不匹配，重定向到403");
+              ElMessage.error('您没有权限访问该页面');
+              return next('/403');
+          }
+
+          // 如果需要特定角色且用户角色不符合要求
+          if (to.meta.roles && !to.meta.roles.some(role => roles.includes(role))) {
+              console.log("路由守卫 - 角色权限不足，重定向到403");
+              ElMessage.error('您没有权限访问该页面');
+              return next('/403');
+          }
+      } catch (error) {
+          console.error('解析用户信息失败:', error);
+          ElMessage.error('登录信息已失效，请重新登录');
+          localStorage.removeItem('isLoggedIn');
+          localStorage.removeItem('userInfo');
+          return next('/login');
+      }
   }
 
   next();
