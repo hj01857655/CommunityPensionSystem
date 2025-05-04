@@ -34,3 +34,7 @@ build/
 .cursorrules
 .cursorignore
 .community-pension-frontend/.cursor/rules/vue.mdc
+
+### Project Specific ###
+docs/
+community-pension-admin/docs/
