@@ -1,6 +1,3 @@
-import {defineStore} from 'pinia';
-import {ref} from 'vue';
-import {ElMessage} from 'element-plus';
 import {
     addUser,
     assignRole,
@@ -22,8 +19,11 @@ import {
     updateUserStatus,
     uploadAvatar,
 } from '@/api/back/system/user';
+import { TokenManager } from '@/utils/axios';
 import axios from 'axios';
-import {TokenManager} from '@/utils/axios';
+import { ElMessage } from 'element-plus';
+import { defineStore } from 'pinia';
+import { ref } from 'vue';
 
 /**
  * 后台管理系统用户状态管理
@@ -83,33 +83,32 @@ export const useUserStore = defineStore('user', () => {
     };
 
     // 登录方法
-    const login = async (loginForm) => {
+    const login = async (loginData) => {
         try {
-            const response = await userLogin(loginForm);
-
-            if (response.code === 200) {
-                console.log("后台登录成功响应", response);
-                setUserInfo(response.data.user);
-
-                // 保存token
-                if (response.data.accessToken) {
-                    TokenManager.admin.set(response.data.accessToken, response.data.refreshToken);
-                } else {
-                    console.error('登录响应中没有token');
-                    ElMessage.error('登录失败：未获取到token');
-                    return false;
-                }
-
+            loading.value = true;
+            const response = await loginApi(loginData);
+            
+            if (response.status === 200 && response.data.code === 0) {
+                const { token, refreshToken, userInfo } = response.data.data;
+                saveToken(token, refreshToken);
+                
+                // 存储用户信息
+                userInfo.value = userInfo;
+                sessionStorage.setItem('userInfo', JSON.stringify(userInfo));
+                sessionStorage.setItem('userId', userInfo.userId);
+                sessionStorage.setItem('username', userInfo.username);
+                sessionStorage.setItem('role', userInfo.roles[0]);
+                sessionStorage.setItem('roleName', userInfo.roleName || '管理员');
+                
+                loading.value = false;
                 return true;
             } else {
-                console.log("后台登录失败响应", response);
-                ElMessage.error('登录失败');
+                loading.value = false;
                 return false;
             }
         } catch (error) {
-            console.error('登录错误:', error.message);
-            ElMessage.error(error.message || '登录失败');
-            return false;
+            loading.value = false;
+            throw error;
         }
     };
 
@@ -138,15 +137,15 @@ export const useUserStore = defineStore('user', () => {
     const fetchUsers = async (queryParams) => {
         try {
             loading.value = true;
-            console.log('开始获取用户列表，参数:', queryParams);
-            console.log('当前路径:', window.location.pathname);
-            console.log('管理员token:', TokenManager.admin.getAccessToken());
+            // console.log('开始获取用户列表，参数:', queryParams);
+            // console.log('当前路径:', window.location.pathname);
+            // console.log('管理员token:', TokenManager.admin.getAccessToken());
 
             const response = await getUserList(queryParams);
-            console.log('获取用户列表响应:', response);
+            // console.log('获取用户列表响应:', response);
 
             if (response?.code === 200) {
-                console.log('用户列表数据:', response.data);
+                // console.log('用户列表数据:', response.data);
                 userList.value = response.data.records || [];
                 total.value = response.data.total || 0;
                 return true;
@@ -592,6 +591,7 @@ export const useUserStore = defineStore('user', () => {
         userList,
         total,
         loading,
+        isLoggedIn,
         fetchUsers,
         handleGetUserInfo,
         handleUpdatePwd,
@@ -614,6 +614,7 @@ export const useUserStore = defineStore('user', () => {
         handleUnbindElderKinRelation,
         handleGetKinsByElderId,
         handleGetEldersByKinId,
+        login,
     };
 });
 

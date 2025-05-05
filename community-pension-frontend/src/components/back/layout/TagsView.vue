@@ -1,40 +1,40 @@
 <!-- 标签页 -->
 <template>
   <div class="tags-view-container">
-    <scroll-pane ref="scrollPane" class="tags-view-wrapper" @scroll="handleScroll">
+    <el-scrollbar wrap-class="tags-view-wrapper" :native="false" :noresize="false">
       <router-link
         v-for="tag in visitedViews"
+        ref="tagRefs"
         :key="tag.path"
-        :class="isActive(tag) ? 'active' : ''"
         :to="{ path: tag.path, query: tag.query, fullPath: tag.fullPath }"
-        tag="span"
+        :class="isActive(tag) ? 'active' : ''"
+        :data-path="tag.path"
         class="tags-view-item"
-        @click.middle="!isAffix(tag) && closeSelectedTag(tag)"
-        @contextmenu.prevent="openMenu($event, tag)"
+        @click.middle="closeSelectedTag(tag)"
+        @contextmenu.prevent="openMenu(tag, $event)"
       >
-        {{ tag.title }}
-        <el-icon v-if="!isAffix(tag)" class="close-icon" @click.prevent.stop="closeSelectedTag(tag)">
-          <Close />
-        </el-icon>
+        {{ (tag.meta && tag.meta.title) || getDefaultTitle(tag.path) }}
+        <span v-if="!isAffix(tag)" class="el-icon-close" @click.prevent.stop="closeSelectedTag(tag)" />
       </router-link>
-    </scroll-pane>
-    <ul v-show="visible" :style="{left:left+'px',top:top+'px'}" class="contextmenu">
-      <li @click="refreshSelectedTag(selectedTag)"><el-icon><Refresh /></el-icon> 刷新页面</li>
-      <li v-if="!isAffix(selectedTag)" @click="closeSelectedTag(selectedTag)"><el-icon><Close /></el-icon> 关闭当前</li>
-      <li @click="closeOthersTags"><el-icon><CircleClose /></el-icon> 关闭其他</li>
-      <li v-if="!isFirstView()" @click="closeLeftTags"><el-icon><ArrowLeft /></el-icon> 关闭左侧</li>
-      <li v-if="!isLastView()" @click="closeRightTags"><el-icon><ArrowRight /></el-icon> 关闭右侧</li>
-      <li @click="closeAllTags"><el-icon><CircleClose /></el-icon> 全部关闭</li>
+    </el-scrollbar>
+    <ul v-show="visible" :style="{ left: left + 'px', top: top + 'px' }" class="contextmenu">
+      <li @click="refreshSelectedTag(selectedTag)">刷新</li>
+      <li v-if="!isAffix(selectedTag)" @click="closeSelectedTag(selectedTag)">关闭</li>
+      <li @click="closeOthersTags">关闭其他</li>
+      <li @click="closeAllTags">关闭所有</li>
+      <li @click="closeLeftTags">关闭左侧</li>
+      <li @click="closeRightTags">关闭右侧</li>
     </ul>
   </div>
 </template>
 
 <script setup>
-import {onBeforeUnmount, onMounted, ref, watch} from 'vue';
-import {useRoute, useRouter} from 'vue-router';
-import ScrollPane from './ScrollPane.vue';
-import {ArrowLeft, ArrowRight, CircleClose, Close, Refresh} from '@element-plus/icons-vue';
+import { useTagsViewStore } from '@/stores/tagsView';
+import { ElScrollbar } from 'element-plus';
+import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 
+// 定义props，但使用store作为主要数据源
 const props = defineProps({
   visitedViews: {
     type: Array,
@@ -43,183 +43,305 @@ const props = defineProps({
 });
 
 const emit = defineEmits([
+  'add-tab',
   'remove-tab',
   'close-others',
+  'close-all',
   'close-left',
   'close-right',
-  'close-all',
-  'refresh',
-  'add-tab'
+  'refresh'
 ]);
 
 const route = useRoute();
 const router = useRouter();
-const scrollPane = ref(null);
+const tagsViewStore = useTagsViewStore();
+const tagRefs = ref([]);
 const visible = ref(false);
 const top = ref(0);
 const left = ref(0);
 const selectedTag = ref({});
 
-// 判断是否是当前激活的标签
-const isActive = (tag) => {
-  return tag.path === route.path || 
-    (tag.meta?.affix && route.matched.some(r => r.path === tag.path));
-};
+// 使用computed引用store中的数据，确保始终使用最新状态
+const visitedViews = ref(tagsViewStore.visitedViews);
+// 同步store变化到本地
+watch(() => tagsViewStore.visitedViews, (newViews) => {
+  visitedViews.value = newViews;
+}, { deep: true });
 
-// 判断是否是固定标签
-const isAffix = (tag) => {
-  return (tag.meta && tag.meta.affix) || tag.path === '/admin/home';
-};
+// 监听路由变化，初始化当前标签
+watch(
+  () => route.path,
+  (newPath) => {
+    try {
+      // 规范化路径，移除末尾斜杠
+      const normalizedPath = newPath.replace(/\/$/, '');
+      
+      // 在添加之前先检查是否已存在重复标签
+      const existingTags = visitedViews.value.filter(v => 
+        v.path.replace(/\/$/, '') === normalizedPath ||
+        v.path.replace(/\/$/, '') + '/' === normalizedPath + '/'
+      );
+      
+      if (existingTags.length > 0) {
+        // 如果发现重复标签，则清理多余的
+        if (existingTags.length > 1) {
+          // 保留第一个，删除其余的
+          for (let i = 1; i < existingTags.length; i++) {
+            emit('remove-tab', existingTags[i]);
+          }
+        }
+        return;
+      }
+      
+      // 不添加首页和特殊页面
+      if (normalizedPath !== '/admin/home' && route.meta?.showInTab !== false && !route.meta?.isFirstLevelMenu) {
+        emit('add-tab', {
+          path: normalizedPath, // 使用规范化的路径
+          name: route.name,
+          meta: { 
+            ...route.meta,
+            title: route.meta?.title || getDefaultTitle(normalizedPath)
+          }
+        });
+      }
+    } catch (error) {
+      // 错误处理
+    }
+  },
+  { immediate: true }
+);
 
-// 判断是否是第一个标签
-const isFirstView = () => {
+// 获取默认标题的函数
+function getDefaultTitle(path) {
   try {
-    return selectedTag.value.path === '/admin/home' || selectedTag.value.path === props.visitedViews[1]?.path;
-  } catch (err) {
-    return false;
+    const parts = path.split('/');
+    if (parts.length > 0) {
+      const lastPart = parts[parts.length - 1];
+      return lastPart.charAt(0).toUpperCase() + lastPart.slice(1);
+    }
+  } catch (e) {
+    // 错误处理
   }
-};
+  return '未命名标签';
+}
 
-// 判断是否是最后一个标签
-const isLastView = () => {
+// 判断标签是否为固定标签
+function isAffix(tag) {
+  return tag && ((tag.meta && tag.meta.affix) || tag.path === '/admin/home');
+}
+
+// 组件挂载时初始化
+onMounted(() => {
   try {
-    return selectedTag.value.path === props.visitedViews[props.visitedViews.length - 1]?.path;
-  } catch (err) {
-    return false;
+    // 首先清理可能存在的重复标签
+    cleanTags();
+    
+    // 初始化首页标签
+    const homeView = {
+      path: '/admin/home', // 确保使用规范化的路径
+      name: 'AdminHome',
+      meta: { 
+        title: '首页',
+        affix: true 
+      }
+    };
+    
+    // 检查首页标签是否存在（包括可能末尾有斜杠的路径）
+    const homeTags = visitedViews.value.filter(v => 
+      v.path.replace(/\/$/, '') === '/admin/home'
+    );
+    
+    if (homeTags.length === 0) {
+      // 没有首页标签，添加一个
+      emit('add-tab', homeView);
+    } else if (homeTags.length > 1) {
+      // 有多个首页标签，清理多余的，只保留一个
+      // 优先保留 affixed 的标签
+      const affixedHomeTag = homeTags.find(tag => tag.meta?.affix);
+      const tagToKeep = affixedHomeTag || homeTags[0];
+      
+      homeTags.forEach(tag => {
+        if (tag !== tagToKeep) {
+          emit('remove-tab', tag);
+        }
+      });
+    }
+    
+    // 初始化当前路由标签（如果不是首页）
+    const currentPath = route.path.replace(/\/$/, ''); // 规范化当前路径
+    
+    if (currentPath !== '/admin/home' && route.meta?.showInTab !== false && !route.meta?.isFirstLevelMenu) {
+      // 检查当前路径标签是否存在
+      const currentTags = visitedViews.value.filter(v => 
+        v.path.replace(/\/$/, '') === currentPath
+      );
+      
+      if (currentTags.length === 0) {
+        // 没有当前页面的标签，添加一个
+        emit('add-tab', {
+          path: currentPath,
+          name: route.name,
+          meta: { 
+            ...route.meta,
+            title: route.meta?.title || getDefaultTitle(currentPath)
+          }
+        });
+      } else if (currentTags.length > 1) {
+        // 有多个相同路径标签，清理多余的
+        for (let i = 1; i < currentTags.length; i++) {
+          emit('remove-tab', currentTags[i]);
+        }
+      }
+    }
+  } catch (error) {
+    // 错误处理
   }
-};
-
-// 关闭选中的标签
-const closeSelectedTag = (view) => {
-  // 如果是固定标签或首页，不允许关闭
-  if (isAffix(view) || view.path === '/admin/home') {
-    return;
-  }
-  emit('remove-tab', view);
-};
-
-// 刷新选中的标签
-const refreshSelectedTag = (view) => {
-  emit('refresh', view);
-};
-
-// 关闭其他标签
-const closeOthersTags = () => {
-  router.push(selectedTag.value.path);
-  emit('close-others', selectedTag.value);
-};
-
-// 关闭左侧标签
-const closeLeftTags = () => {
-  emit('close-left', selectedTag.value);
-};
-
-// 关闭右侧标签
-const closeRightTags = () => {
-  emit('close-right', selectedTag.value);
-};
-
-// 关闭所有标签
-const closeAllTags = () => {
-  emit('close-all');
-};
-
-// 打开右键菜单
-const openMenu = (e, tag) => {
-  const menuMinWidth = 105;
-  const offsetLeft = e.clientX;
-  const offsetWidth = e.target.offsetWidth;
-  const maxLeft = window.innerWidth - menuMinWidth;
-  const left = offsetLeft + offsetWidth > maxLeft ? maxLeft : offsetLeft;
   
-  top.value = e.clientY;
-  left.value = left;
-  visible.value = true;
-  selectedTag.value = tag;
-};
-
-// 关闭右键菜单
-const closeMenu = () => {
-  visible.value = false;
-};
-
-// 处理滚动
-const handleScroll = () => {
-  closeMenu();
-};
-
-// 监听点击事件，关闭右键菜单
-document.addEventListener('click', closeMenu);
+  // 监听点击事件以关闭上下文菜单
+  document.addEventListener('click', closeMenu);
+});
 
 // 组件卸载时移除事件监听
 onBeforeUnmount(() => {
   document.removeEventListener('click', closeMenu);
 });
 
-// 监听路由变化
-watch(() => route.path, (newPath) => {
+// 检查标签是否激活
+function isActive(tag) {
+  // 规范化当前路径，处理末尾斜杠问题
+  const currentPath = route.path.replace(/\/$/, '');
+  const tagPath = tag.path.replace(/\/$/, '');
+  return currentPath === tagPath;
+}
+
+// 关闭选定的标签 - 改进版
+function closeSelectedTag(tag) {
   try {
-    // 通用路由处理逻辑
-    const hasTag = props.visitedViews.some(v => v.path === newPath);
-
-    if (!hasTag && route.meta?.showInTab !== false && !route.meta?.isFirstLevelMenu) {
-      emit('add-tab', {
-        path: newPath,
-        title: route.meta?.title || '未命名标签',
-        meta: {affix: route.meta?.affix}
-      });
-    }
-
-    // 滚动到当前激活的标签
-    if (scrollPane.value) {
-      scrollPane.value.moveToTarget(route);
-    }
-    
-    // 安全更新激活的标签状态
-    const matchedTag = props.visitedViews.find(v => v.path === newPath);
-    if (matchedTag) {
-      selectedTag.value = matchedTag;
-    } else if (props.visitedViews.length > 0) {
-      selectedTag.value = props.visitedViews[0];
-    }
-  } catch (error) {
-    console.error('路由监听异常:', error);
-  }
-}, {immediate: true});
-
-// 监听右键菜单显示状态
-watch(visible, (value) => {
-  if (value) {
-    document.body.addEventListener('click', closeMenu);
-  } else {
-    document.body.removeEventListener('click', closeMenu);
-  }
-});
-
-// 组件挂载时初始化
-onMounted(() => {
-  try {
-    // 初始化首页标签
-    if (!Array.isArray(props.visitedViews)) {
-      console.error('visitedViews 未正确初始化');
+    // 固定标签不能关闭
+    if (isAffix(tag)) {
       return;
     }
-    
-    const hasHome = props.visitedViews.some(v => v?.path === '/admin/home');
-    if (!hasHome) {
-      const homeTab = { path: '/admin/home', title: '首页', meta: { affix: true } };
-      emit('add-tab', homeTab);
-      router.push(homeTab.path).catch(() => {});
-    } else {
-      const homeTag = props.visitedViews.find(v => v?.path === '/admin/home');
-      if (homeTag && !isActive(homeTag)) {
-        router.push(homeTag.path).catch(() => {});
+
+    // 如果关闭的是当前活动标签，需要先找出下一个要导航的标签
+    let nextTag = null;
+    if (isActive(tag)) {
+      // 在移除前确定下一个导航目标
+      const tagIndex = visitedViews.value.findIndex(v => v.path === tag.path);
+      
+      // 优先选择左侧标签
+      if (tagIndex > 0) {
+        nextTag = { ...visitedViews.value[tagIndex - 1] };
+      } 
+      // 如果没有左侧标签，选择右侧标签
+      else if (visitedViews.value.length > 1 && tagIndex + 1 < visitedViews.value.length) {
+        nextTag = { ...visitedViews.value[tagIndex + 1] };
+      } 
+      // 如果没有其他标签，导航到首页
+      else {
+        nextTag = { path: '/admin/home', meta: { title: '首页' } };
       }
     }
+    
+    // 触发关闭事件到父组件
+    emit('remove-tab', tag);
+    
+    // 如果是当前标签，在nextTick后导航到下一个标签
+    if (isActive(tag) && nextTag) {
+      // 使用nextTick确保DOM更新后再进行导航
+      nextTick(() => {
+        router.push(nextTag.path);
+      });
+    }
   } catch (error) {
-    console.error('初始化异常:', error);
+    // 出错时导航到安全的首页
+    router.push('/admin/home');
   }
-});
+}
+
+// 刷新选定的标签
+function refreshSelectedTag(tag) {
+  emit('refresh', tag);
+}
+
+// 关闭其他标签
+function closeOthersTags() {
+  emit('close-others', selectedTag.value);
+  closeMenu();
+}
+
+// 关闭所有标签
+function closeAllTags() {
+  emit('close-all');
+  router.push('/admin/home');
+  closeMenu();
+}
+
+// 关闭左侧标签
+function closeLeftTags() {
+  emit('close-left', selectedTag.value);
+  closeMenu();
+}
+
+// 关闭右侧标签
+function closeRightTags() {
+  emit('close-right', selectedTag.value);
+  closeMenu();
+}
+
+// 打开上下文菜单
+function openMenu(tag, e) {
+  try {
+    const menuMinWidth = 105;
+    const offsetLeft = e.clientX;
+    const offsetWidth = window.innerWidth;
+    const maxLeft = offsetWidth - menuMinWidth;
+    const menuTop = e.clientY;
+
+    if (offsetLeft > maxLeft) {
+      left.value = maxLeft;
+    } else {
+      left.value = offsetLeft;
+    }
+    top.value = menuTop;
+
+    selectedTag.value = tag;
+    visible.value = true;
+  } catch (error) {
+    visible.value = false;
+  }
+}
+
+// 关闭上下文菜单
+function closeMenu() {
+  visible.value = false;
+}
+
+// 清理标签函数
+function cleanTags() {
+  // 查找重复标签
+  const normalizedPaths = new Map();
+  const duplicates = [];
+  
+  visitedViews.value.forEach(tag => {
+    const normalizedPath = tag.path.replace(/\/$/, '');
+    
+    if (normalizedPaths.has(normalizedPath)) {
+      duplicates.push({
+        original: normalizedPaths.get(normalizedPath),
+        duplicate: tag
+      });
+    } else {
+      normalizedPaths.set(normalizedPath, tag);
+    }
+  });
+  
+  // 清理重复标签
+  if (duplicates.length > 0) {
+    duplicates.forEach(pair => {
+      emit('remove-tab', pair.duplicate);
+    });
+  }
+}
 </script>
 
 <style lang="scss" scoped>
@@ -228,11 +350,12 @@ onMounted(() => {
   width: 100%;
   background: #fff;
   border-bottom: 1px solid #d8dce5;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, .12), 0 0 3px 0 rgba(0, 0, 0, .04);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.12), 0 0 3px 0 rgba(0, 0, 0, 0.04);
 
   .tags-view-wrapper {
     .tags-view-item {
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
       position: relative;
       cursor: pointer;
       height: 26px;
@@ -245,6 +368,10 @@ onMounted(() => {
       margin-left: 5px;
       margin-top: 4px;
       text-decoration: none;
+      overflow: hidden;
+      white-space: nowrap;
+      max-width: 180px;
+      text-overflow: ellipsis;
 
       &:first-of-type {
         margin-left: 15px;
@@ -255,9 +382,9 @@ onMounted(() => {
       }
 
       &.active {
-        background-color: #42b983;
+        background-color: #409eff;
         color: #fff;
-        border-color: #42b983;
+        border-color: #409eff;
 
         &::before {
           content: '';
@@ -267,25 +394,19 @@ onMounted(() => {
           height: 8px;
           border-radius: 50%;
           position: relative;
-          margin-right: 4px;
+          margin-right: 2px;
         }
       }
-
-      .close-icon {
+      
+      .el-icon-close {
+        margin-left: 5px;
         width: 16px;
         height: 16px;
-        vertical-align: 2px;
-        border-radius: 50%;
+        line-height: 16px;
         text-align: center;
-        transition: all .3s cubic-bezier(.645, .045, .355, 1);
-        transform-origin: 100% 50%;
-
-        &:before {
-          transform: scale(.6);
-          display: inline-block;
-          vertical-align: -3px;
-        }
-
+        border-radius: 50%;
+        transition: all .3s;
+        
         &:hover {
           background-color: #b4bccc;
           color: #fff;
@@ -305,8 +426,7 @@ onMounted(() => {
     font-size: 12px;
     font-weight: 400;
     color: #333;
-    box-shadow: 2px 2px 3px 0 rgba(0, 0, 0, .3);
-    border: 1px solid #e4e7ed;
+    box-shadow: 2px 2px 3px 0 rgba(0, 0, 0, 0.1);
 
     li {
       margin: 0;

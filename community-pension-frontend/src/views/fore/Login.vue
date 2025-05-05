@@ -34,10 +34,10 @@
 </template>
 
 <script setup>
-import {onMounted, ref, watch} from 'vue';
-import {ElMessage} from 'element-plus';
-import {useRouter} from 'vue-router';
-import {useUserStore} from '@/stores/fore/userStore';
+import { useUserStore } from '@/stores/fore/userStore';
+import { ElMessage } from 'element-plus';
+import { computed, onMounted, ref, watch } from 'vue';
+import { useRouter } from 'vue-router';
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -53,7 +53,7 @@ const loginFormRef = ref();
 // 记住密码状态
 const rememberMe = ref(false);
 // 登录加载状态
-const loading = ref(false);
+const loading = computed(() => userStore.loading);
 // 表单校验规则
 const loginRules = ref({
   roleId: [{ required: true, message: '请选择角色', trigger: 'change' }],
@@ -77,27 +77,40 @@ const submitForm = async () => {
   if (loading.value) return;
   loginFormRef.value.validate(async (valid) => {
     if (valid) {
-      loading.value = true;
       try {
         console.log("开始登录，表单数据：", loginForm.value);
-        const success = await userStore.login(loginForm.value);
+        
+        // 使用用户存储的登录方法
+        const success = await userStore.login({
+          username: loginForm.value.username,
+          password: loginForm.value.password,
+          roleId: loginForm.value.roleId
+        });
 
         if (success) {
-          console.log("登录成功，准备跳转");
-          try {
-            console.log("开始路由跳转到 /home/dashboard");
-            await router.push("/home/dashboard");
-            console.log("路由跳转成功");
-          } catch (routerError) {
-            console.error("路由跳转失败：", routerError);
-            ElMessage.error("页面跳转失败，请刷新重试");
+          // 确认登录状态已设置
+          localStorage.setItem('isLoggedIn', 'true');
+          
+          // 如果选择记住密码，可以在这里处理本地存储
+          if (rememberMe.value) {
+            localStorage.setItem('rememberedUsername', loginForm.value.username);
+            localStorage.setItem('rememberedRoleId', loginForm.value.roleId);
           }
+          
+          ElMessage.success('登录成功');
+          
+          // 强制刷新以确保状态更新
+          setTimeout(() => {
+            // 根据角色判断跳转
+            console.log("登录成功，准备跳转到首页");
+            router.push('/home');
+          }, 500);
+        } else {
+          ElMessage.error('登录失败，用户名或密码错误');
         }
       } catch (err) {
         console.error("登录过程发生错误：", err);
-        ElMessage.error("登录失败，请稍后重试");
-      } finally {
-        loading.value = false;
+        ElMessage.error(err.message || "登录失败，请稍后重试");
       }
     }
   });

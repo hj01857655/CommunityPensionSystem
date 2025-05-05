@@ -33,8 +33,6 @@ EventTarget.prototype.addEventListener = function(type, listener, options) {
 
 const app = createApp(App);
 
-console.log("app.version", app.version);
-
 // 全局方法挂载
 app.config.globalProperties.useDict = useDict;
 
@@ -49,8 +47,8 @@ app.use(store)
 app.use(ElementPlus);
 
 // 注册ElementPlus图标组件
-Object.entries(ElementPlusIconsVue).forEach(([key, component]) => {
-    app.component(key, component);
+Object.keys(ElementPlusIconsVue).forEach(key => {
+    app.component(key, ElementPlusIconsVue[key]);
 });
 
 // 注册自定义指令

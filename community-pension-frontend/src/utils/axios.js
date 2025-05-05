@@ -1,5 +1,5 @@
 import axios from "axios";
-import {jwtDecode} from 'jwt-decode';
+import { jwtDecode } from 'jwt-decode';
 
 const instance = axios.create({
     baseURL: "/",  // 使用代理路径
@@ -148,13 +148,13 @@ instance.interceptors.request.use(
             return config;
         }
         
-        console.log('发送请求:', {
-            url: config.url,
-            method: config.method,
-            params: config.params,
-            data: config.data,
-            headers: config.headers
-        });
+        // console.log('发送请求:', {
+        //     url: config.url,
+        //     method: config.method,
+        //     params: config.params,
+        //     data: config.data,
+        //     headers: config.headers
+        // });
         
         // 根据当前路径确定是用户还是管理员
         const isAdmin = window.location.pathname.includes('/admin/');
@@ -178,11 +178,11 @@ instance.interceptors.response.use(
     async response => {
         // 调试日志
         // console.log("响应拦截器", response);
-        console.log("收到响应:", {
-            url: response.config.url,
-            status: response.status,
-            data: response.data
-        });
+        // console.log("收到响应:", {
+        //     url: response.config.url,
+        //     status: response.status,
+        //     data: response.data
+        // });
         // 处理二进制数据
         if (response.config.responseType === 'blob') {
             return response;

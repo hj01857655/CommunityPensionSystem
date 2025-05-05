@@ -1,5 +1,3 @@
-import {defineStore} from 'pinia'
-import {ref, watch} from 'vue'
 import {
   cancelActivityRegistration,
   getActivityDetail,
@@ -8,8 +6,10 @@ import {
   getUserRegisteredActivities,
   registerActivity
 } from '@/api/fore/activity'
-import {ElMessage} from 'element-plus'
-import {useUserStore} from '@/stores/fore/userStore'
+import { useUserStore } from '@/stores/fore/userStore'
+import { ElMessage } from 'element-plus'
+import { defineStore } from 'pinia'
+import { ref, watch } from 'vue'
 
 /**
  * 活动管理状态库
@@ -92,150 +92,23 @@ export const useActivityStore = defineStore('activity', () => {
    */
   const getElderId = () => {
     try {
-      // 添加调试日志，打印完整的本地存储信息
-      console.log('------获取老人ID调试信息开始------');
-      console.log('userStore.userInfo:', userStore.userInfo);
-      if (localStorage.getItem('userInfo')) {
-        console.log('localStorage.userInfo:', JSON.parse(localStorage.getItem('userInfo')));
-      }
-      console.log('localStorage.userId:', localStorage.getItem('userId'));
-      console.log('localStorage.role:', localStorage.getItem('role'));
-      console.log('localStorage.roleName:', localStorage.getItem('roleName'));
+      // 获取用户信息和角色判断
+      const userInfo = userStore.userInfo;
+      const userRole = localStorage.getItem('role');
       
-      // 首先尝试从userStore获取用户信息
-      if (userStore.userInfo) {
-        console.log('从userStore中获取用户信息:', userStore.userInfo);
-        
-        // 处理roles可能是数组或字符串的情况
-        const isElder = Array.isArray(userStore.userInfo.roles) 
-          ? userStore.userInfo.roles.includes('elder') 
-          : userStore.userInfo.roles === 'elder' || userStore.userInfo.role === 'elder' || userStore.userInfo.roleId === 1;
-        
-        // 如果用户是老人，直接使用userId或id作为老人ID
-        if (isElder) {
-          // 尝试从可能的位置获取老人ID
-          const elderId = userStore.userInfo.userId || userStore.userInfo.id;
-          console.log('用户是老人，使用ID作为老人ID:', elderId);
-          console.log('------获取老人ID调试信息结束------');
-          return elderId;
-        }
-        
-        // 如果用户是家属，并且绑定了老人，使用绑定的老人ID
-        const isKin = Array.isArray(userStore.userInfo.roles) 
-          ? userStore.userInfo.roles.includes('kin') 
-          : userStore.userInfo.roles === 'kin' || userStore.userInfo.role === 'kin' || userStore.userInfo.roleId === 2;
-        
-        if (isKin && userStore.userInfo.bindElder) {
-          console.log('用户是家属，使用绑定的老人ID:', userStore.userInfo.bindElder.id);
-          console.log('------获取老人ID调试信息结束------');
-          return userStore.userInfo.bindElder.id;
-        }
+      // 如果有用户信息且角色是老人，返回用户ID
+      if (userInfo && userInfo.userId && userRole === 'elder') {
+        return userInfo.userId;
       }
       
-      // 如果从store中获取失败，尝试从localStorage获取
-      const userInfoStr = localStorage.getItem('userInfo');
-      const localRole = localStorage.getItem('role');
-      
-      if (userInfoStr) {
-        try {
-          const userInfo = JSON.parse(userInfoStr);
-          console.log('从localStorage解析的userInfo:', userInfo);
-          
-          // 从userInfo中获取老人ID（可能存储在userId或id字段中）
-          const elderId = userInfo.userId || userInfo.id;
-          
-          // 检查用户角色，确认是否是老人 - 处理多种可能情况
-          const isElderFromUserInfo = 
-            // 检查roles数组
-            (userInfo.roles && Array.isArray(userInfo.roles) && userInfo.roles.includes('elder')) ||
-            // 检查roles字符串
-            userInfo.roles === 'elder' ||
-            // 检查单一role字段
-            userInfo.role === 'elder' ||
-            // 检查roleId字段
-            userInfo.roleId === 1 ||
-            // 检查localStorage中的role
-            localRole === '1' || localRole === 1;
-          
-          if (isElderFromUserInfo && elderId) {
-            console.log('从localStorage确认用户是老人，ID:', elderId);
-            console.log('------获取老人ID调试信息结束------');
-            return elderId;
-          }
-          
-          // 如果用户是家属，并且绑定了老人，使用绑定的老人ID
-          const isKinFromUserInfo = 
-            // 检查roles数组
-            (userInfo.roles && Array.isArray(userInfo.roles) && userInfo.roles.includes('kin')) ||
-            // 检查roles字符串
-            userInfo.roles === 'kin' ||
-            // 检查单一role字段
-            userInfo.role === 'kin' ||
-            // 检查roleId字段
-            userInfo.roleId === 2 ||
-            // 检查localStorage中的role
-            localRole === '2' || localRole === 2;
-          
-          if (isKinFromUserInfo && userInfo.bindElder) {
-            console.log('从localStorage确认用户是家属，绑定老人ID:', userInfo.bindElder.id);
-            console.log('------获取老人ID调试信息结束------');
-            return userInfo.bindElder.id;
-          }
-        } catch (error) {
-          console.error('解析localStorage中的userInfo失败:', error);
-        }
-      }
-      
-      // 基于本地存储的role和userId直接判断
+      // 尝试从localStorage获取userId
       const userId = localStorage.getItem('userId');
-      
-      // 如果localStorage中直接有userId且角色是老人
-      if ((localRole === '1' || localRole === 1) && userId) {
-        console.log('从localStorage直接确认用户是老人, userId:', userId);
-        console.log('------获取老人ID调试信息结束------');
-        return userId;
-      } else if (userId && !localRole) {
-        // 如果有userId但没有明确角色信息，假定为老人（针对某些特殊情况）
-        console.log('从localStorage获取到userId但无角色信息，假定为老人:', userId);
-        console.log('------获取老人ID调试信息结束------');
+      if (userId && userRole === 'elder') {
         return userId;
       }
       
-      // 尝试根据存储在userInfo中的userId
-      if (userInfoStr) {
-        try {
-          const userInfo = JSON.parse(userInfoStr);
-          if (userInfo.userId) {
-            console.log('从localStorage.userInfo中获取userId:', userInfo.userId);
-            console.log('------获取老人ID调试信息结束------');
-            return userInfo.userId;
-          }
-        } catch (error) {
-          console.error('再次解析userInfo失败:', error);
-        }
-      }
-      
-      // 尝试获取绑定的老人信息
-      const bindElderStr = localStorage.getItem('bindElder');
-      if (bindElderStr) {
-        try {
-          const bindElder = JSON.parse(bindElderStr);
-          if (bindElder && bindElder.id) {
-            console.log('从localStorage.bindElder获取老人ID:', bindElder.id);
-            console.log('------获取老人ID调试信息结束------');
-            return bindElder.id;
-          }
-        } catch (error) {
-          console.error('解析bindElder数据失败:', error);
-        }
-      }
-      
-      console.warn('无法确定老人ID，用户可能不是老人或未绑定老人');
-      console.log('------获取老人ID调试信息结束------');
       return null;
     } catch (error) {
-      console.error('获取老人ID时出错:', error);
-      console.log('------获取老人ID调试信息结束------');
       return null;
     }
   };
@@ -318,93 +191,46 @@ export const useActivityStore = defineStore('activity', () => {
    * @returns {boolean} 是否报名成功
    */
   const registerActivityAction = async (activity) => {
-    console.log('----活动报名Action开始执行----');
-    // 检查调试信息
-    const debugInfo = activity._debug;
-    if (debugInfo) {
-      console.log('收到活动报名调试信息:', debugInfo);
-    }
-    
     // 检查活动是否可以报名，或者是否正在加载
     if (activity.loading || !canJoin(activity.status)) {
-      console.log('活动不可报名状态:', {
-        loading: activity.loading,
-        status: activity.status,
-        canJoin: canJoin(activity.status)
-      });
-      console.log('----活动报名Action结束：活动不可报名----');
       return false;
     }
     
-    // 尝试获取老人ID - 普通逻辑
+    // 获取老人ID
     let elderId = getElderId();
     
-    // 如果普通方式无法获取，尝试从调试信息或本地存储直接获取
-    if (!elderId && debugInfo) {
-      // 1. 尝试从userInfo中获取
-      if (debugInfo.userInfo) {
-        elderId = debugInfo.userInfo.userId || debugInfo.userInfo.id;
-        if (elderId) {
-          console.log('从调试信息userInfo获取elderId:', elderId);
-        }
-      }
-      
-      // 2. 尝试从localStorage获取
-      if (!elderId && debugInfo.localStorageUserId) {
-        elderId = debugInfo.localStorageUserId;
-        console.log('从调试信息localStorage.userId获取elderId:', elderId);
-      }
-    }
-    
-    // 最后尝试的特殊处理：直接从信息中提取userInfo.userId作为老人ID
+    // 如果不能获取到有效的老人ID，则无法报名
     if (!elderId) {
-      try {
-        const userInfoStr = localStorage.getItem('userInfo');
-        if (userInfoStr) {
-          const userInfo = JSON.parse(userInfoStr);
-          if (userInfo.userId) {
-            elderId = userInfo.userId;
-            console.log('特殊处理：直接使用userInfo.userId作为elderId:', elderId);
-          }
-        }
-      } catch (error) {
-        console.error('尝试获取userInfo.userId失败:', error);
-      }
-    }
-    
-    // 如果依然无法获取老人ID，显示错误并返回
-    if (!elderId) {
-      ElMessage.warning('无法确定老人身份，请确认您是老人或已绑定老人');
-      console.log('----活动报名Action结束：无法获取老人ID----');
+      ElMessage.warning('当前用户不是老人身份或未获取到老人信息，无法报名活动');
       return false;
     }
     
-    activity.loading = true; // 设置特定活动的加载状态
+    // 标记活动正在加载
+    activity.loading = true;
+    
     try {
-      // 调用API进行活动报名，传入老人数据
-      console.log(`开始报名活动[${activity.id}]，老人ID:`, elderId);
-      await registerActivity(activity.id, { elderId });
-      ElMessage.success(`成功报名：${activity.title}`); // 显示成功消息
-      // 重新获取活动列表以更新状态
-      await fetchActivities();
-      console.log('----活动报名Action结束：报名成功----');
-      return true; // 报名成功
-    } catch (error) {
-      console.error('活动报名失败:', error);
-      // 显示详细的错误信息，帮助调试
-      if (error.response) {
-        console.error('错误响应数据:', error.response.data);
-        console.error('错误响应状态:', error.response.status);
-        ElMessage.error(`报名失败：${error.response.data?.msg || error.message || '未知错误'}`);
+      // 调用API进行活动报名
+      const result = await registerActivity(activity.id, elderId);
+      
+      if (result.code === 0) {
+        ElMessage.success('活动报名成功');
+        
+        // 刷新活动列表
+        await fetchActivities();
+        
+        activity.loading = false;
+        return true;
       } else {
-        ElMessage.error(error.message || '活动报名失败，请稍后重试'); // 显示错误消息
+        ElMessage.error(result.message || '活动报名失败');
+        activity.loading = false;
+        return false;
       }
-      console.log('----活动报名Action结束：报名失败----');
-      return false; // 报名失败
-    } finally {
-      activity.loading = false; // 重置加载状态
+    } catch (error) {
+      ElMessage.error(error.message || '活动报名过程中发生错误');
+      activity.loading = false;
+      return false;
     }
-  }
+  };
   
   /**
    * 获取活动详情

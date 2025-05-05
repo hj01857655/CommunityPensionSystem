@@ -32,8 +32,6 @@ onMounted(() => {
   } else {
     document.documentElement.classList.remove('dark');
   }
-
-  console.log(`应用启动，当前模式: ${isBackend.value ? '后台' : '前台'}`);
 });
 </script>
 

@@ -1,16 +1,15 @@
-import { defineStore } from 'pinia';
-import { ref, computed } from 'vue';
-import { 
-  userLogin, 
-  getUnboundElders, 
-  getKinListByElderId,
+import {
   bindElderKinRelation,
-  unbindElderKinRelation
+  getKinListByElderId,
+  getUnboundElders,
+  unbindElderKinRelation,
+  userLogin
 } from '@/api/fore/user';
-import { TokenManager } from '@/utils/axios';
-import { getAvatarUrl } from '@/utils/avatarUtils';  // 导入头像工具函数
-import axios from '@/utils/axios';
+import { getAvatarUrl } from '@/utils/avatarUtils'; // 导入头像工具函数
+import axios, { TokenManager } from '@/utils/axios';
 import { ElMessage } from 'element-plus';
+import { defineStore } from 'pinia';
+import { computed, ref } from 'vue';
 
 /**
  * 前台用户状态管理
@@ -36,6 +35,7 @@ export const useUserStore = defineStore('foreground-user', () => {
   const isLoggedIn = ref(false);
   const roleId = ref(null);
   const roles = ref([]);
+  const loading = ref(false); // 添加loading状态用于登录等操作
 
   // 计算属性
   const avatarUrl = computed(() => {
@@ -43,21 +43,46 @@ export const useUserStore = defineStore('foreground-user', () => {
   });
 
   // 方法定义
+  // 保存token到存储和TokenManager
+  const saveToken = (token, refreshToken) => {
+    if (token && refreshToken) {
+      TokenManager.user.set(token, refreshToken);
+    }
+  };
+
   const setUserInfo = (user) => {
     if (user) {
       userInfo.value = user;
       isLoggedIn.value = true;
-      roleId.value = user.roleId;
-      roles.value = user.roles || [user.role];
+      
+      // 确保roleId存在且为数字类型
+      roleId.value = user.roleId ? Number(user.roleId) : null;
+      
+      // 确保用户有角色
+      let userRoles = [];
+      if (user.roles && Array.isArray(user.roles) && user.roles.length > 0) {
+        userRoles = user.roles;
+      } else if (user.role) {
+        userRoles = [user.role];
+      } else if (user.roleId) {
+        // 根据角色ID设置默认角色
+        userRoles = user.roleId === 1 ? ['elder'] : ['kin'];
+      }
+      roles.value = userRoles;
+      
+      // 确保有userId
+      if (!user.userId && user.id) {
+        user.userId = user.id;
+      }
       
       // 使用 localStorage 存储前台用户基本信息
-      localStorage.setItem("userInfo", JSON.stringify({
-        userId: user.userId,
+      const userToStore = {
+        userId: user.userId || user.id,
         username: user.username,
-        name: user.name,
+        name: user.name || user.username,
         avatar: user.avatar,
         roleId: user.roleId,
-        roles: user.roles || [user.role],
+        roles: userRoles,
         permissions: user.permissions || [],
         phone: user.phone,
         email: user.email,
@@ -73,40 +98,84 @@ export const useUserStore = defineStore('foreground-user', () => {
         // 绑定ID列表
         kinIds: user.kinIds || [],
         elderIds: user.elderIds || []
-      }));
+      };
+      
+      console.log('保存到localStorage的用户信息:', userToStore);
+      localStorage.setItem("userInfo", JSON.stringify(userToStore));
       localStorage.setItem("isLoggedIn", "true");
-      localStorage.setItem("roleId", user.roleId);
-      localStorage.setItem("roles", JSON.stringify(user.roles || [user.role]));
+      
+      // 安全地转换roleId为字符串
+      if (user.roleId !== undefined && user.roleId !== null) {
+        localStorage.setItem("roleId", String(user.roleId));
+      }
+      
+      localStorage.setItem("roles", JSON.stringify(userRoles));
     }
   };
 
-  const login = async (loginForm) => {
+  const login = async (loginData) => {
     try {
-      const response = await userLogin(loginForm);
+      loading.value = true;
+      console.log('正在发送登录请求，数据:', loginData);
+      const response = await userLogin(loginData);
+      console.log('登录响应:', response);
       
-      if (response.code === 200) {
-        console.log("前台登录成功响应", response);
-        setUserInfo(response.data.user);
-
-        // 保存token
-        if (response.data.accessToken) {
-          TokenManager.user.set(response.data.accessToken, response.data.refreshToken);
+      // 登录成功
+      if (response && response.code === 200) {
+        // 根据API返回的数据结构解析
+        let token, refreshToken, userData;
+        
+        // 处理可能的不同响应格式
+        if (response.data && typeof response.data === 'object') {
+          // 直接从data中获取
+          token = response.data.accessToken;
+          refreshToken = response.data.refreshToken;
+          userData = response.data.user ;
+          
+          console.log('解析的数据:', { token, refreshToken, userData });
+          console.log(token,)
+          
+          // 保存token
+          if (token && refreshToken) {
+            saveToken(token, refreshToken);
+            console.log('Token已保存');
+          } else {
+            console.warn('登录成功但未返回有效Token');
+          }
+          
+          // 设置用户信息
+          if (userData && userData.userId) {
+            setUserInfo(userData);
+            console.log('用户信息已保存:', userData);
+          } else {
+            console.warn('登录成功但用户信息不完整');
+            // 尝试设置基本用户信息
+            const basicUserInfo = {
+              userId: userData?.userId || loginData.username,
+              username: loginData.username,
+              roleId: loginData.roleId,
+              roles: loginData.roleId === 1 ? ['elder'] : ['kin']
+            };
+            setUserInfo(basicUserInfo);
+            console.log('已设置基本用户信息:', basicUserInfo);
+          }
+          
+          loading.value = false;
+          return true;
         } else {
-          console.error('登录响应中没有token');
-          ElMessage.error('登录失败：未获取到token');
+          console.error('登录成功但返回的数据格式不正确:', response);
+          loading.value = false;
           return false;
         }
-
-        return true;
       } else {
-        console.log("前台登录失败响应", response);
-        ElMessage.error('登录失败');
+        console.error('登录失败:', response?.message || '未知错误');
+        loading.value = false;
         return false;
       }
     } catch (error) {
-      console.error('登录错误:', error.message);
-      ElMessage.error(error.message || '登录失败');
-      return false;
+      console.error('登录过程中发生错误:', error);
+      loading.value = false;
+      throw error;
     }
   };
 
@@ -297,6 +366,7 @@ export const useUserStore = defineStore('foreground-user', () => {
     isLoggedIn,
     roleId,
     roles,
+    loading,
     
     // 计算属性
     avatarUrl,
