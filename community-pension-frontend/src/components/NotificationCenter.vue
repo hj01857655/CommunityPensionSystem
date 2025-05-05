@@ -89,13 +89,12 @@
 </template>
 
 <script setup>
-import {computed, onMounted, onUnmounted, ref} from 'vue';
-import {Bell, Check, CircleCheckFilled, Delete, InfoFilled, SuccessFilled, Warning} from '@element-plus/icons-vue';
-import {ElMessage, ElMessageBox} from 'element-plus';
-import {useRouter} from 'vue-router';
-import sseClient from '@/utils/sseClient';
-import {formatDistanceToNow} from 'date-fns';
-import {zhCN} from 'date-fns/locale';
+import { Bell, Check, CircleCheckFilled, Delete, InfoFilled, SuccessFilled, Warning } from '@element-plus/icons-vue';
+import { formatDistanceToNow } from 'date-fns';
+import { zhCN } from 'date-fns/locale';
+import { ElMessage, ElMessageBox } from 'element-plus';
+import { computed, onMounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
 
 // 通知列表
 const notifications = ref([]);
@@ -276,10 +275,13 @@ const handlePageChange = (page) => {
 // 格式化时间
 const formatTime = (time) => {
   if (!time) return '';
-
   try {
-    return formatDistanceToNow(new Date(time), {addSuffix: true, locale: zhCN});
+    return formatDistanceToNow(new Date(time), {
+      addSuffix: true,
+      locale: zhCN
+    });
   } catch (error) {
+    console.error('时间格式化失败:', error);
     return time;
   }
 };
@@ -287,12 +289,16 @@ const formatTime = (time) => {
 // 获取图标组件
 const getIconComponent = (type) => {
   switch (type) {
+    case 'SYSTEM':
+      return InfoFilled;
     case 'HEALTH':
       return Warning;
     case 'SERVICE':
-      return CircleCheckFilled;
+      return SuccessFilled;
     case 'ACTIVITY':
       return SuccessFilled;
+    case 'EMERGENCY':
+      return CircleCheckFilled;
     default:
       return InfoFilled;
   }
@@ -301,51 +307,24 @@ const getIconComponent = (type) => {
 // 获取图标颜色
 const getIconColor = (type) => {
   switch (type) {
+    case 'SYSTEM':
+      return '#409EFF';
     case 'HEALTH':
       return '#E6A23C';
     case 'SERVICE':
       return '#67C23A';
     case 'ACTIVITY':
-      return '#409EFF';
+      return '#67C23A';
+    case 'EMERGENCY':
+      return '#F56C6C';
     default:
       return '#909399';
   }
 };
 
-// 处理SSE通知消息
-const handleNotificationMessage = (notification) => {
-  if (!notification) return;
-
-  // 添加新通知到列表
-  notifications.value.unshift({
-    id: notification.id || Date.now(),
-    title: notification.title,
-    content: notification.content,
-    status: 0,
-    type: notification.type,
-    createTime: notification.createTime || new Date().toISOString()
-  });
-
-  // 如果超过页面大小，移除最后一条
-  if (notifications.value.length > pageSize.value) {
-    notifications.value.pop();
-  }
-
-  // 更新总数
-  total.value += 1;
-};
-
-// 组件挂载时获取通知列表并连接SSE
+// 组件挂载时获取通知列表
 onMounted(() => {
   fetchNotifications();
-
-  // 添加SSE通知监听
-  sseClient.addEventListener('notification', handleNotificationMessage);
-});
-
-// 组件卸载时移除SSE消息监听
-onUnmounted(() => {
-  sseClient.removeEventListener('notification', handleNotificationMessage);
 });
 </script>
 

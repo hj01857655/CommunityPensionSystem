@@ -6,7 +6,6 @@ import com.communitypension.communitypensionadmin.entity.Notification;
 import com.communitypension.communitypensionadmin.entity.ServiceOrder;
 import com.communitypension.communitypensionadmin.entity.User;
 import com.communitypension.communitypensionadmin.query.NotificationQuery;
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 public interface NotificationService extends IService<Notification> {
 
@@ -55,8 +54,6 @@ public interface NotificationService extends IService<Notification> {
      */
     void sendSystemMessage(Long userId, String title, String content, String type);
 
-    // 邮件发送方法已移除，改为使用WebSocket实时通知
-
     /**
      * 发送预约相关通知
      *
@@ -65,20 +62,4 @@ public interface NotificationService extends IService<Notification> {
      * @param message 通知消息
      */
     void sendOrderNotification(ServiceOrder order, User user, String message);
-
-    /**
-     * 添加SSE发射器
-     *
-     * @param userId  用户ID
-     * @param emitter SSE发射器
-     */
-    void addEmitter(Long userId, SseEmitter emitter);
-
-    /**
-     * 移除SSE发射器
-     *
-     * @param userId  用户ID
-     * @param emitter SSE发射器
-     */
-    void removeEmitter(Long userId, SseEmitter emitter);
 }

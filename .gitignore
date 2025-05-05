@@ -50,3 +50,11 @@ init.md
 todo.md
 记忆规则说明.md
 
+show_tables.sql
+health_records.sql
+
+# 忽略所有 .sql 文件
+*.sql
+show_tables.sql
+
+

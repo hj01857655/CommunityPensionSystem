@@ -18,16 +18,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * 通知服务实现类
@@ -92,9 +85,6 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
         notificationMapper.updateById(notification);
     }
 
-    // 存储用户ID到SSE发射器的映射
-    private final Map<Long, List<SseEmitter>> userEmitters = new ConcurrentHashMap<>();
-
     /**
      * 发送系统消息
      *
@@ -121,52 +111,7 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
         // 保存通知
         this.save(notification);
 
-        // 通过SSE发送实时通知
-        sendNotificationEvent(userId, notification);
-
         log.info("发送{}通知给用户{}: {}", typeLabel, userId, title);
-    }
-
-    // 发送通知事件
-    private void sendNotificationEvent(Long userId, Notification notification) {
-        List<SseEmitter> emitters = userEmitters.getOrDefault(userId, Collections.emptyList());
-        if (emitters.isEmpty()) {
-            log.info("用户{}不在线，无法发送实时通知", userId);
-            return;
-        }
-
-        List<SseEmitter> deadEmitters = new ArrayList<>();
-
-        for (SseEmitter emitter : emitters) {
-            try {
-                emitter.send(SseEmitter.event()
-                        .name("NOTIFICATION")
-                        .data(notification));
-                log.debug("成功发送实时通知给用户{}", userId);
-            } catch (Exception e) {
-                deadEmitters.add(emitter);
-                log.warn("发送通知失败，将移除无效连接: {}", e.getMessage());
-            }
-        }
-
-        // 移除失效的发射器
-        emitters.removeAll(deadEmitters);
-    }
-
-    // 添加发射器
-    @Override
-    public void addEmitter(Long userId, SseEmitter emitter) {
-        userEmitters.computeIfAbsent(userId, k -> new CopyOnWriteArrayList<>()).add(emitter);
-        log.info("用户{}添加了SSE连接，当前连接数: {}", userId,
-                userEmitters.getOrDefault(userId, Collections.emptyList()).size());
-    }
-
-    // 移除发射器
-    @Override
-    public void removeEmitter(Long userId, SseEmitter emitter) {
-        List<SseEmitter> emitters = userEmitters.getOrDefault(userId, Collections.emptyList());
-        emitters.remove(emitter);
-        log.info("用户{}移除了SSE连接，当前连接数: {}", userId, emitters.size());
     }
 
     /**
@@ -180,8 +125,6 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
 
         // 使用self调用事务方法，确保事务生效
         self.sendSystemMessage(user.getUserId(), title, content, DictTypeConstants.NOTIFICATION_TYPE_SYSTEM);
-
-        // 不再发送邮件通知
     }
 
     /**
@@ -233,6 +176,4 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
 
         return sb.toString();
     }
-
-
 }
