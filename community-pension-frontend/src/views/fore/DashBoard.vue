@@ -736,7 +736,7 @@ const initializeData = async () => {
 
         // 检查用户信息响应
         if (userInfoResponse && userInfoResponse.code === 200 && userInfoResponse.data) {
-            console.log('成功获取用户信息:', userInfoResponse.data);
+            // console.log('成功获取用户信息:', userInfoResponse.data);
         } else {
             console.error('获取用户信息失败:', userInfoResponse);
             ElMessage.error('获取用户信息失败，请尝试重新登录');

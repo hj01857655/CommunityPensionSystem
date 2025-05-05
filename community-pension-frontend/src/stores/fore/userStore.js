@@ -228,16 +228,16 @@ export const useUserStore = defineStore('foreground-user', () => {
     try {
       // 从本地存储获取用户信息
       const userInfoStr = localStorage.getItem('userInfo');
-      console.log('从localStorage获取的原始用户信息:', userInfoStr);
+      // console.log('从localStorage获取的原始用户信息:', userInfoStr);
       
       if (userInfoStr) {
         const parsedUserInfo = JSON.parse(userInfoStr);
-        console.log('解析后的用户信息:', parsedUserInfo);
+        // console.log('解析后的用户信息:', parsedUserInfo);
         
         // 确保角色ID存在并设置到store中
         if (parsedUserInfo.roleId) {
           roleId.value = Number(parsedUserInfo.roleId);
-          console.log('设置roleId到store:', roleId.value);
+          // console.log('设置roleId到store:', roleId.value);
         }
         
         // 确保用户信息设置到store中
