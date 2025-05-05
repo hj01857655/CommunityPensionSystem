@@ -179,17 +179,17 @@
 </template>
 
 <script setup>
-import {computed, onBeforeUnmount, onMounted, onUnmounted, ref, watch} from 'vue';
-import {useRouter} from 'vue-router';
+import { registerActivity as apiRegisterActivity, getActivityDetail, getActivityList } from '@/api/fore/activity';
+import { cancelAppointment, getMyAppointments } from '@/api/fore/service';
 import HomeCard from '@/components/front/HomeCard.vue';
-import {Clock, Location, Phone, Refresh, Warning} from '@element-plus/icons-vue';
-import {ElMessage} from 'element-plus';
-import {formatDate, formatDateTime} from '@/utils/date';
-import {cancelAppointment, getMyAppointments} from '@/api/fore/service';
-import {getActivityDetail, getActivityList, registerActivity as apiRegisterActivity} from '@/api/fore/activity';
-import {useUserStore} from '@/stores/fore/userStore';
-import {useHealthStore} from '@/stores/fore/healthStore'
-import {storeToRefs} from 'pinia';
+import { useHealthStore } from '@/stores/fore/healthStore';
+import { useUserStore } from '@/stores/fore/userStore';
+import { formatDate, formatDateTime } from '@/utils/date';
+import { Clock, Location, Phone, Refresh, Warning } from '@element-plus/icons-vue';
+import { ElMessage } from 'element-plus';
+import { storeToRefs } from 'pinia';
+import { computed, onBeforeUnmount, onMounted, onUnmounted, ref, watch } from 'vue';
+import { useRouter } from 'vue-router';
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -735,8 +735,8 @@ const initializeData = async () => {
         const userInfoResponse = await userStore.getUserInfo();
 
         // 检查用户信息响应
-        if (userInfoResponse && userInfoResponse.userId) {
-            console.log('成功获取用户信息:', userInfoResponse);
+        if (userInfoResponse && userInfoResponse.code === 200 && userInfoResponse.data) {
+            console.log('成功获取用户信息:', userInfoResponse.data);
         } else {
             console.error('获取用户信息失败:', userInfoResponse);
             ElMessage.error('获取用户信息失败，请尝试重新登录');
