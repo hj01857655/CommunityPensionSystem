@@ -3,6 +3,7 @@ package com.communitypension.communitypensionadmin.config;
 import com.communitypension.communitypensionadmin.utils.JwtInterceptor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.lang.NonNull;
+import org.springframework.web.servlet.config.annotation.AsyncSupportConfigurer;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 /**
@@ -30,5 +31,10 @@ public class WebMvcConfig implements WebMvcConfigurer {
                     "/public/**",
                      "/actuator/**"
                 );
+    }
+    // 启用异步支持
+    @Override
+    public void configureAsyncSupport(AsyncSupportConfigurer configurer) {
+        configurer.setDefaultTimeout(300000); // 设置默认超时时间为5分钟
     }
 }

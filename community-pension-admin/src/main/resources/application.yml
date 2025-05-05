@@ -5,123 +5,75 @@ spring:
     name: community-pension-admin
     version: 1.0.0
   datasource:
-    type: com.zaxxer.hikari.HikariDataSource
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://127.0.0.1:3306/community_pension?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://127.0.0.1:3306/community_pension?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: root
     password: 123456
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    type: com.zaxxer.hikari.HikariDataSource
     hikari:
-      # 连接池名称
       pool-name: HikariCP
-      # 最小空闲连接数
       minimum-idle: 5
-      # 最大连接数
       maximum-pool-size: 20
-      # 空闲连接超时时间
       idle-timeout: 300000
-      # 连接最大存活时间
       max-lifetime: 1200000
-      # 连接超时时间
       connection-timeout: 20000
-      # 连接测试查询
       connection-test-query: SELECT 1
-      # 验证超时时间
-      validation-timeout: 3000
-      # 连接泄漏检测阈值
-      leak-detection-threshold: 60000
-      # 自动提交
-      auto-commit: true
-      # 初始化失败超时时间
-      initialization-fail-timeout: 10000
-      # 连接初始化SQL
-      connection-init-sql: SELECT 1
-      # 数据源属性
-      data-source-properties:
-        cachePrepStmts: true
-        prepStmtCacheSize: 250
-        prepStmtCacheSqlLimit: 2048
-        useServerPrepStmts: true
 
+  # JPA配置
   jpa:
+    database-platform: org.hibernate.dialect.MySQLDialect
+    show-sql: true
     open-in-view: true
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+
+  # 禁用SQL初始化
+  sql:
+    init:
+      mode: never
+
   jackson:
     serialization:
       write-dates-as-timestamps: false
   main:
     allow-bean-definition-overriding: true
+    allow-circular-references: true
 
-  # Redis配置
-  data:
-    redis:
-      host: localhost
-      port: 6379
-      database: 0
-      timeout: 10000
-      lettuce:
-        pool:
-          max-active: 8
-          max-wait: -1
-          max-idle: 8
-          min-idle: 0
-
-  cache:
-    type: caffeine
-    caffeine:
-      spec: maximumSize=500,expireAfterWrite=3600s
-
-  # 邮件配置已移除，改为使用WebSocket实时通知
-
+# JWT 配置
 jwt:
-  secret: "cB7ChF1y4Aegk+p9KNkFz0GQeY2e+ZgeIW6EVJbiR9Y="
+  secret: K7mN9pQ2vL5xR8tY3wJ6hD4gF1bC0aE2kM9nP7qV5xR8tY3wJ6hD4gF1bC0aE2kM
   access-token:
-    expiration: 3600000 # 1小时
+    expiration: 3600000  # 1小时，单位：毫秒
   refresh-token:
-    #7天
-    expiration: 604800000 # 7天
+    expiration: 604800000  # 7天，单位：毫秒
+
 # MyBatis-Plus配置
 mybatis-plus:
-  # 配置mapper的扫描，找到所有的mapper.xml映射文件
   mapper-locations: classpath*:/mapper/**/*.xml
-  # 搜索指定包别名
   type-aliases-package: com.communitypension.communitypensionadmin.entity
-  # 配置类型处理器的扫描路径
-  type-handlers-package: com.communitypension.communitypensionadmin.config
   configuration:
-    # 驼峰命名
     map-underscore-to-camel-case: true
-    # 打印SQL日志
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
-    # 二级缓存
     cache-enabled: true
   global-config:
     db-config:
-      # 主键类型 AUTO:"数据库ID自增"
       id-type: auto
-      # 逻辑删除配置
       logic-delete-field: deleted
       logic-delete-value: 1
       logic-not-delete-value: 0
-      # 字段策略
-#      insert-strategy: not_null
-#      update-strategy: not_null
+
+# 文件上传配置
 file:
   upload:
-    path: /upload
-    url-prefix: http://localhost:9000/upload
-knife4j:
-  enable: false
-  setting:
-    enable-footer: false
-    enable-filter-multipart-apis: true
-  documents:
-    - group: 社区养老系统
-      name: 管理接口文档
-management:
-  health:
-    redis:
-      enabled:
+    path: uploads
+    url-prefix: /upload
 
 logging:
   level:
     com.communitypension.communitypensionadmin: DEBUG
-    org.springframework.transaction: DEBUG
+    org.springframework.jdbc: DEBUG
+    com.zaxxer.hikari: DEBUG
+    org.hibernate: DEBUG

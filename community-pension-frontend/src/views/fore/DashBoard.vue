@@ -724,62 +724,81 @@ const initializeData = async () => {
         await fetchRecentActivities();
         return;
     }
-
+    let loadingMessage = ElMessage({
+            message: '正在加载数据，请稍候...',
+            type: 'info',
+            duration: 0,
+            showClose: true
+        });;
     try {
         // 先主动获取用户信息
         const userInfoResponse = await userStore.getUserInfo();
 
-      // 检查用户信息响应
-        if (userInfoResponse.code !== 200 || !userInfoResponse.data) {
+        // 检查用户信息响应
+        if (userInfoResponse && userInfoResponse.userId) {
+            console.log('成功获取用户信息:', userInfoResponse);
+        } else {
             console.error('获取用户信息失败:', userInfoResponse);
             ElMessage.error('获取用户信息失败，请尝试重新登录');
             return;
         }
 
-      console.log('初始化 - 成功获取用户信息:', userInfoResponse.data);
+        
 
-      // 验证用户ID
-        const userId = getUserId();
-        if (!userId) {
-            console.error('无法获取有效的用户ID');
-            ElMessage.error('用户ID无效，请重新登录');
-            return;
+        try {
+            // 获取健康数据
+            console.log('开始获取健康数据...');
+            healthData.value = await healthStore.fetchHealthData();
+            console.log('健康数据获取结果:', healthData.value);
+        } catch (healthError) {
+            console.error('获取健康数据失败:', healthError);
+            healthData.value = null;
         }
 
-      // 显示加载中消息
-        const loadingMessage = ElMessage({
-            message: '正在加载数据...',
-            type: 'info',
-            duration: 0
-        });
+        try {
+            // 获取服务预约数据
+            console.log('开始获取服务预约数据...');
+            await fetchRecentServices();
+            console.log('服务预约数据获取结果:', services.value);
+        } catch (serviceError) {
+            console.error('获取服务预约数据失败:', serviceError);
+            services.value = [];
+        }
 
-      try {
-            // 并行获取所有数据
-            await Promise.allSettled([
-              healthStore.fetchHealthData(),
-                fetchRecentServices(),
-                fetchRecentActivities()
-            ]);
+        try {
+            // 获取活动数据
+            console.log('开始获取活动数据...');
+            await fetchRecentActivities();
+            console.log('活动数据获取结果:', activities.value);
+        } catch (activityError) {
+            console.error('获取活动数据失败:', activityError);
+            activities.value = [];
+        }
 
-        // 检查是否有数据
-        if (!healthData) {
+        // 检查是否所有数据都获取失败
+        if (!healthData.value && services.value.length === 0 && activities.value.length === 0) {
+            console.error('所有数据获取失败');
+            ElMessage.error('无法加载数据，请检查网络连接或稍后重试');
+        } else {
+            // 提示部分数据加载失败
+            if (!healthData.value) {
                 console.warn('未获取到健康数据');
             }
 
-        if (services.value.length === 0) {
+            if (services.value.length === 0) {
                 console.warn('未获取到服务预约数据');
             }
 
-        if (activities.value.length === 0) {
+            if (activities.value.length === 0) {
                 console.warn('未获取到活动数据');
             }
-        } finally {
-            // 关闭加载消息
-            loadingMessage.close();
         }
     } catch (error) {
         console.error('初始化数据失败:', error);
         ElMessage.error('初始化数据出错，请刷新页面重试');
+    } finally {
+        // 关闭加载消息
+        loadingMessage.close();
     }
 };
 

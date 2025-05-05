@@ -3,11 +3,11 @@ package com.communitypension.communitypensionadmin;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.ComponentScan;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 
 @SpringBootApplication
 @MapperScan("com.communitypension.communitypensionadmin.mapper")
-@ComponentScan(basePackages = {"com.communitypension.communitypensionadmin.entity", "com.communitypension.communitypensionadmin.controller", "com.communitypension.communitypensionadmin.service", "com.communitypension.communitypensionadmin.config", "com.communitypension.communitypensionadmin.utils","com.communitypension.communitypensionadmin.converter"})
+@EntityScan("com.communitypension.communitypensionadmin.entity")
 public class CommunityPensionAdminApplication {
     public static void main(String[] args) {
         SpringApplication.run(CommunityPensionAdminApplication.class, args);

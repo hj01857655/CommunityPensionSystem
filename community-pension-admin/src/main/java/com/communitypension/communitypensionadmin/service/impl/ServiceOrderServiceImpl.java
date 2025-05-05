@@ -3,7 +3,6 @@ package com.communitypension.communitypensionadmin.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.communitypension.communitypensionadmin.constant.DictTypeConstants;
 import com.communitypension.communitypensionadmin.dto.ServiceOrderDTO;
 import com.communitypension.communitypensionadmin.entity.ServiceItem;
 import com.communitypension.communitypensionadmin.entity.ServiceOrder;
@@ -33,7 +32,9 @@ import org.springframework.util.StringUtils;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
@@ -56,7 +57,7 @@ public class ServiceOrderServiceImpl extends ServiceImpl<ServiceOrderMapper, Ser
     /**
      * 根据分页参数查询预约记录
      *
-     * @param page 分页参数
+     * @param page  分页参数
      * @param order 查询条件
      * @return 分页后的预约记录列表
      */
@@ -173,6 +174,7 @@ public class ServiceOrderServiceImpl extends ServiceImpl<ServiceOrderMapper, Ser
 
     /**
      * 修改预约信息
+     *
      * @param orderDTO 预约信息
      * @return 是否成功
      */
@@ -195,7 +197,6 @@ public class ServiceOrderServiceImpl extends ServiceImpl<ServiceOrderMapper, Ser
             if (serviceItem == null) {
                 throw new BusinessException("服务项目不存在");
             }
-
 
 
             // 检查时间冲突
@@ -233,8 +234,9 @@ public class ServiceOrderServiceImpl extends ServiceImpl<ServiceOrderMapper, Ser
 
     /**
      * 取消预约
+     *
      * @param orderId 预约ID
-     * @param reason 取消原因
+     * @param reason  取消原因
      * @return 是否成功
      */
     @Override
@@ -267,9 +269,10 @@ public class ServiceOrderServiceImpl extends ServiceImpl<ServiceOrderMapper, Ser
 
     /**
      * 审核预约
+     *
      * @param orderId 预约ID
-     * @param status 审核状态(1-通过 2-拒绝)
-     * @param remark 审核备注
+     * @param status  审核状态(1-通过 2-拒绝)
+     * @param remark  审核备注
      * @return 是否成功
      */
     @Override
@@ -302,6 +305,7 @@ public class ServiceOrderServiceImpl extends ServiceImpl<ServiceOrderMapper, Ser
 
     /**
      * 派单预约
+     *
      * @param orderId 预约ID
      * @return 是否成功
      */
@@ -334,9 +338,10 @@ public class ServiceOrderServiceImpl extends ServiceImpl<ServiceOrderMapper, Ser
 
     /**
      * 完成预约
-     * @param orderId 预约ID
+     *
+     * @param orderId  预约ID
      * @param duration 实际时长（分钟）
-     * @param fee 实际费用
+     * @param fee      实际费用
      * @return 是否成功
      */
     @Override
@@ -373,9 +378,10 @@ public class ServiceOrderServiceImpl extends ServiceImpl<ServiceOrderMapper, Ser
 
     /**
      * 检查时间冲突
+     *
      * @param serviceItemId 服务项目ID
-     * @param scheduleTime 预约时间
-     * @param duration 服务时长（分钟）
+     * @param scheduleTime  预约时间
+     * @param duration      服务时长（分钟）
      * @return 是否冲突
      */
     @Override
@@ -386,20 +392,21 @@ public class ServiceOrderServiceImpl extends ServiceImpl<ServiceOrderMapper, Ser
         // 查询该时间段内的所有预约
         LambdaQueryWrapper<ServiceOrder> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(ServiceOrder::getServiceItemId, serviceItemId)
-               .ne(ServiceOrder::getStatus, 4) // 排除已取消的预约(4)
-               .and(w -> w
-                   .between(ServiceOrder::getScheduleTime, scheduleTime, endTime)
-                   .or()
-                   .between(ServiceOrder::getScheduleTime, scheduleTime.minusMinutes(duration), scheduleTime)
-               );
+                .ne(ServiceOrder::getStatus, 4) // 排除已取消的预约(4)
+                .and(w -> w
+                        .between(ServiceOrder::getScheduleTime, scheduleTime, endTime)
+                        .or()
+                        .between(ServiceOrder::getScheduleTime, scheduleTime.minusMinutes(duration), scheduleTime)
+                );
 
         return this.count(wrapper) > 0;
     }
 
     /**
      * 检查预约时间是否在服务时间内
+     *
      * @param response HTTP响应对象
-     * @param order 查询条件
+     * @param order    查询条件
      */
     @Override
     public void exportOrders(HttpServletResponse response, ServiceOrder order) {
@@ -471,6 +478,7 @@ public class ServiceOrderServiceImpl extends ServiceImpl<ServiceOrderMapper, Ser
 
     /**
      * 根据用户ID和预约状态获取预约记录
+     *
      * @param userId 用户ID
      * @param status 预约状态
      * @return 预约记录列表
@@ -491,17 +499,18 @@ public class ServiceOrderServiceImpl extends ServiceImpl<ServiceOrderMapper, Ser
 
     /**
      * 获取服务项目的预约统计信息
+     *
      * @param serviceItemId 服务项目ID
-     * @param startTime 开始时间
-     * @param endTime 结束时间
+     * @param startTime     开始时间
+     * @param endTime       结束时间
      * @return 统计信息
      */
     @Override
     public Map<String, Object> getOrderStats(Long serviceItemId, LocalDateTime startTime, LocalDateTime endTime) {
         LambdaQueryWrapper<ServiceOrder> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(ServiceOrder::getServiceItemId, serviceItemId)
-               .between(ServiceOrder::getScheduleTime, startTime, endTime)
-               .eq(ServiceOrder::getStatus, 3); // 只统计已完成的预约
+                .between(ServiceOrder::getScheduleTime, startTime, endTime)
+                .eq(ServiceOrder::getStatus, 3); // 只统计已完成的预约
 
         List<ServiceOrder> orders = this.list(wrapper);
 
@@ -602,24 +611,23 @@ public class ServiceOrderServiceImpl extends ServiceImpl<ServiceOrderMapper, Ser
     /**
      * 检查预约时间是否在服务时间内
      */
-    private boolean isWithinServiceTime(LocalDateTime scheduleTime, Integer duration) {
-        // 获取当前时间
-        LocalDateTime now = LocalDateTime.now();
+    private boolean isWithinServiceTime(LocalDateTime scheduleTime, int duration) {
+        // 获取当前服务的营业时间（例如：早上8点到晚上8点）
+        LocalTime serviceStartTime = LocalTime.of(8, 0);  // 早上8点
+        LocalTime serviceEndTime = LocalTime.of(20, 0);  // 晚上8点
 
-        // 检查预约时间是否大于当前时间
-        if (scheduleTime.isBefore(now)) {
-            return false;
-        }
+        // 获取预约日期
+        LocalDate scheduleDate = scheduleTime.toLocalDate();
 
-        // 检查预约时间是否在服务时间内（例如：8:00-18:00）
-        int hour = scheduleTime.getHour();
-        if (hour < 8 || hour >= 18) {
-            return false;
-        }
+        // 服务的开始时间和结束时间
+        LocalDateTime serviceStartDateTime = LocalDateTime.of(scheduleDate, serviceStartTime);
+        LocalDateTime serviceEndDateTime = LocalDateTime.of(scheduleDate, serviceEndTime);
 
-        // 检查服务结束时间是否超过服务时间
-        LocalDateTime endTime = scheduleTime.plusMinutes(duration);
-        return endTime.getHour() < 18;
+        // 预约的结束时间
+        LocalDateTime scheduleEndTime = scheduleTime.plusMinutes(duration);
+
+        // 检查预约的开始时间是否在服务时间之后，以及结束时间是否在服务时间之前
+        return !scheduleTime.isBefore(serviceStartDateTime) && !scheduleEndTime.isAfter(serviceEndDateTime);
     }
 
     /**
@@ -628,10 +636,10 @@ public class ServiceOrderServiceImpl extends ServiceImpl<ServiceOrderMapper, Ser
     private boolean hasUnfinishedOrder(Long userId) {
         LambdaQueryWrapper<ServiceOrder> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(ServiceOrder::getUserId, userId)
-               .in(ServiceOrder::getStatus,
-                       ServiceOrderStatus.PENDING,
-                       ServiceOrderStatus.ASSIGNED,
-                       ServiceOrderStatus.IN_PROGRESS); // 待审核、已派单、服务中状态
+                .in(ServiceOrder::getStatus,
+                        ServiceOrderStatus.PENDING,
+                        ServiceOrderStatus.ASSIGNED,
+                        ServiceOrderStatus.IN_PROGRESS); // 待审核、已派单、服务中状态
 
         return this.count(wrapper) > 0;
     }

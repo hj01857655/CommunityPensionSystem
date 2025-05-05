@@ -260,24 +260,29 @@ const handleUnbindFamily = async (kin) => {
 
 // 获取用户角色
 const userRole = computed(() => {
-  const role = userStore.userInfo?.roleId || userStore.userInfo?.roles?.[0]
-  console.log('当前用户角色:', role)
-  return role
-})
+  const role = userStore.userInfo?.roleId || userStore.userInfo?.roles?.[0];
+  console.log('当前用户角色:', role);
+  if (!role) {
+    console.warn('用户角色未定义，可能未正确加载用户信息');
+  }
+  return role;
+});
 
 // 判断是否为老人角色
 const isElder = computed(() => {
-  const role = userRole.value
-  console.log('判断是否为老人角色:', role)
-  return role === 'elder' || role === 1 || userStore.userInfo?.roleIds?.includes(1)
-})
+  const role = userRole.value;
+  const isElderRole = role === 'elder' || role === 2;
+  console.log('判断是否为老人角色:', isElderRole);
+  return isElderRole;
+});
 
 // 判断是否为家属角色
 const isKin = computed(() => {
-  const role = userRole.value
-  console.log('判断是否为家属角色:', role)
-  return role === 'kin' || role === 2 || userStore.userInfo?.roleIds?.includes(2)
-})
+  const role = userRole.value;
+  const isKinRole = role === 'kin' || role === 3;
+  console.log('判断是否为家属角色:', isKinRole);
+  return isKinRole;
+});
 
 // 加载状态
 const isLoadingKinList = ref(false);
