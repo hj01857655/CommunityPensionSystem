@@ -127,15 +127,34 @@ export const useUserStore = defineStore('foreground-user', () => {
         
         // 处理可能的不同响应格式
         if (response.data && typeof response.data === 'object') {
-          // 直接从data中获取
-          token = response.data.accessToken;
+          // 直接从data中获取各种可能的返回格式
+          token = response.data.token || response.data.accessToken;
           refreshToken = response.data.refreshToken;
-          userData = response.data.user ;
           
-          console.log('解析的数据:', { token, refreshToken, userData });
-          console.log(token,)
+          // 检查用户数据位置
+          if (response.data.user) {
+            userData = response.data.user;
+          } else if (response.data.userInfo) {
+            userData = response.data.userInfo;
+          } else if (response.data.userId || response.data.username) {
+            // 如果直接在data中包含用户信息
+            userData = response.data;
+          } else {
+            // 创建基本用户数据
+            userData = {
+              userId: loginData.username,
+              username: loginData.username,
+              roleId: loginData.roleId
+            };
+          }
           
-          // 保存token
+          console.log('解析的数据:', { 
+            token: token ? '已获取' : '未获取', 
+            refreshToken: refreshToken ? '已获取' : '未获取', 
+            userData: userData 
+          });
+          
+          // 保存token (如有)
           if (token && refreshToken) {
             saveToken(token, refreshToken);
             console.log('Token已保存');
@@ -143,21 +162,30 @@ export const useUserStore = defineStore('foreground-user', () => {
             console.warn('登录成功但未返回有效Token');
           }
           
+          // 确保userData包含基本必需字段
+          if (!userData.roleId && loginData.roleId) {
+            userData.roleId = loginData.roleId;
+          }
+          
+          if (!userData.username && loginData.username) {
+            userData.username = loginData.username;
+          }
+          
           // 设置用户信息
-          if (userData && userData.userId) {
+          try {
             setUserInfo(userData);
             console.log('用户信息已保存:', userData);
-          } else {
-            console.warn('登录成功但用户信息不完整');
-            // 尝试设置基本用户信息
+          } catch (err) {
+            console.error('设置用户信息时发生错误:', err);
+            // 尝试使用最基本的用户信息
             const basicUserInfo = {
-              userId: userData?.userId || loginData.username,
+              userId: loginData.username,
               username: loginData.username,
-              roleId: loginData.roleId,
+              roleId: Number(loginData.roleId),
               roles: loginData.roleId === 1 ? ['elder'] : ['kin']
             };
             setUserInfo(basicUserInfo);
-            console.log('已设置基本用户信息:', basicUserInfo);
+            console.log('使用基本信息设置用户:', basicUserInfo);
           }
           
           loading.value = false;
