@@ -100,6 +100,7 @@
                     :on-success="handleAvatarSuccess"
                     :before-upload="beforeAvatarUpload"
                     :headers="uploadHeaders"
+                    :disabled="!isEditMode"
                   >
                     <img v-if="profileForm.avatar" :src="processedAvatarUrl" class="avatar" />
                     <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
@@ -113,6 +114,7 @@
                     type="textarea"
                     :rows="3"
                     placeholder="请输入个人简介"
+                    :disabled="!isEditMode"
                   />
                 </el-form-item>
               </el-col>
