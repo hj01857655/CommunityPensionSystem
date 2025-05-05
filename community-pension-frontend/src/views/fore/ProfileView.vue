@@ -101,7 +101,7 @@
                     :before-upload="beforeAvatarUpload"
                     :headers="uploadHeaders"
                   >
-                    <img v-if="profileForm.avatar" :src="profileForm.avatar" class="avatar" />
+                    <img v-if="profileForm.avatar" :src="processedAvatarUrl" class="avatar" />
                     <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
                   </el-upload>
                 </el-form-item>
@@ -189,11 +189,12 @@
 </template>
 
 <script setup>
-import {computed, onMounted, ref} from 'vue'
-import {ElMessage, ElMessageBox} from 'element-plus'
-import {Plus} from '@element-plus/icons-vue'
-import {useUserStore} from '@/stores/fore/userStore';
-import {TokenManager} from '@/utils/axios';
+import { useUserStore } from '@/stores/fore/userStore';
+import { getAvatarUrl } from '@/utils/avatarUtils';
+import { TokenManager } from '@/utils/axios';
+import { Plus } from '@element-plus/icons-vue';
+import { ElMessage, ElMessageBox } from 'element-plus';
+import { computed, onMounted, ref } from 'vue';
 
 const userStore = useUserStore();
 
@@ -260,27 +261,25 @@ const handleUnbindFamily = async (kin) => {
 
 // 获取用户角色
 const userRole = computed(() => {
-  const role = userStore.userInfo?.roleId || userStore.userInfo?.roles?.[0];
-  console.log('当前用户角色:', role);
-  if (!role) {
-    console.warn('用户角色未定义，可能未正确加载用户信息');
-  }
-  return role;
+  // 直接使用userStore中定义的userRole计算属性
+  return userStore.userRole;
 });
 
 // 判断是否为老人角色
 const isElder = computed(() => {
   const role = userRole.value;
-  const isElderRole = role === 'elder' || role === 2;
-  console.log('判断是否为老人角色:', isElderRole);
+  // 修复角色判断逻辑，接受数字1或字符串'elder'作为老人角色
+  const isElderRole = role === 'elder' || role === 1;
+  console.log('判断是否为老人角色:', isElderRole, '角色值:', role, '角色类型:', typeof role);
   return isElderRole;
 });
 
 // 判断是否为家属角色
 const isKin = computed(() => {
   const role = userRole.value;
-  const isKinRole = role === 'kin' || role === 3;
-  console.log('判断是否为家属角色:', isKinRole);
+  // 修复角色判断逻辑，接受数字2或字符串'kin'作为家属角色
+  const isKinRole = role === 'kin' || role === 2;
+  console.log('判断是否为家属角色:', isKinRole, '角色值:', role, '角色类型:', typeof role);
   return isKinRole;
 });
 
@@ -457,7 +456,12 @@ const handleAvatarSuccess = (response) => {
   if (response && response.code === 200) {
     // 更新头像URL
     profileForm.value.avatar = response.data;
+    // 更新用户信息中的头像
+    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+    userInfo.avatar = response.data;
+    localStorage.setItem('userInfo', JSON.stringify(userInfo));
     ElMessage.success('头像上传成功');
+    console.log('头像上传成功，新的头像地址:', response.data);
   } else {
     ElMessage.error('头像上传失败');
   }
@@ -490,53 +494,78 @@ const getHealthRecord = async () => {
 // 初始化表单数据
 const initFormData = async () => {
   try {
+    console.log('开始初始化个人信息表单...');
+    
     // 获取用户信息
-    const userInfo = await userStore.getUserInfo()
-    if (!userInfo || userInfo.code !== 200) {
-      ElMessage.error('获取用户信息失败')
-      return
+    const userInfoResponse = await userStore.getUserInfo();
+    console.log('获取到的用户信息响应:', userInfoResponse);
+    
+    // 检查获取的用户信息是否有效
+    if (!userInfoResponse || userInfoResponse.code !== 200 || !userInfoResponse.data) {
+      console.error('获取用户信息失败或无效:', userInfoResponse);
+      ElMessage.error('获取用户信息失败');
+      return;
     }
+    
+    const userData = userInfoResponse.data;
+    
+    // 输出角色相关信息进行调试
+    console.log('用户数据中的角色信息:', {
+      roleId: userData.roleId,
+      roles: userData.roles,
+      userStoreRoleId: userStore.roleId,
+      userStoreRole: userStore.userRole,
+      isElder: isElder.value,
+      isKin: isKin.value
+    });
 
     // 保存原始表单数据
-    const originalFormData = {...profileForm.value}
+    const originalFormData = {...profileForm.value};
 
     // 更新表单数据，保留原有值作为后备
     profileForm.value = {
-      id: userInfo.data.userId || originalFormData.id,
-      name: userInfo.data.name || originalFormData.name,
-      gender: userInfo.data.gender || originalFormData.gender,
-      phone: userInfo.data.phone || originalFormData.phone,
-      email: userInfo.data.email || originalFormData.email,
-      avatar: userInfo.data.avatar || originalFormData.avatar,
-      roles: userInfo.data.roles || originalFormData.roles,
-      isActive: userInfo.data.isActive || originalFormData.isActive,
+      id: userData.userId || originalFormData.id,
+      name: userData.name || originalFormData.name,
+      gender: userData.gender || originalFormData.gender,
+      phone: userData.phone || originalFormData.phone,
+      email: userData.email || originalFormData.email,
+      avatar: userData.avatar || originalFormData.avatar,
+      roles: userData.roles || originalFormData.roles,
+      isActive: userData.isActive || originalFormData.isActive,
       // 老人特有字段
-      idCard: userInfo.data.idCard || originalFormData.idCard,
-      birthday: userInfo.data.birthday || originalFormData.birthday,
-      age: userInfo.data.age || originalFormData.age,
-      healthCondition: userInfo.data.healthCondition || originalFormData.healthCondition,
-      emergencyContactName: userInfo.data.emergencyContactName || originalFormData.emergencyContactName,
-      emergencyContactPhone: userInfo.data.emergencyContactPhone || originalFormData.emergencyContactPhone,
+      idCard: userData.idCard || originalFormData.idCard,
+      birthday: userData.birthday || originalFormData.birthday,
+      age: userData.age || originalFormData.age,
+      healthCondition: userData.healthCondition || originalFormData.healthCondition,
+      emergencyContactName: userData.emergencyContactName || originalFormData.emergencyContactName,
+      emergencyContactPhone: userData.emergencyContactPhone || originalFormData.emergencyContactPhone,
       // 家属特有字段
-      elderId: userInfo.data.elderId || originalFormData.elderId,
-      elderName: userInfo.data.elderName || originalFormData.elderName,
-      relationType: userInfo.data.relationType || originalFormData.relationType,
+      elderId: userData.elderId || originalFormData.elderId,
+      elderName: userData.elderName || originalFormData.elderName,
+      relationType: userData.relationType || originalFormData.relationType,
       // 绑定关系
-      bindKinIds: userInfo.data.bindKinIds || originalFormData.bindKinIds,
-      bindElderIds: userInfo.data.bindElderIds || originalFormData.bindElderIds
-    }
+      bindKinIds: userData.kinIds || userData.bindKinIds || originalFormData.bindKinIds,
+      bindElderIds: userData.elderIds || userData.bindElderIds || originalFormData.bindElderIds
+    };
+    
+    console.log('已更新表单数据:', profileForm.value);
+    console.log('重新检查角色状态 - isElder:', isElder.value, 'isKin:', isKin.value);
 
     // 根据角色加载相关列表
     if (isElder.value) {
-      await getKinList()
+      console.log('用户是老人角色，加载家属列表...');
+      await getKinList();
     } else if (isKin.value) {
-      await getElderList()
+      console.log('用户是家属角色，加载老人列表...');
+      await getElderList();
+    } else {
+      console.warn('用户角色无法识别，不加载关联列表');
     }
   } catch (error) {
-    console.error('初始化表单数据失败:', error)
-    ElMessage.error('初始化表单数据失败')
+    console.error('初始化表单数据失败:', error);
+    ElMessage.error('初始化表单数据失败');
   }
-}
+};
 
 // 保存个人信息
 const saveProfile = async () => {
@@ -681,6 +710,11 @@ const handleUnbindElder = async (elderId) => {
     }
   }
 };
+
+// 计算属性：处理头像URL
+const processedAvatarUrl = computed(() => {
+  return getAvatarUrl(profileForm.value.avatar);
+});
 
 </script>
 

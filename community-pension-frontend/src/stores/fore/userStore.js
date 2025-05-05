@@ -42,6 +42,23 @@ export const useUserStore = defineStore('foreground-user', () => {
     return getAvatarUrl(userInfo.value?.avatar);
   });
 
+  // 获取用户角色
+  const userRole = computed(() => {
+    // 获取角色，优先使用roleId
+    const role = Number(roleId.value) || Number(localStorage.getItem('roleId')) || null;
+    console.log('当前用户角色信息:', {
+      storeRoleId: roleId.value,
+      localStorageRoleId: localStorage.getItem('roleId'),
+      calculatedRole: role,
+      roleType: typeof role
+    });
+    
+    if (!role) {
+      console.warn('用户角色未定义，可能未正确加载用户信息');
+    }
+    return role;
+  });
+
   // 方法定义
   // 保存token到存储和TokenManager
   const saveToken = (token, refreshToken) => {
@@ -210,32 +227,68 @@ export const useUserStore = defineStore('foreground-user', () => {
   const getUserInfo = async () => {
     try {
       // 从本地存储获取用户信息
-      const userInfo = localStorage.getItem('userInfo')
-      if (userInfo) {
-        const parsedUserInfo = JSON.parse(userInfo)
-        // 确保角色ID存在
-        if (!parsedUserInfo.roleId && parsedUserInfo.roleIds && parsedUserInfo.roleIds.length > 0) {
-          parsedUserInfo.roleId = parsedUserInfo.roleIds[0]
+      const userInfoStr = localStorage.getItem('userInfo');
+      console.log('从localStorage获取的原始用户信息:', userInfoStr);
+      
+      if (userInfoStr) {
+        const parsedUserInfo = JSON.parse(userInfoStr);
+        console.log('解析后的用户信息:', parsedUserInfo);
+        
+        // 确保角色ID存在并设置到store中
+        if (parsedUserInfo.roleId) {
+          roleId.value = Number(parsedUserInfo.roleId);
+          console.log('设置roleId到store:', roleId.value);
         }
-        return parsedUserInfo
+        
+        // 确保用户信息设置到store中
+        userInfo.value = parsedUserInfo;
+        isLoggedIn.value = true;
+        
+        // 确保角色设置正确
+        if (parsedUserInfo.roles && Array.isArray(parsedUserInfo.roles)) {
+          roles.value = parsedUserInfo.roles;
+        } else if (parsedUserInfo.roleId) {
+          // 根据roleId推断角色
+          roles.value = parsedUserInfo.roleId === 1 ? ['elder'] : ['kin'];
+        }
+        
+        return {
+          code: 200,
+          data: parsedUserInfo
+        };
       }
 
-      // 从API获取用户信息
-      const response = await axios.get('/user/info')
+      // 从API获取用户信息（如果本地没有）
+      const response = await axios.get('/user/info');
       if (response.code === 200 && response.data) {
-        const userData = response.data
+        const userData = response.data;
         // 确保角色ID存在
         if (!userData.roleId && userData.roleIds && userData.roleIds.length > 0) {
-          userData.roleId = userData.roleIds[0]
+          userData.roleId = userData.roleIds[0];
         }
-        // 存储到本地
-        localStorage.setItem('userInfo', JSON.stringify(userData))
-        return userData
+        
+        // 存储到本地和store
+        localStorage.setItem('userInfo', JSON.stringify(userData));
+        userInfo.value = userData;
+        roleId.value = Number(userData.roleId);
+        isLoggedIn.value = true;
+        
+        return {
+          code: 200,
+          data: userData
+        };
       }
-      return null
+      
+      return {
+        code: 404,
+        message: '未找到用户信息'
+      };
     } catch (error) {
-      console.error('获取用户信息失败:', error)
-      return null
+      console.error('获取用户信息失败:', error);
+      return {
+        code: 500,
+        message: '获取用户信息失败'
+      };
     }
   };
 
@@ -398,6 +451,7 @@ export const useUserStore = defineStore('foreground-user', () => {
     
     // 计算属性
     avatarUrl,
+    userRole,
     
     // 方法
     setUserInfo,

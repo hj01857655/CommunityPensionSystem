@@ -80,12 +80,16 @@ const submitForm = async () => {
       try {
         console.log("开始登录，表单数据：", loginForm.value);
         
-        // 使用用户存储的登录方法
-        const success = await userStore.login({
+        // 确保roleId是数字类型
+        const loginData = {
           username: loginForm.value.username,
           password: loginForm.value.password,
-          roleId: loginForm.value.roleId
-        });
+          roleId: Number(loginForm.value.roleId)
+        };
+        console.log("处理后的登录数据：", loginData);
+        
+        // 使用用户存储的登录方法
+        const success = await userStore.login(loginData);
 
         if (success) {
           // 确认登录状态已设置
@@ -94,16 +98,26 @@ const submitForm = async () => {
           // 如果选择记住密码，可以在这里处理本地存储
           if (rememberMe.value) {
             localStorage.setItem('rememberedUsername', loginForm.value.username);
-            localStorage.setItem('rememberedRoleId', loginForm.value.roleId);
+            localStorage.setItem('rememberedRoleId', loginForm.value.roleId.toString());
           }
           
           ElMessage.success('登录成功');
           
-          // 强制刷新以确保状态更新
+          console.log("登录成功，用户角色:", userStore.userRole, "登录状态:", userStore.isLoggedIn);
+          
+          // 强制延迟跳转以确保状态更新
           setTimeout(() => {
-            // 根据角色判断跳转
-            console.log("登录成功，准备跳转到首页");
-            router.push('/home');
+            // 再次检查登录状态
+            console.log("准备跳转前状态检查 - 登录状态:", userStore.isLoggedIn, "用户角色:", userStore.userRole);
+            if (userStore.isLoggedIn) {
+              console.log("登录状态有效，准备跳转到首页");
+              router.push('/home');
+            } else {
+              console.warn("登录状态无效，重试...");
+              // 强制更新状态并再次尝试
+              userStore.setUserInfo(userStore.userInfo);
+              setTimeout(() => router.push('/home'), 200);
+            }
           }, 500);
         } else {
           ElMessage.error('登录失败，用户名或密码错误');
