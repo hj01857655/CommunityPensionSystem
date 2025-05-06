@@ -123,21 +123,18 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
-import { ElMessage, ElMessageBox } from 'element-plus';
-import { Search, Edit, Delete, View, Plus, Refresh } from '@element-plus/icons-vue';
-import { useRouter } from 'vue-router';
-import Pagination from '@/components/common/Pagination.vue';
 import RightToolbar from '@/components/back/system/menu/RightToolbar.vue';
+import Pagination from '@/components/common/Pagination.vue';
 import { useNoticeStore } from '@/stores/back/noticeStore';
-import { 
-    getTypeTagType, 
-    getStatusTagType, 
-    noticeStatusMap,
-    transformNoticeForFrontend,
-    transformNoticeForBackend
-} from '@/utils/notice';
 import { formatDate, formatDateDetail } from '@/utils/date';
+import {
+    getTypeTagType,
+    transformNoticeForFrontend
+} from '@/utils/notice';
+import { Delete, Edit, Plus, Refresh, Search, View } from '@element-plus/icons-vue';
+import { ElMessage, ElMessageBox } from 'element-plus';
+import { computed, onMounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
 
 const router = useRouter();
 const noticeStore = useNoticeStore();
@@ -218,6 +215,11 @@ const handleSearch = () => {
 // 状态筛选变化
 const handleFilterChange = () => {
     currentPage.value = 1;
+    getNotices();
+};
+
+// 右侧工具栏刷新按钮
+const handleQuery = () => {
     getNotices();
 };
 
