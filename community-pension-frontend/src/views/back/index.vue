@@ -236,8 +236,28 @@ const getUserInfo = async () => {
   }
 };
 
+// 初始化首页标签
+const initHomeTab = () => {
+  // 检查是否已存在首页标签
+  const homeRoute = {
+    path: '/admin/home',
+    meta: {
+      title: '首页',
+      affix: true // 固定标签不可关闭
+    }
+  };
+  
+  // 添加首页标签
+  addTab(homeRoute);
+  
+  // 清理可能存在的重复标签
+  cleanupDuplicateTags();
+};
+
 onMounted(() => {
   getUserInfo();
+  // 初始化首页标签
+  initHomeTab();
 });
 </script>
 

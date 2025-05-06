@@ -10,6 +10,7 @@
         :class="isActive(tag) ? 'active' : ''"
         :data-path="tag.path"
         class="tags-view-item"
+        @click="handleTagClick(tag)"
         @click.middle="closeSelectedTag(tag)"
         @contextmenu.prevent="openMenu(tag, $event)"
       >
@@ -31,26 +32,8 @@
 <script setup>
 import { useTagsViewStore } from '@/stores/tagsView';
 import { ElScrollbar } from 'element-plus';
-import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-
-// 定义props，但使用store作为主要数据源
-const props = defineProps({
-  visitedViews: {
-    type: Array,
-    required: true
-  }
-});
-
-const emit = defineEmits([
-  'add-tab',
-  'remove-tab',
-  'close-others',
-  'close-all',
-  'close-left',
-  'close-right',
-  'refresh'
-]);
 
 const route = useRoute();
 const router = useRouter();
@@ -61,54 +44,20 @@ const top = ref(0);
 const left = ref(0);
 const selectedTag = ref({});
 
-// 使用computed引用store中的数据，确保始终使用最新状态
-const visitedViews = ref(tagsViewStore.visitedViews);
-// 同步store变化到本地
-watch(() => tagsViewStore.visitedViews, (newViews) => {
-  visitedViews.value = newViews;
-}, { deep: true });
+// 直接使用 computed 从 store 获取 visitedViews
+const visitedViews = computed(() => tagsViewStore.visitedViews);
 
-// 监听路由变化，初始化当前标签
+// 监听路由变化，尝试添加新标签到 store
 watch(
-  () => route.path,
-  (newPath) => {
-    try {
-      // 规范化路径，移除末尾斜杠
-      const normalizedPath = newPath.replace(/\/$/, '');
-      
-      // 在添加之前先检查是否已存在重复标签
-      const existingTags = visitedViews.value.filter(v => 
-        v.path.replace(/\/$/, '') === normalizedPath ||
-        v.path.replace(/\/$/, '') + '/' === normalizedPath + '/'
-      );
-      
-      if (existingTags.length > 0) {
-        // 如果发现重复标签，则清理多余的
-        if (existingTags.length > 1) {
-          // 保留第一个，删除其余的
-          for (let i = 1; i < existingTags.length; i++) {
-            emit('remove-tab', existingTags[i]);
-          }
-        }
-        return;
-      }
-      
-      // 不添加首页和特殊页面
-      if (normalizedPath !== '/admin/home' && route.meta?.showInTab !== false && !route.meta?.isFirstLevelMenu) {
-        emit('add-tab', {
-          path: normalizedPath, // 使用规范化的路径
-          name: route.name,
-          meta: { 
-            ...route.meta,
-            title: route.meta?.title || getDefaultTitle(normalizedPath)
-          }
-        });
-      }
-    } catch (error) {
-      // 错误处理
+  () => route.fullPath, // 监听 fullPath 以处理 query 参数变化
+  (newFullPath) => {
+    if (route.name) { // 确保路由有 name
+      tagsViewStore.addView({ ...route }); // 传递整个 route 对象给 store action
     }
+    // 添加后滚动到当前标签
+    moveToCurrentTag();
   },
-  { immediate: true }
+  { immediate: true } // 立即执行一次以添加初始标签
 );
 
 // 获取默认标题的函数
@@ -127,78 +76,33 @@ function getDefaultTitle(path) {
 
 // 判断标签是否为固定标签
 function isAffix(tag) {
-  return tag && ((tag.meta && tag.meta.affix) || tag.path === '/admin/home');
+  // 首页标签始终固定，不允许关闭
+  if (!tag) return false;
+  
+  // 规范化路径进行比较
+  const normalizedPath = tag.path?.replace(/\/$/, '');
+  
+  // 判断是否是首页标签
+  return tag?.meta?.affix || normalizedPath === '/admin/home' || normalizedPath === '/dashboard';
+}
+
+// 处理标签点击事件
+function handleTagClick(tag) {
+  // 确保标签被正确激活
+  tagsViewStore.updateVisitedView(tag);
+  
+  // 如果是当前活动标签，则刷新当前页面
+  if (isActive(tag) && tag.path === route.path) {
+    // 如果已经是当前标签，则刷新当前页面
+    refreshSelectedTag(tag);
+  }
 }
 
 // 组件挂载时初始化
 onMounted(() => {
-  try {
-    // 首先清理可能存在的重复标签
-    cleanTags();
-    
-    // 初始化首页标签
-    const homeView = {
-      path: '/admin/home', // 确保使用规范化的路径
-      name: 'AdminHome',
-      meta: { 
-        title: '首页',
-        affix: true 
-      }
-    };
-    
-    // 检查首页标签是否存在（包括可能末尾有斜杠的路径）
-    const homeTags = visitedViews.value.filter(v => 
-      v.path.replace(/\/$/, '') === '/admin/home'
-    );
-    
-    if (homeTags.length === 0) {
-      // 没有首页标签，添加一个
-      emit('add-tab', homeView);
-    } else if (homeTags.length > 1) {
-      // 有多个首页标签，清理多余的，只保留一个
-      // 优先保留 affixed 的标签
-      const affixedHomeTag = homeTags.find(tag => tag.meta?.affix);
-      const tagToKeep = affixedHomeTag || homeTags[0];
-      
-      homeTags.forEach(tag => {
-        if (tag !== tagToKeep) {
-          emit('remove-tab', tag);
-        }
-      });
-    }
-    
-    // 初始化当前路由标签（如果不是首页）
-    const currentPath = route.path.replace(/\/$/, ''); // 规范化当前路径
-    
-    if (currentPath !== '/admin/home' && route.meta?.showInTab !== false && !route.meta?.isFirstLevelMenu) {
-      // 检查当前路径标签是否存在
-      const currentTags = visitedViews.value.filter(v => 
-        v.path.replace(/\/$/, '') === currentPath
-      );
-      
-      if (currentTags.length === 0) {
-        // 没有当前页面的标签，添加一个
-        emit('add-tab', {
-          path: currentPath,
-          name: route.name,
-          meta: { 
-            ...route.meta,
-            title: route.meta?.title || getDefaultTitle(currentPath)
-          }
-        });
-      } else if (currentTags.length > 1) {
-        // 有多个相同路径标签，清理多余的
-        for (let i = 1; i < currentTags.length; i++) {
-          emit('remove-tab', currentTags[i]);
-        }
-      }
-    }
-  } catch (error) {
-    // 错误处理
-  }
-  
-  // 监听点击事件以关闭上下文菜单
   document.addEventListener('click', closeMenu);
+  // 确保初始时滚动到活动标签
+  nextTick(moveToCurrentTag);
 });
 
 // 组件卸载时移除事件监听
@@ -208,83 +112,189 @@ onBeforeUnmount(() => {
 
 // 检查标签是否激活
 function isActive(tag) {
-  // 规范化当前路径，处理末尾斜杠问题
-  const currentPath = route.path.replace(/\/$/, '');
+  if (!tag) return false;
+  
+  // 规范化路径进行比较
   const tagPath = tag.path.replace(/\/$/, '');
-  return currentPath === tagPath;
+  const routePath = route.path.replace(/\/$/, '');
+  
+  // 直接比较规范化后的路径
+  return tagPath === routePath;
 }
 
-// 关闭选定的标签 - 改进版
+// 关闭选定的标签 - 调用 store action
 function closeSelectedTag(tag) {
-  try {
-    // 固定标签不能关闭
-    if (isAffix(tag)) {
-      return;
+  // 如果是固定标签，不允许关闭
+  if (isAffix(tag)) {
+    return;
+  }
+  
+  // 检查是否是当前活动标签
+  const currentIsActive = isActive(tag);
+  let nextTag = null;
+  
+  // 如果关闭的是当前活动标签，需要确定下一个要导航到的标签
+  if (currentIsActive) {
+    // 获取标签在数组中的位置
+    const tagIndex = visitedViews.value.findIndex(v => v.path === tag.path);
+    
+    // 首先尝试导航到最后一个标签（排除当前标签）
+    const lastTag = visitedViews.value[visitedViews.value.length - 1];
+    if (lastTag && lastTag.path !== tag.path) {
+      nextTag = lastTag;
     }
+    // 如果最后一个标签就是当前标签，则尝试前一个标签
+    else if (tagIndex > 0) {
+      nextTag = visitedViews.value[tagIndex - 1];
+    } 
+    // 如果没有前一个，尝试导航到后一个标签
+    else if (visitedViews.value.length > tagIndex + 1) {
+      nextTag = visitedViews.value[tagIndex + 1];
+    }
+    
+    // 如果上述标签都不存在，则导航到首页
+    if (!nextTag) {
+      // 尝试找到首页标签
+      const homeTag = visitedViews.value.find(v => {
+        const normalizedPath = v.path.replace(/\/$/, '');
+        return normalizedPath === '/admin/home' || normalizedPath === '/dashboard';
+      });
+      nextTag = homeTag || { path: '/admin/home', fullPath: '/admin/home' }; // 确保总有后备
+    }
+  }
 
-    // 如果关闭的是当前活动标签，需要先找出下一个要导航的标签
-    let nextTag = null;
-    if (isActive(tag)) {
-      // 在移除前确定下一个导航目标
-      const tagIndex = visitedViews.value.findIndex(v => v.path === tag.path);
-      
-      // 优先选择左侧标签
-      if (tagIndex > 0) {
-        nextTag = { ...visitedViews.value[tagIndex - 1] };
-      } 
-      // 如果没有左侧标签，选择右侧标签
-      else if (visitedViews.value.length > 1 && tagIndex + 1 < visitedViews.value.length) {
-        nextTag = { ...visitedViews.value[tagIndex + 1] };
-      } 
-      // 如果没有其他标签，导航到首页
-      else {
-        nextTag = { path: '/admin/home', meta: { title: '首页' } };
-      }
-    }
-    
-    // 触发关闭事件到父组件
-    emit('remove-tab', tag);
-    
-    // 如果是当前标签，在nextTick后导航到下一个标签
-    if (isActive(tag) && nextTag) {
-      // 使用nextTick确保DOM更新后再进行导航
-      nextTick(() => {
-        router.push(nextTag.path);
+  // 调用 store action 删除标签
+  tagsViewStore.delView(tag).then(() => {
+    // 删除成功后，如果是关闭当前活动标签，则导航到下一个标签
+    if (currentIsActive && nextTag) {
+      // 使用更可靠的导航方式，确保有 fullPath 和 path 的后备
+      const targetPath = nextTag.fullPath || nextTag.path;
+      router.push(targetPath).catch(err => {
+        console.error('导航失败:', err);
+        // 如果导航失败，尝试导航到首页
+        router.push('/admin/home');
       });
     }
-  } catch (error) {
-    // 出错时导航到安全的首页
-    router.push('/admin/home');
-  }
+  });
 }
 
-// 刷新选定的标签
+// 刷新选定的标签 - 调用 store action
 function refreshSelectedTag(tag) {
-  emit('refresh', tag);
+  // 先移除缓存，确保组件会重新渲染
+  tagsViewStore.delCachedView(tag).then(() => {
+    // 使用 nextTick 确保 DOM 更新后再执行刷新操作
+    nextTick(() => {
+      // 获取当前路径
+      const { fullPath, path } = route;
+      const currentPath = fullPath || path;
+      
+      // 如果当前标签就是要刷新的标签
+      if (tag.path === route.path || tag.fullPath === route.fullPath) {
+        // 不使用重定向路由，改用其他方式刷新
+        // 先导航到一个不同的路径（如首页），然后再导航回来
+        const homeTag = tagsViewStore.visitedViews.find(v => {
+          const normalizedPath = v.path.replace(/\/$/, '');
+          return normalizedPath === '/admin/home';
+        });
+        
+        if (homeTag && homeTag.path !== tag.path) {
+          // 先导航到首页
+          router.push(homeTag.path).then(() => {
+            // 然后导航回原标签
+            nextTick(() => {
+              router.push(tag.fullPath || tag.path);
+            });
+          }).catch(err => {
+            console.error('刷新标签失败:', err);
+          });
+        } else {
+          // 如果没有首页标签或当前就是首页，直接刷新页面
+          window.location.reload();
+        }
+      } else {
+        // 如果刷新的不是当前标签，先标记为已刷新
+        tagsViewStore.refreshTag(tag);
+      }
+    });
+  });
+  closeMenu(); // 关闭右键菜单
 }
 
-// 关闭其他标签
+// 关闭其他标签 - 调用 store action
 function closeOthersTags() {
-  emit('close-others', selectedTag.value);
+  if (!selectedTag.value || !selectedTag.value.path) return;
+  // 确保传递的是有效的 tag 对象
+  const tagToKeep = visitedViews.value.find(v => v.path === selectedTag.value.path);
+  if (tagToKeep) {
+    tagsViewStore.delOthersViews(tagToKeep).then(() => {
+      if (!isActive(tagToKeep)) { // 如果关闭后当前选中的不是活动标签，导航到它
+         router.push(tagToKeep.fullPath || tagToKeep.path);
+      }
+    });
+  }
   closeMenu();
 }
 
-// 关闭所有标签
+// 关闭所有标签 - 调用 store action
 function closeAllTags() {
-  emit('close-all');
-  router.push('/admin/home');
+  // 先关闭菜单
   closeMenu();
+  
+  // 调用 store action 删除所有视图
+  tagsViewStore.delAllViews().then(({ visitedViews: remainingViews }) => {
+    // 确保标签列表中只有一个首页标签
+    const homeTag = remainingViews.find(tag => {
+      const normalizedPath = tag.path.replace(/\/$/, '');
+      return normalizedPath === '/admin/home' || normalizedPath === '/dashboard';
+    });
+    
+    // 如果当前活动路由不在剩余标签中，导航到首页
+    if (!remainingViews.some(v => isActive(v))) {
+      // 使用 nextTick 确保 DOM 更新后再导航
+      nextTick(() => {
+        if (homeTag) {
+          // 如果有首页标签，导航到首页
+          router.push(homeTag.fullPath || homeTag.path).catch(err => {
+            console.error('导航失败:', err);
+            router.push('/admin/home');
+          });
+        } else if (remainingViews.length > 0) {
+          // 如果没有首页标签但有其他标签，导航到第一个标签
+          router.push(remainingViews[0].fullPath || remainingViews[0].path);
+        } else {
+          // 如果没有任何标签（理论上不应发生），导航到首页
+          router.push('/admin/home');
+        }
+      });
+    }
+  });
 }
 
-// 关闭左侧标签
+// 关闭左侧标签 - 调用 store action
 function closeLeftTags() {
-  emit('close-left', selectedTag.value);
+  if (!selectedTag.value || !selectedTag.value.path) return;
+  const tagReference = visitedViews.value.find(v => v.path === selectedTag.value.path);
+  if (tagReference) {
+     tagsViewStore.delLeftViews(tagReference).then(() => {
+       if (!isActive(tagReference)) { // 如果关闭后当前选中的不是活动标签，导航到它
+         router.push(tagReference.fullPath || tagReference.path);
+       }
+     });
+  }
   closeMenu();
 }
 
-// 关闭右侧标签
+// 关闭右侧标签 - 调用 store action
 function closeRightTags() {
-  emit('close-right', selectedTag.value);
+  if (!selectedTag.value || !selectedTag.value.path) return;
+  const tagReference = visitedViews.value.find(v => v.path === selectedTag.value.path);
+  if (tagReference) {
+     tagsViewStore.delRightViews(tagReference).then(() => {
+       if (!isActive(tagReference)) { // 如果关闭后当前选中的不是活动标签，导航到它
+         router.push(tagReference.fullPath || tagReference.path);
+       }
+     });
+  }
   closeMenu();
 }
 
@@ -316,31 +326,23 @@ function closeMenu() {
   visible.value = false;
 }
 
-// 清理标签函数
-function cleanTags() {
-  // 查找重复标签
-  const normalizedPaths = new Map();
-  const duplicates = [];
-  
-  visitedViews.value.forEach(tag => {
-    const normalizedPath = tag.path.replace(/\/$/, '');
-    
-    if (normalizedPaths.has(normalizedPath)) {
-      duplicates.push({
-        original: normalizedPaths.get(normalizedPath),
-        duplicate: tag
-      });
-    } else {
-      normalizedPaths.set(normalizedPath, tag);
+// 新增：滚动到当前激活的标签
+function moveToCurrentTag() {
+  nextTick(() => {
+    for (const tag of tagRefs.value || []) {
+      const tagPath = tag.$el.getAttribute('data-path'); // 从 ref 获取实际 path
+      if (tagPath === route.path) {
+        // 调用滚动方法，需要获取 el-scrollbar 实例
+        // 这里假设 el-scrollbar 组件可以通过 ref 访问，或者需要找到其他方式
+        // (此部分可能需要根据 ElScrollbar 的 API 调整)
+        // 示例性代码：
+        // const scrollbarInstance = ... // 获取 el-scrollbar 实例
+        // const tagElement = tag.$el;
+        // scrollbarInstance.scrollTo({ left: tagElement.offsetLeft, behavior: 'smooth' }); 
+        break;
+      }
     }
   });
-  
-  // 清理重复标签
-  if (duplicates.length > 0) {
-    duplicates.forEach(pair => {
-      emit('remove-tab', pair.duplicate);
-    });
-  }
 }
 </script>
 

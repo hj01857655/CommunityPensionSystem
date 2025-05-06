@@ -14,7 +14,7 @@
     <el-menu :default-active="activeMenu" class="el-menu-vertical" :collapse="isCollapse" background-color="#304156"
       text-color="#bfcbd9" active-text-color="#409EFF" router>
       <!-- 首页 -->
-      <el-menu-item index="/admin/home/">
+      <el-menu-item index="/admin/home/" @click="handleMenuClick('/admin/home/')">
         <template #title>
           <el-icon>
             <Odometer />
@@ -75,7 +75,7 @@
 
       
       <!-- 服务预约管理 -->
-      <el-sub-menu index="services">
+      <el-sub-menu index="/admin/services">
         <template #title>
           <el-icon>
             <Service />
@@ -183,7 +183,8 @@
 
 <script setup>
 import { computed } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
+import { useTagsViewStore } from '@/stores/tagsView';
 import {
   Odometer,
   User,
@@ -205,7 +206,34 @@ const props = defineProps({
 });
 
 const route = useRoute();
+const router = useRouter();
+const tagsViewStore = useTagsViewStore();
 const activeMenu = computed(() => route.path);
+
+// 处理菜单点击事件，确保标签被正确激活
+const handleMenuClick = (path) => {
+  // 规范化路径
+  const normalizedPath = path.replace(/\/$/, '');
+  
+  // 查找对应路径的标签
+  const targetTag = tagsViewStore.visitedViews.find(tag => {
+    // 规范化路径进行比较
+    const tagPath = tag.path.replace(/\/$/, '');
+    return tagPath === normalizedPath;
+  });
+  
+  // 如果找到匹配的标签
+  if (targetTag) {
+    // 更新标签状态
+    tagsViewStore.updateVisitedView(targetTag);
+    
+    // 强制导航到该路径，确保标签被激活
+    router.push(targetTag.fullPath || targetTag.path);
+  } else {
+    // 如果没有找到匹配的标签，直接导航到该路径
+    router.push(path);
+  }
+};
 </script>
 
 <style scoped>

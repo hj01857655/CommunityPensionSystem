@@ -1,8 +1,30 @@
 import { defineStore } from 'pinia';
 
+// 从 localStorage 或 sessionStorage 中获取持久化的标签
+const getPersistedTags = () => {
+  try {
+    const persistedTags = sessionStorage.getItem('tagsView');
+    if (persistedTags) {
+      return JSON.parse(persistedTags);
+    }
+  } catch (error) {
+    console.error('从存储中恢复标签失败:', error);
+  }
+  return [];
+};
+
+// 将标签持久化到 localStorage 或 sessionStorage
+const persistTags = (tags) => {
+  try {
+    sessionStorage.setItem('tagsView', JSON.stringify(tags));
+  } catch (error) {
+    console.error('持久化标签失败:', error);
+  }
+};
+
 export const useTagsViewStore = defineStore('tagsView', {
   state: () => ({
-    visitedViews: [],
+    visitedViews: getPersistedTags(),
     cachedViews: []
   }),
 
@@ -90,12 +112,25 @@ export const useTagsViewStore = defineStore('tagsView', {
       const normalizedPath = view.path.replace(/\/$/, '');
       view.path = normalizedPath;
       
-      // 使用规范化路径检查标签是否已存在
-      const existingView = this.visitedViews.find(v => 
-        v.path === normalizedPath || v.path === normalizedPath + '/'
-      );
+      // 使用更严格的检查标准来确定标签是否已存在
+      const existingView = this.visitedViews.find(v => {
+        // 规范化路径进行比较
+        const vNormalizedPath = v.path.replace(/\/$/, '');
+        return vNormalizedPath === normalizedPath;
+      });
       
       if (existingView) {
+        // 如果标签已存在，更新标签信息
+        if (view.meta && view.meta.title && (!existingView.meta || !existingView.meta.title)) {
+          existingView.meta = existingView.meta || {};
+          existingView.meta.title = view.meta.title;
+        }
+        
+        // 更新fullPath，以确保查询参数的变化能被捕获
+        if (view.fullPath && view.fullPath !== existingView.fullPath) {
+          existingView.fullPath = view.fullPath;
+        }
+        
         return;
       }
       
@@ -145,7 +180,19 @@ export const useTagsViewStore = defineStore('tagsView', {
         fullPath: view.fullPath || normalizedPath
       };
       
-      this.visitedViews.push(viewToAdd);
+      // 判断是否是首页标签
+      const isHomeTag = normalizedPath === '/admin/home';
+      
+      if (isHomeTag) {
+        // 如果是首页标签，放在数组的最前面
+        this.visitedViews.unshift(viewToAdd);
+      } else {
+        // 其他标签放在数组最后
+        this.visitedViews.push(viewToAdd);
+      }
+      
+      // 持久化标签状态
+      persistTags(this.visitedViews);
     },
 
     // 添加缓存视图
@@ -163,29 +210,12 @@ export const useTagsViewStore = defineStore('tagsView', {
     // 删除视图
     delView(view) {
       if (!view || typeof view !== 'object' || !view.path) {
-        return Promise.resolve({ visitedViews: [...this.visitedViews], cachedViews: [...this.cachedViews] });
+        return Promise.resolve();
       }
-
-      // 检查是否正在删除当前激活的视图
-      const isActiveView = this.visitedViews.some(v => v.path === view.path && this.isActiveView(v));
-      if (isActiveView && this.visitedViews.length > 1) {
-        // 找到当前视图的索引
-        const index = this.visitedViews.findIndex(v => v.path === view.path);
-        // 选择上一个或下一个视图作为新的激活视图
-        const newActiveIndex = index > 0 ? index - 1 : index + 1;
-        const newActiveView = this.visitedViews[newActiveIndex];
-        // 可以在这里触发路由跳转或其他逻辑
-      }
-
       return Promise.all([
         this.delVisitedView(view),
         this.delCachedView(view)
-      ]).then(([visitedViews, cachedViews]) => {
-        return {
-          visitedViews,
-          cachedViews
-        };
-      });
+      ]);
     },
 
     // 删除已访问视图
@@ -194,96 +224,82 @@ export const useTagsViewStore = defineStore('tagsView', {
         const index = this.visitedViews.findIndex(v => v.path === view.path);
         if (index !== -1) {
           this.visitedViews.splice(index, 1);
+          // 持久化标签状态
+          persistTags(this.visitedViews);
         }
-        resolve([...this.visitedViews]);
+        resolve(this.visitedViews);
       });
     },
 
     // 删除缓存视图
     delCachedView(view) {
       if (!view || typeof view !== 'object' || !view.name) {
-        return Promise.resolve([...this.cachedViews]);
+        return Promise.resolve();
       }
-
-      const viewName = String(view.name);
       return new Promise(resolve => {
+        const viewName = String(view.name);
         const index = this.cachedViews.indexOf(viewName);
         if (index !== -1) {
           this.cachedViews.splice(index, 1);
         }
-        resolve([...this.cachedViews]);
+        resolve(this.cachedViews);
       });
     },
 
     // 删除其他视图
     delOthersViews(view) {
       if (!view || typeof view !== 'object' || !view.path) {
-        return Promise.resolve({ visitedViews: [...this.visitedViews], cachedViews: [...this.cachedViews] });
+        return Promise.resolve();
       }
-
       return Promise.all([
         this.delOthersVisitedViews(view),
         this.delOthersCachedViews(view)
-      ]).then(([visitedViews, cachedViews]) => {
-        return {
-          visitedViews,
-          cachedViews
-        };
-      });
+      ]);
     },
 
-    // 删除其他已访问视图，使用 Set 优化性能
+    // 删除其他已访问视图，直接修改 state
     delOthersVisitedViews(view) {
       return new Promise(resolve => {
         const keepViews = new Set();
         keepViews.add(view.path);
-        // 保留固定标签
         this.visitedViews.forEach(v => {
           if (v.meta?.affix) {
             keepViews.add(v.path);
           }
         });
         this.visitedViews = this.visitedViews.filter(v => keepViews.has(v.path));
-        resolve([...this.visitedViews]);
+        resolve(this.visitedViews);
       });
     },
 
-    // 删除其他缓存视图，使用 Set 优化性能
+    // 删除其他缓存视图，直接修改 state
     delOthersCachedViews(view) {
       if (!view || typeof view !== 'object' || !view.name) {
-        return Promise.resolve([...this.cachedViews]);
+        return Promise.resolve();
       }
-
-      const viewName = String(view.name);
       return new Promise(resolve => {
+        const viewName = String(view.name);
         const keepViews = new Set();
         keepViews.add(viewName);
-        // 保留对应的已访问视图的缓存
         this.visitedViews.forEach(v => {
           if (v.meta?.affix && v.name) {
             keepViews.add(String(v.name));
           }
         });
         this.cachedViews = this.cachedViews.filter(v => keepViews.has(v));
-        resolve([...this.cachedViews]);
+        resolve(this.cachedViews);
       });
     },
 
     // 删除左侧视图，使用 Set 优化性能
     delLeftViews(view) {
       if (!view || typeof view !== 'object' || !view.path) {
-        return Promise.resolve({ visitedViews: [...this.visitedViews], cachedViews: [...this.cachedViews] });
+        return Promise.resolve();
       }
-
       return Promise.all([
         this.delLeftVisitedViews(view),
         this.delLeftCachedViews(view)
-      ]).then(([visitedViews, cachedViews]) => {
-        return {
-          visitedViews,
-          cachedViews
-        };
-      });
+      ]);
     },
 
     // 删除左侧已访问视图
@@ -291,62 +307,49 @@ export const useTagsViewStore = defineStore('tagsView', {
       return new Promise(resolve => {
         const index = this.visitedViews.findIndex(v => v.path === view.path);
         if (index === -1) {
-          resolve([...this.visitedViews]);
-          return;
+          return resolve(this.visitedViews);
         }
-
         const keepPaths = new Set();
-        // 保留固定标签的路径
         this.visitedViews.forEach((v, i) => {
           if (i >= index || v.meta?.affix) {
             keepPaths.add(v.path);
           }
         });
         this.visitedViews = this.visitedViews.filter(v => keepPaths.has(v.path));
-        resolve([...this.visitedViews]);
+        resolve(this.visitedViews);
       });
     },
 
     // 删除左侧缓存视图
     delLeftCachedViews(view) {
       if (!view || typeof view !== 'object' || !view.path) {
-        return Promise.resolve([...this.cachedViews]);
+        return Promise.resolve();
       }
-
       return new Promise(resolve => {
         const index = this.visitedViews.findIndex(v => v.path === view.path);
         if (index === -1) {
-          resolve([...this.cachedViews]);
-          return;
+          return resolve(this.cachedViews);
         }
-
         const keepNames = new Set();
-        // 保留右侧视图和固定视图的名称
         this.visitedViews.forEach((v, i) => {
           if ((i >= index || v.meta?.affix) && v.name) {
             keepNames.add(String(v.name));
           }
         });
-        this.cachedViews = this.cachedViews.filter(v => keepNames.has(v));
-        resolve([...this.cachedViews]);
+        this.cachedViews = this.cachedViews.filter(name => keepNames.has(name));
+        resolve(this.cachedViews);
       });
     },
 
     // 删除右侧视图，使用 Set 优化性能
     delRightViews(view) {
       if (!view || typeof view !== 'object' || !view.path) {
-        return Promise.resolve({ visitedViews: [...this.visitedViews], cachedViews: [...this.cachedViews] });
+        return Promise.resolve();
       }
-
       return Promise.all([
         this.delRightVisitedViews(view),
         this.delRightCachedViews(view)
-      ]).then(([visitedViews, cachedViews]) => {
-        return {
-          visitedViews,
-          cachedViews
-        };
-      });
+      ]);
     },
 
     // 删除右侧已访问视图
@@ -354,65 +357,91 @@ export const useTagsViewStore = defineStore('tagsView', {
       return new Promise(resolve => {
         const index = this.visitedViews.findIndex(v => v.path === view.path);
         if (index === -1) {
-          resolve([...this.visitedViews]);
-          return;
+          return resolve(this.visitedViews);
         }
-
         const keepPaths = new Set();
-        // 保留左侧视图和固定视图的路径
         this.visitedViews.forEach((v, i) => {
           if (i <= index || v.meta?.affix) {
             keepPaths.add(v.path);
           }
         });
         this.visitedViews = this.visitedViews.filter(v => keepPaths.has(v.path));
-        resolve([...this.visitedViews]);
+        resolve(this.visitedViews);
       });
     },
 
     // 删除右侧缓存视图
     delRightCachedViews(view) {
       if (!view || typeof view !== 'object' || !view.path) {
-        return Promise.resolve([...this.cachedViews]);
+        return Promise.resolve();
       }
-
       return new Promise(resolve => {
         const index = this.visitedViews.findIndex(v => v.path === view.path);
         if (index === -1) {
-          resolve([...this.cachedViews]);
-          return;
+          return resolve(this.cachedViews);
         }
-
         const keepNames = new Set();
-        // 保留左侧视图和固定视图的名称
         this.visitedViews.forEach((v, i) => {
           if ((i <= index || v.meta?.affix) && v.name) {
             keepNames.add(String(v.name));
           }
         });
         this.cachedViews = this.cachedViews.filter(v => keepNames.has(v));
-        resolve([...this.cachedViews]);
+        resolve(this.cachedViews);
       });
     },
 
-    // 删除所有视图
+    // 删除所有视图，保留首页标签
     delAllViews() {
-      return Promise.all([
-        this.delAllVisitedViews(),
-        this.delAllCachedViews()
-      ]).then(([visitedViews, cachedViews]) => {
-        return {
-          visitedViews,
-          cachedViews
-        };
+      return new Promise(resolve => {
+        // 先保存首页标签
+        const homeTag = this.visitedViews.find(tag => {
+          const normalizedPath = tag.path.replace(/\/$/, '');
+          return normalizedPath === '/admin/home' || normalizedPath === '/dashboard';
+        });
+        
+        Promise.all([
+          this.delAllVisitedViews(),
+          this.delAllCachedViews()
+        ]).then(([visitedViews, cachedViews]) => {
+          // 如果 visitedViews 中已经有首页标签，则不需要再添加
+          const hasHomeTag = this.visitedViews.some(tag => {
+            const normalizedPath = tag.path.replace(/\/$/, '');
+            return normalizedPath === '/admin/home' || normalizedPath === '/dashboard';
+          });
+          
+          // 只有当没有首页标签且 homeTag 存在时，才添加首页标签
+          if (!hasHomeTag && homeTag) {
+            this.visitedViews.unshift(homeTag);
+          }
+          
+          // 清理可能存在的重复标签
+          this.cleanupDuplicateTags();
+          
+          // 持久化标签状态
+          persistTags(this.visitedViews);
+          
+          resolve({ visitedViews: this.visitedViews, cachedViews });
+        });
       });
     },
 
-    // 删除所有已访问视图
+    // 删除所有已访问视图，保留首页和固定标签
     delAllVisitedViews() {
       return new Promise(resolve => {
-        const affixTags = this.visitedViews.filter(tag => tag.meta?.affix);
-        this.visitedViews = affixTags;
+        // 保留固定标签和首页标签
+        const tagsToKeep = this.visitedViews.filter(tag => {
+          // 检查是否是固定标签
+          if (tag.meta?.affix) return true;
+          
+          // 检查是否是首页标签
+          const normalizedPath = tag.path.replace(/\/$/, '');
+          return normalizedPath === '/admin/home' || normalizedPath === '/dashboard';
+        });
+        
+        this.visitedViews = tagsToKeep;
+        // 持久化标签状态
+        persistTags(this.visitedViews);
         resolve([...this.visitedViews]);
       });
     },
@@ -421,33 +450,66 @@ export const useTagsViewStore = defineStore('tagsView', {
     delAllCachedViews() {
       return new Promise(resolve => {
         const keepNames = new Set();
-        // 保留固定视图的缓存名称
-        this.visitedViews.forEach(v => {
-          if (v.meta?.affix && v.name) {
+        const affixTags = this.visitedViews.filter(tag => tag.meta?.affix);
+        affixTags.forEach(v => {
+          if (v.name) {
             keepNames.add(String(v.name));
           }
         });
         this.cachedViews = this.cachedViews.filter(v => keepNames.has(v));
-        resolve([...this.cachedViews]);
+        resolve(this.cachedViews);
       });
     },
 
-    // 更新已访问视图
+    // 更新已访问视图 - 增强版本，确保标签激活
     updateVisitedView(view) {
-      if (!view || typeof view !== 'object' || !view.path) {
+      if (!view || typeof view !== 'object') {
         return;
       }
-
+      
+      // 规范化路径进行比较
+      const viewPath = view.path?.replace(/\/$/, '') || '';
+      if (!viewPath) return;
+      
+      // 先检查是否存在匹配的标签
+      let found = false;
+      
       for (let i = 0; i < this.visitedViews.length; i++) {
-        if (this.visitedViews[i].path === view.path) {
+        const currentTag = this.visitedViews[i];
+        const currentPath = currentTag.path.replace(/\/$/, '');
+        
+        // 使用规范化路径进行比较
+        if (currentPath === viewPath) {
+          // 找到匹配的标签，更新它
           const newView = {
-            ...this.visitedViews[i],
+            ...currentTag,
             ...view,
-            title: this.getViewTitle(view)
+            title: view.meta?.title || currentTag.meta?.title || this.getViewTitle(view)
           };
-          this.visitedViews.splice(i, 1, newView);
+          
+          // 如果不是首页标签，则移动到数组最后，表示最近访问
+          // 直接替换原位置的标签，不改变标签顺序
+          this.visitedViews[i] = newView;
+          
+          // 不过首页标签还是需要特殊处理，确保它始终在第一位
+          const isHomeTag = currentPath === '/admin/home';
+          
+          if (isHomeTag && i !== 0) {
+            // 如果是首页标签但不在第一位，移动到第一位
+            this.visitedViews.splice(i, 1);
+            this.visitedViews.unshift(newView);
+          }
+          
+          // 持久化标签状态
+          persistTags(this.visitedViews);
+          found = true;
           break;
         }
+      }
+      
+      // 如果没有找到匹配的标签，则添加一个新标签
+      if (!found) {
+        this.addView(view);
       }
     },
 
@@ -556,119 +618,84 @@ export const useTagsViewStore = defineStore('tagsView', {
       if (!view || !view.path) {
         return;
       }
-      
-      // 从缓存列表中移除，强制重新创建
       if (view.name) {
-        const index = this.cachedViews.indexOf(view.name);
-        if (index !== -1) {
-          this.cachedViews.splice(index, 1);
-        }
-      }
-      
-      // 更新标签信息
-      const tagIndex = this.visitedViews.findIndex(v => v.path === view.path);
-      if (tagIndex !== -1) {
-        // 确保有meta对象和标题
-        if (!view.meta) {
-          view.meta = {};
-        }
-        if (!view.meta.title) {
-          view.meta.title = this.getViewTitle(view);
-        }
-        
-        this.visitedViews[tagIndex] = {
-          ...this.visitedViews[tagIndex],
-          ...view
-        };
+        this.delCachedView(view);
       }
     },
 
-    // 调试方法：打印所有标签
-    printAllTags() {
-      return {
-        stats: this.tagsStats,
-        tags: this.tagsOverview
-      };
-    },
-    
-    // 调试方法：检查标签完整性
-    checkTagsIntegrity() {
-      const issues = [];
-      
-      // 检查每个标签
-      this.visitedViews.forEach((tag, index) => {
-        if (!tag.path) {
-          issues.push(`标签 #${index} 缺少路径`);
-        }
-        
-        if (!tag.meta) {
-          issues.push(`标签 ${tag.path || `#${index}`} 缺少meta对象`);
-        } else if (!tag.meta.title) {
-          issues.push(`标签 ${tag.path} 缺少标题`);
-        }
-        
-        if (tag.name && !this.cachedViews.includes(tag.name)) {
-          issues.push(`标签 ${tag.path} 有name但未被缓存`);
-        }
-      });
-      
-      // 检查缓存视图
-      this.cachedViews.forEach(name => {
-        const found = this.visitedViews.some(v => v.name === name);
-        if (!found) {
-          issues.push(`缓存视图 ${name} 没有对应的访问视图`);
-        }
-      });
-      
-      return {
-        hasIssues: issues.length > 0,
-        issues
-      };
-    },
-    
-    // 查找并返回重复的标签
-    findDuplicateTags() {
-      const normalizedPaths = new Map();
-      const duplicates = [];
-      
-      this.visitedViews.forEach(tag => {
-        const normalizedPath = tag.path.replace(/\/$/, '');
-        
-        if (normalizedPaths.has(normalizedPath)) {
-          duplicates.push({
-            original: normalizedPaths.get(normalizedPath),
-            duplicate: tag
-          });
-        } else {
-          normalizedPaths.set(normalizedPath, tag);
-        }
-      });
-      
-      return duplicates;
-    },
-    
-    // 清理所有重复标签
+    // 清理所有重复标签 - 增强版
     cleanupDuplicateTags() {
-      const duplicates = this.findDuplicateTags();
+      // 使用Map查找重复标签，以规范化路径为键
+      const normalizedPathMap = new Map();
+      const duplicateTags = [];
+      const keepTags = [];
       
-      if (duplicates.length > 0) {
-        // 收集要删除的标签索引
-        const indexesToRemove = [];
+      // 第一步：分类所有标签，找出重复项和要保留的项
+      this.visitedViews.forEach(tag => {
+        // 规范化路径，去除末尾斜杠和重复斜杠
+        const normalizedPath = tag.path.replace(/\/+$/, '').replace(/\/\/+/g, '/');
         
-        duplicates.forEach(pair => {
-          const index = this.visitedViews.findIndex(tag => tag === pair.duplicate);
-          if (index !== -1) {
-            indexesToRemove.push(index);
+        // 如果这个路径已经存在
+        if (normalizedPathMap.has(normalizedPath)) {
+          // 获取已存在的标签
+          const existingTag = normalizedPathMap.get(normalizedPath);
+          
+          // 判断哪个标签更好：优先保留有标题的标签
+          if (tag.meta?.title && !existingTag.meta?.title) {
+            // 如果新标签有标题而旧标签没有，替换旧标签
+            duplicateTags.push(existingTag);
+            normalizedPathMap.set(normalizedPath, tag);
+            keepTags.push(tag);
+          } else if (tag.meta?.affix && !existingTag.meta?.affix) {
+            // 如果新标签是固定标签而旧标签不是，替换旧标签
+            duplicateTags.push(existingTag);
+            normalizedPathMap.set(normalizedPath, tag);
+            keepTags.push(tag);
+          } else {
+            // 否则保留旧标签，将新标签标记为重复
+            duplicateTags.push(tag);
           }
-        });
+        } else {
+          // 这是第一次出现的路径，添加到Map中
+          normalizedPathMap.set(normalizedPath, tag);
+          keepTags.push(tag);
+        }
+      });
+      
+      // 如果有重复标签，重新构建 visitedViews 数组
+      if (duplicateTags.length > 0) {
+        // 先过滤出要保留的标签
+        const filteredTags = this.visitedViews.filter(tag => 
+          keepTags.includes(tag) && !duplicateTags.includes(tag)
+        );
         
-        // 从后向前删除，避免索引变化问题
-        indexesToRemove.sort((a, b) => b - a).forEach(index => {
-          this.visitedViews.splice(index, 1);
-        });
+        // 分离首页标签和其他标签
+        const homeTag = filteredTags.find(tag => tag.path.replace(/\/$/, '') === '/admin/home');
+        const otherTags = filteredTags.filter(tag => tag.path.replace(/\/$/, '') !== '/admin/home');
+        
+        // 重新构建数组，首页标签始终在第一位
+        this.visitedViews = [];
+        
+        // 如果有首页标签，先添加它
+        if (homeTag) {
+          this.visitedViews.push(homeTag);
+        }
+        
+        // 然后添加其他标签
+        this.visitedViews = [...this.visitedViews, ...otherTags];
+        
+        // 持久化标签状态
+        persistTags(this.visitedViews);
+        
+        // 同步清理缓存视图
+        if (duplicateTags.some(tag => tag.name)) {
+          // 如果有重复标签带有name属性，需要清理缓存
+          const cachedSet = new Set(this.cachedViews);
+          this.cachedViews = Array.from(cachedSet);
+        }
       }
       
-      return duplicates.length;
+      return duplicateTags.length;
     }
   }
 });
