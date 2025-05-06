@@ -160,10 +160,10 @@ public class ServiceReviewServiceImpl extends ServiceImpl<ServiceReviewMapper, S
 
         // 获取查询结果中所有不重复的 serviceId
         List<Long> resultServiceIds = page.getRecords().stream()
-                                          .map(ServiceReview::getServiceId)
-                                          .filter(id -> id != null) // 过滤掉可能的 null id
-                                          .distinct()
-                                          .collect(Collectors.toList());
+                .map(ServiceReview::getServiceId)
+                .filter(id -> id != null) // 过滤掉可能的 null id
+                .distinct()
+                .collect(Collectors.toList());
 
         // 批量获取服务名称
         Map<Long, String> serviceNameMap = new HashMap<>();
@@ -238,9 +238,9 @@ public class ServiceReviewServiceImpl extends ServiceImpl<ServiceReviewMapper, S
 
         // 获取用户信息
         Map<Long, User> userMap = new HashMap<>(); // 初始化为空 Map
-        if (userIds != null && !userIds.isEmpty()) { // 只有当 userIds 不为空时才查询
-             userMap = userService.listByIds(userIds).stream()
-                .collect(Collectors.toMap(User::getUserId, user -> user, (existing, replacement) -> existing)); // 添加合并函数处理潜在的重复键
+        if (!userIds.isEmpty()) { // 只有当 userIds 不为空时才查询
+            userMap = userService.listByIds(userIds).stream()
+                    .collect(Collectors.toMap(User::getUserId, user -> user, (existing, replacement) -> existing)); // 添加合并函数处理潜在的重复键
         }
 
         // 转换为VO
