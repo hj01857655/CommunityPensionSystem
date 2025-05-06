@@ -44,20 +44,25 @@
       <el-table-column type="selection" width="55" align="center" v-if="columns[0].visible" />
       <el-table-column prop="id" label="ID" width="80" align="center" v-if="columns[1].visible" />
       <el-table-column prop="elderName" label="老人姓名" width="120" align="center" v-if="columns[2].visible" />
-      <el-table-column prop="monitorTime" label="监测时间" width="180" align="center" v-if="columns[3].visible" />
-      <el-table-column prop="bloodPressure" label="血压" width="120" align="center" v-if="columns[4].visible" />
-      <el-table-column prop="heartRate" label="心率" width="100" align="center" v-if="columns[5].visible" />
-      <el-table-column prop="bloodSugar" label="血糖" width="100" align="center" v-if="columns[6].visible" />
-      <el-table-column prop="temperature" label="体温" width="100" align="center" v-if="columns[7].visible" />
-      <el-table-column prop="status" label="状态" width="100" align="center" v-if="columns[8].visible">
+      <el-table-column prop="monitoringTime" label="监测时间" width="180" align="center" v-if="columns[3].visible" />
+      <el-table-column label="监测类型" width="120" align="center" v-if="columns[4].visible">
         <template #default="scope">
-          <el-tag :type="getStatusType(scope.row.status)">
-            {{ scope.row.status }}
+          <span>{{ getMonitorTypeName(scope.row.monitoringType) }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="监测值" width="150" align="center" v-if="columns[5].visible">
+        <template #default="scope">
+          <span>{{ scope.row.monitoringValue }} {{ scope.row.monitoringUnit }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column prop="monitoringStatus" label="状态" width="100" align="center" v-if="columns[6].visible">
+        <template #default="scope">
+          <el-tag :type="getStatusType(scope.row.monitoringStatus)">
+            {{ scope.row.monitoringStatus === 'normal' ? '正常' : '异常' }}
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column prop="remark" label="备注" align="center" v-if="columns[9].visible" />
-      <el-table-column label="操作" align="center" width="200" v-if="columns[10].visible">
+      <el-table-column label="操作" align="center" width="200" v-if="columns[7].visible">
         <template #default="scope">
           <el-button type="primary" link :icon="Edit" @click="handleEdit(scope.row)">编辑</el-button>
           <el-button type="primary" link :icon="Delete" @click="handleDelete(scope.row)">删除</el-button>
@@ -86,30 +91,32 @@
         <el-form-item label="老人姓名" prop="elderName">
           <el-input v-model="form.elderName" placeholder="请输入老人姓名" />
         </el-form-item>
-        <el-form-item label="监测时间" prop="monitorTime">
-          <el-date-picker v-model="form.monitorTime" type="datetime" placeholder="请选择监测时间"
+        <el-form-item label="监测时间" prop="monitoringTime">
+          <el-date-picker v-model="form.monitoringTime" type="datetime" placeholder="请选择监测时间"
             format="YYYY-MM-DD HH:mm:ss" value-format="YYYY-MM-DD HH:mm:ss" />
         </el-form-item>
-        <el-form-item label="血压" prop="bloodPressure">
-          <el-input v-model="form.bloodPressure" placeholder="请输入血压值" />
-        </el-form-item>
-        <el-form-item label="心率" prop="heartRate">
-          <el-input v-model="form.heartRate" placeholder="请输入心率值" />
-        </el-form-item>
-        <el-form-item label="血糖" prop="bloodSugar">
-          <el-input v-model="form.bloodSugar" placeholder="请输入血糖值" />
-        </el-form-item>
-        <el-form-item label="体温" prop="temperature">
-          <el-input v-model="form.temperature" placeholder="请输入体温值" />
-        </el-form-item>
-        <el-form-item label="状态" prop="status">
-          <el-select v-model="form.status" placeholder="请选择状态">
-            <el-option label="正常" value="正常" />
-            <el-option label="异常" value="异常" />
+        <el-form-item label="监测类型" prop="monitoringType">
+          <el-select v-model="form.monitoringType" placeholder="请选择监测类型">
+            <el-option label="血压" value="1" />
+            <el-option label="血糖" value="2" />
+            <el-option label="体温" value="3" />
+            <el-option label="心率" value="4" />
+            <el-option label="血氧" value="5" />
+            <el-option label="体重" value="6" />
+            <el-option label="其他" value="7" />
           </el-select>
         </el-form-item>
-        <el-form-item label="备注" prop="remark">
-          <el-input v-model="form.remark" type="textarea" placeholder="请输入备注信息" />
+        <el-form-item label="监测值" prop="monitoringValue">
+          <el-input v-model="form.monitoringValue" placeholder="请输入监测值" />
+        </el-form-item>
+        <el-form-item label="监测单位" prop="monitoringUnit">
+          <el-input v-model="form.monitoringUnit" placeholder="请输入监测单位" />
+        </el-form-item>
+        <el-form-item label="状态" prop="monitoringStatus">
+          <el-select v-model="form.monitoringStatus" placeholder="请选择状态">
+            <el-option label="正常" value="normal" />
+            <el-option label="异常" value="abnormal" />
+          </el-select>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -123,12 +130,12 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, watch } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { Search, Refresh, Plus, Edit, Delete, Download, View } from '@element-plus/icons-vue'
-import { listHealthMonitors, getHealthMonitor, addHealthMonitor, updateHealthMonitor, deleteHealthMonitor, exportHealthMonitors } from '@/api/back/health/monitor'
+import { addHealthMonitor, deleteHealthMonitor, exportHealthMonitors, listHealthMonitors, updateHealthMonitor } from '@/api/back/health/monitor'
 import RightToolbar from '@/components/RightToolbar/index.vue'
 import Pagination from '@/components/common/Pagination.vue'
+import { Delete, Download, Edit, Plus, Refresh, Search } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 
 // 遮罩层
 const loading = ref(false)
@@ -151,13 +158,10 @@ const columns = ref([
   { key: 1, label: 'ID', visible: true },
   { key: 2, label: '老人姓名', visible: true },
   { key: 3, label: '监测时间', visible: true },
-  { key: 4, label: '血压', visible: true },
-  { key: 5, label: '心率', visible: true },
-  { key: 6, label: '血糖', visible: true },
-  { key: 7, label: '体温', visible: true },
-  { key: 8, label: '状态', visible: true },
-  { key: 9, label: '备注', visible: true },
-  { key: 10, label: '操作', visible: true }
+  { key: 4, label: '监测类型', visible: true },
+  { key: 5, label: '监测值', visible: true },
+  { key: 6, label: '状态', visible: true },
+  { key: 7, label: '操作', visible: true }
 ])
 
 // 表格数据
@@ -183,24 +187,21 @@ const formRef = ref(null)
 // 表单数据
 const form = reactive({
   elderName: '',
-  monitorTime: '',
-  bloodPressure: '',
-  heartRate: '',
-  bloodSugar: '',
-  temperature: '',
-  status: '正常',
-  remark: ''
+  monitoringTime: '',
+  monitoringType: '',
+  monitoringValue: '',
+  monitoringUnit: '',
+  monitoringStatus: 'normal'
 })
 
 // 表单验证规则
 const rules = {
   elderName: [{ required: true, message: '请输入老人姓名', trigger: 'blur' }],
-  monitorTime: [{ required: true, message: '请选择监测时间', trigger: 'change' }],
-  bloodPressure: [{ required: true, message: '请输入血压值', trigger: 'blur' }],
-  heartRate: [{ required: true, message: '请输入心率值', trigger: 'blur' }],
-  bloodSugar: [{ required: true, message: '请输入血糖值', trigger: 'blur' }],
-  temperature: [{ required: true, message: '请输入体温值', trigger: 'blur' }],
-  status: [{ required: true, message: '请选择状态', trigger: 'change' }]
+  monitoringTime: [{ required: true, message: '请选择监测时间', trigger: 'change' }],
+  monitoringType: [{ required: true, message: '请选择监测类型', trigger: 'change' }],
+  monitoringValue: [{ required: true, message: '请输入监测值', trigger: 'blur' }],
+  monitoringUnit: [{ required: true, message: '请输入监测单位', trigger: 'blur' }],
+  monitoringStatus: [{ required: true, message: '请选择状态', trigger: 'change' }]
 }
 
 // 监听日期范围变化
@@ -216,7 +217,21 @@ const handleSelectionChange = (selection) => {
 
 // 获取状态标签类型
 const getStatusType = (status) => {
-  return status === '正常' ? 'success' : 'danger'
+  return status === 'normal' ? 'success' : 'danger'
+}
+
+// 新增：获取监测类型中文名称
+const getMonitorTypeName = (type) => {
+  const typeMap = {
+    '1': '血压',
+    '2': '血糖',
+    '3': '体温',
+    '4': '心率',
+    '5': '血氧',
+    '6': '体重',
+    '7': '其他'
+  }
+  return typeMap[type] || '未知类型'
 }
 
 // 查询列表
@@ -283,13 +298,11 @@ const handleAdd = () => {
   // 设置默认值
   Object.assign(form, {
     elderName: '',
-    monitorTime: '',
-    bloodPressure: '',
-    heartRate: '',
-    bloodSugar: '',
-    temperature: '',
-    status: '正常',
-    remark: ''
+    monitoringTime: '',
+    monitoringType: '',
+    monitoringValue: '',
+    monitoringUnit: '',
+    monitoringStatus: 'normal'
   })
 }
 
@@ -411,8 +424,8 @@ const formatHealthRecord = (record) => {
   // 根据后端返回的数据格式进行处理
   return {
     ...record,
-    // 可以在这里添加额外的格式化逻辑
-    status: record.status || (isHealthDataNormal(record) ? '正常' : '异常')
+    // 移除错误的 status 处理
+    // status: record.status || (isHealthDataNormal(record) ? '正常' : '异常') 
   }
 }
 

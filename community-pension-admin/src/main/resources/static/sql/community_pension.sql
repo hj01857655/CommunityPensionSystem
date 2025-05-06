@@ -346,7 +346,7 @@ DROP TABLE IF EXISTS `health_monitoring`;
 CREATE TABLE `health_monitoring`  (
   `id` bigint NOT NULL AUTO_INCREMENT COMMENT '监测记录ID',
   `elder_id` bigint NOT NULL COMMENT '老人ID',
-  `monitoring_type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '监测类型(血压/血糖/心率等)',
+  `monitoring_type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '监测类型（1:血压, 2:血糖, 3:体温, 4:心率, 5:血氧, 6:体重, 7:其他）',
   `monitoring_value` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '监测值',
   `monitoring_unit` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '监测单位',
   `monitoring_time` datetime NOT NULL COMMENT '监测时间',
@@ -373,6 +373,11 @@ CREATE TABLE `health_monitoring`  (
 -- ----------------------------
 -- Records of health_monitoring
 -- ----------------------------
+INSERT INTO `health_monitoring` (`elder_id`, `monitoring_type`, `monitoring_value`, `monitoring_unit`, `monitoring_time`, `device_id`, `monitoring_status`, `abnormal_level`, `abnormal_description`, `is_processed`, `processed_time`, `processed_by`, `processed_result`, `health_record_id`, `created_at`, `updated_at`) VALUES
+(2, '1', '125/78', 'mmHg', '2025-05-07 09:00:00', NULL, 'normal', NULL, NULL, 0, NULL, NULL, NULL, NULL, NOW(), NOW()),
+(2, '3', '36.8', '°C', '2025-05-07 11:00:00', 'DeviceB', 'normal', NULL, NULL, 0, NULL, NULL, NULL, NULL, NOW(), NOW()),
+(2, '2', '6.5', 'mmol/L', '2025-05-08 08:30:00', 'DeviceC', 'normal', NULL, NULL, 0, NULL, NULL, NULL, NULL, NOW(), NOW()),
+(2, '4', '110', 'bpm', '2025-05-08 09:45:00', NULL, 'abnormal', 'medium', 'Heart rate consistently high during monitoring period.', 0, NULL, NULL, NULL, NULL, NOW(), NOW());
 
 -- ----------------------------
 -- Table structure for health_records
