@@ -148,21 +148,30 @@ public class ServiceReviewServiceImpl extends ServiceImpl<ServiceReviewMapper, S
 
         // 构建查询条件
         LambdaQueryWrapper<ServiceReview> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(ServiceReview::getServiceId, serviceId);
+        wrapper.eq(serviceId != null, ServiceReview::getServiceId, serviceId);
         if (status != null) {
             wrapper.eq(ServiceReview::getStatus, status);
         }
-        wrapper.eq(ServiceReview::getIsDeleted, 0);
+        wrapper.eq(ServiceReview::getDeleted, 0);
         wrapper.orderByDesc(ServiceReview::getReviewTime);
 
         // 执行查询
         page = page(page, wrapper);
 
-        // 获取服务名称
-        ServiceItem serviceItem = serviceItemService.getById(serviceId);
-        String serviceName = serviceItem != null ? serviceItem.getServiceName() : null;
+        // 获取查询结果中所有不重复的 serviceId
+        List<Long> resultServiceIds = page.getRecords().stream()
+                                          .map(ServiceReview::getServiceId)
+                                          .filter(id -> id != null) // 过滤掉可能的 null id
+                                          .distinct()
+                                          .collect(Collectors.toList());
+
+        // 批量获取服务名称
         Map<Long, String> serviceNameMap = new HashMap<>();
-        serviceNameMap.put(serviceId, serviceName);
+        if (!resultServiceIds.isEmpty()) {
+            List<ServiceItem> serviceItems = serviceItemService.listByIds(resultServiceIds);
+            serviceNameMap = serviceItems.stream()
+                    .collect(Collectors.toMap(ServiceItem::getServiceId, ServiceItem::getServiceName));
+        }
 
         // 获取用户ID列表
         List<Long> userIds = new ArrayList<>();
@@ -175,8 +184,11 @@ public class ServiceReviewServiceImpl extends ServiceImpl<ServiceReviewMapper, S
         }
 
         // 获取用户信息
-        Map<Long, User> userMap = userService.listByIds(userIds).stream()
-                .collect(Collectors.toMap(User::getUserId, user -> user));
+        Map<Long, User> userMap = new HashMap<>(); // 初始化为空 Map
+        if (userIds != null && !userIds.isEmpty()) { // 只有当 userIds 不为空时才查询
+            userMap = userService.listByIds(userIds).stream()
+                    .collect(Collectors.toMap(User::getUserId, user -> user, (existing, replacement) -> existing)); // 添加合并函数处理潜在的重复键
+        }
 
         // 转换为VO
         List<ServiceReviewVO> voList = ServiceReviewConverter.toVOList(page.getRecords(), serviceNameMap, userMap);
@@ -196,7 +208,7 @@ public class ServiceReviewServiceImpl extends ServiceImpl<ServiceReviewMapper, S
         // 查询评价列表
         LambdaQueryWrapper<ServiceReview> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(ServiceReview::getElderId, elderId);
-        wrapper.eq(ServiceReview::getIsDeleted, 0);
+        wrapper.eq(ServiceReview::getDeleted, 0);
         wrapper.orderByDesc(ServiceReview::getReviewTime);
         List<ServiceReview> reviews = list(wrapper);
 
@@ -225,8 +237,11 @@ public class ServiceReviewServiceImpl extends ServiceImpl<ServiceReviewMapper, S
         }
 
         // 获取用户信息
-        Map<Long, User> userMap = userService.listByIds(userIds).stream()
-                .collect(Collectors.toMap(User::getUserId, user -> user));
+        Map<Long, User> userMap = new HashMap<>(); // 初始化为空 Map
+        if (userIds != null && !userIds.isEmpty()) { // 只有当 userIds 不为空时才查询
+             userMap = userService.listByIds(userIds).stream()
+                .collect(Collectors.toMap(User::getUserId, user -> user, (existing, replacement) -> existing)); // 添加合并函数处理潜在的重复键
+        }
 
         // 转换为VO
         return ServiceReviewConverter.toVOList(reviews, serviceNameMap, userMap);
@@ -241,7 +256,7 @@ public class ServiceReviewServiceImpl extends ServiceImpl<ServiceReviewMapper, S
         LambdaQueryWrapper<ServiceReview> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(ServiceReview::getServiceId, serviceId);
         wrapper.eq(ServiceReview::getStatus, 1); // 1-已通过
-        wrapper.eq(ServiceReview::getIsDeleted, 0);
+        wrapper.eq(ServiceReview::getDeleted, 0);
         List<ServiceReview> reviews = list(wrapper);
 
         // 统计数据
@@ -324,7 +339,7 @@ public class ServiceReviewServiceImpl extends ServiceImpl<ServiceReviewMapper, S
         LambdaQueryWrapper<ServiceReview> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(ServiceReview::getServiceAppointmentId, serviceAppointmentId);
         wrapper.eq(ServiceReview::getElderId, elderId);
-        wrapper.eq(ServiceReview::getIsDeleted, 0);
+        wrapper.eq(ServiceReview::getDeleted, 0);
         return count(wrapper) > 0;
     }
 }

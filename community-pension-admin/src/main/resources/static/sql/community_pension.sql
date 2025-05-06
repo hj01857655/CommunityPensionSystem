@@ -1,7 +1,7 @@
 /*
  Navicat Premium Dump SQL
 
- Source Server         : root
+ Source Server         : local
  Source Server Type    : MySQL
  Source Server Version : 80400 (8.4.0)
  Source Host           : localhost:3306
@@ -11,16 +11,8 @@
  Target Server Version : 80400 (8.4.0)
  File Encoding         : 65001
 
- Date: 16/04/2025 21:48:15
+ Date: 06/05/2025 16:24:16
 */
-
--- 创建数据库
-CREATE
-DATABASE IF NOT EXISTS `community_pension` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
-
--- 使用数据库
-USE
-`community_pension`;
 
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
@@ -55,7 +47,7 @@ CREATE TABLE `activities`  (
   INDEX `idx_end_time`(`end_time` ASC) USING BTREE,
   INDEX `idx_register_start_time`(`register_start_time` ASC) USING BTREE,
   INDEX `idx_register_end_time`(`register_end_time` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 72 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '社区活动表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 72 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '社区活动表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of activities
@@ -119,7 +111,7 @@ CREATE TABLE `activity_check_in`  (
   CONSTRAINT `fk_activity_check_in_elder` FOREIGN KEY (`elder_id`) REFERENCES `user` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_activity_check_in_register` FOREIGN KEY (`register_id`) REFERENCES `activity_register` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_activity_check_in_user` FOREIGN KEY (`check_in_user_id`) REFERENCES `user` (`user_id`) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '活动签到表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '活动签到表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of activity_check_in
@@ -152,13 +144,12 @@ CREATE TABLE `activity_register`  (
   CONSTRAINT `fk_activity_register_activity` FOREIGN KEY (`activity_id`) REFERENCES `activities` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_activity_register_elder` FOREIGN KEY (`elder_id`) REFERENCES `user` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_activity_register_register_user` FOREIGN KEY (`register_user_id`) REFERENCES `user` (`user_id`) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE = InnoDB AUTO_INCREMENT = 15 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '活动报名表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 15 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '活动报名表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of activity_register
 -- ----------------------------
-INSERT INTO `activity_register`
-VALUES (14, 21, 2, 2, 0, '2025-04-05 22:22:57', 0, NULL, '2025-04-05 22:22:57', '2025-04-05 22:22:57', 0);
+INSERT INTO `activity_register` VALUES (14, 21, 2, 2, 0, '2025-04-05 22:22:57', 0, NULL, '2025-04-05 22:22:57', '2025-04-05 22:22:57', 0);
 
 -- ----------------------------
 -- Table structure for activity_review
@@ -184,7 +175,7 @@ CREATE TABLE `activity_review`  (
   CONSTRAINT `fk_activity_review_activity` FOREIGN KEY (`activity_id`) REFERENCES `activities` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_activity_review_elder` FOREIGN KEY (`elder_id`) REFERENCES `user` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_activity_review_register` FOREIGN KEY (`register_id`) REFERENCES `activity_register` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '活动评价表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '活动评价表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of activity_review
@@ -206,7 +197,7 @@ CREATE TABLE `config`  (
   `update_time` datetime NULL DEFAULT NULL COMMENT '更新时间',
   `remark` varchar(500) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '备注',
   PRIMARY KEY (`config_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 106 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '参数配置表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 106 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '参数配置表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of config
@@ -244,7 +235,7 @@ CREATE TABLE `dict_data`  (
   `update_time` datetime NULL DEFAULT NULL COMMENT '更新时间',
   `remark` varchar(500) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '备注',
   PRIMARY KEY (`dict_code`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 111 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '字典数据表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 111 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '字典数据表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of dict_data
@@ -313,7 +304,7 @@ CREATE TABLE `dict_type`  (
   `remark` varchar(500) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '备注',
   PRIMARY KEY (`dict_id`) USING BTREE,
   UNIQUE INDEX `dict_type`(`dict_type` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 103 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '字典类型表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 103 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '字典类型表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of dict_type
@@ -340,15 +331,13 @@ CREATE TABLE `elder_kin_relation`  (
   `relation_type` varchar(20) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '关系类型(父子/母女等)',
   PRIMARY KEY (`elder_id`, `kin_id`) USING BTREE,
   INDEX `idx_kin_id`(`kin_id` ASC) USING BTREE COMMENT '家属ID索引'
-) ENGINE = InnoDB CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of elder_kin_relation
 -- ----------------------------
-INSERT INTO `elder_kin_relation`
-VALUES (2, 3, '父子');
-INSERT INTO `elder_kin_relation`
-VALUES (25, 26, '子女');
+INSERT INTO `elder_kin_relation` VALUES (2, 3, '父子');
+INSERT INTO `elder_kin_relation` VALUES (25, 26, '子女');
 
 -- ----------------------------
 -- Table structure for health_monitoring
@@ -379,7 +368,7 @@ CREATE TABLE `health_monitoring`  (
   INDEX `idx_health_record_id`(`health_record_id` ASC) USING BTREE,
   CONSTRAINT `fk_health_monitoring_elder` FOREIGN KEY (`elder_id`) REFERENCES `user` (`user_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_health_monitoring_health_record` FOREIGN KEY (`health_record_id`) REFERENCES `health_records` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '健康监测表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '健康监测表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of health_monitoring
@@ -412,14 +401,12 @@ CREATE TABLE `health_records`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_elder_id`(`elder_id` ASC) USING BTREE,
   INDEX `idx_recorder_id`(`recorder_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 16 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '健康档案表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 16 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '健康档案表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of health_records
 -- ----------------------------
-INSERT INTO `health_records`
-VALUES (15, 2, '120/80', 75, 5.60, 36.5, 65.00, 170.00, NULL, '', '', '轻度感冒', '2025-04-08 05:05:08', '阿莫西林',
-        '2025-04-08 05:05:08', 2, '初始记录', '2025-04-08 13:01:17', '2025-04-08 13:05:07');
+INSERT INTO `health_records` VALUES (15, 2, '120/80', 75, 5.60, 36.5, 65.00, 170.00, NULL, '', '', '轻度感冒', '2025-04-08 05:05:08', '阿莫西林', '2025-04-08 05:05:08', 2, '初始记录', '2025-04-08 13:01:17', '2025-04-08 13:05:07');
 
 -- ----------------------------
 -- Table structure for menu
@@ -447,7 +434,7 @@ CREATE TABLE `menu`  (
   `update_time` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   `remark` varchar(500) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT '' COMMENT '备注',
   PRIMARY KEY (`menu_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 2000 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '菜单权限表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 2000 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '菜单权限表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of menu
@@ -505,7 +492,7 @@ CREATE TABLE `notification`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_status`(`status` ASC) USING BTREE,
   INDEX `idx_publish_time`(`publish_time` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 14 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '通知公告表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 15 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '通知公告表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of notification
@@ -523,6 +510,7 @@ INSERT INTO `notification` VALUES (10, 2, '服务预约通知', '尊敬的刘大
 INSERT INTO `notification` VALUES (11, 2, '服务预约通知', '尊敬的刘大毛用户，您的服务预约（预约号：4）预约已创建，等待审核。预约时间：2025-04-29 08:54:00，服务项目：null。', 0, '2025-04-05 00:54:48', '2025-04-05 00:54:48', '2025-04-05 00:54:48');
 INSERT INTO `notification` VALUES (12, 2, '服务预约通知', '尊敬的刘大毛用户，您的服务预约（预约号：4）预约审核通过。预约时间：2025-04-29 08:54:00，服务项目：null。', 0, '2025-04-05 01:43:34', '2025-04-05 01:43:34', '2025-04-05 01:43:34');
 INSERT INTO `notification` VALUES (13, 2, '服务预约通知', '尊敬的刘大毛用户，您的服务预约（预约号：3）预约审核通过。预约时间：2025-04-29 10:40:00，服务项目：null。', 0, '2025-04-05 01:45:06', '2025-04-05 01:45:06', '2025-04-05 01:45:06');
+INSERT INTO `notification` VALUES (14, 2, '服务预约通知', '尊敬的刘大毛用户，\n\n您的服务预约（预约号：5）预约已创建，等待审核。\n\n预约详情：\n- 服务项目：null\n- 预约时间：2025-05-28 15:11:00\n\n您的预约正在审核中，请耐心等待。审核结果将以系统通知的形式告知您。\n\n如有疑问，请联系客服中心。', 0, '2025-05-05 17:12:04', '2025-05-05 17:12:04', '2025-05-05 17:12:04');
 
 -- ----------------------------
 -- Table structure for role
@@ -544,7 +532,7 @@ CREATE TABLE `role`  (
   `remark` varchar(500) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '备注',
   PRIMARY KEY (`role_id`) USING BTREE,
   INDEX `idx_role_name`(`role_name` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 100 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '角色信息表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 100 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '角色信息表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of role
@@ -562,7 +550,7 @@ CREATE TABLE `role_menu`  (
   `role_id` bigint NOT NULL COMMENT '角色ID',
   `menu_id` bigint NOT NULL COMMENT '菜单ID',
   PRIMARY KEY (`role_id`, `menu_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '角色和菜单关联表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '角色和菜单关联表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of role_menu
@@ -586,7 +574,7 @@ CREATE TABLE `service_item`  (
   `update_time` datetime NULL DEFAULT NULL,
   `remark` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '备注',
   PRIMARY KEY (`service_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '服务项目表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '服务项目表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of service_item
@@ -624,13 +612,14 @@ CREATE TABLE `service_order`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_user_status`(`user_id` ASC, `status` ASC) USING BTREE,
   CONSTRAINT `service_order_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '服务工单表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '服务工单表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of service_order
 -- ----------------------------
 INSERT INTO `service_order` VALUES (3, 2, 1001, 1, '13433432', '1', '2025-04-29 10:40:00', NULL, NULL, NULL, '2025-04-05 00:39:10', NULL, '2025-04-05 00:39:10', NULL);
 INSERT INTO `service_order` VALUES (4, 2, 3002, 1, '要求认真仔细一点的阿姨', '1', '2025-04-29 08:54:00', NULL, NULL, NULL, '2025-04-05 00:54:48', NULL, '2025-04-05 00:54:48', NULL);
+INSERT INTO `service_order` VALUES (5, 2, 1001, 0, '1111111111111111111', NULL, '2025-05-28 15:11:00', NULL, NULL, 'Ldamao', '2025-05-05 17:12:04', 'Ldamao', '2025-05-05 17:12:04', NULL);
 
 -- ----------------------------
 -- Table structure for service_review
@@ -652,12 +641,13 @@ CREATE TABLE `service_review`  (
   `createTime` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `updateBy` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '更新者',
   `updateTime` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `deleted` tinyint(1) NOT NULL DEFAULT 0 COMMENT '逻辑删除标志(0-未删除, 1-已删除)',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_order`(`order_id` ASC) USING BTREE,
   INDEX `idx_user`(`user_id` ASC) USING BTREE,
   CONSTRAINT `service_review_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `service_order` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `service_review_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '服务评价表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '服务评价表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of service_review
@@ -695,7 +685,7 @@ CREATE TABLE `user`  (
   UNIQUE INDEX `username`(`username` ASC) USING BTREE,
   INDEX `idx_user_status`(`is_active` ASC) USING BTREE,
   INDEX `idx_user_id`(`user_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 27 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '用户表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 27 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '用户表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of user
@@ -704,9 +694,7 @@ INSERT INTO `user` VALUES (1, 'admin', '123456', '超级管理员', '女', '1380
 INSERT INTO `user` VALUES (2, 'Ldamao', '123456', '刘大毛', '女', '13800000002', 'mao.builder@hotmail.com', '深圳市南山区科技园中区', '/avatar/zhangdaye.jpg', 1, '', '', '340881199005204216', '1990-05-20', 35, '张伟', '13812345678', '中等，需定期监测血压、血糖，并注意饮食控制。', 'staff', '2025-03-22 19:46:06', NULL, '2025-03-28 15:22:26', '');
 INSERT INTO `user` VALUES (3, 'Lxiaomao', '123456', '刘小毛', '男', '13800000004', 'mao.builder@hotmail.com', '深圳市南山区科技园中区', '/avatar/zhangdaye.jpg', 1, '', '', '', NULL, NULL, '', '', '', 'staff', '2025-03-27 15:38:04', NULL, '2025-03-28 15:22:21', '');
 INSERT INTO `user` VALUES (25, 'Lshumei', '123456', '刘淑梅', '未知', '15349545835', 'yopsu@mailto.plus', NULL, NULL, 1, '', '', '12345619900101123X', '1990-01-01', 35, '王小明', '13987654321  ', '慢性咳嗽', NULL, NULL, NULL, NULL, '');
-INSERT INTO `user`
-VALUES (26, 'Wdaniu', '123456', '王大牛', '未知', '13458684687', '23468746@qq.com', NULL, NULL, 1, '', '', '', NULL,
-        NULL, '', '', '', 'admin', '2025-04-06 14:59:16', 'admin', '2025-04-06 14:59:16', '');
+INSERT INTO `user` VALUES (26, 'Wdaniu', '123456', '王大牛', '未知', '13458684687', '23468746@qq.com', NULL, NULL, 1, '', '', '', NULL, NULL, '', '', '', 'admin', '2025-04-06 14:59:16', 'admin', '2025-04-06 14:59:16', '');
 
 -- ----------------------------
 -- Table structure for user_role
@@ -716,7 +704,7 @@ CREATE TABLE `user_role`  (
   `user_id` bigint NOT NULL COMMENT '用户ID',
   `role_id` bigint NOT NULL COMMENT '角色ID',
   PRIMARY KEY (`user_id`, `role_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '用户-角色关联表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '用户-角色关联表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of user_role
@@ -725,8 +713,7 @@ INSERT INTO `user_role` VALUES (1, 4);
 INSERT INTO `user_role` VALUES (2, 1);
 INSERT INTO `user_role` VALUES (3, 2);
 INSERT INTO `user_role` VALUES (25, 1);
-INSERT INTO `user_role`
-VALUES (26, 2);
+INSERT INTO `user_role` VALUES (26, 2);
 
 -- ----------------------------
 -- Table structure for warning_record
@@ -743,7 +730,7 @@ CREATE TABLE `warning_record`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `user_id`(`user_id` ASC) USING BTREE,
   CONSTRAINT `warning_record_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '预警记录表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '预警记录表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of warning_record

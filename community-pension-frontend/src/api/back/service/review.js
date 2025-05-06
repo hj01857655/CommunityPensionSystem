@@ -1,15 +1,33 @@
 import axios from '@/utils/axios';
 
 /**
- * 获取评价列表
- * @param {Object} params - 查询参数
- * @param {number} [params.serviceItemId] - 服务项目ID
- * @param {number} [params.orderId] - 工单ID
- * @param {number} [params.userId] - 用户ID
- * @param {number} [params.rating] - 评分：1-5星
+ * 服务评价管理相关接口 (ServiceReviewController)
+ */
+
+/**
+ * 分页获取评价列表
+ * @param {Object} query - 查询参数
+ * @param {number} [query.serviceId] - 服务ID
+ * @param {number} [query.status] - 评价状态
+ * @param {number} [query.current=1] - 当前页码 (对应后端 pageNum)
+ * @param {number} [query.size=10] - 每页显示条数 (对应后端 pageSize)
  * @returns {Promise<{code: number, data: {records: Array, total: number}, msg: string}>}
  */
-export const getServiceReviewList = (params) => {
+export const getServiceReviewList = (query) => {
+  // 修正参数映射，并仅在有值时发送 serviceId 和 status
+  const params = {
+    pageNum: query.current || 1,
+    pageSize: query.size || 10
+  };
+  // 仅当 serviceId 不是 null 或 undefined 时添加
+  if (query.serviceId !== null && query.serviceId !== undefined) {
+    params.serviceId = query.serviceId;
+  }
+  // 仅当 status 不是 null、undefined 或空字符串 (代表'全部') 时添加
+  if (query.status !== null && query.status !== undefined && query.status !== '') {
+    params.status = query.status;
+  }
+  
   return axios.get('/api/service/review/list', { params });
 };
 
@@ -23,60 +41,85 @@ export const getServiceReviewDetail = (id) => {
 };
 
 /**
- * 新增评价
- * @param {Object} data - 评价数据
- * @param {number} data.orderId - 工单ID
- * @param {number} data.userId - 用户ID
- * @param {number} data.rating - 评分：1-5星
- * @param {string} data.content - 评价内容
- * @returns {Promise<{code: number, msg: string}>}
+ * 新增评价 (对应 addServiceReview)
+ * @param {Object} data - 评价数据 (应符合 ServiceReviewDTO 结构)
+ * @param {number} data.serviceAppointmentId - 服务预约ID
+ * @param {number} data.elderId - 老人ID
+ * @param {number} data.rating - 评分
+ * @param {string} data.content - 内容
+ * @returns {Promise<{code: number, data: number, msg: string}>}
  */
 export const createServiceReview = (data) => {
+  // 后端需要 ServiceReviewDTO
   return axios.post('/api/service/review', data);
 };
 
 /**
- * 回复评价
- * @param {Object} data - 回复数据
+ * 回复评价 (对应 replyServiceReview)
+ * @param {Object} data - 回复数据 (应符合 ServiceReviewReplyDTO 结构)
  * @param {number} data.id - 评价ID
  * @param {string} data.replyContent - 回复内容
  * @returns {Promise<{code: number, msg: string}>}
  */
 export const replyServiceReview = (data) => {
-  const { id, replyContent } = data;
-  return axios.put(`/api/service/review/${id}/reply`, {
-    replyContent
-  });
+  // 后端需要 ServiceReviewReplyDTO 作为 RequestBody
+  return axios.post('/api/service/review/reply', data);
 };
 
 /**
- * 获取服务项目平均评分
+ * 审核评价 (对应 auditServiceReview)
+ * @param {Object} data - 审核数据 (应符合 ServiceReviewAuditDTO 结构)
+ * @param {number} data.id - 评价ID
+ * @param {number} data.status - 审核状态
+ * @param {string} [data.auditReason] - 审核理由
+ * @returns {Promise<{code: number, msg: string}>}
+ */
+export const auditServiceReview = (data) => {
+  // 后端需要 ServiceReviewAuditDTO 作为 RequestBody
+  return axios.post('/api/service/review/audit', data);
+};
+
+/**
+ * 删除评价 (对应 deleteServiceReview)
+ * @param {number} id - 评价ID
+ * @returns {Promise<{code: number, msg: string}>}
+ */
+export const deleteServiceReview = (id) => {
+  return axios.delete(`/api/service/review/${id}`);
+};
+
+
+// --- 以下是 review.js 原有但后端 ServiceReviewController 中不直接对应或参数不符的函数，需要确认是否保留或修改 ---
+
+/**
+ * 获取服务项目平均评分 (后端无此接口 /api/service/review/average/{serviceId})
  * @param {number} serviceId - 服务项目ID
  * @returns {Promise<{code: number, data: number, msg: string}>}
  */
-export const getServiceAverageRating = (serviceId) => {
-  return axios.get(`/api/service/review/average/${serviceId}`);
-};
+// export const getServiceAverageRating = (serviceId) => {
+//   return axios.get(`/api/service/review/average/${serviceId}`);
+// };
 
 /**
- * 检查用户是否已评价
+ * 检查用户是否已评价 (对应 checkReviewExists)
  * @param {Object} params - 查询参数
- * @param {number} params.orderId - 工单ID
- * @param {number} params.userId - 用户ID
+ * @param {number} params.serviceAppointmentId - 服务预约ID (后端需要 serviceAppointmentId)
+ * @param {number} params.elderId - 老人ID (后端需要 elderId)
  * @returns {Promise<{code: number, data: boolean, msg: string}>}
  */
 export const checkServiceReview = (params) => {
+  // 确认后端参数名为 serviceAppointmentId 和 elderId
   return axios.get('/api/service/review/check', { params });
 };
 
 /**
- * 导出评价数据
- * @param {Object} params - 查询参数，与获取列表接口参数一致
+ * 导出评价数据 (后端无此接口)
+ * @param {Object} params - 查询参数
  * @returns {Promise<Blob>} - 返回文件流
  */
-export const exportServiceReview = (params) => {
-  return axios.get('/api/service/review/export', {
-    params,
-    responseType: 'blob'
-  });
-}; 
+// export const exportServiceReview = (params) => {
+//   return axios.get('/api/service/review/export', {
+//     params,
+//     responseType: 'blob'
+//   });
+// }; 

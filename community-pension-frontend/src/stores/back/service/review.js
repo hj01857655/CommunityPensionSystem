@@ -1,25 +1,23 @@
+import {
+  deleteServiceReview,
+  getServiceReviewDetail,
+  getServiceReviewList,
+  replyServiceReview
+} from '@/api/back/service/review';
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import { 
-  getServiceReviewList,
-  getServiceReviewDetail,
-  replyServiceReview,
-  getServiceAverageRating
-} from '@/api/back/service/review';
 
 export const useServiceReviewStore = defineStore('serviceReview', () => {
   // 状态
   const reviewList = ref([]);
   const total = ref(0);
   const loading = ref(false);
-  const averageRating = ref(0);
 
   // 重置状态
   const resetState = () => {
     reviewList.value = [];
     total.value = 0;
     loading.value = false;
-    averageRating.value = 0;
   };
 
   // 获取服务评价列表
@@ -27,16 +25,21 @@ export const useServiceReviewStore = defineStore('serviceReview', () => {
     loading.value = true;
     try {
       const res = await getServiceReviewList(params);
-      if (res.code === 200) {
-        reviewList.value = res.data.data.records;
-        total.value = res.data.data.total;
-        return res.data.data;
+      if (res.code === 200 && res.data && res.data.records) {
+        reviewList.value = res.data.records;
+        total.value = Number(res.data.total) || 0;
+        return res.data;
       } else {
-        throw new Error(res.message || '获取服务评价列表失败');
+        console.error('获取服务评价列表格式错误:', res);
+        reviewList.value = [];
+        total.value = 0;
+        throw new Error(res.msg || '获取服务评价列表失败或数据格式错误');
       }
     } catch (error) {
       console.error('获取服务评价列表失败:', error);
-      throw error;
+      reviewList.value = [];
+      total.value = 0;
+      return Promise.reject(error);
     } finally {
       loading.value = false;
     }
@@ -58,33 +61,32 @@ export const useServiceReviewStore = defineStore('serviceReview', () => {
   };
 
   // 回复服务评价
-  const replyReview = async (reviewId, data) => {
+  const replyReview = async (replyData) => {
     try {
-      const res = await replyServiceReview(reviewId, data);
+      const res = await replyServiceReview(replyData);
       if (res.code === 200) {
-        return res.data;
+        return res;
       } else {
-        throw new Error(res.message || '回复服务评价失败');
+        throw new Error(res.msg || '回复服务评价失败');
       }
     } catch (error) {
       console.error('回复服务评价失败:', error);
-      throw error;
+      return Promise.reject(error);
     }
   };
 
-  // 获取服务平均评分
-  const getAverageRating = async (serviceId) => {
+  // 删除服务评价
+  const deleteReview = async (reviewId) => {
     try {
-      const res = await getServiceAverageRating(serviceId);
+      const res = await deleteServiceReview(reviewId);
       if (res.code === 200) {
-        averageRating.value = res.data;
-        return res.data;
+        return res;
       } else {
-        throw new Error(res.message || '获取服务平均评分失败');
+        throw new Error(res.msg || '删除服务评价失败');
       }
     } catch (error) {
-      console.error('获取服务平均评分失败:', error);
-      throw error;
+      console.error('删除服务评价失败:', error);
+      return Promise.reject(error);
     }
   };
 
@@ -92,11 +94,10 @@ export const useServiceReviewStore = defineStore('serviceReview', () => {
     reviewList,
     total,
     loading,
-    averageRating,
     getReviewList,
     getReviewDetail,
     replyReview,
-    getAverageRating,
+    deleteReview,
     resetState
   };
 }); 

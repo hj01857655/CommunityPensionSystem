@@ -96,8 +96,8 @@ public class ServiceReview {
     private LocalDateTime updatedAt;
 
     /**
-     * 是否已删除
+     * 是否已删除 (逻辑删除字段)
      */
     @TableLogic
-    private Integer isDeleted;
+    private Integer deleted;
 }

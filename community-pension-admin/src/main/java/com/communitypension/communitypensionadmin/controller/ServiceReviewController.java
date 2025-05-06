@@ -62,7 +62,7 @@ public class ServiceReviewController {
     @GetMapping("/list")
     @Operation(summary = "分页查询服务评价列表", description = "分页查询服务评价列表")
     public Result<Page<ServiceReviewVO>> getServiceReviewList(
-            @RequestParam Long serviceId,
+            @RequestParam(required = false) Long serviceId,
             @RequestParam(required = false) Integer status,
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "10") Integer pageSize) {

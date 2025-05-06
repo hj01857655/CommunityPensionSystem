@@ -190,28 +190,29 @@ const routes = [
         ]
       },
       {
-        path: 'services',
-        name: 'ServiceManagement',
+        path: '/admin/services',
         component: () => import('@/views/back/service/index.vue'),
-        meta: { title: '服务预约管理', icon: 'service', roles: ['admin', 'staff'] },
+        redirect: '/admin/services/service',
+        name: 'Services',
+        meta: { title: '服务预约管理', icon: 'Service' },
         children: [
           {
             path: 'service',
-            name: 'ServiceList',
+            name: 'ServiceItem',
             component: () => import('@/views/back/service/ServiceManagement.vue'),
-            meta: { title: '服务项目管理', icon: 'service', requiresAuth: true, roles: ['admin', 'staff'] }
+            meta: { title: '服务项目管理' }
           },
           {
             path: 'order',
-            name: 'ServiceOrderManagement',
+            name: 'ServiceOrder',
             component: () => import('@/views/back/service/ServiceOrderManagement.vue'),
-            meta: { title: '服务工单管理', icon: 'service', requiresAuth: true, roles: ['admin', 'staff'] }
+            meta: { title: '服务工单管理' }
           },
           {
-            path: 'evaluation',
-            name: 'ServiceEvaluationList',
-            component: () => import('@/views/back/service/ServiceEvaluation.vue'),
-            meta: { title: '服务评价管理', icon: 'service', requiresAuth: true, roles: ['admin', 'staff'] }
+            path: 'review',
+            name: 'ServiceReview',
+            component: () => import('@/views/back/service/ServiceReview.vue'),
+            meta: { title: '服务评价管理' }
           }
         ]
       },

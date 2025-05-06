@@ -98,7 +98,7 @@
             <span>服务工单管理</span>
           </template>
         </el-menu-item>
-        <el-menu-item index="/admin/services/evaluation">
+        <el-menu-item index="/admin/services/review">
           <template #title>
             <el-icon>
               <Service />
@@ -182,21 +182,21 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
 import { useTagsViewStore } from '@/stores/tagsView';
 import {
-  Odometer,
-  User,
-  Service,
-  FirstAidKit,
-  Calendar,
   Bell,
-  Setting,
+  Calendar,
+  Collection,
+  FirstAidKit,
   HomeFilled,
   Menu,
-  Collection
+  Odometer,
+  Service,
+  Setting,
+  User
 } from '@element-plus/icons-vue';
+import { computed } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 
 const props = defineProps({
   isCollapse: {

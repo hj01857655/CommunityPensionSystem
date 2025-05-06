@@ -2,39 +2,27 @@
   <div class="app-container">
     <!-- 搜索条件 -->
     <el-form :model="queryParams" ref="queryRef" :inline="true" v-show="showSearch" label-width="68px">
-      <el-form-item label="服务名称" prop="serviceName">
+      <el-form-item label="服务 ID" prop="serviceId">
         <el-input
-          v-model="queryParams.serviceName"
-          placeholder="请输入服务名称"
+          v-model="queryParams.serviceId"
+          placeholder="请输入服务 ID"
           clearable
           style="width: 200px"
           @keyup.enter="handleSearch"
         />
       </el-form-item>
-      <el-form-item label="评分" prop="rating">
+      <el-form-item label="评价状态" prop="status">
         <el-select
-          v-model="queryParams.rating"
-          placeholder="请选择评分"
+          v-model="queryParams.status"
+          placeholder="请选择评价状态"
           clearable
           style="width: 200px"
         >
-          <el-option label="5星" :value="5" />
-          <el-option label="4星" :value="4" />
-          <el-option label="3星" :value="3" />
-          <el-option label="2星" :value="2" />
-          <el-option label="1星" :value="1" />
+          <el-option label="全部" value="" />
+          <el-option label="待审核" :value="0" />
+          <el-option label="显示" :value="1" />
+          <el-option label="隐藏" :value="2" />
         </el-select>
-      </el-form-item>
-      <el-form-item label="评价时间">
-        <el-date-picker
-          v-model="dateRange"
-          type="daterange"
-          range-separator="-"
-          start-placeholder="开始日期"
-          end-placeholder="结束日期"
-          value-format="YYYY-MM-DD"
-          style="width: 240px"
-        />
       </el-form-item>
       <el-form-item>
         <el-button type="primary" :icon="Search" @click="handleSearch">搜索</el-button>
@@ -45,10 +33,7 @@
     <!-- 操作按钮 -->
     <el-row :gutter="10" class="mb8">
       <el-col :span="1.5">
-        <el-button type="danger" plain :icon="Delete" :disabled="multiple" @click="handleDelete">删除</el-button>
-      </el-col>
-      <el-col :span="1.5">
-        <el-button type="warning" plain :icon="Download" @click="handleExport">导出</el-button>
+        <el-button type="danger" plain :icon="Delete" :disabled="multiple" @click="handleBulkDelete">批量删除</el-button>
       </el-col>
       <right-toolbar v-model:showSearch="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
@@ -56,7 +41,7 @@
     <!-- 表格 -->
     <el-table
       v-loading="loading"
-      :data="evaluationList"
+      :data="reviewList"
       @selection-change="handleSelectionChange"
       border
     >
@@ -151,39 +136,38 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { Search, Delete, View, Refresh, Download, ChatLineRound } from '@element-plus/icons-vue'
-import { formatDate } from '@/utils/date'
 import Pagination from '@/components/common/Pagination.vue'
 import RightToolbar from '@/components/RightToolbar/index.vue'
-import { getEvaluationList, replyEvaluation, deleteEvaluation, exportEvaluation } from '@/api/back/service/evaluation'
+import { useServiceReviewStore } from '@/stores/back/service/review'
+import { formatDate } from '@/utils/date'
+import { ChatLineRound, Delete, Refresh, Search, View } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { computed, onMounted, reactive, ref } from 'vue'
+
+// 实例化 Store
+const serviceReviewStore = useServiceReviewStore()
 
 // 查询参数
 const queryParams = reactive({
   current: 1,
   size: 10,
-  serviceName: '',
-  rating: null,
-  startTime: '',
-  endTime: ''
+  serviceId: null,
+  status: ''
 })
-
-// 日期范围
-const dateRange = ref([])
 
 // 显示搜索条件
 const showSearch = ref(true)
 
 // 非多个禁用
 const multiple = ref(true)
+const selectedIds = ref([])
 
 // 加载状态
-const loading = ref(false)
+const loading = computed(() => serviceReviewStore.loading)
 
 // 评价列表数据
-const evaluationList = ref([])
-const total = ref(0)
+const reviewList = computed(() => serviceReviewStore.reviewList)
+const total = computed(() => serviceReviewStore.total)
 
 // 对话框相关
 const dialogVisible = ref(false)
@@ -212,48 +196,29 @@ const currentRating = ref(0)
 
 // 获取列表数据
 const getList = async () => {
-  loading.value = true
   try {
-    const res = await getEvaluationList(queryParams)
-    if (res.code === 200) {
-      evaluationList.value = res.data.records
-      total.value = res.data.total
-    } else {
-      ElMessage.error(res.msg || '获取评价列表失败')
-    }
+    await serviceReviewStore.getReviewList(queryParams)
   } catch (error) {
-    console.error('获取评价列表失败:', error)
-    ElMessage.error('获取评价列表失败')
-  } finally {
-    loading.value = false
+    ElMessage.error(error.message || '获取评价列表失败')
   }
 }
 
 // 搜索按钮操作
 const handleSearch = () => {
   queryParams.current = 1
-  if (dateRange.value && dateRange.value.length === 2) {
-    queryParams.startTime = dateRange.value[0]
-    queryParams.endTime = dateRange.value[1]
-  } else {
-    queryParams.startTime = ''
-    queryParams.endTime = ''
-  }
   getList()
 }
 
 // 重置按钮操作
 const handleReset = () => {
-  dateRange.value = []
-  queryParams.serviceName = ''
-  queryParams.rating = undefined
-  queryParams.startTime = ''
-  queryParams.endTime = ''
+  queryParams.serviceId = null
+  queryParams.status = ''
   handleSearch()
 }
 
 // 多选框选中数据
 const handleSelectionChange = (selection) => {
+  selectedIds.value = selection.map(item => item.id)
   multiple.value = !selection.length
 }
 
@@ -281,38 +246,15 @@ const submitReply = async () => {
   await replyFormRef.value.validate(async (valid) => {
     if (valid) {
       try {
-        const res = await replyEvaluation(replyForm)
-        if (res.code === 200) {
-          ElMessage.success('回复成功')
-          dialogVisible.value = false
-          getList()
-        } else {
-          ElMessage.error(res.msg || '回复失败')
-        }
+        await serviceReviewStore.replyReview(replyForm)
+        ElMessage.success('回复成功')
+        dialogVisible.value = false
+        getList()
       } catch (error) {
-        console.error('回复失败:', error)
-        ElMessage.error('回复失败')
+        ElMessage.error(error.message || '回复失败')
       }
     }
   })
-}
-
-// 导出按钮操作
-const handleExport = async () => {
-  try {
-    const res = await exportEvaluation(queryParams)
-    // 处理文件下载
-    const blob = new Blob([res], { type: 'application/vnd.ms-excel' })
-    const link = document.createElement('a')
-    link.href = window.URL.createObjectURL(blob)
-    link.download = '服务评价列表.xlsx'
-    link.click()
-    window.URL.revokeObjectURL(link.href)
-    ElMessage.success('导出成功')
-  } catch (error) {
-    console.error('导出失败:', error)
-    ElMessage.error('导出失败')
-  }
 }
 
 // 删除按钮操作
@@ -323,15 +265,38 @@ const handleDelete = async (row) => {
       cancelButtonText: '取消',
       type: 'warning'
     })
-    const res = await deleteEvaluation(row.id)
-    if (res.code === 200) {
-      ElMessage.success('删除成功')
-      getList()
-    } else {
-      ElMessage.error(res.msg || '删除失败')
-    }
+    await serviceReviewStore.deleteReview(row.id)
+    ElMessage.success('删除成功')
+    getList()
   } catch (error) {
-    console.error('删除操作取消或失败:', error)
+    if (error !== 'cancel') {
+      ElMessage.error(error.message || '删除操作失败')
+    }
+  }
+}
+
+// 新增：批量删除操作
+const handleBulkDelete = async () => {
+  if (selectedIds.value.length === 0) {
+    ElMessage.warning('请至少选择一条数据进行删除')
+    return
+  }
+  try {
+    await ElMessageBox.confirm(`是否确认删除选中的 ${selectedIds.value.length} 条评价记录？`, '警告', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+    for (const id of selectedIds.value) {
+      await serviceReviewStore.deleteReview(id)
+    }
+    ElMessage.success('批量删除成功')
+    getList()
+    selectedIds.value = []
+  } catch (error) {
+    if (error !== 'cancel') {
+      ElMessage.error(error.message || '批量删除失败')
+    }
   }
 }
 
