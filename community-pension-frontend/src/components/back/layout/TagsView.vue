@@ -1,7 +1,7 @@
 <!-- 标签页 -->
 <template>
   <div class="tags-view-container">
-    <el-scrollbar wrap-class="tags-view-wrapper" :native="false" :noresize="false">
+    <el-scrollbar wrap-class="tags-view-wrapper" :native="false" :noresize="false" class="custom-scrollbar">
       <router-link
         v-for="tag in visitedViews"
         ref="tagRefs"
@@ -95,6 +95,15 @@ function handleTagClick(tag) {
   if (isActive(tag) && tag.path === route.path) {
     // 如果已经是当前标签，则刷新当前页面
     refreshSelectedTag(tag);
+  } else {
+    // 添加点击动画效果
+    const tagEl = event.currentTarget;
+    if (tagEl) {
+      tagEl.classList.add('tag-click-effect');
+      setTimeout(() => {
+        tagEl.classList.remove('tag-click-effect');
+      }, 300);
+    }
   }
 }
 
@@ -348,11 +357,24 @@ function moveToCurrentTag() {
 
 <style lang="scss" scoped>
 .tags-view-container {
-  height: 34px;
+  height: 40px;
   width: 100%;
-  background: #fff;
-  border-bottom: 1px solid #d8dce5;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.12), 0 0 3px 0 rgba(0, 0, 0, 0.04);
+  background: linear-gradient(to right, #f8f9fa, #ffffff);
+  border-bottom: 1px solid #e4e7ed;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  
+  .custom-scrollbar {
+    :deep(.el-scrollbar__bar.is-horizontal) {
+      height: 4px;
+      bottom: 0;
+      opacity: 0.2;
+      transition: opacity 0.3s;
+      
+      &:hover {
+        opacity: 0.8;
+      }
+    }
+  }
 
   .tags-view-wrapper {
     .tags-view-item {
@@ -360,20 +382,38 @@ function moveToCurrentTag() {
       align-items: center;
       position: relative;
       cursor: pointer;
-      height: 26px;
-      line-height: 26px;
-      border: 1px solid #d8dce5;
-      color: #495060;
+      height: 28px;
+      line-height: 28px;
+      border: 1px solid #e4e7ed;
+      color: #606266;
       background: #fff;
-      padding: 0 8px;
-      font-size: 12px;
-      margin-left: 5px;
-      margin-top: 4px;
+      padding: 0 10px;
+      font-size: 13px;
+      margin-left: 6px;
+      margin-top: 5px;
       text-decoration: none;
       overflow: hidden;
       white-space: nowrap;
-      max-width: 180px;
+      max-width: 200px;
       text-overflow: ellipsis;
+      border-radius: 4px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      
+      &.tag-click-effect {
+        animation: tagPulse 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      
+      @keyframes tagPulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(0.95); }
+        100% { transform: scale(1); }
+      }
+      
+      &:hover:not(.active) {
+        color: #409eff;
+        border-color: #c6e2ff;
+        background-color: #f0f7ff;
+      }
 
       &:first-of-type {
         margin-left: 15px;
@@ -384,34 +424,66 @@ function moveToCurrentTag() {
       }
 
       &.active {
-        background-color: #409eff;
+        background: linear-gradient(135deg, #409eff, #66b1ff);
         color: #fff;
         border-color: #409eff;
-
+        box-shadow: 0 3px 10px rgba(64, 158, 255, 0.35);
+        transform: translateY(-1px);
+        font-weight: 500;
+        padding-left: 12px;
+        padding-right: 12px;
+        position: relative;
+        overflow: visible;
+        
         &::before {
           content: '';
+          position: absolute;
+          bottom: -1px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 80%;
+          height: 2px;
+          background: rgba(255, 255, 255, 0.8);
+          border-radius: 2px;
+        }
+        
+        &::after {
+          content: '';
+          position: absolute;
+          bottom: -4px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 6px;
+          height: 6px;
           background: #fff;
-          display: inline-block;
-          width: 8px;
-          height: 8px;
           border-radius: 50%;
-          position: relative;
-          margin-right: 2px;
+          box-shadow: 0 0 6px rgba(0, 0, 0, 0.1);
         }
       }
       
       .el-icon-close {
-        margin-left: 5px;
-        width: 16px;
-        height: 16px;
-        line-height: 16px;
+        margin-left: 6px;
+        width: 18px;
+        height: 18px;
+        line-height: 18px;
         text-align: center;
         border-radius: 50%;
         transition: all .3s;
+        background-color: rgba(0, 0, 0, 0.1);
+        color: #666;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         
         &:hover {
-          background-color: #b4bccc;
+          background-color: #f56c6c;
           color: #fff;
+        }
+        
+        &::after {
+          content: '×';
+          font-size: 14px;
         }
       }
     }
@@ -423,20 +495,54 @@ function moveToCurrentTag() {
     z-index: 3000;
     position: absolute;
     list-style-type: none;
-    padding: 5px 0;
-    border-radius: 4px;
-    font-size: 12px;
+    padding: 6px 0;
+    border-radius: 6px;
+    font-size: 13px;
     font-weight: 400;
     color: #333;
-    box-shadow: 2px 2px 3px 0 rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    border: 1px solid #ebeef5;
+    min-width: 120px;
+    animation: menuFadeIn 0.2s ease-out;
+    
+    @keyframes menuFadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
 
     li {
       margin: 0;
-      padding: 7px 16px;
+      padding: 8px 16px;
       cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      position: relative;
+      
+      &::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 0;
+        background: #409eff;
+        transition: width 0.2s;
+      }
 
       &:hover {
-        background: #eee;
+        background: #f5f7fa;
+        color: #409eff;
+        
+        &::before {
+          width: 3px;
+        }
       }
     }
   }

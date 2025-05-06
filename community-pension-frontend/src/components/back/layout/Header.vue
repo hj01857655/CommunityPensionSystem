@@ -9,8 +9,8 @@
     <div class="right">
       <el-dropdown trigger="click" @command="handleCommand">
         <span class="user-info">
-          <el-avatar :size="32" :src="userInfo.avatar" />
-          <span class="username">{{ userInfo.userName }}</span>
+          <el-avatar :size="32" :src="getAvatarUrl(userInfo.avatar)" />
+          <span class="username">{{ userInfo.username || userInfo.userName || '管理员' }}</span>
           <el-icon><ArrowDown /></el-icon>
         </span>
         <template #dropdown>
@@ -31,6 +31,7 @@ import { useRouter } from 'vue-router';
 import { useAdminStore } from '@/stores/back/adminStore';
 import Breadcrumb from './Breadcrumb.vue';
 import { ElMessageBox } from 'element-plus';
+import { getAvatarUrl } from '@/utils/avatarUtils';
 
 const props = defineProps({
   isCollapse: {
@@ -52,10 +53,26 @@ const toggleSidebar = () => {
 const handleCommand = async (command) => {
   switch (command) {
     case 'profile':
-      router.push('/admin/profile');
+      // 使用完整路径并避免使用重定向路由
+      if (router.currentRoute.value.path !== '/admin/system/user/profile' || 
+          router.currentRoute.value.query.tab !== 'info') {
+        router.push({
+          path: '/admin/system/user/profile',
+          query: { tab: 'info' },
+          replace: true // 使用replace避免在历史记录中创建新条目
+        });
+      }
       break;
     case 'password':
-      router.push('/admin/password');
+      // 使用完整路径并避免使用重定向路由
+      if (router.currentRoute.value.path !== '/admin/system/user/profile' || 
+          router.currentRoute.value.query.tab !== 'password') {
+        router.push({
+          path: '/admin/system/user/profile',
+          query: { tab: 'password' },
+          replace: true // 使用replace避免在历史记录中创建新条目
+        });
+      }
       break;
     case 'logout':
       try {

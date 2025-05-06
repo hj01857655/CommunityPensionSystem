@@ -157,7 +157,7 @@ const routes = [
           },
           {
             path: 'user/profile',
-            redirect: '/admin/system/user/profile?tab=password',
+            component: () => import('@/views/back/system/user/profile/index.vue'),
             meta: { title: '个人中心', icon: 'User', requiresAuth: true, roles: ['admin', 'staff'] }
           }
         ]

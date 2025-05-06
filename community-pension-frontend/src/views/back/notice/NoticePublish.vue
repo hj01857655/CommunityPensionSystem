@@ -1,5 +1,5 @@
 <template>
-  <div class="notice-publish">
+  <div class="app-container">
     <el-card shadow="hover" class="main-card">
       <template #header>
         <div class="card-header">
@@ -155,8 +155,10 @@ import { Back, Upload, Document } from '@element-plus/icons-vue';
 import { useRouter } from 'vue-router';
 import { useRoute } from 'vue-router';
 import { useNoticeStore } from '@/stores/back/noticeStore';
+
 const router = useRouter();
 const route = useRoute();
+const noticeStore = useNoticeStore(); // 初始化noticeStore
 
 // 判断是否为编辑模式
 const isEdit = computed(() => {
@@ -324,11 +326,12 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.notice-publish {
-  padding: 24px;
-  background-color: #f0f2f5;
-  min-height: calc(100vh - 84px);
-  animation: fadeIn 0.5s ease-out;
+.app-container {
+  padding: 20px;
+}
+
+.mb8 {
+  margin-bottom: 8px;
 }
 
 .main-card {
@@ -338,11 +341,6 @@ onMounted(() => {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   background: linear-gradient(to right bottom, #ffffff, #fafafa);
   overflow: hidden;
-}
-
-.main-card:hover {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-  transform: translateY(-2px);
 }
 
 .card-header {
@@ -364,7 +362,8 @@ onMounted(() => {
 
 .header-actions {
   display: flex;
-  gap: 12px;
+  align-items: center;
+  gap: 16px;
 }
 
 .notice-form {
@@ -444,6 +443,35 @@ onMounted(() => {
   background: linear-gradient(45deg, #66b1ff, #409EFF);
 }
 
+:deep(.el-button--link) {
+  padding: 6px 12px;
+  border-radius: 6px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-weight: 500;
+  position: relative;
+  overflow: hidden;
+}
+
+:deep(.el-button--link:hover) {
+  background-color: #f5f7fa;
+  transform: translateY(-1px);
+}
+
+:deep(.el-button--link::after) {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: all 0.3s ease;
+}
+
+:deep(.el-button--link:hover::after) {
+  transform: translateX(100%);
+}
+
 :deep(.el-upload) {
   width: 100%;
 }
@@ -519,6 +547,11 @@ onMounted(() => {
   font-weight: 500;
   border: none;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+:deep(.el-tag--info) {
+  background: linear-gradient(45deg, #e6f3ff, #f0f7ff);
+  color: #409eff;
 }
 
 :deep(.el-tag--success) {
@@ -607,6 +640,35 @@ onMounted(() => {
   border-top: 1px dashed #e4e7ed;
 }
 
+:deep(.el-dialog) {
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+:deep(.el-dialog__header) {
+  margin: 0;
+  padding: 24px 32px;
+  background: linear-gradient(to right, #f8f9fa, #ffffff);
+  border-bottom: 1px solid #e4e7ed;
+}
+
+:deep(.el-dialog__title) {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+:deep(.el-dialog__body) {
+  padding: 32px;
+}
+
+:deep(.el-dialog__footer) {
+  padding: 24px 32px;
+  background: linear-gradient(to right, #f8f9fa, #ffffff);
+  border-top: 1px solid #e4e7ed;
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -620,7 +682,7 @@ onMounted(() => {
 
 /* 响应式布局 */
 @media screen and (max-width: 768px) {
-  .notice-publish {
+  .app-container {
     padding: 16px;
   }
   
@@ -651,6 +713,14 @@ onMounted(() => {
   
   .notice-attachments ul {
     grid-template-columns: 1fr;
+  }
+  
+  :deep(.el-dialog) {
+    margin: 8px !important;
+  }
+  
+  :deep(.el-dialog__body) {
+    padding: 16px;
   }
 }
 
