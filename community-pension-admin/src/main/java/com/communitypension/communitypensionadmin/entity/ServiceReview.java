@@ -19,9 +19,9 @@ public class ServiceReview {
     private Long id;
 
     /**
-     * 服务预约ID
+     * 关联订单ID (原服务预约ID)
      */
-    private Long serviceAppointmentId;
+    private Long orderId;
 
     /**
      * 服务ID
@@ -66,6 +66,7 @@ public class ServiceReview {
     /**
      * 管理员回复
      */
+    @TableField("reply_content")
     private String adminReply;
 
     /**
@@ -76,6 +77,7 @@ public class ServiceReview {
     /**
      * 回复管理员ID
      */
+    @TableField("admin_reply_user_id")
     private Long replyAdminId;
 
     /**
@@ -86,13 +88,13 @@ public class ServiceReview {
     /**
      * 创建时间
      */
-    @TableField(fill = FieldFill.INSERT)
+    @TableField(value = "createTime", fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
 
     /**
      * 更新时间
      */
-    @TableField(fill = FieldFill.INSERT_UPDATE)
+    @TableField(value = "updateTime", fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updatedAt;
 
     /**

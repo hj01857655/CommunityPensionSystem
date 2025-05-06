@@ -11,7 +11,7 @@
  Target Server Version : 80400 (8.4.0)
  File Encoding         : 65001
 
- Date: 06/05/2025 16:24:16
+ Date: 06/05/2025 17:25:32
 */
 
 SET NAMES utf8mb4;
@@ -627,13 +627,19 @@ INSERT INTO `service_order` VALUES (5, 2, 1001, 0, '1111111111111111111', NULL, 
 DROP TABLE IF EXISTS `service_review`;
 CREATE TABLE `service_review`  (
   `id` bigint NOT NULL AUTO_INCREMENT,
+  `service_id` bigint NULL DEFAULT NULL COMMENT '服务项目ID (关联 service_item 表的主键)',
   `order_id` bigint NOT NULL COMMENT '关联订单',
-  `user_id` bigint NOT NULL COMMENT '评价用户',
+  `elder_id` bigint NOT NULL COMMENT '老人ID (服务接受者, 外键 -> user.user_id)',
+  `review_user_id` bigint NOT NULL COMMENT '评价人ID (可能是老人或家属, 外键 -> user.user_id)',
+  `review_type` tinyint NOT NULL COMMENT '评价类型 (例如: 0-老人自己评价, 1-家属代评价)',
   `rating` tinyint NOT NULL COMMENT '评分(1-5星)',
   `content` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '评价内容',
   `review_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '评价时间',
+  `is_anonymous` tinyint NOT NULL DEFAULT 0 COMMENT '是否匿名 (例如: 0-否, 1-是)',
+  `status` tinyint NOT NULL DEFAULT 0 COMMENT '评价状态 (例如: 0-待审核, 1-已通过, 2-已拒绝)',
   `reply_content` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '官方回复',
   `reply_time` datetime NULL DEFAULT NULL COMMENT '回复时间',
+  `admin_reply_user_id` bigint NULL DEFAULT NULL COMMENT '回复的管理员ID (外键 -> user.user_id)',
   `create_by` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '创建者',
   `update_by` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '更新者',
   `remark` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '备注',
@@ -644,14 +650,18 @@ CREATE TABLE `service_review`  (
   `deleted` tinyint(1) NOT NULL DEFAULT 0 COMMENT '逻辑删除标志(0-未删除, 1-已删除)',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_order`(`order_id` ASC) USING BTREE,
-  INDEX `idx_user`(`user_id` ASC) USING BTREE,
+  INDEX `idx_user`(`elder_id` ASC) USING BTREE,
+  INDEX `idx_admin_reply_user_id`(`admin_reply_user_id` ASC) USING BTREE,
   CONSTRAINT `service_review_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `service_order` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
-  CONSTRAINT `service_review_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '服务评价表' ROW_FORMAT = DYNAMIC;
+  CONSTRAINT `service_review_ibfk_2` FOREIGN KEY (`elder_id`) REFERENCES `user` (`user_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `fk_service_review_reply_admin` FOREIGN KEY (`admin_reply_user_id`) REFERENCES `user` (`user_id`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '服务评价表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of service_review
 -- ----------------------------
+INSERT INTO `service_review` VALUES (1, NULL, 3, 2, 0, 0, 5, '服务非常好，医生很专业，态度也很好！强烈推荐！', '2025-05-06 16:30:25', 0, 0, NULL, NULL, NULL, 'Ldamao', 'Ldamao', '首次评价，非常满意', NULL, '2025-05-06 16:30:25', NULL, '2025-05-06 16:30:25', 0);
+INSERT INTO `service_review` VALUES (2, NULL, 4, 2, 0, 0, 3, '服务还可以，师傅上门比较准时，但是问题没有完全解决，希望改进。', '2025-05-05 16:30:25', 0, 0, '感谢您的反馈，我们已联系师傅跟进处理，给您带来不便非常抱歉。', '2025-05-06 16:30:25', NULL, 'Ldamao_kin', 'admin', '家属代评，管理员已回复', NULL, '2025-05-05 16:30:25', NULL, '2025-05-06 16:30:25', 0);
 
 -- ----------------------------
 -- Table structure for user

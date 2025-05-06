@@ -335,9 +335,9 @@ public class ServiceReviewServiceImpl extends ServiceImpl<ServiceReviewMapper, S
      * 检查用户是否已评价服务预约
      */
     @Override
-    public boolean checkReviewExists(Long serviceAppointmentId, Long elderId) {
+    public boolean checkReviewExists(Long orderId, Long elderId) {
         LambdaQueryWrapper<ServiceReview> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(ServiceReview::getServiceAppointmentId, serviceAppointmentId);
+        wrapper.eq(ServiceReview::getOrderId, orderId);
         wrapper.eq(ServiceReview::getElderId, elderId);
         wrapper.eq(ServiceReview::getDeleted, 0);
         return count(wrapper) > 0;
