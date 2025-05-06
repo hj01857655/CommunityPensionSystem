@@ -1,88 +1,103 @@
 <template>
-  <div class="activity-participate">
-    <el-card>
-      <template #header>
-        <div class="card-header">
-          <span>活动报名管理</span>
-          <div class="header-right">
-            <el-button type="primary" @click="handleExport">导出</el-button>
-          </div>
-        </div>
-      </template>
+  <div class="app-container">
+    <!-- 搜索条件 -->
+    <el-form :model="queryParams" ref="queryRef" :inline="true" v-show="showSearch" label-width="80px">
+      <el-form-item label="活动名称" prop="activityId">
+        <el-select v-model="queryParams.activityId" placeholder="请选择活动" clearable style="width: 200px">
+          <el-option
+            v-for="item in activityOptions"
+            :key="item.id"
+            :label="item.title"
+            :value="item.id"
+          />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="报名状态" prop="status">
+        <el-select v-model="queryParams.status" placeholder="请选择状态" clearable style="width: 200px">
+          <el-option label="已报名" :value="0" />
+          <el-option label="已签到" :value="1" />
+          <el-option label="已取消" :value="2" />
+        </el-select>
+      </el-form-item>
+      <el-form-item>
+        <el-button type="primary" :icon="Search" @click="handleQuery">搜索</el-button>
+        <el-button :icon="Refresh" @click="resetQuery">重置</el-button>
+      </el-form-item>
+    </el-form>
 
-      <!-- 搜索表单 -->
-      <el-form :inline="true" :model="queryParams" class="search-form">
-        <el-form-item label="活动名称">
-          <el-select v-model="queryParams.activityId" placeholder="请选择活动">
-            <el-option
-              v-for="item in activityOptions"
-              :key="item.id"
-              :label="item.title"
-              :value="item.id"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="报名状态">
-          <el-select v-model="queryParams.status" placeholder="请选择状态">
-            <el-option label="已报名" :value="0" />
-            <el-option label="已签到" :value="1" />
-            <el-option label="已取消" :value="2" />
-          </el-select>
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="handleQuery">查询</el-button>
-          <el-button @click="resetQuery">重置</el-button>
-        </el-form-item>
-      </el-form>
+    <!-- 操作按钮 -->
+    <el-row :gutter="10" class="mb8">
+      <el-col :span="1.5">
+        <el-button type="primary" plain :icon="Plus" @click="handleAdd">新增报名</el-button>
+      </el-col>
+      <el-col :span="1.5">
+        <el-button type="warning" plain :icon="Download" @click="handleExport">导出</el-button>
+      </el-col>
+      <right-toolbar v-model:showSearch="showSearch" @queryTable="getList" :columns="columns"></right-toolbar>
+    </el-row>
 
-      <!-- 报名记录列表 -->
-      <el-table :data="participateList" v-loading="loading">
-        <el-table-column prop="activityTitle" label="活动名称" />
-        <el-table-column prop="elderName" label="报名人" />
-        <el-table-column prop="status" label="状态">
-          <template #default="{ row }">
-            <el-tag :type="getStatusType(row.status)">
-              {{ getStatusText(row.status) }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="signTime" label="签到时间" />
-        <el-table-column label="操作" width="150">
-          <template #default="{ row }">
-            <el-button 
-              v-if="row.status === 0"
-              type="primary" 
-              link 
-              @click="handleAudit(row)"
-            >
-              审核
-            </el-button>
-            <el-button 
-              v-if="row.status === 1"
-              type="success" 
-              link 
-              @click="handleCheckin(row)"
-            >
-              签到
-            </el-button>
-          </template>
-        </el-table-column>
-      </el-table>
+    <!-- 报名记录列表 -->
+    <el-table v-loading="loading" :data="participateList" @selection-change="handleSelectionChange">
+      <el-table-column type="selection" width="55" align="center" v-if="columns[0].visible" />
+      <el-table-column prop="activityTitle" label="活动名称" v-if="columns[1].visible" />
+      <el-table-column prop="elderName" label="报名人" v-if="columns[2].visible" />
+      <el-table-column prop="status" label="状态" v-if="columns[3].visible">
+        <template #default="{ row }">
+          <el-tag :type="getStatusType(row.status)">
+            {{ getStatusText(row.status) }}
+          </el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column prop="signTime" label="签到时间" v-if="columns[4].visible" />
+      <el-table-column prop="applyTime" label="报名时间" v-if="columns[5].visible" />
+      <el-table-column prop="remark" label="备注" v-if="columns[6].visible" />
+      <el-table-column label="操作" width="180" v-if="columns[7].visible">
+        <template #default="{ row }">
+          <el-button 
+            v-if="row.status === 0"
+            type="primary" 
+            link 
+            :icon="Check"
+            @click="handleAudit(row)"
+          >
+            审核
+          </el-button>
+          <el-button 
+            v-if="row.status === 1"
+            type="primary" 
+            link 
+            :icon="Check"
+            @click="handleCheckin(row)"
+          >
+            签到
+          </el-button>
+          <el-button 
+            type="primary" 
+            link 
+            :icon="Delete"
+            @click="handleCancel(row)"
+          >
+            取消
+          </el-button>
+        </template>
+      </el-table-column>
+    </el-table>
 
-      <!-- 分页 -->
-      <el-pagination
-        v-model:current-page="queryParams.pageNum"
-        v-model:page-size="queryParams.pageSize"
-        :total="total"
-        @current-change="handleQuery"
-      />
-    </el-card>
+    <!-- 分页组件 -->
+    <pagination
+      v-if="total > 0"
+      :total="total"
+      :page="queryParams.pageNum"
+      :limit="queryParams.pageSize"
+      @pagination="getList"
+    />
 
     <!-- 审核对话框 -->
     <el-dialog
       v-model="auditDialogVisible"
       title="报名审核"
       width="500px"
+      append-to-body
     >
       <el-form ref="auditFormRef" :model="auditForm" :rules="auditRules" label-width="100px">
         <el-form-item label="审核结果" prop="result">
@@ -92,20 +107,65 @@
           </el-radio-group>
         </el-form-item>
         <el-form-item label="审核意见" prop="remark">
-          <el-input type="textarea" v-model="auditForm.remark" />
+          <el-input type="textarea" v-model="auditForm.remark" :rows="4" />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="auditDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleAuditSubmit">确定</el-button>
+        <span class="dialog-footer">
+          <el-button @click="auditDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="handleAuditSubmit">确定</el-button>
+        </span>
+      </template>
+    </el-dialog>
+
+    <!-- 新增报名对话框 -->
+    <el-dialog
+      v-model="addDialogVisible"
+      title="新增报名"
+      width="500px"
+      append-to-body
+    >
+      <el-form ref="addFormRef" :model="addForm" :rules="addRules" label-width="100px">
+        <el-form-item label="活动" prop="activityId">
+          <el-select v-model="addForm.activityId" placeholder="请选择活动" style="width: 100%">
+            <el-option
+              v-for="item in activityOptions"
+              :key="item.id"
+              :label="item.title"
+              :value="item.id"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="报名人" prop="elderId">
+          <el-select v-model="addForm.elderId" placeholder="请选择报名人" style="width: 100%">
+            <el-option
+              v-for="item in elderOptions"
+              :key="item.id"
+              :label="item.name"
+              :value="item.id"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="备注" prop="remark">
+          <el-input type="textarea" v-model="addForm.remark" :rows="3" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="addDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="handleAddSubmit">确定</el-button>
+        </span>
       </template>
     </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ref, reactive, computed, onMounted } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { Search, Refresh, Plus, Check, Delete, Download } from '@element-plus/icons-vue'
+import RightToolbar from '@/components/RightToolbar/index.vue'
+import Pagination from '@/components/common/Pagination.vue'
 
 // 查询参数
 const queryParams = reactive({
@@ -115,28 +175,64 @@ const queryParams = reactive({
   status: ''
 })
 
+// 遮罩层
+const loading = ref(false)
+// 选中数组
+const selectedRows = ref([])
+// 显示搜索条件
+const showSearch = ref(true)
+// 总条数
+const total = ref(0)
+// 报名记录列表
+const participateList = ref([])
 // 活动选项
 const activityOptions = ref([])
+// 老人选项
+const elderOptions = ref([])
 
-// 参与记录列表
-const participateList = ref([])
-const loading = ref(false)
-const total = ref(0)
+// 列显示控制
+const columns = ref([
+  { key: 0, label: '选择列', visible: true },
+  { key: 1, label: '活动名称', visible: true },
+  { key: 2, label: '报名人', visible: true },
+  { key: 3, label: '状态', visible: true },
+  { key: 4, label: '签到时间', visible: true },
+  { key: 5, label: '报名时间', visible: true },
+  { key: 6, label: '备注', visible: true },
+  { key: 7, label: '操作', visible: true }
+])
 
-// 审核相关
+// 审核对话框
 const auditDialogVisible = ref(false)
-const auditFormRef = ref(null)
 const auditForm = reactive({
   id: '',
   result: 1,
   remark: ''
 })
-
-// 审核表单验证规则
 const auditRules = {
-  result: [{ required: true, message: '请选择审核结果', trigger: 'change' }],
-  remark: [{ required: true, message: '请输入审核意见', trigger: 'blur' }]
+  result: [
+    { required: true, message: '请选择审核结果', trigger: 'change' }
+  ]
 }
+const auditFormRef = ref(null)
+
+// 新增报名对话框
+const addDialogVisible = ref(false)
+const addForm = reactive({
+  activityId: '',
+  elderId: '',
+  remark: ''
+})
+const addRules = {
+  activityId: [
+    { required: true, message: '请选择活动', trigger: 'change' }
+  ],
+  elderId: [
+    { required: true, message: '请选择报名人', trigger: 'change' }
+  ]
+}
+const addFormRef = ref(null)
+const queryRef = ref(null)
 
 // 获取状态类型
 const getStatusType = (status) => {
@@ -158,156 +254,204 @@ const getStatusText = (status) => {
   return texts[status] || '未知'
 }
 
-// 查询参与记录
-const handleQuery = async () => {
-  loading.value = true
-  try {
-    // TODO: 调用API获取参与记录列表
-    loading.value = false
-  } catch (error) {
-    loading.value = false
-    ElMessage.error('获取参与记录失败')
-  }
+// 多选框选中数据
+const handleSelectionChange = (selection) => {
+  selectedRows.value = selection
 }
 
-// 重置查询
+// 查询参与记录
+const getList = (params) => {
+  loading.value = true
+  
+  // 处理分页参数
+  if (params) {
+    queryParams.pageNum = params.page
+    queryParams.pageSize = params.limit
+  }
+  
+  // 这里应该调用API获取参与记录列表
+  // 模拟数据
+  setTimeout(() => {
+    // 模拟数据
+    participateList.value = [
+      {
+        id: '1',
+        activityId: '1',
+        activityTitle: '健康讲座',
+        elderId: '1',
+        elderName: '张三',
+        status: 1,
+        signTime: '2025-05-06 09:30:00',
+        applyTime: '2025-05-01 15:20:00',
+        remark: '对健康知识很感兴趣'
+      },
+      {
+        id: '2',
+        activityId: '1',
+        activityTitle: '健康讲座',
+        elderId: '2',
+        elderName: '李四',
+        status: 0,
+        signTime: null,
+        applyTime: '2025-05-02 10:15:00',
+        remark: ''
+      }
+    ]
+    total.value = 2
+    loading.value = false
+  }, 300)
+}
+
+// 查询活动列表
+const getActivityOptions = () => {
+  // 这里应该调用API获取活动列表
+  // 模拟数据
+  activityOptions.value = [
+    { id: '1', title: '健康讲座' },
+    { id: '2', title: '太极拳教学' },
+    { id: '3', title: '书法比赛' }
+  ]
+}
+
+// 查询老人列表
+const getElderOptions = () => {
+  // 这里应该调用API获取老人列表
+  // 模拟数据
+  elderOptions.value = [
+    { id: '1', name: '张三' },
+    { id: '2', name: '李四' },
+    { id: '3', name: '王五' }
+  ]
+}
+
+// 搜索按钮操作
+const handleQuery = () => {
+  queryParams.pageNum = 1
+  getList()
+}
+
+// 重置按钮操作
 const resetQuery = () => {
+  if (queryRef.value) {
+    queryRef.value.resetFields()
+  }
+  queryParams.pageNum = 1
+  queryParams.pageSize = 10
   queryParams.activityId = ''
   queryParams.status = ''
   handleQuery()
 }
 
-// 导出数据
-const handleExport = async () => {
-  try {
-    // TODO: 调用导出API
-    ElMessage.success('导出成功')
-  } catch (error) {
-    ElMessage.error('导出失败')
+// 新增报名
+const handleAdd = () => {
+  addDialogVisible.value = true
+  addForm.activityId = ''
+  addForm.elderId = ''
+  addForm.remark = ''
+  
+  if (addFormRef.value) {
+    addFormRef.value.resetFields()
   }
+}
+
+// 提交新增报名
+const handleAddSubmit = () => {
+  if (!addFormRef.value) return
+  
+  addFormRef.value.validate((valid) => {
+    if (valid) {
+      // 这里应该调用API提交新增报名
+      ElMessage.success('新增报名成功')
+      addDialogVisible.value = false
+      getList()
+    }
+  })
+}
+
+// 导出数据
+const handleExport = () => {
+  ElMessageBox.confirm('确认导出所有报名记录数据?', '警告', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning',
+  })
+    .then(() => {
+      // 这里应该调用导出API
+      ElMessage.success('导出成功')
+    })
+    .catch(() => {})
 }
 
 // 审核操作
 const handleAudit = (row) => {
+  auditDialogVisible.value = true
   auditForm.id = row.id
   auditForm.result = 1
   auditForm.remark = ''
-  auditDialogVisible.value = true
+  
+  if (auditFormRef.value) {
+    auditFormRef.value.resetFields()
+  }
 }
 
 // 提交审核
-const handleAuditSubmit = async () => {
+const handleAuditSubmit = () => {
   if (!auditFormRef.value) return
-  await auditFormRef.value.validate(async (valid) => {
+  
+  auditFormRef.value.validate((valid) => {
     if (valid) {
-      try {
-        // TODO: 调用审核API
-        ElMessage.success('审核成功')
-        auditDialogVisible.value = false
-        handleQuery()
-      } catch (error) {
-        ElMessage.error('审核失败')
-      }
+      // 这里应该调用API提交审核
+      ElMessage.success('审核提交成功')
+      auditDialogVisible.value = false
+      getList()
     }
   })
 }
 
 // 签到操作
-const handleCheckin = async (row) => {
-  try {
-    // TODO: 调用签到API
+const handleCheckin = (row) => {
+  ElMessageBox.confirm(`确认为 ${row.elderName} 进行签到操作吗?`, '提示', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'info'
+  }).then(() => {
+    // 这里应该调用API进行签到操作
     ElMessage.success('签到成功')
-    handleQuery()
-  } catch (error) {
-    ElMessage.error('签到失败')
-  }
+    getList()
+  }).catch(() => {})
+}
+
+// 取消报名
+const handleCancel = (row) => {
+  ElMessageBox.confirm(`确认取消 ${row.elderName} 的报名记录吗?`, '警告', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning'
+  }).then(() => {
+    // 这里应该调用API取消报名
+    ElMessage.success('取消报名成功')
+    getList()
+  }).catch(() => {})
 }
 
 // 初始化
-handleQuery()
+onMounted(() => {
+  getActivityOptions()
+  getElderOptions()
+  getList()
+})
 </script>
 
 <style scoped>
-.activity-participate {
-  padding: 24px;
-  background-color: #f0f2f5;
-  min-height: calc(100vh - 84px);
-  animation: fadeIn 0.5s ease-out;
+.app-container {
+  padding: 20px;
 }
 
-:deep(.el-card) {
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  background: linear-gradient(to right bottom, #ffffff, #fafafa);
+.mb8 {
+  margin-bottom: 8px;
 }
 
-:deep(.el-card:hover) {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-  transform: translateY(-2px);
-}
-
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 24px;
-  background: linear-gradient(to right, #f8f9fa, #ffffff);
-  border-radius: 12px 12px 0 0;
-}
-
-.card-header span {
-  font-size: 18px;
-  font-weight: 600;
-  color: #1a1a1a;
-  letter-spacing: 0.5px;
-}
-
-.header-right {
-  display: flex;
-  gap: 12px;
-}
-
-.search-form {
-  padding: 24px;
-  background: linear-gradient(135deg, #f8f9fa, #ffffff);
-  border-radius: 12px;
-  margin: 0 16px 24px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
-}
-
-:deep(.el-table) {
-  margin: 0 16px;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
-}
-
-:deep(.el-table th) {
-  background: linear-gradient(to bottom, #f8f9fa, #f5f7fa) !important;
-  color: #1a1a1a;
-  font-weight: 600;
-  font-size: 14px;
-  padding: 16px 0;
-}
-
-:deep(.el-table td) {
-  padding: 16px 0;
-  color: #4a4a4a;
-  font-size: 14px;
-}
-
-:deep(.el-table--striped .el-table__body tr.el-table__row--striped td) {
-  background: #fafafa;
-}
-
-:deep(.el-table__row:hover > td) {
-  background-color: #f5f7fa !important;
-}
-
-:deep(.el-tag) {
-  border-radius: 6px;
-  padding: 0 12px;
+.dialog-footer {
   height: 28px;
   line-height: 28px;
   font-weight: 500;

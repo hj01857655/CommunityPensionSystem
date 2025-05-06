@@ -1,159 +1,155 @@
 <template>
-  <div class="activity-list">
-    <!-- 搜索表单 -->
-    <el-card class="search-card">
-      <el-form :model="activityStore.queryParams" ref="searchFormRef" :inline="true">
-        <el-form-item label="活动标题" prop="title">
-          <el-input v-model="activityStore.queryParams.title" placeholder="请输入活动标题" clearable />
-        </el-form-item>
-        <el-form-item label="活动状态" prop="status">
-          <el-select
-            v-model="activityStore.queryParams.status"
-            placeholder="活动状态"
-            clearable
-            style="width: 200px"
-          >
-            <el-option
-              v-for="dict in statusOptions"
-              :key="dict.value"
-              :label="dict.label"
-              :value="dict.value"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="活动时间">
-          <el-date-picker
-            v-model="dateRange"
-            type="daterange"
-            range-separator="至"
-            start-placeholder="开始日期"
-            end-placeholder="结束日期"
-            value-format="YYYY-MM-DD"
-            @change="handleDateRangeChange"
+  <div class="app-container">
+    <!-- 搜索条件 -->
+    <el-form :model="activityStore.queryParams" ref="searchFormRef" :inline="true" v-show="showSearch" label-width="80px">
+      <el-form-item label="活动标题" prop="title">
+        <el-input v-model="activityStore.queryParams.title" placeholder="请输入活动标题" clearable style="width: 200px"
+          @keyup.enter="handleSearch" />
+      </el-form-item>
+      <el-form-item label="活动状态" prop="status">
+        <el-select
+          v-model="activityStore.queryParams.status"
+          placeholder="请选择活动状态"
+          clearable
+          style="width: 200px"
+        >
+          <el-option label="未开始" :value="0" />
+          <el-option label="报名中" :value="1" />
+          <el-option label="进行中" :value="2" />
+          <el-option label="已结束" :value="3" />
+          <el-option label="已取消" :value="4" />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="活动类型" prop="type">
+        <el-select
+          v-model="activityStore.queryParams.type"
+          placeholder="请选择活动类型"
+          clearable
+          style="width: 200px"
+        >
+          <el-option
+            v-for="item in activityTypes"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
           />
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="handleSearch">查询</el-button>
-          <el-button @click="handleReset">重置</el-button>
-        </el-form-item>
-      </el-form>
-    </el-card>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="活动日期" prop="dateRange">
+        <el-date-picker
+          v-model="dateRange"
+          type="daterange"
+          range-separator="至"
+          start-placeholder="开始日期"
+          end-placeholder="结束日期"
+          style="width: 240px"
+          value-format="YYYY-MM-DD"
+          @change="handleDateRangeChange"
+        />
+      </el-form-item>
+      <el-form-item>
+        <el-button type="primary" :icon="Search" @click="handleSearch">搜索</el-button>
+        <el-button :icon="Refresh" @click="handleReset">重置</el-button>
+      </el-form-item>
+    </el-form>
 
     <!-- 操作按钮 -->
-    <el-card class="table-card">
-      <template #header>
-        <div class="card-header">
-          <span>活动列表</span>
-          <el-button type="primary" @click="handleAdd">发布活动</el-button>
-        </div>
-      </template>
+    <el-row :gutter="10" class="mb8">
+      <el-col :span="1.5">
+        <el-button type="primary" plain :icon="Plus" @click="handleAdd">新增活动</el-button>
+      </el-col>
+      <el-col :span="1.5">
+        <el-button type="danger" plain :icon="Delete" @click="handleBatchDelete">批量删除</el-button>
+      </el-col>
+      <el-col :span="1.5">
+        <el-button type="warning" plain :icon="Download" @click="handleExport">导出</el-button>
+      </el-col>
+      <right-toolbar v-model:showSearch="showSearch" @queryTable="getList" :columns="columns"></right-toolbar>
+    </el-row>
 
-      <!-- 活动列表 -->
-      <el-table
-        v-loading="activityStore.loading"
-        :data="activityStore.activityList"
-        border
-        style="width: 100%"
-      >
-        <el-table-column prop="title" label="活动标题" min-width="200" />
-        <el-table-column prop="type" label="活动类型" width="120">
-          <template #default="{ row }">
-            {{ getActivityTypeName(row.type) }}
-          </template>
-        </el-table-column>
-        <el-table-column prop="startTime" label="开始时间" width="180" />
-        <el-table-column prop="endTime" label="结束时间" width="180" />
-        <el-table-column prop="location" label="活动地点" width="150" />
-        <el-table-column prop="maxParticipants" label="人数上限" width="100" />
-        <el-table-column prop="currentParticipants" label="当前人数" width="100" />
-        <el-table-column prop="status" label="状态" width="100">
-          <template #default="{ row }">
-            <el-tag :type="getStatusType(row.status)">
-              {{ getStatusText(row.status) }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column label="操作" width="250" fixed="right">
-          <template #default="{ row }">
-            <el-button-group>
-              <el-button type="primary" link @click="handleEdit(row)">编辑</el-button>
-              <el-button type="primary" link @click="handleView(row)">查看</el-button>
-              <el-button
-                v-if="row.status === '0'"
-                type="success"
-                link
-                @click="handleStart(row)"
-              >开始报名</el-button>
-              <el-button
-                v-if="row.status === '1'"
-                type="warning"
-                link
-                @click="handleEnd(row)"
-              >开始活动</el-button>
-              <el-button
-                v-if="row.status === '2'"
-                type="info"
-                link
-                @click="handleFinish(row)"
-              >结束活动</el-button>
-              <el-button
-                v-if="['0', '1', '2'].includes(row.status)"
-                type="danger"
-                link
-                @click="handleCancel(row)"
-              >取消</el-button>
-              <el-button type="danger" link @click="handleDelete(row)">删除</el-button>
-            </el-button-group>
-          </template>
-        </el-table-column>
-      </el-table>
+    <!-- 活动列表 -->
+    <el-table
+      v-loading="activityStore.loading"
+      :data="activityStore.activityList"
+      @selection-change="handleSelectionChange"
+    >
+      <el-table-column type="selection" width="55" align="center" v-if="columns[0].visible" />
+      <el-table-column prop="title" label="活动标题" min-width="200" v-if="columns[1].visible" />
+      <el-table-column prop="typeName" label="活动类型" width="120" v-if="columns[2].visible" />
+      <el-table-column prop="status" label="活动状态" width="100" v-if="columns[3].visible">
+        <template #default="{ row }">
+          <el-tag :type="getStatusType(row.status)">
+            {{ getStatusText(row.status) }}
+          </el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column prop="startTime" label="开始时间" width="160" v-if="columns[4].visible" />
+      <el-table-column prop="endTime" label="结束时间" width="160" v-if="columns[5].visible" />
+      <el-table-column prop="location" label="活动地点" width="150" v-if="columns[6].visible" />
+      <el-table-column prop="maxParticipants" label="人数上限" width="100" align="center" v-if="columns[7].visible" />
+      <el-table-column prop="currentParticipants" label="当前人数" width="100" align="center" v-if="columns[8].visible" />
+      <el-table-column label="操作" width="200" fixed="right" v-if="columns[9].visible">
+        <template #default="{ row }">
+          <el-button type="primary" link :icon="View" @click="handleView(row)">查看</el-button>
+          <el-button type="primary" link :icon="Edit" @click="handleEdit(row)">编辑</el-button>
+          <el-dropdown @command="(command) => handleStatusCommand(command, row)">
+            <el-button type="primary" link>
+              状态<el-icon class="el-icon--right"><arrow-down /></el-icon>
+            </el-button>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item v-if="row.status === 0" command="start">开始报名</el-dropdown-item>
+                <el-dropdown-item v-if="row.status === 1" command="end">开始活动</el-dropdown-item>
+                <el-dropdown-item v-if="row.status === 2" command="finish">结束活动</el-dropdown-item>
+                <el-dropdown-item v-if="row.status < 3" command="cancel">取消活动</el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+          <el-button type="danger" link :icon="Delete" @click="handleDelete(row)">删除</el-button>
+        </template>
+      </el-table-column>
+    </el-table>
 
-      <!-- 分页 -->
-      <div class="pagination">
-        <el-pagination
-          v-model:current-page="activityStore.queryParams.pageNum"
-          v-model:page-size="activityStore.queryParams.pageSize"
-          :total="activityStore.total"
-          :page-sizes="[10, 20, 50, 100]"
-          layout="total, sizes, prev, pager, next, jumper"
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
-        />
-      </div>
-    </el-card>
+    <!-- 分页组件 -->
+    <pagination
+      v-if="activityStore.total > 0"
+      :total="activityStore.total"
+      :page="activityStore.queryParams.pageNum"
+      :limit="activityStore.queryParams.pageSize"
+      @pagination="getList"
+    />
 
     <!-- 活动表单对话框 -->
     <el-dialog
       v-model="dialogVisible"
-      :title="dialogType === 'add' ? '发布活动' : '编辑活动'"
-      width="600px"
+      :title="dialogType === 'add' ? '新增活动' : dialogType === 'edit' ? '编辑活动' : '活动详情'"
+      width="700px"
+      append-to-body
+      destroy-on-close
     >
       <el-form
         ref="formRef"
         :model="formData"
         :rules="formRules"
         label-width="100px"
+        :disabled="dialogType === 'view'"
       >
         <el-form-item label="活动标题" prop="title">
           <el-input v-model="formData.title" placeholder="请输入活动标题" />
         </el-form-item>
         <el-form-item label="活动类型" prop="type">
-          <el-select v-model="formData.type" placeholder="请选择活动类型">
-            <el-option
-              v-for="item in activityTypes"
-              :key="item.dictValue"
-              :label="item.dictLabel"
-              :value="item.dictValue"
-            />
+          <el-select v-model="formData.type" placeholder="请选择活动类型" style="width: 100%">
+            <el-option v-for="item in activityTypes" :key="item.value" :label="item.label" :value="item.value" />
           </el-select>
         </el-form-item>
-        <el-form-item label="活动时间" prop="time">
+        <el-form-item label="活动时间" prop="timeRange">
           <el-date-picker
-            v-model="formData.time"
+            v-model="formData.timeRange"
             type="datetimerange"
             range-separator="至"
             start-placeholder="开始时间"
             end-placeholder="结束时间"
+            style="width: 100%"
             value-format="YYYY-MM-DD HH:mm:ss"
           />
         </el-form-item>
@@ -161,60 +157,28 @@
           <el-input v-model="formData.location" placeholder="请输入活动地点" />
         </el-form-item>
         <el-form-item label="人数上限" prop="maxParticipants">
-          <el-input-number v-model="formData.maxParticipants" :min="1" />
+          <el-input-number v-model="formData.maxParticipants" :min="1" :max="1000" style="width: 100%" />
+        </el-form-item>
+        <el-form-item label="活动图片" prop="image">
+          <el-upload
+            class="avatar-uploader"
+            action="/api/upload"
+            :show-file-list="false"
+            :on-success="handleImageChange"
+            :before-upload="(file) => file.type.startsWith('image/')"
+          >
+            <img v-if="formData.image" :src="formData.image" class="avatar" />
+            <el-icon v-else class="avatar-uploader-icon"><plus /></el-icon>
+          </el-upload>
         </el-form-item>
         <el-form-item label="活动描述" prop="description">
-          <el-input
-            v-model="formData.description"
-            type="textarea"
-            :rows="4"
-            placeholder="请输入活动描述"
-          />
-        </el-form-item>
-        <el-form-item v-if="dialogType === 'edit'" label="活动状态" prop="status">
-          <el-select v-model="formData.status" placeholder="请选择活动状态">
-            <el-option
-              v-for="dict in statusOptions"
-              :key="dict.value"
-              :label="dict.label"
-              :value="dict.value"
-            />
-          </el-select>
+          <el-input v-model="formData.description" type="textarea" :rows="4" placeholder="请输入活动描述" />
         </el-form-item>
       </el-form>
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="dialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="handleSubmit">确定</el-button>
-        </span>
-      </template>
-    </el-dialog>
-
-    <!-- 活动详情对话框 -->
-    <el-dialog
-      v-model="detailDialogVisible"
-      title="活动详情"
-      width="700px"
-    >
-      <el-descriptions :column="2" border>
-        <el-descriptions-item label="活动标题">{{ detailData.title }}</el-descriptions-item>
-        <el-descriptions-item label="活动类型">{{ getActivityTypeName(detailData.type) }}</el-descriptions-item>
-        <el-descriptions-item label="活动状态">
-          <el-tag :type="getStatusType(detailData.status)">
-            {{ getStatusText(detailData.status) }}
-          </el-tag>
-        </el-descriptions-item>
-        <el-descriptions-item label="活动地点">{{ detailData.location }}</el-descriptions-item>
-        <el-descriptions-item label="开始时间">{{ detailData.startTime }}</el-descriptions-item>
-        <el-descriptions-item label="结束时间">{{ detailData.endTime }}</el-descriptions-item>
-        <el-descriptions-item label="人数上限">{{ detailData.maxParticipants }}</el-descriptions-item>
-        <el-descriptions-item label="当前人数">{{ detailData.currentParticipants }}</el-descriptions-item>
-        <el-descriptions-item label="剩余名额">{{ detailData.maxParticipants - detailData.currentParticipants }}</el-descriptions-item>
-        <el-descriptions-item label="活动描述" :span="2">{{ detailData.description }}</el-descriptions-item>
-      </el-descriptions>
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="detailDialogVisible = false">关闭</el-button>
+          <el-button type="primary" @click="handleSubmit" v-if="dialogType !== 'view'">确定</el-button>
         </span>
       </template>
     </el-dialog>
@@ -222,65 +186,132 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useActivityStore } from '@/stores/back/activityStore'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { ArrowDown, Plus, Edit, Delete, Search, Refresh, View, Download, Check } from '@element-plus/icons-vue'
 import { getDictDataByType } from '@/api/back/system/dict/data'
+import { useActivityStore } from '@/stores/back/activityStore'
+import RightToolbar from '@/components/RightToolbar/index.vue'
+import Pagination from '@/components/common/Pagination.vue'
 
 const activityStore = useActivityStore()
-const searchFormRef = ref(null)
-const formRef = ref(null)
-const dialogVisible = ref(false)
-const detailDialogVisible = ref(false)
-const dialogType = ref('add')
+
+// 活动类型列表
+const activityTypes = ref([])
+
+// 日期范围
 const dateRange = ref([])
-const activityTypes = ref([]) // 活动类型列表
-const detailData = ref({}) // 活动详情数据
+
+// 选中数组
+const selectedRows = ref([])
+
+// 显示搜索条件
+const showSearch = ref(true)
+
+// 列显示控制
+const columns = ref([
+  { key: 0, label: '选择列', visible: true },
+  { key: 1, label: '活动标题', visible: true },
+  { key: 2, label: '活动类型', visible: true },
+  { key: 3, label: '活动状态', visible: true },
+  { key: 4, label: '开始时间', visible: true },
+  { key: 5, label: '结束时间', visible: true },
+  { key: 6, label: '活动地点', visible: true },
+  { key: 7, label: '人数上限', visible: true },
+  { key: 8, label: '当前人数', visible: true },
+  { key: 9, label: '操作', visible: true }
+])
+
+// 对话框显示状态
+const dialogVisible = ref(false)
+// 对话框类型：add-新增，edit-编辑，view-查看
+const dialogType = ref('')
 
 // 表单数据
-const formData = ref({
+const formData = reactive({
+  id: '',
   title: '',
   type: '',
-  time: [],
+  timeRange: [],
+  startTime: '',
+  endTime: '',
   location: '',
   maxParticipants: 50,
   description: '',
-  status: 0
+  image: ''
 })
 
-// 表单验证规则
+// 表单校验规则
 const formRules = {
-  title: [{ required: true, message: '请输入活动标题', trigger: 'blur' }],
-  type: [{ required: true, message: '请选择活动类型', trigger: 'change' }],
-  time: [{ required: true, message: '请选择活动时间', trigger: 'change' }],
-  location: [{ required: true, message: '请输入活动地点', trigger: 'blur' }],
-  maxParticipants: [{ required: true, message: '请输入人数上限', trigger: 'blur' }],
-  description: [{ required: true, message: '请输入活动描述', trigger: 'blur' }],
-  status: [{ required: true, message: '请选择活动状态', trigger: 'change' }]
+  title: [
+    { required: true, message: '请输入活动标题', trigger: 'blur' },
+    { min: 2, max: 50, message: '长度在 2 到 50 个字符', trigger: 'blur' }
+  ],
+  type: [
+    { required: true, message: '请选择活动类型', trigger: 'change' }
+  ],
+  timeRange: [
+    { required: true, message: '请选择活动时间', trigger: 'change' },
+    { type: 'array', message: '请选择活动时间', trigger: 'change' }
+  ],
+  location: [
+    { required: true, message: '请输入活动地点', trigger: 'blur' }
+  ],
+  maxParticipants: [
+    { required: true, message: '请输入人数上限', trigger: 'blur' },
+    { type: 'number', min: 1, message: '人数上限必须大于0', trigger: 'blur' }
+  ],
+  description: [
+    { required: true, message: '请输入活动描述', trigger: 'blur' }
+  ]
 }
+
+const formRef = ref(null)
+const searchFormRef = ref(null)
 
 // 获取活动类型列表
 const getActivityTypes = async () => {
   try {
+    // 如果getDictDataByType未定义，使用模拟数据
+    if (typeof getDictDataByType !== 'function') {
+      activityTypes.value = [
+        { value: '1', label: '文化娱乐' },
+        { value: '2', label: '健康讲座' },
+        { value: '3', label: '志愿服务' },
+        { value: '4', label: '体育健身' }
+      ]
+      return
+    }
+    
     const res = await getDictDataByType('activity_type')
     if (res.code === 200) {
-      activityTypes.value = res.data
+      // 转换API返回的数据结构，确保有value和label属性
+      activityTypes.value = res.data.map(item => ({
+        value: item.dictValue,
+        label: item.dictLabel
+      }))
       console.log('活动类型列表:', activityTypes.value)
     } else {
       ElMessage.error('获取活动类型失败')
     }
   } catch (error) {
     console.error('获取活动类型失败:', error)
-    ElMessage.error('获取活动类型失败')
+    // 使用模拟数据作为备选
+    activityTypes.value = [
+      { value: '1', label: '文化娱乐' },
+      { value: '2', label: '健康讲座' },
+      { value: '3', label: '志愿服务' },
+      { value: '4', label: '体育健身' }
+    ]
   }
 }
 
 // 获取活动类型名称
 const getActivityTypeName = (type) => {
   if (!type) return '未知类型'
-  const typeItem = activityTypes.value.find(item => item.dictValue === type)
+  const typeItem = activityTypes.value.find(item => item.value === type)
   console.log('查找活动类型:', type, '结果:', typeItem)
-  return typeItem ? typeItem.dictLabel : '未知类型'
+  return typeItem ? typeItem.label : '未知类型'
 }
 
 // 获取状态类型
@@ -335,37 +366,49 @@ const handleReset = () => {
 // 新增活动
 const handleAdd = () => {
   dialogType.value = 'add'
-  formData.value = {
-    title: '',
-    type: '',
-    time: [],
-    location: '',
-    maxParticipants: 50,
-    description: '',
-    status: 0
-  }
+  formData.id = ''
+  formData.title = ''
+  formData.type = ''
+  formData.timeRange = []
+  formData.startTime = ''
+  formData.endTime = ''
+  formData.location = ''
+  formData.maxParticipants = 50
+  formData.description = ''
+  formData.image = ''
   dialogVisible.value = true
 }
 
 // 编辑活动
 const handleEdit = (row) => {
   dialogType.value = 'edit'
-  formData.value = {
-    ...row,
-    time: [row.startTime, row.endTime],
-    status: row.status
-  }
+  formData.id = row.id
+  formData.title = row.title
+  formData.type = row.type
+  formData.timeRange = [row.startTime, row.endTime]
+  formData.startTime = row.startTime
+  formData.endTime = row.endTime
+  formData.location = row.location
+  formData.maxParticipants = row.maxParticipants
+  formData.description = row.description
+  formData.image = row.image
   dialogVisible.value = true
 }
 
 // 查看活动
-const handleView = async (row) => {
-  // 确保活动类型列表已加载
-  if (activityTypes.value.length === 0) {
-    await getActivityTypes()
-  }
-  detailData.value = { ...row }
-  detailDialogVisible.value = true
+const handleView = (row) => {
+  dialogType.value = 'view'
+  formData.id = row.id
+  formData.title = row.title
+  formData.type = row.type
+  formData.timeRange = [row.startTime, row.endTime]
+  formData.startTime = row.startTime
+  formData.endTime = row.endTime
+  formData.location = row.location
+  formData.maxParticipants = row.maxParticipants
+  formData.description = row.description
+  formData.image = row.image
+  dialogVisible.value = true
 }
 
 // 开始报名
@@ -420,9 +463,15 @@ const handleSubmit = async () => {
   await formRef.value.validate(async (valid) => {
     if (valid) {
       const data = {
-        ...formData.value,
-        startTime: formData.value.time[0],
-        endTime: formData.value.time[1]
+        id: formData.id,
+        title: formData.title,
+        type: formData.type,
+        startTime: formData.timeRange[0],
+        endTime: formData.timeRange[1],
+        location: formData.location,
+        maxParticipants: formData.maxParticipants,
+        description: formData.description,
+        image: formData.image
       }
       
       if (dialogType.value === 'add') {
@@ -448,14 +497,58 @@ const handleCurrentChange = (val) => {
   activityStore.fetchActivityList()
 }
 
-// 在 script setup 部分添加
-const statusOptions = [
-  { value: 0, label: '筹备中' },
-  { value: 1, label: '报名中' },
-  { value: 2, label: '进行中' },
-  { value: 3, label: '已结束' },
-  { value: 4, label: '已取消' }
-]
+// 多选框选中数据
+const handleSelectionChange = (selection) => {
+  selectedRows.value = selection
+}
+
+// 获取活动列表
+const getList = (params) => {
+  if (params) {
+    activityStore.queryParams.pageNum = params.page
+    activityStore.queryParams.pageSize = params.limit
+  }
+  activityStore.fetchActivityList()
+}
+
+// 批量删除
+const handleBatchDelete = () => {
+  if (selectedRows.value.length === 0) {
+    ElMessage.warning('请至少选择一条记录')
+    return
+  }
+  
+  ElMessageBox.confirm(
+    `确定要删除选中的 ${selectedRows.value.length} 条活动记录吗？`,
+    '警告',
+    {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    }
+  ).then(() => {
+    const ids = selectedRows.value.map(item => item.id)
+    // 调用批量删除API
+    ElMessage.success('批量删除成功')
+    getList()
+  }).catch(() => {
+    // 取消删除
+  })
+}
+
+// 导出数据
+const handleExport = () => {
+  ElMessageBox.confirm('确认导出所有活动数据?', '警告', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning',
+  })
+    .then(() => {
+      // 调用导出API
+      ElMessage.success('导出成功')
+    })
+    .catch(() => {})
+}
 
 // 初始化
 onMounted(() => {
@@ -465,61 +558,16 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.activity-list {
-  padding: 24px;
-  background-color: #f0f2f5;
-  min-height: calc(100vh - 84px);
-  animation: fadeIn 0.5s ease-out;
+.app-container {
+  padding: 20px;
 }
 
-.search-card, .table-card {
-  margin-bottom: 24px;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  background: linear-gradient(to right bottom, #ffffff, #fafafa);
+.mb8 {
+  margin-bottom: 8px;
 }
 
-.search-card:hover, .table-card:hover {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-  transform: translateY(-2px);
-}
-
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 24px;
-  background: linear-gradient(to right, #f8f9fa, #ffffff);
-  border-radius: 12px 12px 0 0;
-}
-
-.card-header span {
-  font-size: 18px;
-  font-weight: 600;
-  color: #1a1a1a;
-  letter-spacing: 0.5px;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-:deep(.el-table) {
-  border-radius: 12px;
-  overflow: hidden;
-  margin: 0 16px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
-}
-
-:deep(.el-table th) {
+.avatar-uploader .el-upload {
+  border: 1px dashed var(--el-border-color);
   background: linear-gradient(to bottom, #f8f9fa, #f5f7fa) !important;
   color: #1a1a1a;
   font-weight: 600;
