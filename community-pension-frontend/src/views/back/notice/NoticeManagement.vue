@@ -1,53 +1,42 @@
 <template>
     <div class="app-container">
-        <el-card shadow="hover" class="main-card">
-            <template #header>
-                <div class="card-header">
-                    <h3>通知公告管理</h3>
-                    <div class="header-actions">
-                        <el-input
-                            v-model="searchQuery"
-                            placeholder="搜索通知标题/内容"
-                            class="search-input"
-                            clearable
-                            @clear="handleSearch"
-                        >
-                            <template #prefix>
-                                <el-icon><Search /></el-icon>
-                            </template>
-                        </el-input>
-                        <el-button type="primary" @click="handleSearch">
-                            <el-icon><Search /></el-icon>
-                            搜索
-                        </el-button>
-                        <el-button type="success" @click="handleAdd">
-                            <el-icon><Plus /></el-icon>
-                            发布通知
-                        </el-button>
-                    </div>
-                </div>
-            </template>
+        <!-- 搜索条件 -->
+        <el-form :model="queryParams" ref="queryRef" :inline="true" v-show="showSearch" label-width="80px">
+            <el-form-item label="通知标题" prop="title">
+                <el-input v-model="searchQuery" placeholder="请输入通知标题/内容" clearable style="width: 200px"
+                    @keyup.enter="handleSearch" @clear="handleSearch" />
+            </el-form-item>
+            <el-form-item label="状态" prop="status">
+                <el-select v-model="statusFilter" placeholder="通知状态" clearable style="width: 200px" @change="handleFilterChange">
+                    <el-option label="全部" value="all" />
+                    <el-option label="已发布" value="published" />
+                    <el-option label="草稿" value="draft" />
+                    <el-option label="已过期" value="expired" />
+                </el-select>
+            </el-form-item>
+            <el-form-item>
+                <el-button type="primary" :icon="Search" @click="handleSearch">搜索</el-button>
+                <el-button :icon="Refresh" @click="resetQuery">重置</el-button>
+            </el-form-item>
+        </el-form>
 
-            <!-- 状态筛选标签 -->
-            <div class="filter-tags">
-                <el-radio-group v-model="statusFilter" size="large" @change="handleFilterChange">
-                    <el-radio-button value="all">全部</el-radio-button>
-                    <el-radio-button value="published">已发布</el-radio-button>
-                    <el-radio-button value="draft">草稿</el-radio-button>
-                    <el-radio-button value="expired">已过期</el-radio-button>
-                </el-radio-group>
-            </div>
+        <!-- 操作按钮 -->
+        <el-row :gutter="10" class="mb8">
+            <el-col :span="1.5">
+                <el-button type="primary" plain :icon="Plus" @click="handleAdd">发布通知</el-button>
+            </el-col>
+            <right-toolbar v-model:showSearch="showSearch" @queryTable="handleQuery"></right-toolbar>
+        </el-row>
 
-            <!-- 通知数据表格 -->
-            <el-table
-                :data="filteredNotices"
-                style="width: 100%"
-                v-loading="loading"
-                border
-                stripe
-                highlight-current-row
-                @row-click="handleRowClick"
-                class="notice-table">
+        <!-- 通知数据表格 -->
+        <el-table
+            :data="filteredNotices"
+            style="width: 100%"
+            v-loading="loading"
+            border
+            stripe
+            highlight-current-row
+            @row-click="handleRowClick">
                 <el-table-column prop="id" label="ID" width="80" align="center" />
                 <el-table-column prop="title" label="标题" min-width="180" show-overflow-tooltip />
                 <el-table-column prop="type" label="类型" width="120">
@@ -96,21 +85,16 @@
                         </el-button>
                     </template>
                 </el-table-column>
-            </el-table>
+        </el-table>
 
-            <!-- 分页 -->
-            <div class="pagination-container">
-                <el-pagination
-                    v-model:current-page="currentPage"
-                    v-model:page-size="pageSize"
-                    :page-sizes="[10, 20, 50, 100]"
-                    layout="total, sizes, prev, pager, next, jumper"
-                    :total="totalNotices"
-                    @size-change="handleSizeChange"
-                    @current-change="handleCurrentChange"
-                    background />
-            </div>
-        </el-card>
+        <!-- 分页组件 -->
+        <Pagination
+            v-if="totalNotices > 0"
+            :total="totalNotices"
+            :page="currentPage"
+            :limit="pageSize"
+            @pagination="handlePagination"
+        />
 
         <!-- 预览抽屉 -->
         <el-drawer
@@ -141,8 +125,10 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { Search, Edit, Delete, View, Plus } from '@element-plus/icons-vue';
+import { Search, Edit, Delete, View, Plus, Refresh } from '@element-plus/icons-vue';
 import { useRouter } from 'vue-router';
+import Pagination from '@/components/common/Pagination.vue';
+import RightToolbar from '@/components/back/system/menu/RightToolbar.vue';
 import { useNoticeStore } from '@/stores/back/noticeStore';
 import { 
     getTypeTagType, 
@@ -181,33 +167,22 @@ const currentPage = ref(1);
 const pageSize = ref(10);
 const searchQuery = ref('');
 const statusFilter = ref('all');
+const showSearch = ref(true);
+
+// 查询参数
+const queryParams = ref({
+    title: '',
+    status: ''
+});
 
 // 抽屉和当前选中通知
 const previewDrawerVisible = ref(false);
 const currentNotice = ref(null);
 
-// 过滤后的通知列表
+// 通知列表（直接使用store中的数据，状态筛选已在API请求中处理）
 const filteredNotices = computed(() => {
-    let result = noticeStore.noticeList;
-    
-    // 状态筛选
-    if (statusFilter.value !== 'all') {
-        const expectedStatus = statusFilter.value === 'published' ? '1' : 
-                              statusFilter.value === 'draft' ? '0' : 
-                              statusFilter.value === 'expired' ? '2' : '';
-        result = result.filter(item => item.status === expectedStatus);
-    }
-    
-    // 搜索筛选
-    if (searchQuery.value) {
-        const query = searchQuery.value.toLowerCase();
-        result = result.filter(item => 
-            (item.title && item.title.toLowerCase().includes(query)) || 
-            (item.content && item.content.toLowerCase().includes(query))
-        );
-    }
-    
-    return result;
+    // 直接使用store中的数据
+    return noticeStore.noticeList;
 });
 
 // 总通知数
@@ -237,11 +212,13 @@ const getStatusText = (status) => {
 // 搜索
 const handleSearch = () => {
     currentPage.value = 1;
+    getNotices();
 };
 
 // 状态筛选变化
 const handleFilterChange = () => {
     currentPage.value = 1;
+    getNotices();
 };
 
 // 添加通知
@@ -293,15 +270,19 @@ const handleRowClick = (row) => {
     handlePreview(row);
 };
 
-// 分页大小变化
-const handleSizeChange = (val) => {
-    pageSize.value = val;
-    currentPage.value = 1;
+// 分页处理
+const handlePagination = (val) => {
+    currentPage.value = val.page;
+    pageSize.value = val.limit;
+    getNotices();
 };
 
-// 当前页变化
-const handleCurrentChange = (val) => {
-    currentPage.value = val;
+// 重置查询
+const resetQuery = () => {
+    searchQuery.value = '';
+    statusFilter.value = 'all';
+    currentPage.value = 1;
+    getNotices();
 };
 
 
@@ -320,90 +301,19 @@ onMounted(() => {
     margin-bottom: 8px;
 }
 
-.main-card {
-    margin-bottom: 24px;
-    border-radius: 16px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    background: linear-gradient(to right bottom, #ffffff, #fafafa);
-    overflow: hidden;
+.small-padding {
+    padding-left: 5px;
+    padding-right: 5px;
 }
 
-.main-card:hover {
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-    transform: translateY(-2px);
+.fixed-width .el-button--small {
+    padding: 7px 10px;
+    min-width: 60px;
 }
 
-.card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px 32px;
-    background: linear-gradient(to right, #f8f9fa, #ffffff);
-    border-bottom: 1px solid #e4e7ed;
-}
-
-.card-header h3 {
-    margin: 0;
-    font-size: 22px;
-    font-weight: 600;
-    color: #1a1a1a;
-    letter-spacing: 0.5px;
-}
-
-.header-actions {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-}
-
-.search-input {
-    width: 280px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.search-input:focus-within {
-    width: 320px;
-}
-
-:deep(.el-input__wrapper) {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    border-radius: 8px;
-    transition: all 0.3s ease;
-}
-
-:deep(.el-input__wrapper:hover) {
-    box-shadow: 0 4px 12px rgba(64, 158, 255, 0.1);
-}
-
-:deep(.el-input__wrapper.is-focus) {
-    box-shadow: 0 4px 12px rgba(64, 158, 255, 0.2);
-}
-
-.filter-tags {
-    margin: 24px 32px;
-    padding: 16px;
-    background: linear-gradient(135deg, #f8f9fa, #ffffff);
-    border-radius: 12px;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
-}
-
-:deep(.el-radio-button__inner) {
-    border-radius: 6px;
-    padding: 8px 20px;
-    transition: all 0.3s ease;
-}
-
-:deep(.el-radio-button__inner:hover) {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.notice-table {
-    margin: 0 32px 24px;
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+.notice-table :deep(td) {
+    padding: 16px 0;
+    color: #4a4a4a;
 }
 
 .notice-table :deep(th) {
@@ -414,11 +324,6 @@ onMounted(() => {
     padding: 16px 0;
 }
 
-.notice-table :deep(td) {
-    padding: 16px 0;
-    color: #4a4a4a;
-    font-size: 14px;
-}
 
 .notice-table :deep(.el-table__row) {
     cursor: pointer;
