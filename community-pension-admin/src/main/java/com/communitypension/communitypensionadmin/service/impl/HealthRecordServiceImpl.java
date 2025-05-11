@@ -17,13 +17,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import com.communitypension.communitypensionadmin.util.ExcelExporter;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.Objects;
 
 /**
  * 健康档案Service实现类
@@ -201,7 +204,7 @@ public class HealthRecordServiceImpl extends ServiceImpl<HealthRecordMapper, Hea
         // 获取记录人ID列表
         List<Long> recorderIds = page.getRecords().stream()
                 .map(HealthRecord::getRecorderId)
-                .filter(id -> id != null)
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
         // 获取老人信息
@@ -226,5 +229,20 @@ public class HealthRecordServiceImpl extends ServiceImpl<HealthRecordMapper, Hea
         resultPage.setRecords(voList);
 
         return resultPage;
+    }
+
+    @Override
+    public byte[] exportHealthRecords() {
+        try {
+            // 获取所有健康档案
+            List<HealthRecord> records = list();
+            
+            // 直接返回导出的数据
+            return ExcelExporter.exportToExcel(records);
+        } catch (IOException e) {
+            // 处理异常，例如记录日志或返回错误信息
+            log.error("导出健康档案时发生错误", e);
+            return new byte[0]; // 返回空字节数组或根据需要处理
+        }
     }
 }

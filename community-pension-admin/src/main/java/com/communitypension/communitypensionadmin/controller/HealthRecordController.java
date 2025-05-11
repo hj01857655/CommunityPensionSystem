@@ -8,6 +8,7 @@ import com.communitypension.communitypensionadmin.vo.HealthRecordVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +18,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 /**
  * 健康档案Controller
@@ -227,6 +229,45 @@ public class HealthRecordController {
     public Result<Void> updateHealthRecords(@RequestBody @Valid HealthRecordDTO recordDTO) {
         log.info("兼容旧接口：更新健康档案，ID: {}, 老人ID: {}", recordDTO.getId(), recordDTO.getElderId());
         return updateHealthRecord(recordDTO);
+    }
+
+    /**
+     * 导出健康档案
+     */
+    @GetMapping("/export")
+    @Operation(summary = "导出健康档案", description = "导出健康档案数据")
+    public void exportHealthRecords(HttpServletResponse response) {
+        log.info("导出健康档案");
+        try {
+            // 假设有一个服务方法可以导出数据
+            byte[] data = healthRecordService.exportHealthRecords();
+            response.setContentType("application/octet-stream");
+            response.setHeader("Content-Disposition", "attachment; filename=health_records.xlsx");
+            response.getOutputStream().write(data);
+            response.flushBuffer();
+        } catch (Exception e) {
+            log.error("导出健康档案失败，错误: {}", e.getMessage(), e);
+            throw new RuntimeException("导出失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 批量添加健康档案
+     */
+    @PostMapping("/batch")
+    @Operation(summary = "批量添加健康档案", description = "批量添加健康档案信息")
+    @Transactional(rollbackFor = Exception.class)
+    public Result<Void> batchAddHealthRecords(@RequestBody List<HealthRecordDTO> recordDTOs) {
+        log.info("批量添加健康档案");
+        try {
+            for (HealthRecordDTO recordDTO : recordDTOs) {
+                healthRecordService.addHealthRecord(recordDTO);
+            }
+            return Result.success("批量添加成功");
+        } catch (Exception e) {
+            log.error("批量添加健康档案失败，错误: {}", e.getMessage(), e);
+            return Result.error("批量添加失败: " + e.getMessage());
+        }
     }
 
     /**

@@ -60,4 +60,10 @@ public interface HealthRecordService extends IService<HealthRecord> {
      * @return 分页结果
      */
     Page<HealthRecordVO> getHealthRecordList(String elderName, Integer pageNum, Integer pageSize);
+
+    /**
+     * 导出健康档案
+     * @return 导出的文件数据
+     */
+    byte[] exportHealthRecords();
 }
