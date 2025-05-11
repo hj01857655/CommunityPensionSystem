@@ -243,7 +243,7 @@ yarn dev
 [MIT](LICENSE)
 
 ## 联系方式
-- 项目负责人：[hj01857655]
+- 项目负责人：[liaojun2719]
 - 邮箱：[hj6395759@gmail.com]
 
 
