@@ -8,7 +8,7 @@ import instance from '@/utils/axios'
  * @returns {Promise} - 返回Promise对象
  */
 export function getNoticeList(params) {
-    return instance.get('/api/notifications/list', {
+    return instance.get('/api/notice/list', {
     params
   })
 }
