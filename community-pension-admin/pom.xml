@@ -224,8 +224,6 @@
             <version>3.3.4</version>
         </dependency>
 
-        <!-- 邮件相关依赖已移除，改为使用WebSocket实时通知 -->
-
         <!-- MapStruct -->
         <dependency>
             <groupId>org.mapstruct</groupId>
