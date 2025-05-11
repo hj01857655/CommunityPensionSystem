@@ -1,3 +1,6 @@
+const AutoImport = require('unplugin-auto-import/webpack');
+const Components = require('unplugin-vue-components/webpack');
+const { ElementPlusResolver } = require('unplugin-vue-components/resolvers');
 const webpack = require('webpack');
 
 module.exports = {
@@ -24,6 +27,12 @@ module.exports = {
     }
   },
   plugins: [
+    new AutoImport({
+      resolvers: [ElementPlusResolver()],
+    }),
+    new Components({
+      resolvers: [ElementPlusResolver()],
+    }),
     new webpack.DefinePlugin({
       __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: JSON.stringify(false),
       __VUE_OPTIONS_API__: JSON.stringify(true), 

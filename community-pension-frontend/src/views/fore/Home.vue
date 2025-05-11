@@ -27,6 +27,8 @@
 
         <!-- 通知组件 -->
         <el-popover
+          ref="notificationPopoverRef"
+          v-model:visible="notificationPopoverVisible"
           placement="bottom"
           :width="400"
           trigger="click"
@@ -53,9 +55,9 @@
                     @click="handleNotificationClick(notice)">
                     <div class="notification-content">
                       <div class="notification-title">{{ notice.title }}</div>
-                      <div class="notification-message">{{ notice.message }}</div>
+                      <div class="notification-message">{{ notice.content || notice.message }}</div>
                     </div>
-                    <div class="notification-time">{{ formatDateTime(notice.createTime) }}</div>
+                    <div class="notification-time">{{ formatDateTime(notice.publishTime || notice.createTime) }}</div>
                   </div>
                 </div>
               </el-tab-pane>
@@ -66,16 +68,16 @@
                     @click="handleNotificationClick(notice)">
                     <div class="notification-content">
                       <div class="notification-title">{{ notice.title }}</div>
-                      <div class="notification-message">{{ notice.message }}</div>
+                      <div class="notification-message">{{ notice.content || notice.message }}</div>
                     </div>
-                    <div class="notification-time">{{ formatDateTime(notice.createTime) }}</div>
+                    <div class="notification-time">{{ formatDateTime(notice.publishTime || notice.createTime) }}</div>
                   </div>
                 </div>
               </el-tab-pane>
             </el-tabs>
 
             <div class="notification-footer">
-              <el-button link @click="viewAllNotifications">查看全部</el-button>
+              <el-button link @click="handleViewAllNotices">查看全部通知</el-button>
             </div>
           </div>
         </el-popover>
@@ -132,6 +134,8 @@
 </template>
 
 <script setup>
+import { getNoticeList, markNoticeAsRead } from '@/api/fore/notice';
+import { useNoticeStore } from '@/stores/fore/noticeStore';
 import { useUserStore } from '@/stores/fore/userStore';
 import { getAvatarUrl } from '@/utils/avatarUtils';
 import { formatDateTime } from '@/utils/date';
@@ -143,6 +147,7 @@ import { useRouter } from 'vue-router';
 
 const router = useRouter();
 const userStore = useUserStore();
+const noticeStore = useNoticeStore();
 
 // 获取登录状态
 const isLoggedIn = computed(() => {
@@ -231,8 +236,7 @@ const menuItems = [
   { index: 'home', label: '首页' },
   { index: 'service', label: '服务预约' },
   { index: 'health', label: '健康档案' },
-  { index: 'activity', label: '社区活动' },
-  { index: 'notice', label: '通知公告' }
+  { index: 'activity', label: '社区活动' }
 ];
 
 // 定义组件
@@ -357,25 +361,32 @@ const unreadNotifications = computed(() => {
 // 获取通知列表
 const fetchNotifications = async () => {
   try {
-    // TODO: 调用后端API获取通知列表
-    // const response = await getNotifications()
-    // notifications.value = response.data
+    // 调用后端API获取通知列表
+    const res = await getNoticeList({ current: 1, size: 10 });
+    if (res.code === 200) {
+      notifications.value = res.data.records || [];
+    } else {
+      console.error('获取通知列表失败:', res.message);
+      notifications.value = []; // 清空通知列表
+    }
   } catch (error) {
-    console.error('获取通知列表失败:', error)
+    console.error('获取通知列表失败:', error);
+    notifications.value = []; // 清空通知列表
   }
-}
+};
 
 // 标记通知为已读
 const markAsRead = async (noticeId) => {
   try {
-    const notice = notifications.value.find(n => n.id === noticeId)
+    await markNoticeAsRead(noticeId);
+    const notice = notifications.value.find(n => n.id === noticeId);
     if (notice) {
-      notice.read = true
+      notice.read = true;
     }
   } catch (error) {
-    console.error('标记通知已读失败:', error)
+    console.error('标记通知已读失败:', error);
   }
-}
+};
 
 // 标记所有通知为已读
 const markAllAsRead = async () => {
@@ -388,19 +399,35 @@ const markAllAsRead = async () => {
   }
 }
 
+// 通知弹窗的ref
+const notificationPopoverRef = ref(null);
+// 控制通知弹窗显示状态
+const notificationPopoverVisible = ref(false);
+
 // 处理通知点击
 const handleNotificationClick = async (notice) => {
   if (!notice.read) {
-    await markAsRead(notice.id)
+    await markAsRead(notice.id);
   }
-}
+  
+  // 关闭弹窗
+  notificationPopoverVisible.value = false;
+  
+  // 导航到通知详情页面
+  router.push({
+    name: 'NoticeDetailView',
+    params: { id: notice.id }
+  });
+};
 
 // 查看全部通知
-const viewAllNotifications = () => {
-  // TODO: 跳转到通知中心页面
-  activeIndex.value = 'notice'
-  router.push('/home/notice')
-}
+const handleViewAllNotices = () => {
+  // 关闭弹窗
+  notificationPopoverVisible.value = false;
+  
+  // 导航到通知列表页面
+  router.push('/home/notice');
+};
 
 // 搜索相关
 const searchQuery = ref('')
