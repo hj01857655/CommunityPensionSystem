@@ -9,8 +9,8 @@ import store from '@/stores';
 import App from './App.vue';
 import router from './router';
 
-import DictTag from '@/components/DictTag';
-import Pagination from '@/components/Pagination';
+import DictTag from '@/components/common/base/DictTag';
+import Pagination from '@/components/common/base/Pagination';
 import RightToolbar from '@/components/back/system/menu/RightToolbar.vue';
 import { useDict } from '@/utils/dict';
 

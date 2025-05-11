@@ -229,7 +229,7 @@ import { ElMessage, ElMessageBox } from 'element-plus';
 import { listMenu } from '@/api/back/system/menu';
 import { handleTree } from '@/utils/tree';
 import { formatDate } from '@/utils/date';
-import RightToolbar from '@/components/RightToolbar/index.vue';
+import RightToolbar from '@/components/common/base/RightToolbar/index.vue';
 import Pagination from '@/components/common/Pagination.vue';
 import { useRoleStore } from '@/stores/back/roleStore';
 import { storeToRefs } from 'pinia';

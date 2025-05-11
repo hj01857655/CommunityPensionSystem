@@ -109,7 +109,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, nextTick } from 'vue'
-import CountTo from '@/components/CountTo/index.vue'
+import CountTo from '@/components/common/utils/CountTo/index.vue'
 import {
   User, Timer, List, Bell,
   ArrowUp, ArrowDown

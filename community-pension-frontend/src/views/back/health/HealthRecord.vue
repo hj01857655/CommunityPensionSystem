@@ -268,7 +268,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Refresh, Plus, Edit, Delete, View, Download } from '@element-plus/icons-vue'
 import { useRoute } from 'vue-router'
 import { useHealthStore } from '@/stores/back/healthStore'
-import RightToolbar from '@/components/RightToolbar/index.vue'
+import RightToolbar from '@/components/common/base/RightToolbar/index.vue'
 import Pagination from '@/components/common/Pagination.vue'
 
 const healthStore = useHealthStore()

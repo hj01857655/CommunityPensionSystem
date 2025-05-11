@@ -149,7 +149,7 @@ import { ref, computed, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Delete, Edit, Plus, Refresh } from '@element-plus/icons-vue'
 import Pagination from '@/components/common/Pagination.vue'
-import RightToolbar from '@/components/RightToolbar/index.vue'
+import RightToolbar from '@/components/common/base/RightToolbar/index.vue'
 import { useServiceItemStore } from '@/stores/back/service'
 
 const serviceStore = useServiceItemStore()

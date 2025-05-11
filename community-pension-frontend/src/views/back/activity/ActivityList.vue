@@ -191,7 +191,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { ArrowDown, Plus, Edit, Delete, Search, Refresh, View, Download, Check } from '@element-plus/icons-vue'
 import { getDictDataByType } from '@/api/back/system/dict/data'
 import { useActivityStore } from '@/stores/back/activityStore'
-import RightToolbar from '@/components/RightToolbar/index.vue'
+import RightToolbar from '@/components/common/base/RightToolbar/index.vue'
 import Pagination from '@/components/common/Pagination.vue'
 
 const activityStore = useActivityStore()

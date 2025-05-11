@@ -131,7 +131,7 @@
 
 <script setup>
 import { addHealthMonitor, deleteHealthMonitor, exportHealthMonitors, listHealthMonitors, updateHealthMonitor } from '@/api/back/health/monitor'
-import RightToolbar from '@/components/RightToolbar/index.vue'
+import RightToolbar from '@/components/common/base/RightToolbar/index.vue'
 import Pagination from '@/components/common/Pagination.vue'
 import { Delete, Download, Edit, Plus, Refresh, Search } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'

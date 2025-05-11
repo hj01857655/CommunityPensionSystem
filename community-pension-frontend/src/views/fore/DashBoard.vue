@@ -181,7 +181,7 @@
 <script setup>
 import { registerActivity as apiRegisterActivity, getActivityDetail, getActivityList } from '@/api/fore/activity';
 import { cancelAppointment, getMyAppointments } from '@/api/fore/service';
-import HomeCard from '@/components/front/HomeCard.vue';
+import HomeCard from '@/components/fore/HomeCard.vue';
 import { useHealthStore } from '@/stores/fore/healthStore';
 import { useUserStore } from '@/stores/fore/userStore';
 import { formatDate, formatDateTime } from '@/utils/date';

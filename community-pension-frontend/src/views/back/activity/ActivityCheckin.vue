@@ -151,7 +151,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Refresh, Plus, Edit, Check, Download } from '@element-plus/icons-vue'
-import RightToolbar from '@/components/RightToolbar/index.vue'
+import RightToolbar from '@/components/common/base/RightToolbar/index.vue'
 import Pagination from '@/components/common/Pagination.vue'
 
 // 查询参数

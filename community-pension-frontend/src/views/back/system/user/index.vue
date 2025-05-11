@@ -227,7 +227,7 @@
   </template>
   
   <script setup>
-  import RightToolbar from '@/components/RightToolbar/index.vue';
+  import RightToolbar from '@/components/common/base/RightToolbar/index.vue';
 import Pagination from '@/components/common/Pagination.vue';
 import { useUserStore } from '@/stores/back/userStore';
 import { formatDate } from '@/utils/date';

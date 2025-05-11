@@ -137,7 +137,7 @@
 
 <script setup>
 import Pagination from '@/components/common/Pagination.vue'
-import RightToolbar from '@/components/RightToolbar/index.vue'
+import RightToolbar from '@/components/common/base/RightToolbar/index.vue'
 import { useServiceReviewStore } from '@/stores/back/service/review'
 import { formatDate } from '@/utils/date'
 import { ChatLineRound, Delete, Refresh, Search, View } from '@element-plus/icons-vue'
