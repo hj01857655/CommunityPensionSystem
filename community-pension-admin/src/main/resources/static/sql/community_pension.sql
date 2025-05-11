@@ -11,7 +11,7 @@
  Target Server Version : 80400 (8.4.0)
  File Encoding         : 65001
 
- Date: 06/05/2025 17:25:32
+ Date: 09/05/2025 01:01:53
 */
 
 SET NAMES utf8mb4;
@@ -111,7 +111,7 @@ CREATE TABLE `activity_check_in`  (
   CONSTRAINT `fk_activity_check_in_elder` FOREIGN KEY (`elder_id`) REFERENCES `user` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_activity_check_in_register` FOREIGN KEY (`register_id`) REFERENCES `activity_register` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_activity_check_in_user` FOREIGN KEY (`check_in_user_id`) REFERENCES `user` (`user_id`) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '活动签到表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '活动签到表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of activity_check_in
@@ -175,7 +175,7 @@ CREATE TABLE `activity_review`  (
   CONSTRAINT `fk_activity_review_activity` FOREIGN KEY (`activity_id`) REFERENCES `activities` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_activity_review_elder` FOREIGN KEY (`elder_id`) REFERENCES `user` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_activity_review_register` FOREIGN KEY (`register_id`) REFERENCES `activity_register` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '活动评价表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '活动评价表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of activity_review
@@ -368,16 +368,15 @@ CREATE TABLE `health_monitoring`  (
   INDEX `idx_health_record_id`(`health_record_id` ASC) USING BTREE,
   CONSTRAINT `fk_health_monitoring_elder` FOREIGN KEY (`elder_id`) REFERENCES `user` (`user_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_health_monitoring_health_record` FOREIGN KEY (`health_record_id`) REFERENCES `health_records` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '健康监测表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '健康监测表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of health_monitoring
 -- ----------------------------
-INSERT INTO `health_monitoring` (`elder_id`, `monitoring_type`, `monitoring_value`, `monitoring_unit`, `monitoring_time`, `device_id`, `monitoring_status`, `abnormal_level`, `abnormal_description`, `is_processed`, `processed_time`, `processed_by`, `processed_result`, `health_record_id`, `created_at`, `updated_at`) VALUES
-(2, '1', '125/78', 'mmHg', '2025-05-07 09:00:00', NULL, 'normal', NULL, NULL, 0, NULL, NULL, NULL, NULL, NOW(), NOW()),
-(2, '3', '36.8', '°C', '2025-05-07 11:00:00', 'DeviceB', 'normal', NULL, NULL, 0, NULL, NULL, NULL, NULL, NOW(), NOW()),
-(2, '2', '6.5', 'mmol/L', '2025-05-08 08:30:00', 'DeviceC', 'normal', NULL, NULL, 0, NULL, NULL, NULL, NULL, NOW(), NOW()),
-(2, '4', '110', 'bpm', '2025-05-08 09:45:00', NULL, 'abnormal', 'medium', 'Heart rate consistently high during monitoring period.', 0, NULL, NULL, NULL, NULL, NOW(), NOW());
+INSERT INTO `health_monitoring` VALUES (1, 2, '1', '125/78', 'mmHg', '2025-05-07 09:00:00', NULL, 'normal', NULL, NULL, 0, NULL, NULL, NULL, NULL, '2025-05-06 21:18:04', '2025-05-06 21:18:04');
+INSERT INTO `health_monitoring` VALUES (2, 2, '3', '36.8', '°C', '2025-05-07 11:00:00', NULL, 'normal', NULL, NULL, 0, NULL, NULL, NULL, NULL, '2025-05-06 21:18:04', '2025-05-06 21:18:04');
+INSERT INTO `health_monitoring` VALUES (3, 2, '2', '6.5', 'mmol/L', '2025-05-08 08:30:00', 'DeviceC', 'normal', NULL, NULL, 0, NULL, NULL, NULL, NULL, '2025-05-06 23:52:22', '2025-05-06 23:52:22');
+INSERT INTO `health_monitoring` VALUES (4, 2, '4', '110', 'bpm', '2025-05-08 09:45:00', NULL, 'abnormal', 'medium', 'Heart rate consistently high during monitoring period.', 0, NULL, NULL, NULL, NULL, '2025-05-06 23:52:22', '2025-05-06 23:53:04');
 
 -- ----------------------------
 -- Table structure for health_records
@@ -514,8 +513,6 @@ INSERT INTO `notification` VALUES (9, 2, '服务预约通知', '尊敬的刘大�
 INSERT INTO `notification` VALUES (10, 2, '服务预约通知', '尊敬的刘大毛用户，您的服务预约（预约号：3）预约已创建，等待审核。预约时间：2025-04-29 10:40:00，服务项目：null。', 0, '2025-04-05 00:39:10', '2025-04-05 00:39:10', '2025-04-05 00:39:10');
 INSERT INTO `notification` VALUES (11, 2, '服务预约通知', '尊敬的刘大毛用户，您的服务预约（预约号：4）预约已创建，等待审核。预约时间：2025-04-29 08:54:00，服务项目：null。', 0, '2025-04-05 00:54:48', '2025-04-05 00:54:48', '2025-04-05 00:54:48');
 INSERT INTO `notification` VALUES (12, 2, '服务预约通知', '尊敬的刘大毛用户，您的服务预约（预约号：4）预约审核通过。预约时间：2025-04-29 08:54:00，服务项目：null。', 0, '2025-04-05 01:43:34', '2025-04-05 01:43:34', '2025-04-05 01:43:34');
-INSERT INTO `notification` VALUES (13, 2, '服务预约通知', '尊敬的刘大毛用户，您的服务预约（预约号：3）预约审核通过。预约时间：2025-04-29 10:40:00，服务项目：null。', 0, '2025-04-05 01:45:06', '2025-04-05 01:45:06', '2025-04-05 01:45:06');
-INSERT INTO `notification` VALUES (14, 2, '服务预约通知', '尊敬的刘大毛用户，\n\n您的服务预约（预约号：5）预约已创建，等待审核。\n\n预约详情：\n- 服务项目：null\n- 预约时间：2025-05-28 15:11:00\n\n您的预约正在审核中，请耐心等待。审核结果将以系统通知的形式告知您。\n\n如有疑问，请联系客服中心。', 0, '2025-05-05 17:12:04', '2025-05-05 17:12:04', '2025-05-05 17:12:04');
 
 -- ----------------------------
 -- Table structure for role
@@ -657,16 +654,16 @@ CREATE TABLE `service_review`  (
   INDEX `idx_order`(`order_id` ASC) USING BTREE,
   INDEX `idx_user`(`elder_id` ASC) USING BTREE,
   INDEX `idx_admin_reply_user_id`(`admin_reply_user_id` ASC) USING BTREE,
+  CONSTRAINT `fk_service_review_reply_admin` FOREIGN KEY (`admin_reply_user_id`) REFERENCES `user` (`user_id`) ON DELETE SET NULL ON UPDATE CASCADE,
   CONSTRAINT `service_review_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `service_order` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
-  CONSTRAINT `service_review_ibfk_2` FOREIGN KEY (`elder_id`) REFERENCES `user` (`user_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
-  CONSTRAINT `fk_service_review_reply_admin` FOREIGN KEY (`admin_reply_user_id`) REFERENCES `user` (`user_id`) ON DELETE SET NULL ON UPDATE CASCADE
+  CONSTRAINT `service_review_ibfk_2` FOREIGN KEY (`elder_id`) REFERENCES `user` (`user_id`) ON DELETE RESTRICT ON UPDATE RESTRICT
 ) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '服务评价表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of service_review
 -- ----------------------------
-INSERT INTO `service_review` VALUES (1, NULL, 3, 2, 0, 0, 5, '服务非常好，医生很专业，态度也很好！强烈推荐！', '2025-05-06 16:30:25', 0, 0, NULL, NULL, NULL, 'Ldamao', 'Ldamao', '首次评价，非常满意', NULL, '2025-05-06 16:30:25', NULL, '2025-05-06 16:30:25', 0);
-INSERT INTO `service_review` VALUES (2, NULL, 4, 2, 0, 0, 3, '服务还可以，师傅上门比较准时，但是问题没有完全解决，希望改进。', '2025-05-05 16:30:25', 0, 0, '感谢您的反馈，我们已联系师傅跟进处理，给您带来不便非常抱歉。', '2025-05-06 16:30:25', NULL, 'Ldamao_kin', 'admin', '家属代评，管理员已回复', NULL, '2025-05-05 16:30:25', NULL, '2025-05-06 16:30:25', 0);
+INSERT INTO `service_review` VALUES (1, 1001, 3, 2, 0, 0, 5, '服务非常好，医生很专业，态度也很好！强烈推荐！', '2025-05-06 16:30:25', 0, 0, NULL, NULL, NULL, 'Ldamao', 'Ldamao', '首次评价，非常满意', NULL, '2025-05-06 16:30:25', NULL, '2025-05-06 17:27:17', 0);
+INSERT INTO `service_review` VALUES (2, 3002, 4, 2, 0, 0, 3, '服务还可以，师傅上门比较准时，但是问题没有完全解决，希望改进。', '2025-05-05 16:30:25', 0, 0, '感谢您的反馈，我们已联系师傅跟进处理，给您带来不便非常抱歉。', '2025-05-06 16:30:25', NULL, 'Ldamao_kin', 'admin', '家属代评，管理员已回复', NULL, '2025-05-05 16:30:25', NULL, '2025-05-06 17:27:17', 0);
 
 -- ----------------------------
 -- Table structure for user
@@ -745,7 +742,7 @@ CREATE TABLE `warning_record`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `user_id`(`user_id` ASC) USING BTREE,
   CONSTRAINT `warning_record_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '预警记录表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '预警记录表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of warning_record
