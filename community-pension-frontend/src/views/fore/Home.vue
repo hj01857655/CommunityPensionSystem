@@ -132,14 +132,14 @@
 </template>
 
 <script setup>
-import {computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref, watch} from 'vue';
-import {useRouter} from 'vue-router';
-import {ElMessage} from 'element-plus';
-import {Bell, Moon, Search, Sunny} from '@element-plus/icons-vue';
+import { useUserStore } from '@/stores/fore/userStore';
+import { getAvatarUrl } from '@/utils/avatarUtils';
+import { formatDateTime } from '@/utils/date';
 import DashBoard from '@/views/fore/DashBoard.vue';
-import {useUserStore} from '@/stores/fore/userStore';
-import {getAvatarUrl} from '@/utils/avatarUtils';
-import {formatDateTime} from '@/utils/date';
+import { Bell, Moon, Search, Sunny } from '@element-plus/icons-vue';
+import { ElMessage } from 'element-plus';
+import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { useRouter } from 'vue-router';
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -778,18 +778,27 @@ const toggleTheme = () => {
 }
 
 :root.dark :deep(.el-breadcrumb__item) {
-  color: #aaa;
+  font-size: 14px;
+  color: #606266;
+  transition: color 0.3s;
 }
 
 :root.dark :deep(.el-breadcrumb__inner.is-link:hover) {
-  color: var(--primary-color);
+  color: #409eff;
 }
 
 :root.dark :deep(.el-breadcrumb__separator) {
-  color: #666;
+  color: #909399;
+  margin: 0 8px;
 }
 
-:root.dark :deep(.el-avatar) {
+@media (max-width: 768px) {
+  :deep(.el-breadcrumb__item) {
+    font-size: 12px;
+  }
+}
+
+:deep(.el-avatar) {
   border: 1px solid var(--border-color);
 }
 
