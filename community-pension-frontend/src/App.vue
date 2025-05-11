@@ -1,11 +1,20 @@
 <template>
-  <router-view></router-view>
+  <el-config-provider :theme="{ dark: isDark }">
+    <router-view />
+    <!-- 全局深色切换按钮，可根据需要移动位置 -->
+    <el-switch
+      v-model="isDark"
+      style="position: fixed; right: 32px; bottom: 32px; z-index: 9999;"
+      active-text="深色"
+      inactive-text="浅色"
+    />
+  </el-config-provider>
 </template>
 
 <script setup>
 import { useUserStore as backUserStore } from '@/stores/back/userStore';
 import { useUserStore as foreUserStore } from '@/stores/fore/userStore';
-import { computed, onMounted } from 'vue';
+import { computed, ref, watchEffect } from 'vue';
 import { useRoute } from 'vue-router';
 
 const route = useRoute();
@@ -23,14 +32,17 @@ const currentUserStore = computed(() => {
   }
 });
 
-// 在应用启动时初始化主题
-onMounted(() => {
-  // 从 localStorage 获取主题设置
-  const savedTheme = localStorage.getItem('fore-theme');
-  if (savedTheme === 'dark') {
+// 全局深色模式
+const isDark = ref(localStorage.getItem('fore-theme') === 'dark');
+
+// 监听切换，自动同步 html 的 .dark class 和 localStorage
+watchEffect(() => {
+  if (isDark.value) {
     document.documentElement.classList.add('dark');
+    localStorage.setItem('fore-theme', 'dark');
   } else {
     document.documentElement.classList.remove('dark');
+    localStorage.setItem('fore-theme', 'light');
   }
 });
 </script>

@@ -165,12 +165,12 @@
   </template>
 
   <script setup>
-  import {computed, onBeforeUnmount, onMounted, onUnmounted, ref, watch} from 'vue'
-  import {useRoute, useRouter} from 'vue-router'
-  import {ElMessage, ElMessageBox} from 'element-plus'
-  import {Calendar, Location, User} from '@element-plus/icons-vue'
-  import {useActivityStore} from '@/stores/fore/activityStore'
-  import {useUserStore} from '@/stores/fore/userStore'
+  import { useActivityStore } from '@/stores/fore/activityStore'
+import { useUserStore } from '@/stores/fore/userStore'
+import { Calendar, Location, User } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { computed, onBeforeUnmount, onMounted, onUnmounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
   // 使用路由
   const router = useRouter()
@@ -570,9 +570,6 @@
 
     // 无论是否有tab参数，都加载活动列表
     await ensureDataLoaded('onMounted', true);
-
-    // 添加主题变化事件监听
-    window.addEventListener('fore-theme-changed', handleThemeChange);
   });
 
   // 修改 onBeforeUnmount 钩子，确保移除所有事件监听器
@@ -583,14 +580,7 @@
 
   // 修改 onUnmounted 钩子，确保移除所有事件监听器
   onUnmounted(() => {
-    // 移除主题变化事件监听
-    window.removeEventListener('fore-theme-changed', handleThemeChange);
   });
-
-  // 处理主题变化
-  const handleThemeChange = () => {
-    console.log('[活动页面] 接收到主题变化事件');
-  };
   </script>
 
 <style scoped>

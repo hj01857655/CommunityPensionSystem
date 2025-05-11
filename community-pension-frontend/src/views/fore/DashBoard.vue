@@ -948,11 +948,6 @@ const MAX_RETRY_COUNT = 3; // 添加最大重试次数常量
     overflow-x: hidden;
 }
 
-:root.dark .dashboard {
-    background-color: #1f1f1f;
-    color: #fff;
-}
-
 .content-card {
     width: 100%;
     margin-bottom: 20px;
@@ -960,12 +955,6 @@ const MAX_RETRY_COUNT = 3; // 添加最大重试次数常量
     border-radius: 8px;
     box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
     overflow: hidden;
-}
-
-:root.dark .content-card {
-    background-color: #2a2a2a;
-    color: #eee;
-    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.3);
 }
 
 /* 网格布局优化 */
@@ -1051,22 +1040,6 @@ const MAX_RETRY_COUNT = 3; // 添加最大重试次数常量
     }
 }
 
-:root.dark .health-card .data-item {
-    background-color: #333;
-
-  .label {
-        color: #aaa;
-    }
-
-  .value {
-        color: #eee;
-    }
-
-  &.data-abnormal {
-        background-color: #3d1d1d;
-    }
-}
-
 /* 服务预约卡片样式优化 */
 .service-card {
     .service-list {
@@ -1106,22 +1079,6 @@ const MAX_RETRY_COUNT = 3; // 添加最大重试次数常量
             align-items: center;
             gap: 12px;
             flex-shrink: 0;
-        }
-    }
-}
-
-:root.dark .service-card {
-    .service-item {
-        background-color: #333;
-
-      .service-info {
-            .service-name {
-                color: #eee;
-            }
-
-        .service-time {
-                color: #888;
-            }
         }
     }
 }
@@ -1167,23 +1124,6 @@ const MAX_RETRY_COUNT = 3; // 添加最大重试次数常量
       .el-icon {
                 font-size: 14px;
             }
-        }
-    }
-}
-
-:root.dark .activity-card {
-    .activity-item {
-        background-color: #333;
-
-      .activity-header {
-            .activity-name {
-                color: #eee;
-            }
-        }
-
-      .activity-time,
-        .activity-location {
-            color: #888;
         }
     }
 }

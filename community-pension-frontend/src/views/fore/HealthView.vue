@@ -105,11 +105,11 @@
 </template>
 
 <script setup>
-import {onMounted, ref} from 'vue'
-import {ElMessage} from 'element-plus'
-import {addHealthData, getHealthData, updateHealthData} from '@/api/fore/health'
-import {useForegroundUserStore} from '@/stores/fore/userStore'
-import {useRouter} from 'vue-router'
+import { addHealthData, getHealthData, updateHealthData } from '@/api/fore/health'
+import { useForegroundUserStore } from '@/stores/fore/userStore'
+import { ElMessage } from 'element-plus'
+import { onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const healthFormRef = ref(null)
@@ -359,21 +359,42 @@ onMounted(async () => {
 <style scoped>
 .health-view {
   width: 100%;
+  transition: all 0.3s ease-in-out;
 }
 
 .content-card {
   margin-bottom: 20px;
+  transition: all 0.3s ease;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 h3 {
   margin-bottom: 20px;
   color: #2c3e50;
   font-weight: 600;
+  transition: color 0.3s ease;
+  position: relative;
+  padding-bottom: 10px;
+}
+
+h3::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 60px;
+  height: 3px;
+  background-color: #409EFF;
+  transition: all 0.3s ease;
 }
 
 .unit {
   margin-left: 8px;
   color: #666;
+  transition: color 0.3s ease;
+  font-size: 13px;
 }
 
 .el-form {
@@ -383,18 +404,22 @@ h3 {
 
 .el-divider {
   margin: 24px 0;
+  transition: all 0.3s ease;
 }
 
 .el-divider__text {
   font-size: 16px;
   font-weight: 500;
   color: #409EFF;
+  transition: color 0.3s ease;
 }
 
 .health-info {
   padding: 20px;
   background-color: #f9f9f9;
   border-radius: 8px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
 }
 
 .health-info p {
@@ -402,9 +427,174 @@ h3 {
   font-size: 14px;
   color: #333;
   line-height: 1.6;
+  transition: color 0.3s ease;
+  padding: 5px 0;
+  border-bottom: 1px dashed rgba(0, 0, 0, 0.05);
+}
+
+.health-info p:last-child {
+  border-bottom: none;
 }
 
 .health-info strong {
   color: #409EFF;
+  transition: color 0.3s ease;
+  font-weight: 600;
+  margin-right: 8px;
+  display: inline-block;
+  min-width: 80px;
+}
+
+/* 表单控件在深色模式下的优化 - 仅限健康视图页面 */
+:root.dark .health-view .el-input__wrapper,
+:root.dark .health-view .el-textarea__inner {
+  background-color: #282828;
+  box-shadow: 0 0 0 1px #383838 inset;
+  transition: all 0.3s ease;
+}
+
+:root.dark .health-view .el-input__wrapper.is-focus {
+  box-shadow: 0 0 0 1px #5e9eff inset, 0 0 0 2px rgba(94, 158, 255, 0.1);
+}
+
+:root.dark .health-view .el-input__inner,
+:root.dark .health-view .el-textarea__inner {
+  color: #e6e6e6;
+}
+
+:root.dark .health-view .el-button {
+  transition: all 0.3s ease;
+}
+
+:root.dark .health-view .el-button--primary {
+  background-color: #5e9eff;
+  border-color: #5e9eff;
+}
+
+:root.dark .health-view .el-button--primary:hover {
+  background-color: #4a8eff;
+  border-color: #4a8eff;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(94, 158, 255, 0.3);
+}
+
+:root.dark .health-view .el-button--default {
+  background-color: #1f1f1f;
+  border-color: #383838;
+  color: #e6e6e6;
+}
+
+:root.dark .health-view .el-button--default:hover {
+  background-color: #2d2d2d;
+  border-color: #484848;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* 输入框数字增减按钮 - 仅限健康视图页面 */
+:root.dark .health-view .el-input-number__decrease,
+:root.dark .health-view .el-input-number__increase {
+  background-color: #252525;
+  border-color: #383838;
+  color: #bfbfbf;
+  transition: all 0.2s ease;
+}
+
+:root.dark .health-view .el-input-number__decrease:hover,
+:root.dark .health-view .el-input-number__increase:hover {
+  color: #5e9eff;
+  background-color: #2d2d2d;
+}
+
+/* 健康信息卡片动画效果 */
+:root.dark .health-view .content-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px 0 rgba(0, 0, 0, 0.6);
+}
+
+/* 表单项标签 */
+:root.dark .health-view .el-form-item__label {
+  color: #bfbfbf;
+  font-weight: 500;
+}
+
+/* 卡片标题增强 */
+:root.dark .health-view .content-card h3 {
+  border-bottom: 1px solid #383838;
+  padding-bottom: 12px;
+  font-size: 20px;
+  margin-bottom: 24px;
+}
+
+/* 表单项交互效果 */
+:root.dark .health-view .el-form-item {
+  transition: all 0.3s ease;
+  padding: 4px 0;
+}
+
+:root.dark .health-view .el-form-item:hover {
+  background-color: rgba(94, 158, 255, 0.03);
+  transform: translateX(4px);
+  border-radius: 4px;
+}
+
+/* 分割线文本强调 */
+:root.dark .health-view .el-divider__text {
+  padding: 0 15px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+/* 数据展示视觉效果强化 */
+:root.dark .health-view .health-info p {
+  transition: all 0.3s ease;
+  padding: 8px 6px;
+  border-radius: 4px;
+}
+
+:root.dark .health-view .health-info p:hover {
+  background-color: rgba(94, 158, 255, 0.05);
+  transform: translateX(4px);
+}
+
+/* 滚动条美化 - 仅限健康视图页面 */
+:root.dark .health-view ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+:root.dark .health-view ::-webkit-scrollbar-track {
+  background-color: #1a1a1a;
+  border-radius: 4px;
+}
+
+:root.dark .health-view ::-webkit-scrollbar-thumb {
+  background-color: #3a3a3a;
+  border-radius: 4px;
+}
+
+:root.dark .health-view ::-webkit-scrollbar-thumb:hover {
+  background-color: #4a4a4a;
+}
+
+/* textarea 特别优化 - 仅限健康视图页面 */
+:root.dark .health-view .el-textarea__inner:focus {
+  border-color: #5e9eff;
+  outline: none;
+}
+
+:root.dark .health-view .el-textarea__inner {
+  transition: all 0.3s ease;
+}
+
+/* 输入框焦点状态增强 - 仅限健康视图页面 */
+:root.dark .health-view .el-input.is-focus .el-input__wrapper {
+  box-shadow: 0 0 0 1px #5e9eff inset, 0 0 0 2px rgba(94, 158, 255, 0.1);
+}
+
+:root.dark .health-view .el-input-number.is-controls-right .el-input-number__decrease,
+:root.dark .health-view .el-input-number.is-controls-right .el-input-number__increase {
+  background-color: #252525;
+  border-color: #383838;
 }
 </style>

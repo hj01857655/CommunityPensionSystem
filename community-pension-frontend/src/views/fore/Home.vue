@@ -92,10 +92,6 @@
               <el-dropdown-item command="profile">个人信息</el-dropdown-item>
               <el-dropdown-item command="changePassword">修改密码</el-dropdown-item>
 
-              <el-dropdown-item command="theme">
-                <el-icon><Moon v-if="isDarkTheme" /><Sunny v-else /></el-icon>
-                切换主题
-              </el-dropdown-item>
               <el-dropdown-item divided command="logout">退出登录</el-dropdown-item>
             </el-dropdown-menu>
           </template>
@@ -140,7 +136,7 @@ import { useUserStore } from '@/stores/fore/userStore';
 import { getAvatarUrl } from '@/utils/avatarUtils';
 import { formatDateTime } from '@/utils/date';
 import DashBoard from '@/views/fore/DashBoard.vue';
-import { Bell, Moon, Search, Sunny } from '@element-plus/icons-vue';
+import { Bell, Search } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
 import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
@@ -309,7 +305,7 @@ watch(() => router.currentRoute.value.path, (newPath) => {
 
 // 用户操作
 const handleCommand = async (command) => {
-  if (!isLoggedIn.value && command !== 'theme') {
+  if (!isLoggedIn.value) {
     ElMessage.warning('请先登录以访问此功能');
     return;
   }
@@ -320,9 +316,6 @@ const handleCommand = async (command) => {
       break;
     case 'changePassword':
       activeIndex.value = command;
-      break;
-    case 'theme':
-      toggleTheme();
       break;
     case 'logout':
       ElMessage.success('退出登录成功');
@@ -435,26 +428,6 @@ const handleSearch = () => {
   if (!searchQuery.value.trim()) return
   // TODO: 实现全局搜索
   console.log('搜索关键词:', searchQuery.value)
-}
-
-// 主题相关
-const isDarkTheme = ref(localStorage.getItem('fore-theme') === 'dark')
-const toggleTheme = () => {
-  isDarkTheme.value = !isDarkTheme.value
-  // 更新文档根元素类名
-  document.documentElement.classList.toggle('dark')
-
-  // 更新本地存储中的主题设置
-  if (isDarkTheme.value) {
-    localStorage.setItem('fore-theme', 'dark')
-  } else {
-    localStorage.setItem('fore-theme', 'light')
-  }
-
-  // 触发自定义事件，通知子组件主题已更改
-  window.dispatchEvent(new CustomEvent('fore-theme-changed', {
-    detail: { isDark: isDarkTheme.value }
-  }))
 }
 </script>
 
@@ -674,151 +647,6 @@ const toggleTheme = () => {
   font-size: 16px;
 }
 
-/* 暗色主题样式 */
-:root.dark {
-  --bg-color: #1a1a1a;
-  --text-color: #ffffff;
-  --border-color: #333333;
-  --card-bg: #2a2a2a;
-  --card-border: #333333;
-  --hover-bg: #363636;
-  --primary-color: #66b1ff;
-  --secondary-color: #a0cfff;
-  --info-color: #8896b3;
-  --success-color: #67c23a;
-  --warning-color: #e6a23c;
-  --danger-color: #f56c6c;
-  --disabled-color: #606266;
-  --disabled-bg: #252525;
-}
-
-:root.dark .home-container {
-  background: linear-gradient(135deg, #1a1a1a 0%, #2c3e50 100%);
-}
-
-:root.dark .header {
-  background: rgba(26, 26, 26, 0.95);
-}
-
-:root.dark .logo {
-  color: #66b1ff;
-}
-
-:root.dark .username {
-  color: #ffffff;
-}
-
-:root.dark .main {
-  background-color: #1f1f1f;
-  color: var(--text-color);
-}
-
-:root.dark .footer {
-  background-color: #1a1a1a;
-  color: #999;
-}
-
-:root.dark .notification-item {
-  border-bottom-color: var(--border-color);
-}
-
-:root.dark .notification-item:hover {
-  background-color: #2a2a2a;
-}
-
-:root.dark .notification-item.unread {
-  background-color: #1f2937;
-}
-
-:root.dark .notification-title {
-  color: var(--text-color);
-}
-
-:root.dark .notification-message {
-  color: #a3a3a3;
-}
-
-:root.dark .notification-time {
-  color: #666666;
-}
-
-:root.dark .notification-container,
-:root.dark .notification-header,
-:root.dark .notification-footer {
-  background-color: #2a2a2a;
-  border-color: var(--border-color);
-}
-
-:root.dark :deep(.el-menu) {
-  background-color: transparent;
-  border-bottom-color: var(--border-color);
-}
-
-:root.dark :deep(.el-menu-item) {
-  color: #aaa;
-}
-
-:root.dark :deep(.el-menu-item.is-active) {
-  color: var(--primary-color);
-}
-
-:root.dark :deep(.el-menu-item:hover) {
-  background-color: #2a2a2a;
-}
-
-:root.dark :deep(.el-input__wrapper) {
-  background-color: #2a2a2a;
-  border-color: var(--border-color);
-}
-
-:root.dark :deep(.el-input__inner) {
-  color: var(--text-color);
-}
-
-:root.dark :deep(.el-tabs__item) {
-  color: #aaa;
-}
-
-:root.dark :deep(.el-tabs__item.is-active) {
-  color: var(--primary-color);
-}
-
-:root.dark :deep(.el-tabs__active-bar) {
-  background-color: var(--primary-color);
-}
-
-:root.dark :deep(.el-dropdown-menu) {
-  background-color: #2a2a2a;
-  border-color: var(--border-color);
-}
-
-:root.dark :deep(.el-dropdown-menu__item) {
-  color: var(--text-color);
-}
-
-:root.dark :deep(.el-dropdown-menu__item:hover) {
-  background-color: #363636;
-}
-
-:root.dark :deep(.el-dropdown-menu__item.is-disabled) {
-  color: var(--disabled-color);
-}
-
-:root.dark :deep(.el-breadcrumb__item) {
-  font-size: 14px;
-  color: #606266;
-  transition: color 0.3s;
-}
-
-:root.dark :deep(.el-breadcrumb__inner.is-link:hover) {
-  color: #409eff;
-}
-
-:root.dark :deep(.el-breadcrumb__separator) {
-  color: #909399;
-  margin: 0 8px;
-}
-
 @media (max-width: 768px) {
   :deep(.el-breadcrumb__item) {
     font-size: 12px;
@@ -826,15 +654,7 @@ const toggleTheme = () => {
 }
 
 :deep(.el-avatar) {
-  border: 1px solid var(--border-color);
-}
-
-:root.dark .tool-icon {
-  color: #aaa;
-}
-
-:root.dark .tool-icon:hover {
-  color: var(--primary-color);
+  border: 1px solid #EBEEF5;
 }
 
 :deep(.el-dropdown-menu__item) {
