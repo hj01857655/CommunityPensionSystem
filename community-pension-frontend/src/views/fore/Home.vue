@@ -10,21 +10,6 @@
           </el-menu-item>
         </el-menu>
 
-        <!-- 搜索框 -->
-        <div class="search-box">
-          <el-input
-            v-model="searchQuery"
-            placeholder="搜索服务、活动、通知等"
-            class="global-search"
-            clearable
-            @keyup.enter="handleSearch"
-          >
-            <template #prefix>
-              <el-icon><Search /></el-icon>
-            </template>
-          </el-input>
-        </div>
-
         <!-- 通知组件 -->
         <el-popover
           ref="notificationPopoverRef"
@@ -82,6 +67,14 @@
           </div>
         </el-popover>
 
+        <!-- 主题切换按钮，放在头像前面 -->
+        <el-switch
+          v-model="isDark"
+          inline-prompt
+          active-text="🌙"
+          inactive-text="☀️"
+          style="margin-left: 24px;"
+        />
         <el-dropdown @command="handleCommand" class="user-dropdown">
           <span class="user-info">
             <el-avatar :size="48" :src="avatarUrl" />
@@ -91,7 +84,6 @@
             <el-dropdown-menu>
               <el-dropdown-item command="profile">个人信息</el-dropdown-item>
               <el-dropdown-item command="changePassword">修改密码</el-dropdown-item>
-
               <el-dropdown-item divided command="logout">退出登录</el-dropdown-item>
             </el-dropdown-menu>
           </template>
@@ -101,10 +93,11 @@
 
     <!-- Main Content -->
     <el-main class="main">
-      <el-breadcrumb v-if="activeIndex !== 'home'" separator="/">
+      <!-- 移除面包屑导航 -->
+      <!-- <el-breadcrumb v-if="activeIndex !== 'home'" separator="/">
         <el-breadcrumb-item>首页</el-breadcrumb-item>
         <el-breadcrumb-item>{{ breadcrumbMap[activeIndex] }}</el-breadcrumb-item>
-      </el-breadcrumb>
+      </el-breadcrumb> -->
 
       <!-- Dashboard -->
       <template v-if="activeIndex === 'home'">
@@ -136,14 +129,15 @@ import { useUserStore } from '@/stores/fore/userStore';
 import { getAvatarUrl } from '@/utils/avatarUtils';
 import { formatDateTime } from '@/utils/date';
 import DashBoard from '@/views/fore/DashBoard.vue';
-import { Bell, Search } from '@element-plus/icons-vue';
-import { ElMessage } from 'element-plus';
-import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { Bell } from '@element-plus/icons-vue';
+import { ElMessage, ElNotification } from 'element-plus';
+import { computed, defineAsyncComponent, inject, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
 const router = useRouter();
 const userStore = useUserStore();
 const noticeStore = useNoticeStore();
+const isDark = inject('isDark')
 
 // 获取登录状态
 const isLoggedIn = computed(() => {
@@ -187,9 +181,10 @@ const handleUpdateActiveIndex = (event) => {
   }
 };
 
-onMounted(() => {
+onMounted(async () => {
   if (!isLoggedIn.value) {
     router.push('/login');
+    return;
   }
 
   // 检查本地存储中的主题设置并应用
@@ -202,6 +197,21 @@ onMounted(() => {
 
   // 添加自定义事件监听器
   window.addEventListener('update-active-index', handleUpdateActiveIndex);
+
+  // 登录后自动拉取通知并弹出未读通知
+  await fetchNotifications();
+  const unread = notifications.value.find(n => !n.read)
+  if (unread) {
+    ElNotification({
+      title: '新通知',
+      message: unread.title,
+      type: 'info',
+      position: 'bottom-right',
+      onClick: () => {
+        router.push({ name: 'NoticeDetailView', params: { id: unread.id } })
+      }
+    })
+  }
 });
 
 onBeforeUnmount(() => {
@@ -214,17 +224,6 @@ const selectedNotice = ref(null);
 const viewNoticeDetail = (notice) => {
   selectedNotice.value = notice;
   activeIndex.value = 'noticeDetail';
-};
-
-// 面包屑导航
-const breadcrumbMap = {
-  home: '首页',
-  service: '服务预约',
-  health: '健康档案',
-  activity: '社区活动',
-  notice: '通知公告',
-  profile: '个人信息',
-  noticeDetail: '通知详情'
 };
 
 const activeIndex = ref('home');
@@ -264,35 +263,26 @@ const handleMenuSelect = async (index) => {
     return;
   }
 
-  console.log('[导航] 菜单选择:', index);
   activeIndex.value = index;
 
-  // 如果是活动页面，先发送活动数据重置事件
   if(index === 'activity') {
-    console.log('[导航] 发送活动数据重置事件');
-    // 重置活动视图的数据加载状态
     window.dispatchEvent(new CustomEvent('activity-data-reset'));
   }
 
-  // 使用路由导航
   if(index === 'home'){
     await router.push(`/home`);
   }else{
     await router.push(`/home/${index}`);
   }
 
-  // 如果是社区活动页面，确保等待路由更新后触发数据刷新
   if(index === 'activity') {
-    console.log('[导航] 等待路由更新...');
-
-    // 使用延迟确保组件已加载
     setTimeout(() => {
-      console.log('[导航] 发送活动数据刷新事件');
       window.dispatchEvent(new CustomEvent('refresh-activity-data', {
         detail: {forceRefresh: true, source: 'navigation'}
       }));
-    }, 300); // 延长延迟以确保组件完全挂载
+    }, 300);
   }
+  ElMessage.success('导航切换成功');
 };
 
 // 监听路由变化，更新activeIndex
@@ -313,9 +303,11 @@ const handleCommand = async (command) => {
     case 'profile':
       activeIndex.value = 'profile';
       router.push('/home/profile');
+      ElMessage.success('进入个人信息页');
       break;
     case 'changePassword':
       activeIndex.value = command;
+      ElMessage.info('请在页面中修改密码');
       break;
     case 'logout':
       ElMessage.success('退出登录成功');
@@ -421,14 +413,6 @@ const handleViewAllNotices = () => {
   // 导航到通知列表页面
   router.push('/home/notice');
 };
-
-// 搜索相关
-const searchQuery = ref('')
-const handleSearch = () => {
-  if (!searchQuery.value.trim()) return
-  // TODO: 实现全局搜索
-  console.log('搜索关键词:', searchQuery.value)
-}
 </script>
 
 <style scoped>

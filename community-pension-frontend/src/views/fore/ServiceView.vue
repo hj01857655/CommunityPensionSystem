@@ -19,26 +19,36 @@
           </div>
 
           <el-table :data="filteredServices" style="width: 100%" v-loading="loading">
-            <el-table-column prop="serviceName" label="服务名称" />
-            <el-table-column prop="serviceTypeName" label="服务类别" />
-            <el-table-column prop="price" label="价格">
+            <el-table-column prop="serviceName" label="服务名称" min-width="140">
               <template #default="{ row }">
-                {{ row.price }} 元
+                <div class="service-name">{{ row.serviceName }}</div>
               </template>
             </el-table-column>
-            <el-table-column prop="duration" label="时长">
+            <el-table-column prop="serviceTypeName" label="服务类别" min-width="120">
               <template #default="{ row }">
-                {{ row.duration }} 分钟
+                <el-tag size="small" type="info">{{ row.serviceTypeName }}</el-tag>
               </template>
             </el-table-column>
-            <el-table-column label="操作">
+            <el-table-column prop="price" label="价格" min-width="100">
               <template #default="{ row }">
-                <el-button type="primary" size="small" @click="openBookingDialog(row)">
-                  预约
-                </el-button>
-                <el-button type="info" size="small" @click="viewServiceDetail(row)">
-                  详情
-                </el-button>
+                <span class="price-tag">{{ row.price }} 元</span>
+              </template>
+            </el-table-column>
+            <el-table-column prop="duration" label="时长" min-width="100">
+              <template #default="{ row }">
+                <span class="duration-tag">{{ row.duration }} 分钟</span>
+              </template>
+            </el-table-column>
+            <el-table-column label="操作" min-width="150" fixed="right">
+              <template #default="{ row }">
+                <div class="action-buttons">
+                  <el-button type="primary" size="small" @click="openBookingDialog(row)">
+                    预约
+                  </el-button>
+                  <el-button type="info" size="small" @click="viewServiceDetail(row)">
+                    详情
+                  </el-button>
+                </div>
               </template>
             </el-table-column>
           </el-table>
@@ -49,55 +59,83 @@
 
         <el-tab-pane label="我的预约" name="my">
           <div class="filter-container">
-            <el-select v-model="statusFilter" placeholder="预约状态" clearable @change="fetchMyAppointments">
+            <el-select v-model="statusFilter" placeholder="预约状态" clearable @change="fetchMyAppointments" class="status-filter">
               <el-option v-for="item in statusOptions" :key="item.value" :label="item.label" :value="item.value" />
             </el-select>
             <el-date-picker v-model="dateRange" type="daterange" range-separator="至" start-placeholder="开始日期"
-              end-placeholder="结束日期" @change="fetchMyAppointments" />
+              end-placeholder="结束日期" class="date-range" @change="fetchMyAppointments" />
+            <el-button type="primary" icon="Refresh" circle @click="fetchMyAppointments" class="refresh-button" title="刷新预约列表"></el-button>
           </div>
 
           <el-table :data="myAppointments" style="width: 100%" v-loading="loadingAppointments">
-            <el-table-column prop="serviceName" label="服务名称" min-width="120" />
-            <el-table-column prop="serviceTypeName" label="服务类别" min-width="100" />
+            <template #empty>
+              <el-empty description="暂无预约数据" />
+            </template>
+            <el-table-column prop="serviceName" label="服务名称" min-width="120">
+              <template #default="{ row }">
+                <div class="service-name">{{ row.serviceName }}</div>
+              </template>
+            </el-table-column>
+            <el-table-column prop="serviceTypeName" label="服务类别" min-width="100">
+              <template #default="{ row }">
+                <el-tag size="small" type="info">{{ row.serviceTypeName || '未分类' }}</el-tag>
+              </template>
+            </el-table-column>
             <el-table-column label="服务信息" min-width="150">
               <template #default="{ row }">
-                <div>{{ row.price }} 元</div>
-                <div>{{ row.duration }} 分钟</div>
+                <div class="service-info">
+                  <div><span class="price-tag">{{ row.price || 0 }} 元</span></div>
+                  <div><span class="duration-tag">{{ row.duration || 0 }} 分钟</span></div>
+                </div>
               </template>
             </el-table-column>
             <el-table-column prop="scheduleTime" label="预约时间" min-width="160">
               <template #default="{ row }">
-                {{ formatDateTime(row.scheduleTime) }}
+                <div class="time-info">
+                  <el-icon><Calendar /></el-icon>
+                  <span>{{ formatDateTime(row.scheduleTime || row.appointmentTime) }}</span>
+                </div>
               </template>
             </el-table-column>
-            <el-table-column prop="applyReason" label="预约备注" min-width="150" show-overflow-tooltip />
+            <el-table-column prop="applyReason" label="预约备注" min-width="150" show-overflow-tooltip>
+              <template #default="{ row }">
+                <span class="remark">{{ row.applyReason || '无' }}</span>
+              </template>
+            </el-table-column>
             <el-table-column label="服务人员" min-width="120">
               <template #default="{ row }">
-                <span v-if="row.status >= 1">{{ row.staffName || '未分配' }}</span>
-                <span v-else>-</span>
+                <span v-if="row.status >= 1" class="staff-name">
+                  <el-icon><User /></el-icon>
+                  {{ row.staffName || '未分配' }}
+                </span>
+                <span v-else class="text-muted">-</span>
               </template>
             </el-table-column>
             <el-table-column label="状态" min-width="120">
               <template #default="{ row }">
-                <el-tag :type="getStatusType(row.status)">{{ getStatusText(row.status) }}</el-tag>
-                <div v-if="row.statusUpdateTime" class="status-time">
-                  {{ formatDateTime(row.statusUpdateTime) }}
+                <div class="status-container">
+                  <el-tag :type="getStatusType(row.status)" size="small">{{ getStatusText(row.status) }}</el-tag>
+                  <div v-if="row.statusUpdateTime" class="status-time">
+                    {{ formatDateTime(row.statusUpdateTime) }}
+                  </div>
                 </div>
               </template>
             </el-table-column>
             <el-table-column label="操作" min-width="150" fixed="right">
               <template #default="{ row }">
-                <el-button type="primary" size="small" @click="viewAppointmentDetail(row)">
-                  详情
-                </el-button>
-                <el-button v-if="row.status === 0 || row.status === 1" type="danger" size="small"
-                  @click="handleCancel(row)">
-                  取消
-                </el-button>
-                <el-button v-if="row.status === 2 && !row.evaluated" type="success" size="small"
-                  @click="openEvaluationDialog(row)">
-                  评价
-                </el-button>
+                <div class="action-buttons">
+                  <el-button type="primary" size="small" @click="viewAppointmentDetail(row)">
+                    详情
+                  </el-button>
+                  <el-button v-if="row.status === 0 || row.status === 1" type="danger" size="small"
+                    @click="handleCancel(row)">
+                    取消
+                  </el-button>
+                  <el-button v-if="row.status === 2 && !row.evaluated" type="success" size="small"
+                    @click="openEvaluationDialog(row)">
+                    评价
+                  </el-button>
+                </div>
               </template>
             </el-table-column>
           </el-table>
@@ -192,15 +230,35 @@
       <el-descriptions :column="2" border>
         <el-descriptions-item label="服务名称">{{ currentAppointment.serviceName }}</el-descriptions-item>
         <el-descriptions-item label="服务类别">{{ currentAppointment.serviceTypeName }}</el-descriptions-item>
-        <el-descriptions-item label="价格">{{ currentAppointment.price }} 元</el-descriptions-item>
-        <el-descriptions-item label="时长">{{ currentAppointment.duration }} 分钟</el-descriptions-item>
-        <el-descriptions-item label="预约时间">{{ formatDateTime(currentAppointment.scheduleTime) }}</el-descriptions-item>
+        <el-descriptions-item label="价格">
+          <template v-if="currentAppointment.price !== null && currentAppointment.price !== undefined">
+            {{ currentAppointment.price }} 元
+          </template>
+          <template v-else-if="currentAppointment.actualFee !== null && currentAppointment.actualFee !== undefined">
+            {{ currentAppointment.actualFee }} 元
+          </template>
+          <template v-else>
+            <span class="text-muted">待定</span>
+          </template>
+        </el-descriptions-item>
+        <el-descriptions-item label="时长">
+          <template v-if="currentAppointment.duration !== null && currentAppointment.duration !== undefined">
+            {{ currentAppointment.duration }} 分钟
+          </template>
+          <template v-else-if="currentAppointment.actualDuration !== null && currentAppointment.actualDuration !== undefined">
+            {{ currentAppointment.actualDuration }} 分钟
+          </template>
+          <template v-else>
+            <span class="text-muted">待定</span>
+          </template>
+        </el-descriptions-item>
+        <el-descriptions-item label="预约时间">{{ formatDateTime(currentAppointment.scheduleTime || currentAppointment.appointmentTime) }}</el-descriptions-item>
         <el-descriptions-item label="预约状态">
           <el-tag :type="getStatusType(currentAppointment.status)">
             {{ getStatusText(currentAppointment.status) }}
           </el-tag>
         </el-descriptions-item>
-        <el-descriptions-item label="预约备注" :span="2">{{ currentAppointment.applyReason }}</el-descriptions-item>
+        <el-descriptions-item label="预约备注" :span="2">{{ currentAppointment.applyReason || '无' }}</el-descriptions-item>
         <el-descriptions-item label="服务人员" v-if="currentAppointment.status >= 1">
           <span v-if="currentAppointment.staffName">{{ currentAppointment.staffName }}</span>
           <span v-else class="text-muted">暂未指派</span>
@@ -214,18 +272,39 @@
 </template>
 
 <script setup>
-import {computed, onMounted, reactive, ref, watch} from 'vue'
+import {computed, onBeforeUnmount, onMounted, reactive, ref, watch} from 'vue'
 import {ElMessage, ElMessageBox} from 'element-plus'
 import {formatDateTime} from '@/utils/date'
-import {Search} from '@element-plus/icons-vue'
+import {Search, Calendar, User, Refresh} from '@element-plus/icons-vue'
 import useServiceStore from '@/stores/fore/serviceStore'
 import useUserStore from '@/stores/fore/userStore'
 import {checkHoliday} from '@/api/fore/holiday'
+import {useRoute, useRouter} from 'vue-router'
 
 const serviceStore = useServiceStore()
 const userStore = useUserStore()
+const router = useRouter()
+const route = useRoute()
 
-const activeTab = ref('list')
+// 从URL参数或localStorage恢复activeTab
+const initActiveTab = () => {
+  const tabParam = route.query.tab;
+  const savedTab = localStorage.getItem('serviceActiveTab');
+  
+  if (tabParam === 'my' || tabParam === 'list') {
+    return tabParam;
+  } else if (savedTab === 'my' || savedTab === 'list') {
+    return savedTab;
+  }
+  return 'list';  // 默认值
+};
+
+const activeTab = ref(initActiveTab())
+const debugMode = ref(false)  // 关闭调试模式
+
+// 本地状态存储预约列表数据，不再使用计算属性
+const localAppointments = ref([]);
+const localTotal = ref(0);
 
 // 服务列表相关
 const loading = computed(() => serviceStore.loading)
@@ -245,7 +324,6 @@ const filteredServices = computed(() => {
 // 我的预约相关
 const loadingAppointments = computed(() => serviceStore.loading)
 const myAppointments = computed(() => {
-  console.log('计算属性 myAppointments 被调用，当前值:', serviceStore.myAppointments)
   return serviceStore.myAppointments
 })
 const statusFilter = ref('')
@@ -253,8 +331,13 @@ const dateRange = ref([])
 const appointmentPage = ref(1)
 const appointmentPageSize = ref(10)
 const totalAppointments = computed(() => {
-  console.log('计算属性 totalAppointments 被调用，当前值:', serviceStore.appointmentTotal)
   return serviceStore.appointmentTotal
+})
+
+// 计算预约列表是否为空
+const isEmptyAppointments = computed(() => {
+  const isEmpty = !myAppointments.value || myAppointments.value.length === 0;
+  return isEmpty;
 })
 
 // 状态处理方法
@@ -439,28 +522,57 @@ const getUserInfo = () => {
 
 // 获取我的预约列表
 const fetchMyAppointments = async () => {
+  const isLoggedIn = await checkLoginStatus();
+  if (!isLoggedIn) return;
+
   try {
-    const userInfo = getUserInfo()
-    if (!userInfo?.userId) {
-      ElMessage.warning('请先登录')
-      return
+    // 获取用户ID
+    const userInfo = getUserInfo();
+    if (!userInfo || !userInfo.userId) {
+      ElMessage.warning('获取用户信息失败，请重新登录');
+      router.push('/login');
+      return;
     }
+
+    // 显示加载状态
+    const loadingMessage = ElMessage({
+      message: '正在加载预约数据...',
+      type: 'info',
+      duration: 0
+    });
+
     const params = {
-      current: appointmentPage.value,
-      size: appointmentPageSize.value,
       userId: userInfo.userId,
-      status: statusFilter.value,
-      startTime: dateRange.value?.[0],
-      endTime: dateRange.value?.[1]
+      pageNum: appointmentPage.value,
+      pageSize: appointmentPageSize.value,
+      status: statusFilter.value || undefined,
+      startTime: dateRange.value ? dateRange.value[0] : undefined,
+      endTime: dateRange.value ? dateRange.value[1] : undefined
+    };
+
+    try {
+      const result = await serviceStore.fetchMyAppointments(params);
+      // 检查结果 
+      if (result && Array.isArray(result) && result.length > 0) {
+        // 如果store中没有数据但API返回了数据，尝试主动更新store
+        if (serviceStore.myAppointments.length === 0) {
+          // 确保store.myAppointments是响应式数组
+          if (Array.isArray(serviceStore.myAppointments)) {
+            serviceStore.myAppointments.length = 0;
+            result.forEach(item => serviceStore.myAppointments.push(item));
+          }
+        }
+      }
+    } catch (error) {
+      ElMessage.error(error.message || '获取预约列表失败');
+    } finally {
+      // 关闭加载消息
+      loadingMessage.close();
     }
-    console.log('获取预约列表参数:', params)
-    await serviceStore.fetchMyAppointments(params)
-    console.log('预约列表数据:', serviceStore.myAppointments)
   } catch (error) {
-    console.error('获取预约列表失败:', error)
-    ElMessage.error('获取预约列表失败')
+    ElMessage.error(error.message || '获取预约列表失败');
   }
-}
+};
 
 const handleSearch = () => {
   currentPage.value = 1
@@ -497,45 +609,13 @@ const bookingRules = {
 const detailDialogVisible = ref(false)
 
 // 打开预约对话框
-const openBookingDialog = (service) => {
-  const userInfo = getUserInfo()
-  if (!userInfo?.userId) {
-    ElMessage.warning('请先登录后再进行预约')
-    return
-  }
+const openBookingDialog = async (service) => {
+  const isLoggedIn = await checkLoginStatus();
+  if (!isLoggedIn) return;
 
-  // 确保service对象包含必要的字段
-  const requiredFields = ['serviceId', 'serviceName', 'serviceType', 'serviceTypeName', 'price', 'duration']
-  const missingFields = requiredFields.filter(field => !service?.[field])
-
-  if (missingFields.length > 0) {
-    console.error('服务信息不完整，缺少字段:', missingFields)
-    console.error('当前服务信息:', service)
-    ElMessage.error('服务信息不完整，请刷新页面重试')
-    return
-  }
-
-  // 打印服务信息以便调试
-  console.log('打开预约对话框，服务信息:', service)
-
-  // 将serviceType映射为serviceTypeId
-  const serviceTypeMap = {
-    'medical': 1,
-    'cleaning': 2,
-    'repair': 3
-  }
-
-  currentService.value = {
-    ...service,
-    serviceTypeId: serviceTypeMap[service.serviceType]
-  }
-
-  bookingForm.appointmentDate = null
-  bookingForm.appointmentTime = null
-  bookingForm.remark = ''
-  bookingForm.serviceTypeId = serviceTypeMap[service.serviceType]
-  bookingDialogVisible.value = true
-}
+  currentService.value = service;
+  bookingDialogVisible.value = true;
+};
 
 // 打开服务详情对话框
 const viewServiceDetail = (service) => {
@@ -545,111 +625,57 @@ const viewServiceDetail = (service) => {
 
 // 提交预约
 const submitBooking = async () => {
-  if (!bookingFormRef.value) return
+  const isLoggedIn = await checkLoginStatus();
+  if (!isLoggedIn) return;
 
-  try {
-    const userInfo = getUserInfo()
-    if (!userInfo?.userId) {
-      ElMessage.warning('请先登录后再进行预约')
-      return
+  if (!bookingFormRef.value) return;
+  
+  await bookingFormRef.value.validate(async (valid) => {
+    if (valid) {
+      try {
+        const params = {
+          ...bookingForm.value,
+          serviceId: currentService.value.id,
+          elderId: userStore.userInfo.userId
+        };
+        
+        await serviceStore.submitAppointment(params);
+        ElMessage.success('预约提交成功');
+        bookingDialogVisible.value = false;
+        // 重新获取预约列表
+        if (activeTab.value === 'my') {
+          fetchMyAppointments();
+        }
+      } catch (error) {
+        console.error('预约提交失败:', error);
+        ElMessage.error(error.message || '预约提交失败');
+      }
     }
-
-    await bookingFormRef.value.validate()
-
-    // 验证currentService
-    if (!currentService.value || !currentService.value.serviceId || !currentService.value.serviceType) {
-      console.error('服务信息不完整:', currentService.value)
-      ElMessage.error('服务信息不完整，请刷新页面重试')
-      return
-    }
-
-    submitting.value = true
-
-    // 构建预约时间
-    const appointmentTime = new Date(bookingForm.appointmentDate)
-    const timeDate = new Date(bookingForm.appointmentTime)
-    appointmentTime.setHours(timeDate.getHours())
-    appointmentTime.setMinutes(timeDate.getMinutes())
-
-    // 检查时间是否在服务时间内（8:00-18:00）
-    const hours = appointmentTime.getHours()
-    if (hours < 8 || hours >= 18) {
-      ElMessage.warning('预约时间必须在8:00-18:00之间')
-      return
-    }
-
-    // 检查是否是未来时间
-    const now = new Date()
-    if (appointmentTime <= now) {
-      ElMessage.warning('预约时间必须大于当前时间')
-      return
-    }
-
-    // 确保applyReason满足长度要求
-    const applyReason = bookingForm.remark?.trim() || '服务预约'
-    if (applyReason.length < 5) {
-      ElMessage.warning('备注信息至少需要5个字符')
-      return
-    }
-    if (applyReason.length > 500) {
-      ElMessage.warning('备注信息不能超过500个字符')
-      return
-    }
-
-    // 构建请求数据
-    const data = {
-      userId: Number(userInfo.userId),
-      serviceItemId: Number(currentService.value.serviceId),
-      serviceTypeId: Number(bookingForm.serviceTypeId),
-      scheduleTime: new Date(appointmentTime.getTime() + 8 * 60 * 60 * 1000).toISOString().split('.')[0], // 转换为东八区时间
-      applyReason: applyReason
-    }
-
-    // 添加日志输出
-    console.log('提交预约数据:', data)
-
-    await serviceStore.createServiceAppointment(data)
-    ElMessage.success('预约成功')
-    bookingDialogVisible.value = false
-
-    // 切换到我的预约标签页并刷新列表
-    activeTab.value = 'my'
-    fetchMyAppointments()
-  } catch (error) {
-    if (error !== 'cancel') {
-      console.error('预约失败:', error)
-      ElMessage.error(error.message || '预约失败')
-    }
-  } finally {
-    submitting.value = false
-  }
-}
+  });
+};
 
 // 取消预约
 const handleCancel = async (appointment) => {
-  try {
-    // 检查预约状态
-    if (appointment.status !== 0 && appointment.status !== 1) {
-      ElMessage.warning('只有待审核或已派单状态的预约可以取消')
-      return
-    }
+  const isLoggedIn = await checkLoginStatus();
+  if (!isLoggedIn) return;
 
-    await ElMessageBox.confirm('确定要取消该预约吗？', '提示', {
+  try {
+    await ElMessageBox.confirm('确认要取消该预约吗？', '提示', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
       type: 'warning'
-    })
-
-    await serviceStore.cancelServiceAppointment(appointment.id)
-    ElMessage.success('取消预约成功')
-    fetchMyAppointments()
+    });
+    
+    await serviceStore.cancelAppointment(appointment.id);
+    ElMessage.success('预约取消成功');
+    fetchMyAppointments();
   } catch (error) {
     if (error !== 'cancel') {
-      console.error('取消预约失败:', error)
-      ElMessage.error('取消预约失败')
+      console.error('取消预约失败:', error);
+      ElMessage.error(error.message || '取消预约失败');
     }
   }
-}
+};
 
 // 评价对话框相关
 const evaluationDialogVisible = ref(false)
@@ -673,76 +699,184 @@ const evaluationRules = {
 }
 
 // 打开评价对话框
-const openEvaluationDialog = (appointment) => {
-  currentAppointment.value = appointment
-  evaluationForm.rating = 0
-  evaluationForm.content = ''
-  evaluationDialogVisible.value = true
-}
+const openEvaluationDialog = async (appointment) => {
+  const isLoggedIn = await checkLoginStatus();
+  if (!isLoggedIn) return;
+
+  currentAppointment.value = appointment;
+  evaluationDialogVisible.value = true;
+};
 
 // 提交评价
 const submitEvaluation = async () => {
-  if (!evaluationFormRef.value) return
+  const isLoggedIn = await checkLoginStatus();
+  if (!isLoggedIn) return;
 
-  try {
-    await evaluationFormRef.value.validate()
-
-    submittingEvaluation.value = true
-    await serviceStore.handleEvaluateService(currentAppointment.value.id, evaluationForm)
-    ElMessage.success('评价成功')
-    evaluationDialogVisible.value = false
-    fetchMyAppointments()
-  } catch (error) {
-    if (error !== 'cancel') {
-      console.error('评价失败:', error)
-      ElMessage.error('评价失败')
+  if (!evaluationFormRef.value) return;
+  
+  await evaluationFormRef.value.validate(async (valid) => {
+    if (valid) {
+      try {
+        const params = {
+          ...evaluationForm.value,
+          appointmentId: currentAppointment.value.id
+        };
+        
+        await serviceStore.submitEvaluation(params);
+        ElMessage.success('评价提交成功');
+        evaluationDialogVisible.value = false;
+        // 重新获取预约列表
+        fetchMyAppointments();
+      } catch (error) {
+        console.error('评价提交失败:', error);
+        ElMessage.error(error.message || '评价提交失败');
+      }
     }
-  } finally {
-    submittingEvaluation.value = false
-  }
-}
+  });
+};
 
 // 监听预约列表数据变化
 watch(() => serviceStore.myAppointments, (newVal) => {
-  console.log('预约列表数据发生变化:', newVal)
+  // 监听预约列表数据变化
 }, { deep: true })
 
 // 监听总数变化
 watch(() => serviceStore.appointmentTotal, (newVal) => {
-  console.log('预约总数发生变化:', newVal)
+  // 监听预约总数变化
 })
 
-// 组件挂载时获取数据
-onMounted(async () => {
-  // 从本地存储恢复用户信息
-  const storedUserInfo = localStorage.getItem('userInfo')
-  if (storedUserInfo) {
-    try {
-      const userInfo = JSON.parse(storedUserInfo)
-      userStore.setUserInfo(userInfo)
-    } catch (error) {
-      console.error('解析用户信息失败:', error)
-    }
-  }
-
-  await fetchServices()
-})
-
-// 监听标签页切换
+// 监听标签页切换，并保存到localStorage和URL
 watch(() => activeTab.value, (newTab) => {
+  // 保存当前活动标签到localStorage
+  localStorage.setItem('serviceActiveTab', newTab);
+  
+  // 更新URL参数，但不触发路由跳转
+  const query = {...route.query, tab: newTab};
+  router.replace({query});
+  
   if (newTab === 'my') {
-    fetchMyAppointments()
+    fetchMyAppointments();
+  } else if (newTab === 'list') {
+    fetchServices();
   }
-})
+});
+
+// 监听路由变化，如果tab参数变化则更新activeTab
+watch(() => route.query.tab, (newTab) => {
+  if (newTab && (newTab === 'my' || newTab === 'list') && newTab !== activeTab.value) {
+    activeTab.value = newTab;
+  }
+}, {immediate: true});
+
+// 组件卸载时保存状态
+onBeforeUnmount(() => {
+  // 保存当前活动标签到localStorage
+  localStorage.setItem('serviceActiveTab', activeTab.value);
+});
 
 // 预约详情对话框相关
 const appointmentDetailVisible = ref(false)
 
 // 查看预约详情
 const viewAppointmentDetail = (appointment) => {
-  currentAppointment.value = appointment
-  appointmentDetailVisible.value = true
+  // 创建一个新对象以避免修改原始数据
+  currentAppointment.value = {
+    ...appointment,
+    // 不需要设置默认值，让模板中的条件判断来处理
+  };
+  
+  appointmentDetailVisible.value = true;
 }
+
+// 重新加载数据
+const reloadAppointments = () => {
+  fetchMyAppointments();
+};
+
+// 检查登录状态
+const checkLoginStatus = async () => {
+  try {
+    // 检查是否有token，使用正确的key
+    const token = localStorage.getItem('user-access-token');
+    if (!token) {
+      ElMessage.warning('请先登录后再访问服务预约');
+      router.push('/login');
+      return false;
+    }
+
+    // 从本地存储获取用户信息
+    const localUserInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+    if (!localUserInfo || !localUserInfo.userId) {
+      ElMessage.warning('请先登录后再访问服务预约');
+      router.push('/login');
+      return false;
+    }
+
+    // 更新store中的用户信息
+    if (!userStore.userInfo) {
+      userStore.setUserInfo(localUserInfo);
+    }
+
+    return true;
+  } catch (error) {
+    console.error('检查登录状态失败:', error);
+    ElMessage.error('登录状态验证失败，请重新登录');
+    router.push('/login');
+    return false;
+  }
+}
+
+// 组件挂载时获取数据
+onMounted(async () => {
+  // 从本地存储恢复用户信息
+  const storedUserInfo = localStorage.getItem('userInfo');
+  if (storedUserInfo) {
+    try {
+      const userInfo = JSON.parse(storedUserInfo);
+      userStore.setUserInfo(userInfo);
+    } catch (error) {
+      // 用户信息解析失败
+    }
+  }
+
+  // 从localStorage恢复活动标签页状态
+  const savedTab = localStorage.getItem('serviceActiveTab');
+  if (savedTab) {
+    activeTab.value = savedTab;
+    // 如果是我的预约标签，立即加载数据
+    if (activeTab.value === 'my') {
+      fetchMyAppointments();
+    }
+  } else {
+    await fetchServices();
+  }
+  
+  // 添加事件监听，防止外部刷新影响标签页状态
+  window.addEventListener('refresh-dashboard-data', handleRefreshEvent);
+});
+
+// 组件卸载时清理事件监听器
+onBeforeUnmount(() => {
+  // 保存当前活动标签到localStorage
+  localStorage.setItem('serviceActiveTab', activeTab.value);
+  
+  // 移除事件监听器
+  window.removeEventListener('refresh-dashboard-data', handleRefreshEvent);
+});
+
+// 处理外部刷新事件，确保不会重置标签页
+const handleRefreshEvent = (event) => {
+  // 如果是在"我的预约"标签页，则刷新预约数据而不是切换标签页
+  if (activeTab.value === 'my') {
+    // 延迟执行以避免与主刷新冲突
+    setTimeout(() => {
+      fetchMyAppointments();
+    }, 500);
+    
+    // 阻止事件进一步传播，避免影响其他组件
+    event.stopPropagation();
+  }
+};
 </script>
 
 <style scoped>
@@ -752,12 +886,15 @@ const viewAppointmentDetail = (appointment) => {
 
 .content-card {
   margin-bottom: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
 }
 
 .content-card h3 {
   margin: 0 0 20px 0;
   font-size: 18px;
   font-weight: 500;
+  color: #303133;
 }
 
 .filter-container {
@@ -765,6 +902,7 @@ const viewAppointmentDetail = (appointment) => {
   display: flex;
   gap: 10px;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .search-input {
@@ -802,5 +940,113 @@ const viewAppointmentDetail = (appointment) => {
 .text-muted {
   color: #909399;
   font-style: italic;
+}
+
+/* 新增样式 */
+.service-name {
+  font-weight: 500;
+  color: #303133;
+}
+
+.price-tag {
+  font-weight: bold;
+  color: #e6a23c;
+}
+
+.duration-tag {
+  color: #409eff;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+/* 表格样式优化 */
+:deep(.el-table) {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+:deep(.el-table__header) {
+  background-color: #f5f7fa;
+}
+
+:deep(.el-table__row:hover) {
+  background-color: #f0f7ff !important;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .filter-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .search-input {
+    width: 100%;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+  }
+}
+
+/* 我的预约标签页样式 */
+.status-filter {
+  width: 150px;
+}
+
+.date-range {
+  width: 350px;
+}
+
+.refresh-button {
+  margin-left: auto;
+}
+
+.service-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.time-info {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #606266;
+}
+
+.time-info .el-icon {
+  font-size: 16px;
+  color: #409eff;
+}
+
+.remark {
+  color: #606266;
+  font-size: 13px;
+}
+
+.staff-name {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.staff-name .el-icon {
+  color: #67c23a;
+}
+
+.status-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* 状态更新时间 */
+.status-time {
+  font-size: 12px;
+  color: #909399;
 }
 </style>

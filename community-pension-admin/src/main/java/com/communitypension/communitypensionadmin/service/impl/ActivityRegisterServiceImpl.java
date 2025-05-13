@@ -55,16 +55,30 @@ public class ActivityRegisterServiceImpl extends ServiceImpl<ActivityRegisterMap
         // 检查老人是否已报名
         Integer status = getElderActivityStatus(activityId, elderId);
         if (status != null) {
-            // 如果已报名，返回当前报名状态
-            String statusName = switch (status) {
-                case 0 -> "待审核";
-                case 1 -> "已通过";
-                case 2 -> "已拒绝";
-                case 3 -> "已取消";
-                case 4 -> "已签到";
-                default -> "未知状态";
-            };
-            throw new BusinessException("您已报名此活动，当前状态：" + statusName);
+            // 如果已报名，判断状态
+            if (status == 3) { // 3-已取消，允许重新报名，恢复为待审核
+                // 查询报名记录
+                LambdaQueryWrapper<ActivityRegister> wrapper = new LambdaQueryWrapper<>();
+                wrapper.eq(ActivityRegister::getActivityId, activityId)
+                       .eq(ActivityRegister::getElderId, elderId);
+                ActivityRegister register = getOne(wrapper);
+                if (register != null) {
+                    register.setStatus(0); // 0-待审核
+                    register.setRegisterTime(LocalDateTime.now());
+                    updateById(register);
+                    return true;
+                }
+            } else {
+                // 其他状态不允许重复报名
+                String statusName = switch (status) {
+                    case 0 -> "待审核";
+                    case 1 -> "已通过";
+                    case 2 -> "已拒绝";
+                    case 4 -> "已签到";
+                    default -> "未知状态";
+                };
+                throw new BusinessException("您已报名此活动，当前状态：" + statusName);
+            }
         }
 
         // 检查报名人数是否已满
@@ -221,12 +235,6 @@ public class ActivityRegisterServiceImpl extends ServiceImpl<ActivityRegisterMap
         return count != null && count > 0;
     }
 
-
-
-
-
-
-
     /**
      * 将实体转换为VO
      */
@@ -263,9 +271,6 @@ public class ActivityRegisterServiceImpl extends ServiceImpl<ActivityRegisterMap
 
         return vo;
     }
-
-
-
 
     /**
      * 获取报名类型名称

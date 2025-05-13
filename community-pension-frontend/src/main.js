@@ -2,6 +2,7 @@ import '@/assets/styles/index.scss'; // global css
 import * as ElementPlusIconsVue from '@element-plus/icons-vue';
 import ElementPlus from 'element-plus';
 import 'element-plus/dist/index.css';
+import 'element-plus/theme-chalk/dark/css-vars.css';
 import { createApp } from 'vue';
 
 import setupDirective from '@/directive/permission/index';
@@ -9,9 +10,9 @@ import store from '@/stores';
 import App from './App.vue';
 import router from './router';
 
+import RightToolbar from '@/components/back/system/menu/RightToolbar.vue';
 import DictTag from '@/components/common/base/DictTag';
 import Pagination from '@/components/common/base/Pagination';
-import RightToolbar from '@/components/back/system/menu/RightToolbar.vue';
 import { useDict } from '@/utils/dict';
 
 // 全局处理滚动事件监听器的passive选项

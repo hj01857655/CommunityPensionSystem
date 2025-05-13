@@ -180,9 +180,10 @@
 
 <script setup>
 import { registerActivity as apiRegisterActivity, getActivityDetail, getActivityList } from '@/api/fore/activity';
-import { cancelAppointment, getMyAppointments } from '@/api/fore/service';
+import { cancelAppointment } from '@/api/fore/service';
 import HomeCard from '@/components/fore/HomeCard.vue';
 import { useHealthStore } from '@/stores/fore/healthStore';
+import useServiceStore from '@/stores/fore/serviceStore';
 import { useUserStore } from '@/stores/fore/userStore';
 import { formatDate, formatDateTime } from '@/utils/date';
 import { Clock, Location, Phone, Refresh, Warning } from '@element-plus/icons-vue';
@@ -193,6 +194,7 @@ import { useRouter } from 'vue-router';
 
 const router = useRouter();
 const userStore = useUserStore();
+const serviceStore = useServiceStore();
 
 const props = defineProps({
     isLoggedIn: {
@@ -302,7 +304,6 @@ const createTimeoutPromise = (milliseconds = 10000) => {
 const fetchRecentServices = async () => {
     if (!props.isLoggedIn || servicesLoading.value) return;
 
-    // 重试次数检查
     if (servicesRetryCount.value >= MAX_RETRY_COUNT) {
         console.warn(`服务请求已达最大重试次数 ${MAX_RETRY_COUNT}，不再尝试`);
         return;
@@ -311,7 +312,6 @@ const fetchRecentServices = async () => {
     servicesLoading.value = true;
 
     try {
-        // 使用工具函数获取用户ID
         const userId = getUserId();
         if (!userId) {
             console.error('无法获取有效的用户ID');
@@ -321,49 +321,35 @@ const fetchRecentServices = async () => {
             return;
         }
 
-        console.log('服务预约 - 使用userId:', userId);
+        // 统一调用 serviceStore.fetchMyAppointments
+        const params = {
+            userId,
+            pageNum: 1,
+            pageSize: 10
+        };
+        const result = await serviceStore.fetchMyAppointments(params);
 
-        // 调用API获取用户的服务预约列表，添加超时控制
-        const response = await Promise.race([
-          getMyAppointments({
-                userId: userId,
-                size: 10 // 获取多一些记录，以便筛选后仍有足够数据
-            }),
-            createTimeoutPromise()
-        ]);
-
-        // 成功获取数据，重置重试计数
         servicesRetryCount.value = 0;
 
-        if (response.code === 200 && response.data) {
-            // 根据API返回数据结构调整数据处理
-          const appointmentData = Array.isArray(response.data) ? response.data :
-                (response.data.records ? response.data.records : []);
+        // 兼容返回值
+        const appointmentData = Array.isArray(result)
+            ? result
+            : (result?.records || result?.data?.records || []);
 
-          // 获取最近的预约并格式化数据
-            services.value = appointmentData
-                // 过滤掉已取消和已拒绝的预约
-                .filter(service => service.status !== 4 && service.status !== 5)
-                // 按预约时间排序
-                .sort((a, b) => new Date(a.scheduleTime || a.appointmentTime) - new Date(b.scheduleTime || b.appointmentTime))
-                // 只取最近的3条
-                .slice(0, 3)
-                .map(service => ({
-                    id: service.id,
-                    name: service.serviceItemName || service.serviceName,
-                    status: service.statusText || getOrderStatusText(service.status),
-                    scheduleTime: service.scheduleTime || service.appointmentTime,
-                    isUpcoming: isUpcomingService(service.scheduleTime || service.appointmentTime)
-                }));
-        } else {
-            console.warn('获取服务预约返回数据异常:', response);
-            services.value = [];
-            servicesRetryCount.value++;
-        }
+        services.value = appointmentData
+            .filter(service => service.status !== 4 && service.status !== 5)
+            .sort((a, b) => new Date(a.scheduleTime || a.appointmentTime) - new Date(b.scheduleTime || b.appointmentTime))
+            .slice(0, 3)
+            .map(service => ({
+                id: service.id,
+                name: service.serviceItemName || service.serviceName,
+                status: service.statusText || getOrderStatusText(service.status),
+                scheduleTime: service.scheduleTime || service.appointmentTime,
+                isUpcoming: isUpcomingService(service.scheduleTime || service.appointmentTime)
+            }));
     } catch (error) {
         console.error('获取服务预约失败:', error);
         servicesRetryCount.value++;
-        console.warn(`服务请求失败，当前重试次数: ${servicesRetryCount.value}/${MAX_RETRY_COUNT}`);
         services.value = [];
     } finally {
         servicesLoading.value = false;
@@ -907,14 +893,24 @@ const formatActivityDate = (date) => {
     }
 };
 
-// 工具函数：获取用户ID
+// 优化后的工具函数：获取用户ID（参考 ServiceView.vue）
 const getUserId = () => {
-  const userInfo = userStore.userInfo;
-  if (!userInfo) {
-    console.warn('未获取到用户信息');
-    return null;
+  // 优先从 store 获取
+  if (userStore.userInfo?.userId) {
+    return userStore.userInfo.userId;
   }
-  return userInfo.userId || userInfo.id;
+  // 如果 store 中没有，尝试从本地存储获取
+  const storedUserInfo = localStorage.getItem('userInfo');
+  if (storedUserInfo) {
+    try {
+      const userInfo = JSON.parse(storedUserInfo);
+      userStore.setUserInfo(userInfo); // 主动同步到 store
+      return userInfo.userId;
+    } catch (error) {
+      console.error('解析用户信息失败:', error);
+    }
+  }
+  return null;
 };
 
 // 事件处理函数：处理刷新事件

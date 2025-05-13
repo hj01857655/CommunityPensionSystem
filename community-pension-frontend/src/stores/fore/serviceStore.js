@@ -1,14 +1,14 @@
+import {
+  cancelAppointment,
+  createAppointment,
+  evaluateService,
+  getMyAppointments,
+  getServiceDetail,
+  getServiceList
+} from '@/api/fore/service';
+import { ElMessage } from 'element-plus';
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import { ElMessage } from 'element-plus';
-import {
-  getServiceList,
-  getServiceDetail,
-  createAppointment,
-  getMyAppointments,
-  cancelAppointment,
-  evaluateService
-} from '@/api/fore/service';
 
 const useServiceStore = defineStore('service', () => {
   // 状态定义
@@ -85,21 +85,29 @@ const useServiceStore = defineStore('service', () => {
   const fetchMyAppointments = async (params) => {
     try {
       loading.value = true;
-      console.log('开始获取预约列表，参数:', params);
       const res = await getMyAppointments(params);
-      console.log('获取预约列表响应:', res);
       if (res.code === 200) {
-        console.log('预约列表数据:', res.data);
-        myAppointments.value = Array.isArray(res.data) ? res.data : [];
-        appointmentTotal.value = myAppointments.value.length;
-        console.log('更新后的预约列表:', myAppointments.value);
-        console.log('更新后的总数:', appointmentTotal.value);
-        return res.data;
+        // 清空现有数据
+        myAppointments.value.length = 0;
+        
+        // API直接返回数组，不需要取records
+        const appointments = Array.isArray(res.data) ? res.data : [];
+        
+        // 确保数据被正确赋值 - 遍历添加
+        appointments.forEach(item => {
+          myAppointments.value.push(item);
+        });
+        
+        // 设置总数
+        appointmentTotal.value = appointments.length;
+        
+        return appointments;
       } else {
         throw new Error(res.message || '获取预约列表失败');
       }
     } catch (error) {
-      console.error('获取预约列表失败:', error);
+      myAppointments.value = [];
+      appointmentTotal.value = 0;
       throw error;
     } finally {
       loading.value = false;

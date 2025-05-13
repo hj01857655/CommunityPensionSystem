@@ -179,57 +179,79 @@ const healthRules = {
 
 const userStore = useForegroundUserStore()
 
-// 检查登录状态
-const checkLoginStatus = () => {
-  if (!userStore.isLoggedIn || !userStore.userInfo?.userId) {
-    ElMessage.warning('请先登录')
-    router.push('/login')
-    return false
+const checkLoginStatus = async () => {
+  try {
+    // 检查是否有token，使用正确的key
+    const token = localStorage.getItem('user-access-token');
+    if (!token) {
+      ElMessage.warning('请先登录后再访问健康记录');
+      router.push('/login');
+      return false;
+    }
+
+    // 从本地存储获取用户信息
+    const localUserInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+    if (!localUserInfo || !localUserInfo.userId) {
+      ElMessage.warning('请先登录后再访问健康记录');
+      router.push('/login');
+      return false;
+    }
+
+    // 更新store中的用户信息
+    if (!userStore.userInfo) {
+      userStore.setUserInfo(localUserInfo);
+    }
+
+    return true;
+  } catch (error) {
+    console.error('检查登录状态失败:', error);
+    ElMessage.error('登录状态验证失败，请重新登录');
+    router.push('/login');
+    return false;
   }
-  return true
 }
 
 const handleSave = async () => {
-  if (!checkLoginStatus()) return
+  if (!checkLoginStatus()) return;
 
   try {
-    loading.value = true
+    loading.value = true;
 
-    // 确保有必要的字段
-    const userInfo = userStore.userInfo;
+    // 从本地存储获取用户信息
+    const localUserInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
     const formData = {
       ...healthForm.value,
-      recorderId: userInfo.userId,
-      elderId: userInfo.userId, // 如果是老人，使用自己的ID
+      recorderId: localUserInfo.userId,
+      elderId: localUserInfo.userId, // 如果是老人，使用自己的ID
       recordTime: new Date().toISOString().split('.')[0],
       symptomsRecordTime: new Date().toISOString().split('.')[0]
-    }
+    };
 
     // 计算 BMI
     if (formData.height && formData.weight) {
-      const height = parseFloat(formData.height) / 100
-      const weight = parseFloat(formData.weight)
-      formData.bmi = (weight / (height * height)).toFixed(2)
+      const height = parseFloat(formData.height) / 100;
+      const weight = parseFloat(formData.weight);
+      formData.bmi = (weight / (height * height)).toFixed(2);
     }
 
-    console.log('保存健康记录，参数：', JSON.stringify(formData, null, 2))
+    console.log('保存健康记录，参数：', JSON.stringify(formData, null, 2));
 
-    const response = await updateHealthData(formData)
-    console.log('保存响应：', response)
+    const response = await updateHealthData(formData);
+    console.log('保存响应：', response);
 
     if (response.code === 200) {
-      ElMessage.success('保存成功')
-      isEditMode.value = false
+      ElMessage.success('保存成功');
+      isEditMode.value = false;
       // 更新表单数据
-      Object.assign(healthForm.value, response.data)
+      Object.assign(healthForm.value, response.data);
     } else {
-      throw new Error(response.message || '保存失败')
+      throw new Error(response.message || '保存失败');
     }
   } catch (error) {
-    console.error('保存健康记录失败:', error)
-    ElMessage.error(error.response?.data?.message || error.message || '保存失败')
+    console.error('保存健康记录失败:', error);
+    ElMessage.error(error.response?.data?.message || error.message || '保存失败');
   } finally {
-    loading.value = false
+    loading.value = false;
   }
 }
 
@@ -275,47 +297,50 @@ const fetchHealthRecords = async () => {
 };
 
 const fetchHealthData = async () => {
-  if (!checkLoginStatus()) return
+  const isLoggedIn = await checkLoginStatus();
+  if (!isLoggedIn) return;
 
-  loading.value = true
+  loading.value = true;
   try {
-    const userInfo = userStore.userInfo;
-    const elderId = userInfo.userId // 如果是老人，使用自己的ID
+    // 从本地存储获取用户信息
+    const localUserInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+    const elderId = localUserInfo.userId; // 如果是老人，使用自己的ID
 
     if (!elderId) {
-      throw new Error('无法获取用户ID')
+      throw new Error('无法获取用户ID');
     }
 
-    const response = await getHealthData(elderId)
-    console.log('获取健康数据响应：', response)
+    const response = await getHealthData(elderId);
+    console.log('获取健康数据响应：', response);
 
     if (response.code === 200) {
       if (!response.data) {
         // 如果没有健康记录，创建新的
-        await createNewHealthRecord()
+        await createNewHealthRecord();
       } else {
-        Object.assign(healthForm.value, response.data)
+        Object.assign(healthForm.value, response.data);
       }
     } else {
-      throw new Error(response.message || '获取健康数据失败')
+      throw new Error(response.message || '获取健康数据失败');
     }
   } catch (error) {
-    console.error('获取健康数据失败:', error)
-    ElMessage.error(error.response?.data?.message || error.message || '获取健康数据失败')
+    console.error('获取健康数据失败:', error);
+    ElMessage.error(error.response?.data?.message || error.message || '获取健康数据失败');
   } finally {
-    loading.value = false
+    loading.value = false;
   }
 }
 
 const createNewHealthRecord = async () => {
   try {
-    const userInfo = userStore.userInfo;
-    if (!userInfo) {
+    // 从本地存储获取用户信息
+    const localUserInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+    if (!localUserInfo || !localUserInfo.userId) {
       throw new Error('用户未登录')
     }
 
-    const recorderId = userInfo.userId
-    const elderId = userStore.getElderId()
+    const recorderId = localUserInfo.userId;
+    const elderId = localUserInfo.userId; // 如果是老人，使用自己的ID
 
     if (!elderId || !recorderId) {
       throw new Error('无法获取用户ID')
@@ -337,11 +362,12 @@ const createNewHealthRecord = async () => {
     }
 
     const response = await addHealthData(newHealthRecord)
-    if (response.data.code === 200) {
+    if (response.code === 200) {
       ElMessage.success('健康记录创建成功')
-      return response.data.data
+      Object.assign(healthForm.value, response.data);
+      return response.data;
     } else {
-      throw new Error(response.data.message || '创建健康记录失败')
+      throw new Error(response.message || '创建健康记录失败')
     }
   } catch (error) {
     console.error('创建健康记录失败:', error)
@@ -351,8 +377,10 @@ const createNewHealthRecord = async () => {
 }
 
 onMounted(async () => {
-  if (!checkLoginStatus()) return
-  await fetchHealthData()
+  const isLoggedIn = await checkLoginStatus();
+  if (isLoggedIn) {
+    await fetchHealthData();
+  }
 })
 </script>
 

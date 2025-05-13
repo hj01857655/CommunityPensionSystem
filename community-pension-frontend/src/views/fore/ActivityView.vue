@@ -36,29 +36,34 @@
                       <el-icon><User /></el-icon>
                       <span>{{ activity.currentRegistrations || 0 }}/{{ activity.maxRegistrations }}人</span>
                     </div>
-                    <el-tag :type="getStatusType(activity.status)" effect="dark">
+                    <el-tag :type="getStatusType(activity.status)" effect="plain" class="activity-status-tag">
                       {{ getStatusText(activity.status) }}
                     </el-tag>
                   </div>
                   <!-- 操作按钮 -->
                   <div class="actions">
                     <el-button
-                        v-if="canJoin(activity.status)"
-                        type="primary"
+                      v-if="canJoin(activity.status)"
+                      :disabled="[0,1,4].includes(getActivityRegisterStatus(activity.id))"
+                      type="primary"
                       size="small"
                       :loading="activity.loading"
                       @click="handleRegister(activity)"
                     >
-                      {{ getButtonText(activity.status) }}
+                      <template v-if="[0,1,4].includes(getActivityRegisterStatus(activity.id))">
+                        已报名
+                      </template>
+                      <template v-else>
+                        {{ getButtonText(activity.status) }}
+                      </template>
                     </el-button>
-                    <el-button
-                        v-else
-                        disabled
-                        size="small"
-                        type="info"
+                    <el-tooltip
+                      v-if="[0,1,4].includes(getActivityRegisterStatus(activity.id))"
+                      content="您已报名该活动"
+                      placement="top"
                     >
-                      {{ getButtonText(activity.status) }}
-                    </el-button>
+                      <span style="color: #f56c6c;">已报名</span>
+                    </el-tooltip>
                   </div>
                 </el-card>
               </el-col>
@@ -115,7 +120,7 @@
               <!-- 活动状态列 -->
               <el-table-column label="活动状态" width="100">
                 <template #default="{ row }">
-                  <el-tag :type="getStatusType(row.status)" effect="dark">
+                  <el-tag :type="getStatusType(row.status)" effect="plain" class="activity-status-tag">
                     {{ getStatusText(row.status) }}
                   </el-tag>
                 </template>
@@ -124,7 +129,7 @@
               <!-- 报名状态列 -->
               <el-table-column label="报名状态" width="100">
                 <template #default="{ row }">
-                  <el-tag :type="getParticipateStatusType(row.participateStatus)" effect="dark">
+                  <el-tag :type="getParticipateStatusType(row.participateStatus)" effect="plain" class="participate-status-tag">
                     {{ getParticipateStatusText(row.participateStatus) }}
                   </el-tag>
                 </template>
@@ -347,6 +352,9 @@ import { useRoute, useRouter } from 'vue-router'
    * @param {Object} activity - 活动对象
    */
   const handleRegister = async (activity) => {
+    // 打印当前获取到的用户信息
+    const userInfo = userStore.userInfo || JSON.parse(localStorage.getItem('userInfo') || '{}');
+    console.log('【报名前用户信息】', userInfo);
     try {
       // 直接调用store的报名方法，让其内部处理老人ID获取
       console.log('准备报名活动:', activity);
@@ -354,21 +362,31 @@ import { useRoute, useRouter } from 'vue-router'
       const success = await registerActivityAction(activity);
       console.log('报名活动结果:', success);
 
-      if (success && activeTab.value === 'myActivities') {
+      // 无论在哪个标签页，报名成功后都刷新活动列表
+      fetchActivities();
+      
+      if (activeTab.value === 'myActivities') {
         // 如果在"我的活动"标签页，报名成功后刷新列表
         fetchUserActivities();
       }
-      console.log('----活动报名调试信息结束：操作完成----');
     } catch (error) {
       console.error('报名活动过程中发生错误:', error);
-      // 优化错误提示
-      if (error.response?.data?.msg) {
-        ElMessage.error(error.response.data.msg);
-      } else if (error.message) {
-        ElMessage.error(error.message);
-      } else {
-        ElMessage.error('报名活动过程中发生错误，请稍后重试');
+      
+      // 无论报名成功还是失败，都刷新活动列表
+      fetchActivities();
+      
+      // 如果是因为"已报名"等业务错误，也刷新我的活动列表以更新状态
+      if (error.response?.status === 409 || error.response?.status === 500) {
+        fetchUserActivities();
       }
+      
+      // 优先使用后端返回的标准错误结构
+      const errorMsg = error.response?.data?.message || 
+                       error.response?.data?.msg || 
+                       error.message || 
+                       '报名活动过程中发生错误，请稍后重试';
+      
+      ElMessage.error(errorMsg);
       console.log('----活动报名调试信息结束：发生错误----');
     }
   }
@@ -385,6 +403,15 @@ import { useRoute, useRouter } from 'vue-router'
       // 获取用户信息
       const userInfo = userStore.userInfo || JSON.parse(localStorage.getItem('userInfo') || '{}');
       console.log('当前用户信息:', userInfo);
+      
+      // 先检查是否有用户信息
+      if (!userInfo || !userInfo.userId) {
+        console.warn('未检测到有效的用户信息，跳过获取用户活动列表');
+        myActivitiesList.value = [];
+        total.value = 0;
+        emptyText.value = '请先登录';
+        return;
+      }
 
       // 通过 store 获取用户报名的活动列表
       const result = await fetchUserRegisteredActivities({
@@ -396,22 +423,56 @@ import { useRoute, useRouter } from 'vue-router'
 
       // 处理返回结果
       if (result && result.records) {
+        // 先获取所有活动的详情
+        const activityDetails = await Promise.all(
+          result.records.map(async (record) => {
+            try {
+              const detailResponse = await activityStore.getActivityDetailAction(record.activityId);
+              return {
+                activityId: record.activityId,
+                detail: detailResponse || {}
+              };
+            } catch (error) {
+              console.error(`获取活动${record.activityId}详情失败:`, error);
+              return {
+                activityId: record.activityId,
+                detail: {}
+              };
+            }
+          })
+        );
+
+        // 创建活动详情的映射
+        const detailMap = activityDetails.reduce((map, item) => {
+          map[item.activityId] = item.detail;
+          return map;
+        }, {});
+
         // 确保每条记录都包含必要的字段
         myActivitiesList.value = result.records.map(record => {
           console.log('处理单条记录:', record);
+          // 获取对应的活动详情
+          const activityDetail = detailMap[record.activityId] || {};
           return {
             ...record,
-            title: record.title || '未知活动',
-            typeName: record.typeName || '其他',
-            startTime: record.startTime || '',
-            endTime: record.endTime || '',
-            location: record.location || '未指定',
+            // 活动基本信息
+            title: record.activityTitle || '未知活动',
+            // 报名状态
+            participateStatus: record.status ?? 0,
+            // 活动时间和地点从详情中获取
+            startTime: activityDetail.startTime || record.registerTime || '',
+            endTime: activityDetail.endTime || record.registerTime || '',
+            // 其他信息
+            typeName: record.registerTypeName || '其他',
+            location: activityDetail.location || '地点待定',
             status: record.status ?? 0,
-            participateStatus: record.participateStatus ?? 0
+            // 扩展信息
+            registerInfo: `${record.elderName} (${record.registerTypeName})`,
+            registerTimeFormatted: formatDateTime(record.registerTime, 'YYYY-MM-DD HH:mm')
           };
         });
-        total.value = result.total;
-        emptyText.value = '暂无报名记录';
+        total.value = result.total || 0;
+        emptyText.value = myActivitiesList.value.length === 0 ? '暂无报名记录' : '';
         console.log('处理后的活动报名列表:', myActivitiesList.value);
       } else {
         console.warn('返回数据格式不正确:', result);
@@ -421,10 +482,20 @@ import { useRoute, useRouter } from 'vue-router'
       }
     } catch (error) {
       console.error('获取用户活动报名列表失败:', error);
-      ElMessage.error('获取报名记录失败，请稍后重试');
-      emptyText.value = '加载失败，请刷新重试';
       myActivitiesList.value = [];
       total.value = 0;
+      
+      // 判断错误类型并提供更明确的错误信息
+      if (error.message && error.message.includes('无法确定老人身份')) {
+        emptyText.value = '无法确定老人身份，请确认您是老人或已绑定老人';
+        ElMessage.warning(emptyText.value);
+      } else if (error.response?.status === 401) {
+        emptyText.value = '请先登录后查看';
+        ElMessage.warning('请先登录后查看您的报名活动');
+      } else {
+        emptyText.value = '加载失败，请刷新重试';
+        ElMessage.error('获取报名记录失败，请稍后重试');
+      }
     } finally {
       myActivitiesLoading.value = false;
     }
@@ -560,16 +631,28 @@ import { useRoute, useRouter } from 'vue-router'
     window.addEventListener('refresh-activity-data', handleRefreshEvent);
     window.addEventListener('activity-data-reset', handleResetEvent);
 
+    // 确保先加载公共活动列表，这不依赖用户登录状态
+    await ensureDataLoaded('onMounted', true);
+
     // 检查URL中是否有tab参数
     const tabParam = route.query.tab;
     if (tabParam === 'myActivities') {
-      // URL中指定了my-activities标签页
+      // URL中指定了my-activities标签页，先设置标签页
       activeTab.value = 'myActivities';
-      await fetchUserActivities();
+      // 不需要在这里调用fetchUserActivities，因为watch会处理
+    } else {
+      // 如果不是myActivities标签，且用户已登录，则加载用户活动列表
+      try {
+        const userInfo = userStore.userInfo || JSON.parse(localStorage.getItem('userInfo') || '{}');
+        if (userInfo && userInfo.userId) {
+          await fetchUserActivities();
+        } else {
+          console.log('用户未登录，跳过加载用户活动列表');
+        }
+      } catch (err) {
+        console.error('加载用户活动列表失败', err);
+      }
     }
-
-    // 无论是否有tab参数，都加载活动列表
-    await ensureDataLoaded('onMounted', true);
   });
 
   // 修改 onBeforeUnmount 钩子，确保移除所有事件监听器
@@ -581,6 +664,26 @@ import { useRoute, useRouter } from 'vue-router'
   // 修改 onUnmounted 钩子，确保移除所有事件监听器
   onUnmounted(() => {
   });
+
+  // 判断当前活动是否已报名
+  const isRegistered = (activityId) => {
+    // 从两个数据源检查是否已报名
+    const fromMyActivities = myActivitiesList.value?.some(item => item.id === activityId);
+    return fromMyActivities;
+  };
+
+  // 判断当前活动报名状态（返回报名状态码，未报名返回null）
+  const getActivityRegisterStatus = (activityId) => {
+    // 优先从我的活动报名列表中找
+    if (Array.isArray(myActivitiesList.value)) {
+      const record = myActivitiesList.value.find(item => item.id === activityId);
+      if (record) {
+        return record.participateStatus;
+      }
+    }
+    
+    return null;
+  };
   </script>
 
 <style scoped>
@@ -643,6 +746,7 @@ import { useRoute, useRouter } from 'vue-router'
     text-overflow: ellipsis;
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
   }
 
@@ -866,5 +970,19 @@ import { useRoute, useRouter } from 'vue-router'
     --el-button-active-bg-color: #3a3a3a;
     --el-button-active-border-color: #444;
     color: #bbb;
+  }
+
+  .activity-status-tag {
+    cursor: default;
+    pointer-events: none;
+    opacity: 0.85;
+    font-weight: normal;
+  }
+
+  .participate-status-tag {
+    cursor: default;
+    pointer-events: none;
+    opacity: 0.85;
+    font-weight: normal;
   }
   </style>

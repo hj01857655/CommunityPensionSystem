@@ -68,19 +68,24 @@ export const createAppointment = async (data) => {
  * 获取我的预约列表
  * @param {Object} params - 查询参数
  * @param {number} params.userId - 用户ID
+ * @param {number} [params.pageNum=1] - 当前页码
+ * @param {number} [params.pageSize=10] - 每页条数
  * @param {number} [params.status] - 预约状态
- * @param {number} [params.current=1] - 当前页码
- * @param {number} [params.size=10] - 每页条数
  * @param {string} [params.startTime] - 开始时间
  * @param {string} [params.endTime] - 结束时间
- * @returns {Promise<{code: number, data: {records: Array, total: number}, msg: string}>}
+ * @returns {Promise<{code: number, data: Array, message: string}>}
  */
 export const getMyAppointments = async (params) => {
-  return axios.get(`/api/service/order/user/${params.userId}`, { params })
-    .catch(error => {
-      console.error('Error fetching my appointments:', error);
-      return Promise.reject(error);
-    });
+  const { userId, ...queryParams } = params;
+  return axios.get(`/api/service/order/user/${userId}`, { 
+    params: {
+      ...queryParams,
+      pageNum: params.pageNum || 1,
+      pageSize: params.pageSize || 10
+    }
+  }).catch(error => {
+    return Promise.reject(error);
+  });
 };
 
 /**

@@ -92,22 +92,11 @@ export const useActivityStore = defineStore('activity', () => {
    */
   const getElderId = () => {
     try {
-      // 获取用户信息和角色判断
-      const userInfo = userStore.userInfo;
-      const userRole = localStorage.getItem('role');
-      
-      // 如果有用户信息且角色是老人，返回用户ID
-      if (userInfo && userInfo.userId && userRole === 'elder') {
+      const userInfo = userStore.userInfo || JSON.parse(localStorage.getItem('userInfo') || '{}');
+      // 优先判断 userInfo.roles
+      if (userInfo && userInfo.userId && userInfo.roles && userInfo.roles.includes('elder')) {
         return userInfo.userId;
       }
-      
-      // 尝试从localStorage获取userId
-      const userId = localStorage.getItem('userId');
-      if (userId && userRole === 'elder') {
-        return userId;
-      }
-      
-      return null;
     } catch (error) {
       return null;
     }
@@ -209,10 +198,10 @@ export const useActivityStore = defineStore('activity', () => {
     activity.loading = true;
     
     try {
-      // 调用API进行活动报名
-      const result = await registerActivity(activity.id, elderId);
+      // 调用API进行活动报名，直接传递elderId
+      const result = await registerActivity(activity.id, { elderId });
       
-      if (result.code === 0) {
+      if (result.code === 200) {
         ElMessage.success('活动报名成功');
         
         // 刷新活动列表
@@ -366,7 +355,7 @@ export const useActivityStore = defineStore('activity', () => {
         // 设置查询参数
         const queryParams = {
             ...params,
-            userId: elderId // 使用老人ID作为查询参数
+            userId: elderId  // 使用userId作为参数名
         };
 
         console.log('[活动Store] 请求参数:', queryParams);
