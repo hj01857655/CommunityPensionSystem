@@ -2,121 +2,170 @@
   <div class="health-view">
     <el-card class="content-card" shadow="hover">
       <h3>健康档案</h3>
-      <div v-if="isEditMode">
-        <el-form :model="healthForm" :rules="healthRules" ref="healthFormRef" label-width="120px">
-          <!-- 基础指标 -->
-          <el-divider content-position="left">基础指标</el-divider>
-          <el-row :gutter="20">
-            <el-col :span="12">
-              <el-form-item label="身高" prop="height">
-                <el-input-number v-model="healthForm.height" :min="100" :max="250" />
-                <span class="unit">cm</span>
-              </el-form-item>
-            </el-col>
-            <el-col :span="12">
-              <el-form-item label="体重" prop="weight">
-                <el-input-number v-model="healthForm.weight" :min="30" :max="200" />
-                <span class="unit">kg</span>
-              </el-form-item>
-            </el-col>
-          </el-row>
+      <el-tabs v-model="activeTab" @tab-change="handleTabChange">
+        <el-tab-pane label="健康监测记录" name="monitor">
+          <div style="margin-bottom: 16px; display: flex; justify-content: flex-end;">
+            <el-button type="primary" icon="Refresh" @click="fetchHealthMonitorList" :loading="monitorLoading">刷新</el-button>
+          </div>
+          <el-table :data="monitorList" v-loading="monitorLoading" style="width: 100%;">
+            <el-table-column prop="monitoringTime" label="时间" min-width="140">
+              <template #default="{ row }">
+                <span>{{ row.monitoringTime }}</span>
+              </template>
+            </el-table-column>
+            <el-table-column prop="monitoringType" label="类型" min-width="80">
+              <template #default="{ row }">
+                {{ monitoringTypeText(row.monitoringType) }}
+              </template>
+            </el-table-column>
+            <el-table-column prop="monitoringValue" label="数值" min-width="80" />
+            <el-table-column prop="monitoringUnit" label="单位" min-width="60" />
+            <el-table-column prop="monitoringStatus" label="状态" min-width="80">
+              <template #default="{ row }">
+                <el-tag :type="row.monitoringStatus === 'normal' ? 'success' : 'danger'">
+                  {{ row.monitoringStatus === 'normal' ? '正常' : '异常' }}
+                </el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column prop="abnormalDescription" label="异常说明" min-width="120" />
+          </el-table>
+          <el-pagination
+            v-if="monitorTotal > pageSize"
+            style="margin-top: 16px; text-align: right;"
+            :current-page="currentPage"
+            :page-size="pageSize"
+            :total="monitorTotal"
+            layout="total, prev, pager, next"
+            @current-change="handlePageChange"
+          />
+        </el-tab-pane>
+        <el-tab-pane label="健康档案" name="profile">
+          <div v-if="isEditMode">
+            <el-form :model="healthForm" :rules="healthRules" ref="healthFormRef" label-width="120px">
+              <!-- 基础指标 -->
+              <el-divider content-position="left">基础指标</el-divider>
+              <el-row :gutter="20">
+                <el-col :span="12">
+                  <el-form-item label="身高" prop="height">
+                    <el-input-number v-model="healthForm.height" :min="100" :max="250" />
+                    <span class="unit">cm</span>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                  <el-form-item label="体重" prop="weight">
+                    <el-input-number v-model="healthForm.weight" :min="30" :max="200" />
+                    <span class="unit">kg</span>
+                  </el-form-item>
+                </el-col>
+              </el-row>
 
-          <!-- 生命体征 -->
-          <el-divider content-position="left">生命体征</el-divider>
-          <el-row :gutter="20">
-            <el-col :span="12">
-              <el-form-item label="血压" prop="bloodPressure">
-                <el-input v-model="healthForm.bloodPressure" placeholder="如：120/80" />
-                <span class="unit">mmHg</span>
-              </el-form-item>
-            </el-col>
-            <el-col :span="12">
-              <el-form-item label="心率" prop="heartRate">
-                <el-input-number v-model="healthForm.heartRate" :min="40" :max="200" />
-                <span class="unit">次/分</span>
-              </el-form-item>
-            </el-col>
-          </el-row>
-          <el-row :gutter="20">
-            <el-col :span="12">
-              <el-form-item label="血糖" prop="bloodSugar">
-                <el-input-number v-model="healthForm.bloodSugar" :precision="1" :step="0.1" :min="2" :max="30" />
-                <span class="unit">mmol/L</span>
-              </el-form-item>
-            </el-col>
-            <el-col :span="12">
-              <el-form-item label="体温" prop="temperature">
-                <el-input-number v-model="healthForm.temperature" :precision="1" :step="0.1" :min="35" :max="42" />
-                <span class="unit">℃</span>
-              </el-form-item>
-            </el-col>
-          </el-row>
+              <!-- 生命体征 -->
+              <el-divider content-position="left">生命体征</el-divider>
+              <el-row :gutter="20">
+                <el-col :span="12">
+                  <el-form-item label="血压" prop="bloodPressure">
+                    <el-input v-model="healthForm.bloodPressure" placeholder="如：120/80" />
+                    <span class="unit">mmHg</span>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                  <el-form-item label="心率" prop="heartRate">
+                    <el-input-number v-model="healthForm.heartRate" :min="40" :max="200" />
+                    <span class="unit">次/分</span>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row :gutter="20">
+                <el-col :span="12">
+                  <el-form-item label="血糖" prop="bloodSugar">
+                    <el-input-number v-model="healthForm.bloodSugar" :precision="1" :step="0.1" :min="2" :max="30" />
+                    <span class="unit">mmol/L</span>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                  <el-form-item label="体温" prop="temperature">
+                    <el-input-number v-model="healthForm.temperature" :precision="1" :step="0.1" :min="35" :max="42" />
+                    <span class="unit">℃</span>
+                  </el-form-item>
+                </el-col>
+              </el-row>
 
-          <!-- 健康状况 -->
-          <el-divider content-position="left">健康状况</el-divider>
-          <el-form-item label="既往病史" prop="medicalHistory">
-            <el-input type="textarea" v-model="healthForm.medicalHistory" :rows="2" placeholder="请输入既往病史" />
-          </el-form-item>
-          <el-form-item label="过敏史" prop="allergy">
-            <el-input type="textarea" v-model="healthForm.allergy" :rows="2" placeholder="请输入过敏史" />
-          </el-form-item>
-          <el-form-item label="当前症状" prop="symptoms">
-            <el-input type="textarea" v-model="healthForm.symptoms" :rows="2" placeholder="请输入当前症状" />
-          </el-form-item>
-          <el-form-item label="用药情况" prop="medication">
-            <el-input type="textarea" v-model="healthForm.medication" :rows="2" placeholder="请输入用药情况" />
-          </el-form-item>
+              <!-- 健康状况 -->
+              <el-divider content-position="left">健康状况</el-divider>
+              <el-form-item label="既往病史" prop="medicalHistory">
+                <el-input type="textarea" v-model="healthForm.medicalHistory" :rows="2" placeholder="请输入既往病史" />
+              </el-form-item>
+              <el-form-item label="过敏史" prop="allergy">
+                <el-input type="textarea" v-model="healthForm.allergy" :rows="2" placeholder="请输入过敏史" />
+              </el-form-item>
+              <el-form-item label="当前症状" prop="symptoms">
+                <el-input type="textarea" v-model="healthForm.symptoms" :rows="2" placeholder="请输入当前症状" />
+              </el-form-item>
+              <el-form-item label="用药情况" prop="medication">
+                <el-input type="textarea" v-model="healthForm.medication" :rows="2" placeholder="请输入用药情况" />
+              </el-form-item>
 
-          <el-form-item>
-            <el-button type="primary" @click="handleSave">保存</el-button>
-            <el-button @click="handleReset">重置</el-button>
-            <el-button @click="toggleEditMode">取消</el-button>
-          </el-form-item>
-        </el-form>
-      </div>
-      <div v-else>
-        <!-- 查看模式 -->
-        <div class="health-info">
-          <el-row :gutter="20">
-            <el-col :span="12">
-              <p><strong>身高:</strong> {{ healthForm.height }} cm</p>
-              <p><strong>体重:</strong> {{ healthForm.weight }} kg</p>
-              <p><strong>血压:</strong> {{ healthForm.bloodPressure }} mmHg</p>
-              <p><strong>心率:</strong> {{ healthForm.heartRate }} 次/分</p>
-            </el-col>
-            <el-col :span="12">
-              <p><strong>血糖:</strong> {{ healthForm.bloodSugar }} mmol/L</p>
-              <p><strong>体温:</strong> {{ healthForm.temperature }} ℃</p>
-              <p><strong>既往病史:</strong> {{ healthForm.medicalHistory }}</p>
-              <p><strong>过敏史:</strong> {{ healthForm.allergy }}</p>
-            </el-col>
-          </el-row>
-          <el-row :gutter="20">
-            <el-col :span="24">
-              <p><strong>当前症状:</strong> {{ healthForm.symptoms }}</p>
-              <p><strong>用药情况:</strong> {{ healthForm.medication }}</p>
-            </el-col>
-          </el-row>
-        </div>
-        <el-button type="primary" @click="toggleEditMode">编辑</el-button>
-      </div>
+              <el-form-item>
+                <el-button type="primary" @click="handleSave">保存</el-button>
+                <el-button @click="handleReset">重置</el-button>
+                <el-button @click="toggleEditMode">取消</el-button>
+              </el-form-item>
+            </el-form>
+          </div>
+          <div v-else>
+            <!-- 查看模式 -->
+            <div class="health-info">
+              <el-row :gutter="20">
+                <el-col :span="12">
+                  <p><strong>身高:</strong> {{ healthForm.height }} cm</p>
+                  <p><strong>体重:</strong> {{ healthForm.weight }} kg</p>
+                  <p><strong>血压:</strong> {{ healthForm.bloodPressure }} mmHg</p>
+                  <p><strong>心率:</strong> {{ healthForm.heartRate }} 次/分</p>
+                </el-col>
+                <el-col :span="12">
+                  <p><strong>血糖:</strong> {{ healthForm.bloodSugar }} mmol/L</p>
+                  <p><strong>体温:</strong> {{ healthForm.temperature }} ℃</p>
+                  <p><strong>既往病史:</strong> {{ healthForm.medicalHistory }}</p>
+                  <p><strong>过敏史:</strong> {{ healthForm.allergy }}</p>
+                </el-col>
+              </el-row>
+              <el-row :gutter="20">
+                <el-col :span="24">
+                  <p><strong>当前症状:</strong> {{ healthForm.symptoms }}</p>
+                  <p><strong>用药情况:</strong> {{ healthForm.medication }}</p>
+                </el-col>
+              </el-row>
+            </div>
+            <el-button type="primary" @click="toggleEditMode">编辑</el-button>
+          </div>
+        </el-tab-pane>
+      </el-tabs>
     </el-card>
   </div>
 </template>
 
 <script setup>
 import { addHealthData, getHealthData, updateHealthData } from '@/api/fore/health'
+import { useHealthMonitorStore } from '@/stores/fore/healthMonitorStore'
 import { useForegroundUserStore } from '@/stores/fore/userStore'
 import { ElMessage } from 'element-plus'
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const healthFormRef = ref(null)
 const isEditMode = ref(false)
 const loading = ref(false)
-const healthRecords = ref([])
-const totalRecords = ref(0)
+const activeTab = ref('monitor')
+const currentPage = ref(1)
+const pageSize = ref(10)
+const userStore = useForegroundUserStore()
+const healthMonitorStore = useHealthMonitorStore()
+
+// 健康监测store数据
+const monitorList = computed(() => healthMonitorStore.monitorList)
+const monitorTotal = computed(() => healthMonitorStore.total)
+const monitorLoading = computed(() => healthMonitorStore.loading)
 
 const healthForm = ref({
   id: null,
@@ -176,8 +225,6 @@ const healthRules = {
     { type: 'number', min: 35, max: 42, message: '体温应在35-42℃之间', trigger: 'blur' }
   ]
 }
-
-const userStore = useForegroundUserStore()
 
 const checkLoginStatus = async () => {
   try {
@@ -264,37 +311,34 @@ const toggleEditMode = () => {
   isEditMode.value = !isEditMode.value
 }
 
-// 获取健康记录列表
-const fetchHealthRecords = async () => {
-  if (!checkLoginStatus()) {
-    return;
+const handleTabChange = (tabName) => {
+  if (tabName === 'monitor') {
+    fetchHealthMonitorList()
+  } else if (tabName === 'profile') {
+    fetchHealthData()
   }
+}
 
-  loading.value = true;
-  try {
-    const elderId = userStore.getElderId();
-    if (!elderId) {
-      ElMessage.warning('请先登录后再访问健康记录');
-      return;
-    }
+const handlePageChange = (page) => {
+  currentPage.value = page
+  fetchHealthMonitorList()
+}
 
-    const response = await userStore.getHealthRecords(elderId);
-    if (response && response.data) {
-      healthRecords.value = Array.isArray(response.data) ? response.data : [response.data];
-      totalRecords.value = healthRecords.value.length;
-    } else {
-      healthRecords.value = [];
-      totalRecords.value = 0;
-    }
-  } catch (error) {
-    console.error('获取健康记录失败:', error);
-    ElMessage.error(error.response?.data?.message || error.message || '获取健康记录失败');
-    healthRecords.value = [];
-    totalRecords.value = 0;
-  } finally {
-    loading.value = false;
+// 通过store获取健康监测历史
+const fetchHealthMonitorList = async () => {
+  if (!checkLoginStatus()) return
+  const localUserInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
+  const userId = localUserInfo.userId
+  if (!userId) {
+    ElMessage.warning('请先登录后再访问健康监测')
+    return
   }
-};
+  await healthMonitorStore.fetchMonitorList({
+    userId,
+    pageNum: currentPage.value,
+    pageSize: pageSize.value
+  })
+}
 
 const fetchHealthData = async () => {
   const isLoggedIn = await checkLoginStatus();
@@ -376,10 +420,22 @@ const createNewHealthRecord = async () => {
   }
 }
 
+const monitoringTypeText = (type) => {
+  switch (type) {
+    case '1': return '血压'
+    case '2': return '血糖'
+    case '3': return '体温'
+    case '4': return '心率'
+    case '5': return '血氧'
+    case '6': return '体重'
+    default: return '其他'
+  }
+}
+
 onMounted(async () => {
   const isLoggedIn = await checkLoginStatus();
   if (isLoggedIn) {
-    await fetchHealthData();
+    fetchHealthMonitorList();
   }
 })
 </script>
