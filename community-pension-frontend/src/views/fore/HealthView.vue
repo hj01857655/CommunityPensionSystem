@@ -2,14 +2,19 @@
   <div class="health-view">
     <el-card class="content-card" shadow="hover">
       <h3>健康档案</h3>
-      <el-tabs v-model="activeTab" @tab-change="handleTabChange">
+      <el-tabs v-model="activeTab" @tab-change="handleTabChange" lazy>
         <el-tab-pane label="健康监测记录" name="monitor">
           <!-- 趋势图区域 -->
           <HealthTrendChart :data="monitorList" :loading="monitorLoading" />
           <div style="margin-bottom: 16px; display: flex; justify-content: flex-end;">
             <el-button type="primary" icon="Refresh" @click="fetchHealthMonitorList" :loading="monitorLoading">刷新</el-button>
           </div>
-          <el-table :data="monitorList" v-loading="monitorLoading" style="width: 100%;">
+          <el-table :data="monitorList" v-loading="monitorLoading" style="width: 100%;" :row-class-name="monitorRowClass">
+            <template #empty>
+              <div style="padding: 40px 0; color: #999; font-size: 16px; text-align: center;">
+                暂无健康监测数据
+              </div>
+            </template>
             <el-table-column prop="monitoringTime" label="时间" min-width="140">
               <template #default="{ row }">
                 <span>{{ row.monitoringTime }}</span>
@@ -116,30 +121,52 @@
           </div>
           <div v-else>
             <!-- 查看模式 -->
-            <div class="health-info">
-              <el-row :gutter="20">
-                <el-col :span="12">
-                  <p><strong>身高:</strong> {{ healthForm.height }} cm</p>
-                  <p><strong>体重:</strong> {{ healthForm.weight }} kg</p>
-                  <p><strong>血压:</strong> {{ healthForm.bloodPressure }} mmHg</p>
-                  <p><strong>心率:</strong> {{ healthForm.heartRate }} 次/分</p>
-                </el-col>
-                <el-col :span="12">
-                  <p><strong>血糖:</strong> {{ healthForm.bloodSugar }} mmol/L</p>
-                  <p><strong>体温:</strong> {{ healthForm.temperature }} ℃</p>
-                  <p><strong>既往病史:</strong> {{ healthForm.medicalHistory }}</p>
-                  <p><strong>过敏史:</strong> {{ healthForm.allergy }}</p>
-                </el-col>
-              </el-row>
+            <div class="health-info" ref="healthInfoRef">
               <el-row :gutter="20">
                 <el-col :span="24">
-                  <p><strong>当前症状:</strong> {{ healthForm.symptoms }}</p>
-                  <p><strong>用药情况:</strong> {{ healthForm.medication }}</p>
+                  <el-divider content-position="left">基础指标</el-divider>
+                </el-col>
+                <el-col :span="12">
+                  <p><strong>身高:</strong> {{ healthForm.height || '未填写' }} cm</p>
+                  <p><strong>体重:</strong> {{ healthForm.weight || '未填写' }} kg</p>
+                </el-col>
+                <el-col :span="12">
+                  <p><strong>BMI:</strong> {{ healthForm.bmi || '未填写' }}</p>
+                </el-col>
+                <el-col :span="24">
+                  <el-divider content-position="left">生命体征</el-divider>
+                </el-col>
+                <el-col :span="12">
+                  <p><strong>血压:</strong> <el-tag v-if="isAbnormal('bloodPressure')" type="danger">{{ healthForm.bloodPressure }}</el-tag><span v-else>{{ healthForm.bloodPressure || '未填写' }}</span> mmHg</p>
+                  <p><strong>心率:</strong> <el-tag v-if="isAbnormal('heartRate')" type="danger">{{ healthForm.heartRate }}</el-tag><span v-else>{{ healthForm.heartRate || '未填写' }}</span> 次/分</p>
+                </el-col>
+                <el-col :span="12">
+                  <p><strong>血糖:</strong> <el-tag v-if="isAbnormal('bloodSugar')" type="danger">{{ healthForm.bloodSugar }}</el-tag><span v-else>{{ healthForm.bloodSugar || '未填写' }}</span> mmol/L</p>
+                  <p><strong>体温:</strong> <el-tag v-if="isAbnormal('temperature')" type="danger">{{ healthForm.temperature }}</el-tag><span v-else>{{ healthForm.temperature || '未填写' }}</span> ℃</p>
+                </el-col>
+                <el-col :span="24">
+                  <el-divider content-position="left">健康状况</el-divider>
+                </el-col>
+                <el-col :span="12">
+                  <p><strong>既往病史:</strong> {{ healthForm.medicalHistory || '未填写' }}</p>
+                  <p><strong>过敏史:</strong> {{ healthForm.allergy || '未填写' }}</p>
+                </el-col>
+                <el-col :span="12">
+                  <p><strong>当前症状:</strong> {{ healthForm.symptoms || '未填写' }}</p>
+                  <p><strong>用药情况:</strong> {{ healthForm.medication || '未填写' }}</p>
                 </el-col>
               </el-row>
+              <div style="margin-top: 16px; display: flex; gap: 12px; align-items: center;">
+                <el-button size="small" @click="copyHealthInfo">复制全部</el-button>
+                <el-button size="small" @click="exportHealthInfoPDF">导出PDF</el-button>
+                <span style="color: #999; font-size: 13px; margin-left: 8px;">最后更新时间：{{ healthForm.recordTime ? (healthForm.recordTime.replace('T', ' ').slice(0, 19)) : '无' }}</span>
+              </div>
             </div>
             <el-button type="primary" @click="toggleEditMode">编辑</el-button>
           </div>
+        </el-tab-pane>
+        <el-tab-pane label="体检报告" name="exam">
+          <PhysicalExamReport />
         </el-tab-pane>
       </el-tabs>
     </el-card>
@@ -151,19 +178,23 @@ import { addHealthData, getHealthData, updateHealthData } from '@/api/fore/healt
 import { useHealthMonitorStore } from '@/stores/fore/healthMonitorStore'
 import { useForegroundUserStore } from '@/stores/fore/userStore'
 import { ElMessage } from 'element-plus'
+import html2canvas from 'html2canvas'
+import jsPDF from 'jspdf'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import HealthTrendChart from './HealthTrendChart.vue'
+import PhysicalExamReport from './PhysicalExamReport.vue'
 
 const router = useRouter()
 const healthFormRef = ref(null)
 const isEditMode = ref(false)
 const loading = ref(false)
-const activeTab = ref('monitor')
+const activeTab = ref(localStorage.getItem('health-active-tab') || 'monitor')
 const currentPage = ref(1)
 const pageSize = ref(10)
 const userStore = useForegroundUserStore()
 const healthMonitorStore = useHealthMonitorStore()
+const healthInfoRef = ref(null)
 
 // 健康监测store数据
 const monitorList = computed(() => healthMonitorStore.monitorList)
@@ -315,10 +346,14 @@ const toggleEditMode = () => {
 }
 
 const handleTabChange = (tabName) => {
+  activeTab.value = tabName
+  localStorage.setItem('health-active-tab', tabName)
   if (tabName === 'monitor') {
     fetchHealthMonitorList()
   } else if (tabName === 'profile') {
     fetchHealthData()
+  } else if (tabName === 'exam') {
+    // 体检报告
   }
 }
 
@@ -435,10 +470,73 @@ const monitoringTypeText = (type) => {
   }
 }
 
+function copyHealthInfo() {
+  const info = [
+    '【基础指标】',
+    `身高: ${healthForm.value.height || '未填写'} cm`,
+    `体重: ${healthForm.value.weight || '未填写'} kg`,
+    `BMI: ${healthForm.value.bmi || '未填写'}`,
+    '【生命体征】',
+    `血压: ${healthForm.value.bloodPressure || '未填写'} mmHg`,
+    `心率: ${healthForm.value.heartRate || '未填写'} 次/分`,
+    `血糖: ${healthForm.value.bloodSugar || '未填写'} mmol/L`,
+    `体温: ${healthForm.value.temperature || '未填写'} ℃`,
+    '【健康状况】',
+    `既往病史: ${healthForm.value.medicalHistory || '未填写'}`,
+    `过敏史: ${healthForm.value.allergy || '未填写'}`,
+    `当前症状: ${healthForm.value.symptoms || '未填写'}`,
+    `用药情况: ${healthForm.value.medication || '未填写'}`,
+    `最后更新时间: ${healthForm.value.recordTime ? (healthForm.value.recordTime.replace('T', ' ').slice(0, 19)) : '无'}`
+  ].join('\n')
+  navigator.clipboard.writeText(info).then(() => {
+    ElMessage.success('健康档案已复制到剪贴板')
+  })
+}
+
+function exportHealthInfoPDF() {
+  const el = healthInfoRef.value
+  if (!el) return
+  html2canvas(el, { scale: 2 }).then(canvas => {
+    const imgData = canvas.toDataURL('image/png')
+    const pdf = new jsPDF('p', 'mm', 'a4')
+    const pageWidth = pdf.internal.pageSize.getWidth()
+    const pageHeight = pdf.internal.pageSize.getHeight()
+    // 计算图片宽高，保持比例
+    const imgWidth = pageWidth - 20
+    const imgHeight = canvas.height * imgWidth / canvas.width
+    pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight)
+    pdf.save('健康档案.pdf')
+  })
+}
+
+function monitorRowClass({ row }) {
+  return row.monitoringStatus === 'abnormal' ? 'abnormal-row' : '';
+}
+
+function isAbnormal(field) {
+  if (field === 'bloodPressure' && healthForm.value.bloodPressure) {
+    const [sys, dia] = healthForm.value.bloodPressure.split('/').map(Number);
+    return sys > 140 || dia > 90 || sys < 90 || dia < 60;
+  }
+  if (field === 'bloodSugar' && healthForm.value.bloodSugar) {
+    return healthForm.value.bloodSugar < 3.9 || healthForm.value.bloodSugar > 7.8;
+  }
+  if (field === 'temperature' && healthForm.value.temperature) {
+    return healthForm.value.temperature < 36.0 || healthForm.value.temperature > 37.2;
+  }
+  if (field === 'heartRate' && healthForm.value.heartRate) {
+    return healthForm.value.heartRate < 60 || healthForm.value.heartRate > 100;
+  }
+  return false;
+}
+
 onMounted(async () => {
   const isLoggedIn = await checkLoginStatus();
   if (isLoggedIn) {
     fetchHealthMonitorList();
+  }
+  if (monitorList.value.some(item => item.monitoringStatus === 'abnormal')) {
+    ElMessage.warning('检测到健康异常，请及时关注！')
   }
 })
 </script>
@@ -683,5 +781,10 @@ h3::after {
 :root.dark .health-view .el-input-number.is-controls-right .el-input-number__increase {
   background-color: #252525;
   border-color: #383838;
+}
+
+.abnormal-row {
+  background: #fff0f0 !important;
+  color: #d9001b !important;
 }
 </style>
