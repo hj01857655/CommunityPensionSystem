@@ -15,6 +15,25 @@ import DictTag from '@/components/common/base/DictTag';
 import Pagination from '@/components/common/base/Pagination';
 import { useDict } from '@/utils/dict';
 
+// 1. 引入 ECharts 主模块和渲染器
+import { LineChart } from 'echarts/charts';
+import { GridComponent, LegendComponent, TitleComponent, TooltipComponent } from 'echarts/components';
+import * as echarts from 'echarts/core';
+import { CanvasRenderer } from 'echarts/renderers';
+
+// 2. 注册渲染器和组件
+echarts.use([
+  CanvasRenderer,
+  LineChart,
+  TitleComponent,
+  TooltipComponent,
+  LegendComponent,
+  GridComponent
+])
+
+// 3. 全局注册 vue-echarts
+import VueECharts from 'vue-echarts';
+
 // 全局处理滚动事件监听器的passive选项
 const originalAddEventListener = EventTarget.prototype.addEventListener;
 EventTarget.prototype.addEventListener = function(type, listener, options) {
@@ -42,6 +61,7 @@ app.config.globalProperties.useDict = useDict;
 app.component('DictTag', DictTag);//字典标签
 app.component('Pagination', Pagination);//分页组件
 app.component('RightToolbar', RightToolbar);//右侧工具栏
+app.component('VueECharts', VueECharts)
 // 使用插件
 app.use(router)
 app.use(store)

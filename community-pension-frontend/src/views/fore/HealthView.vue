@@ -4,6 +4,8 @@
       <h3>健康档案</h3>
       <el-tabs v-model="activeTab" @tab-change="handleTabChange">
         <el-tab-pane label="健康监测记录" name="monitor">
+          <!-- 趋势图区域 -->
+          <HealthTrendChart :data="monitorList" :loading="monitorLoading" />
           <div style="margin-bottom: 16px; display: flex; justify-content: flex-end;">
             <el-button type="primary" icon="Refresh" @click="fetchHealthMonitorList" :loading="monitorLoading">刷新</el-button>
           </div>
@@ -151,6 +153,7 @@ import { useForegroundUserStore } from '@/stores/fore/userStore'
 import { ElMessage } from 'element-plus'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import HealthTrendChart from './HealthTrendChart.vue'
 
 const router = useRouter()
 const healthFormRef = ref(null)
