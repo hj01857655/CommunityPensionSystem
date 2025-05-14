@@ -136,7 +136,6 @@ let isRefreshing = false;
 // 添加请求拦截器
 instance.interceptors.request.use(
     config => {
-        // console.log(config)
         // 登录接口不需要token
         const loginPaths = ['/api/auth/login', '/api/auth/adminLogin'];  // 更新登录路径
         if (loginPaths.some(path => config.url === path)) {
@@ -148,13 +147,11 @@ instance.interceptors.request.use(
             return config;
         }
         
-        // console.log('发送请求:', {
-        //     url: config.url,
-        //     method: config.method,
-        //     params: config.params,
-        //     data: config.data,
-        //     headers: config.headers
-        // });
+        // 如果是FormData类型的请求(文件上传)，不要修改Content-Type
+        if (config.data instanceof FormData) {
+            // 删除默认的Content-Type，让浏览器自动添加包含boundary的正确值
+            delete config.headers['Content-Type'];
+        }
         
         // 根据当前路径确定是用户还是管理员
         const isAdmin = window.location.pathname.includes('/admin/');

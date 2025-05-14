@@ -345,10 +345,6 @@ export const useUserStore = defineStore('foreground-user', () => {
         return { code: 200, data: elderInfo.value };
       }
       
-      // 此处可以添加API调用来获取老人详细信息
-      // const response = await fetchElderInfo(elderId);
-      
-      // 模拟返回数据
       return { 
         code: 200, 
         data: { 

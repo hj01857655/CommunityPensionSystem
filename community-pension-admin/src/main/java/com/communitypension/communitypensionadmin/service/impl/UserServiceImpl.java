@@ -21,6 +21,7 @@ import com.communitypension.communitypensionadmin.utils.FileUploadUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -33,15 +34,27 @@ import java.util.List;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 @Transactional(rollbackFor = Exception.class)
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
     // 注入依赖
-    private final UserMapper userMapper;
-    private final RoleMapper roleMapper;
-    private final UserRoleMapper userRoleMapper;
-    private final FileUploadUtil fileUploadUtil;
-    private final ElderKinRelationService elderKinRelationService;
+    @Autowired
+    private UserMapper userMapper;
+    
+    @Autowired
+    private RoleMapper roleMapper;
+    
+    @Autowired
+    private UserRoleMapper userRoleMapper;
+    
+    @Autowired
+    private FileUploadUtil fileUploadUtil;
+    
+    @Autowired
+    private ElderKinRelationService elderKinRelationService;
+
+    public UserServiceImpl() {
+        // 无参构造函数
+    }
 
     /**
      * 根据条件分页查询用户信息
@@ -268,17 +281,22 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public String uploadAvatar(MultipartFile file) {
-        // 上传文件
-        String avatarUrl = fileUploadUtil.uploadFile(file, "avatar");
-
-        // 更新用户头像
-        User currentUser = getCurrentUser();
-        if (currentUser != null) {
-            currentUser.setAvatar(avatarUrl);
-            userMapper.updateById(currentUser);
+        try {
+            // 使用静态方法上传文件，避免依赖注入问题
+            String avatarUrl = FileUploadUtil.upload(file, "avatar");
+            
+            // 更新用户头像
+            User currentUser = getCurrentUser();
+            if (currentUser != null) {
+                currentUser.setAvatar(avatarUrl);
+                userMapper.updateById(currentUser);
+            }
+            
+            return avatarUrl;
+        } catch (Exception e) {
+            log.error("上传头像失败: {}", e.getMessage(), e);
+            throw new RuntimeException("上传头像失败: " + e.getMessage());
         }
-
-        return avatarUrl;
     }
 
     @Override

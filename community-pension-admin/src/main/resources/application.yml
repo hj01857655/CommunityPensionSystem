@@ -18,6 +18,12 @@ spring:
       max-lifetime: 1200000
       connection-timeout: 20000
       connection-test-query: SELECT 1
+  # 文件上传配置
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 15MB
+      enabled: true
 
   # JPA配置
   jpa:
@@ -68,7 +74,7 @@ mybatis-plus:
 # 文件上传配置
 file:
   upload:
-    path: uploads
+    path: D:/uploads
     url-prefix: /upload
 
 logging:

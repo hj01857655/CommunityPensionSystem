@@ -1,6 +1,6 @@
-import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import path from 'path'
+import { defineConfig } from 'vite'
 import { createSvgIconsPlugin } from 'vite-plugin-svg-icons'
 // 配置vite
 export default defineConfig({
@@ -46,6 +46,11 @@ export default defineConfig({
         target: 'http://localhost:9000',
         changeOrigin: true,
         rewrite: (path) => path
+      },
+      '/upload': {
+        target: 'http://localhost:9000',
+        changeOrigin: true,
+        // 不重写路径，保持原样
       },
       '/holiday': {
         target: 'https://api.jiejiariapi.com',

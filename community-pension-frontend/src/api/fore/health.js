@@ -57,11 +57,24 @@ export const addHealthData = (data) => {
         data.bmi = +(data.weight / (heightInMeters * heightInMeters)).toFixed(1)
     }
 
-    return axios.post('/api/health/record/addHealthRecords', {
-        ...data,
-        recordTime: new Date().toISOString(),
-        symptomsRecordTime: new Date().toISOString()
-    })
+    // 如果没有提供日期时间，则生成当前时间并格式化为后端期望的格式
+    if (!data.recordTime || !data.symptomsRecordTime) {
+        const now = new Date();
+        const formattedDateTime = now.getFullYear() + '-' + 
+            String(now.getMonth() + 1).padStart(2, '0') + '-' + 
+            String(now.getDate()).padStart(2, '0') + ' ' + 
+            String(now.getHours()).padStart(2, '0') + ':' + 
+            String(now.getMinutes()).padStart(2, '0') + ':' + 
+            String(now.getSeconds()).padStart(2, '0');
+        
+        return axios.post('/api/health/record/addHealthRecords', {
+            ...data,
+            recordTime: data.recordTime || formattedDateTime,
+            symptomsRecordTime: data.symptomsRecordTime || formattedDateTime
+        })
+    }
+
+    return axios.post('/api/health/record/addHealthRecords', data)
 }
 
 /**

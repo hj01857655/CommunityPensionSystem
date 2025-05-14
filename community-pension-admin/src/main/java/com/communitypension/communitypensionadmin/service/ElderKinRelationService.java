@@ -1,10 +1,12 @@
 package com.communitypension.communitypensionadmin.service;
 
+import com.baomidou.mybatisplus.extension.service.IService;
+import com.communitypension.communitypensionadmin.entity.ElderKinRelation;
 import com.communitypension.communitypensionadmin.entity.User;
 
 import java.util.List;
 
-public interface ElderKinRelationService {
+public interface ElderKinRelationService extends IService<ElderKinRelation> {
     /**
      * 绑定老人和家属关系
      * @param elderId 老人ID
@@ -18,6 +20,7 @@ public interface ElderKinRelationService {
      * 解绑老人和家属关系
      * @param elderId 老人ID
      * @param kinId 家属ID
+     * @param relationType 关系类型
      * @return 是否解绑成功
      */
     boolean unbindRelation(Long elderId, Long kinId, String relationType);

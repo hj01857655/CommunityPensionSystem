@@ -36,8 +36,10 @@ public class JwtInterceptor implements HandlerInterceptor {
                 requestURI.equals("/api/auth/refresh") ||
                 requestURI.equals("/auth/refresh") ||
                 requestURI.startsWith("/static/") ||
-                requestURI.startsWith("/public/")) {
-            logger.info("放行登录接口: {}", requestURI);
+                requestURI.startsWith("/public/") ||
+                requestURI.startsWith("/upload/") ||
+                requestURI.equals("/api/physicalExamReport/upload")) {
+            logger.info("放行请求: {}", requestURI);
             return true;  // 放行这些请求
         }
         logger.info("拦截请求: {}", request.getRequestURI());

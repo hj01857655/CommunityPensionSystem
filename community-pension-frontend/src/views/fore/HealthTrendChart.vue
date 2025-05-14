@@ -6,8 +6,8 @@
         <el-option v-for="item in typeOptions" :key="item.value" :label="item.label" :value="item.value" />
       </el-select>
     </div>
-    <div v-loading="loading" style="height: 320px; position: relative;">
-      <template v-if="filteredData.length > 0">
+    <div v-loading="loading" style="height: 320px; position: relative;" ref="chartContainerRef">
+      <template v-if="isChartVisible && filteredData.length > 0">
         <VueECharts
           ref="chartRef"
           :option="chartOption"
@@ -35,7 +35,7 @@
 
 <script setup>
 import { ElMessage } from 'element-plus'
-import { computed, ref, watch } from 'vue'
+import { computed, defineExpose, nextTick, onMounted, ref, watch } from 'vue'
 import VueECharts from 'vue-echarts'
 
 const props = defineProps({
@@ -55,6 +55,8 @@ const typeOptions = [
 const selectedType = ref('1')
 const chartRef = ref(null)
 const chartReady = ref(false)
+const chartContainerRef = ref(null)
+const isChartVisible = ref(false)
 
 const filteredData = computed(() => {
   return props.data
@@ -122,8 +124,30 @@ function onChartReady() {
   chartReady.value = true
 }
 
-watch([filteredData, selectedType], () => {
+function checkChartVisible() {
+  const el = chartContainerRef.value
+  if (el && el.clientWidth > 0 && el.clientHeight > 0) {
+    isChartVisible.value = true
+  } else {
+    isChartVisible.value = false
+    requestAnimationFrame(checkChartVisible)
+  }
+}
+
+onMounted(() => {
+  requestAnimationFrame(checkChartVisible)
+})
+
+watch([filteredData, selectedType], async () => {
   chartReady.value = false
+  await nextTick()
+  setTimeout(() => {
+    checkChartVisible()
+    chartReady.value = true
+    for (let i = 0; i < 3; i++) {
+      setTimeout(() => resizeChart(), i * 100)
+    }
+  }, 50)
 })
 
 function exportChart() {
@@ -138,6 +162,24 @@ function exportChart() {
     ElMessage.warning('图表尚未渲染，无法导出')
   }
 }
+
+function resizeChart(retry = 10) {
+  // 兼容 vue-echarts 2.x/3.x/4.x
+  const chartDom = chartRef.value?.$el || chartRef.value?.getDom?.() || chartRef.value?.$el?.parentNode
+  if (!chartDom) return
+  if (chartDom.clientWidth === 0 || chartDom.clientHeight === 0) {
+    if (retry > 0) {
+      setTimeout(() => resizeChart(retry - 1), 200)
+    }
+    return
+  }
+  const chart = chartRef.value?.getEchartsInstance?.()
+  if (chart) {
+    chart.resize()
+  }
+}
+
+defineExpose({ resizeChart })
 </script>
 
 <style scoped>
