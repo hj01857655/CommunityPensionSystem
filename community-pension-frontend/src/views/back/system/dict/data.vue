@@ -184,13 +184,12 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, watch,getCurrentInstance } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { useRouter, useRoute } from 'vue-router'
 import { useDictDataStore } from '@/stores/back/dictDataStore'
 import { useDictTypeStore } from '@/stores/back/dictTypeStore'
-import { useDict } from '@/utils/dict'
-import { formatDateTime, formatDateDetail } from '@/utils/date'
+import { formatDateDetail } from '@/utils/date'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { getCurrentInstance, onMounted, reactive, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 const { proxy } = getCurrentInstance()
 const router = useRouter()
 const route = useRoute()
@@ -246,7 +245,12 @@ const form = reactive({
 })
 
 // 获取字典数据列表
-const getList = async () => {
+const getList = async (val) => {
+  // 如果有分页参数传递过来，更新分页信息
+  if (val) {
+    queryParams.current = val.current;
+    queryParams.size = val.size;
+  }
   await dictDataStore.fetchDictDataList(queryParams)
   // 添加调试日志
   console.log('字典数据列表:', dictDataStore.dictDataList)

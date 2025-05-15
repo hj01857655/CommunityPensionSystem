@@ -11,7 +11,7 @@
  Target Server Version : 80400 (8.4.0)
  File Encoding         : 65001
 
- Date: 14/05/2025 21:19:33
+ Date: 15/05/2025 17:58:23
 */
 
 SET NAMES utf8mb4;
@@ -52,36 +52,36 @@ CREATE TABLE `activities`  (
 -- ----------------------------
 -- Records of activities
 -- ----------------------------
-INSERT INTO `activities` VALUES (1, '社区烧烤活动', '7', '欢迎大家参加本次社区烧烤活动，一起享受美食、聊天、玩游戏。', NULL, '2023-05-01 18:00:00', '2023-05-01 21:00:00', NULL, NULL, '社区广场', 100, NULL, 1, NULL, 1, 1, '2025-03-13 18:16:28', '2025-03-30 19:21:03');
-INSERT INTO `activities` VALUES (2, '社区健康讲座', '2', '本次讲座将邀请专业医生为大家讲解如何保持健康的生活方式。', NULL, '2023-05-10 19:30:00', '2023-05-10 21:00:00', NULL, NULL, '社区活动中心', 50, NULL, 1, NULL, 2, 1, '2025-03-13 18:16:28', '2025-03-30 19:21:03');
-INSERT INTO `activities` VALUES (3, '社区植树活动', '4', '让我们一起为社区种下更多绿色植被,共建美丽家园。', NULL, '2023-05-15 09:00:00', '2023-05-15 12:00:00', NULL, NULL, '社区公园', 80, NULL, 1, NULL, 3, 1, '2025-03-13 18:16:28', '2025-03-30 19:21:03');
-INSERT INTO `activities` VALUES (4, '社区亲子游戏日', '9', '孩子们快来参加这次有趣的亲子游戏活动吧!', NULL, '2023-05-20 14:00:00', '2023-05-20 17:00:00', NULL, NULL, '社区活动中心', 60, NULL, 1, NULL, 4, 1, '2025-03-13 18:16:28', '2025-03-30 19:21:03');
-INSERT INTO `activities` VALUES (5, '社区篮球赛', '3', '欢迎大家参加本次社区篮球赛,展现你的球技!', NULL, '2023-05-25 19:00:00', '2023-05-25 21:30:00', NULL, NULL, '社区体育馆', 40, NULL, 1, NULL, 5, 1, '2025-03-13 18:16:28', '2025-03-30 19:21:03');
-INSERT INTO `activities` VALUES (6, '社区书籍交换会', '9', '把你家里的旧书带来,和其他人交换心仪的新书吧。', NULL, '2023-06-01 14:00:00', '2023-06-01 17:00:00', NULL, NULL, '社区图书馆', 30, NULL, 1, NULL, 6, 1, '2025-03-13 18:16:28', '2025-03-30 19:21:03');
-INSERT INTO `activities` VALUES (7, '社区环保讲座', '8', '让我们一起学习如何在日常生活中实践环保理念。', NULL, '2023-06-05 19:30:00', '2023-06-05 21:00:00', NULL, NULL, '社区活动中心', 50, NULL, 1, NULL, 7, 1, '2025-03-13 18:16:28', '2025-03-30 19:22:25');
-INSERT INTO `activities` VALUES (8, '社区DIY手工坊', '9', '来学习制作各种有趣的手工艺品吧!', NULL, '2023-06-10 14:00:00', '2023-06-10 17:00:00', NULL, NULL, '社区活动中心', 40, NULL, 1, NULL, 8, 1, '2025-03-13 18:16:28', '2025-03-30 19:21:03');
-INSERT INTO `activities` VALUES (9, '社区烹饪课', '9', '邀请专业厨师为大家讲解美味佳肴的制作方法。', NULL, '2023-06-15 19:00:00', '2023-06-15 21:30:00', NULL, NULL, '社区活动中心', 30, NULL, 1, NULL, 9, 1, '2025-03-13 18:16:28', '2025-03-30 19:21:03');
-INSERT INTO `activities` VALUES (10, '社区户外拓展', '9', '一起来体验户外拓展活动,增强团队合作能力。', NULL, '2023-06-20 09:00:00', '2023-06-20 16:00:00', NULL, NULL, '社区公园', 60, NULL, 1, NULL, 10, 1, '2025-03-13 18:16:28', '2025-03-30 19:21:03');
-INSERT INTO `activities` VALUES (11, '社区音乐会', '1', '欣赏各种精彩的音乐表演,享受美好的音乐时光。', NULL, '2023-06-25 19:30:00', '2023-06-25 21:30:00', NULL, NULL, '社区文化中心', 80, NULL, 1, NULL, 1, 1, '2025-03-13 18:17:14', '2025-03-30 19:21:03');
-INSERT INTO `activities` VALUES (12, '社区绘画展', '1', '欣赏社区居民的绘画作品,感受艺术的魅力。', NULL, '2023-07-01 14:00:00', '2023-07-01 17:00:00', NULL, NULL, '社区文化中心', 50, NULL, 1, NULL, 2, 1, '2025-03-13 18:17:14', '2025-03-30 19:21:03');
-INSERT INTO `activities` VALUES (13, '社区舞蹈课', '3', '学习各种流行舞蹈,展现自己的舞蹈才能。', NULL, '2023-07-05 19:00:00', '2023-07-05 21:00:00', NULL, NULL, '社区活动中心', 40, NULL, 1, NULL, 3, 1, '2025-03-13 18:17:14', '2025-03-30 19:21:03');
-INSERT INTO `activities` VALUES (14, '社区趣味运动会', '3', '参加各种有趣的运动项目,增强身体素质。', NULL, '2023-07-10 09:00:00', '2023-07-10 12:00:00', NULL, NULL, '社区体育场', 80, NULL, 1, NULL, 4, 1, '2025-03-13 18:17:14', '2025-03-30 19:21:03');
-INSERT INTO `activities` VALUES (15, '社区电影欣赏', '1', '观看精彩的电影作品,享受电影带来的视听盛宴。', NULL, '2023-07-15 19:00:00', '2023-07-15 21:30:00', NULL, NULL, '社区文化中心', 60, NULL, 1, NULL, 5, 1, '2025-03-13 18:17:14', '2025-03-30 19:21:03');
-INSERT INTO `activities` VALUES (16, '社区园艺培训', '6', '学习园艺知识,种植自己喜欢的花草植物。', NULL, '2023-07-20 14:00:00', '2023-07-20 17:00:00', NULL, NULL, '社区公园', 30, NULL, 1, NULL, 6, 1, '2025-03-13 18:17:14', '2025-03-30 19:21:03');
-INSERT INTO `activities` VALUES (17, '社区读书会', '9', '一起分享读书心得,探讨有趣的文学作品。', NULL, '2023-07-25 19:30:00', '2023-07-25 21:00:00', NULL, NULL, '社区图书馆', 20, NULL, 1, NULL, 7, 1, '2025-03-13 18:17:14', '2025-03-30 19:21:03');
-INSERT INTO `activities` VALUES (18, '社区摄影展', '9', '展示社区居民的摄影作品,欣赏生活中的美好瞬间。', NULL, '2023-08-01 14:00:00', '2023-08-01 17:00:00', NULL, NULL, '社区文化中心', 50, NULL, 1, NULL, 8, 1, '2025-03-13 18:17:14', '2025-03-30 19:21:03');
-INSERT INTO `activities` VALUES (19, '社区烹饪大赛', '9', '展示大家的厨艺,品尝各种美味佳肴。', NULL, '2023-08-05 19:00:00', '2023-08-05 21:30:00', NULL, NULL, '社区活动中心', 40, NULL, 1, NULL, 9, 1, '2025-03-13 18:17:14', '2025-03-30 19:21:03');
-INSERT INTO `activities` VALUES (20, '社区户外探险', '9', '一起探索大自然,体验户外运动的乐趣。', NULL, '2023-08-10 09:00:00', '2023-08-10 16:00:00', NULL, NULL, '社区公园', 60, NULL, 1, NULL, 10, 1, '2025-03-13 18:17:14', '2025-03-30 19:21:03');
-INSERT INTO `activities` VALUES (21, '社区音乐会', '1', '欣赏各种精彩的音乐表演,享受美好的音乐时光。', NULL, '2023-06-25 19:30:00', '2023-06-25 21:30:00', NULL, NULL, '社区文化中心', 80, NULL, 1, NULL, 1, 1, '2025-03-13 18:17:30', '2025-03-30 19:21:03');
-INSERT INTO `activities` VALUES (22, '社区绘画展', '1', '欣赏社区居民的绘画作品,感受艺术的魅力。', NULL, '2023-07-01 14:00:00', '2023-07-01 17:00:00', NULL, NULL, '社区文化中心', 50, NULL, 1, NULL, 2, 1, '2025-03-13 18:17:30', '2025-03-30 19:21:03');
-INSERT INTO `activities` VALUES (23, '社区舞蹈课', '3', '学习各种流行舞蹈,展现自己的舞蹈才能。', NULL, '2023-07-05 19:00:00', '2023-07-05 21:00:00', NULL, NULL, '社区活动中心', 40, NULL, 1, NULL, 3, 1, '2025-03-13 18:17:30', '2025-03-30 19:21:03');
-INSERT INTO `activities` VALUES (24, '社区趣味运动会', '3', '参加各种有趣的运动项目,增强身体素质。', NULL, '2023-07-10 09:00:00', '2023-07-10 12:00:00', NULL, NULL, '社区体育场', 80, NULL, 1, NULL, 4, 1, '2025-03-13 18:17:30', '2025-03-30 19:21:03');
-INSERT INTO `activities` VALUES (25, '社区电影欣赏', '1', '观看精彩的电影作品,享受电影带来的视听盛宴。', NULL, '2023-07-15 19:00:00', '2023-07-15 21:30:00', NULL, NULL, '社区文化中心', 60, NULL, 1, NULL, 5, 1, '2025-03-13 18:17:30', '2025-03-30 19:21:03');
-INSERT INTO `activities` VALUES (26, '社区园艺培训', '6', '学习园艺知识,种植自己喜欢的花草植物。', NULL, '2023-07-20 14:00:00', '2023-07-20 17:00:00', NULL, NULL, '社区公园', 30, NULL, 1, NULL, 6, 1, '2025-03-13 18:17:30', '2025-03-30 19:21:03');
-INSERT INTO `activities` VALUES (27, '社区读书会', '9', '一起分享读书心得,探讨有趣的文学作品。', NULL, '2023-07-25 19:30:00', '2023-07-25 21:00:00', NULL, NULL, '社区图书馆', 20, NULL, 1, NULL, 7, 1, '2025-03-13 18:17:30', '2025-03-30 19:21:03');
-INSERT INTO `activities` VALUES (28, '社区摄影展', '9', '展示社区居民的摄影作品,欣赏生活中的美好瞬间。', NULL, '2023-08-01 14:00:00', '2023-08-01 17:00:00', NULL, NULL, '社区文化中心', 50, NULL, 1, NULL, 8, 1, '2025-03-13 18:17:30', '2025-03-30 19:21:03');
-INSERT INTO `activities` VALUES (29, '社区烹饪大赛', '9', '展示大家的厨艺,品尝各种美味佳肴。', NULL, '2023-08-05 19:00:00', '2023-08-05 21:30:00', NULL, NULL, '社区活动中心', 40, NULL, 1, NULL, 9, 1, '2025-03-13 18:17:30', '2025-03-30 19:21:03');
-INSERT INTO `activities` VALUES (30, '社区户外探险', '9', '一起探索大自然,体验户外运动的乐趣。', NULL, '2023-08-10 09:00:00', '2023-08-10 16:00:00', NULL, NULL, '社区公园', 60, NULL, 1, NULL, 10, 1, '2025-03-13 18:17:30', '2025-03-30 19:21:03');
+INSERT INTO `activities` VALUES (1, '社区烧烤活动', '7', '欢迎大家参加本次社区烧烤活动，一起享受美食、聊天、玩游戏。', '/images/activities/default.jpg', '2023-05-01 18:00:00', '2023-05-01 21:00:00', '2023-04-24 18:00:00', '2023-04-30 18:00:00', '社区广场', 100, 5, 1, '健康,娱乐,社交', 1, 1, '2025-03-13 18:16:28', '2025-05-15 17:33:58');
+INSERT INTO `activities` VALUES (2, '社区健康讲座', '2', '本次讲座将邀请专业医生为大家讲解如何保持健康的生活方式。', '/images/activities/default.jpg', '2023-05-10 19:30:00', '2023-05-10 21:00:00', '2023-05-03 19:30:00', '2023-05-09 19:30:00', '社区活动中心', 50, 5, 1, '健康,娱乐,社交', 2, 1, '2025-03-13 18:16:28', '2025-05-15 17:33:58');
+INSERT INTO `activities` VALUES (3, '社区植树活动', '4', '让我们一起为社区种下更多绿色植被,共建美丽家园。', '/images/activities/default.jpg', '2023-05-15 09:00:00', '2023-05-15 12:00:00', '2023-05-08 09:00:00', '2023-05-14 09:00:00', '社区公园', 80, 5, 1, '健康,娱乐,社交', 3, 1, '2025-03-13 18:16:28', '2025-05-15 17:33:58');
+INSERT INTO `activities` VALUES (4, '社区亲子游戏日', '9', '孩子们快来参加这次有趣的亲子游戏活动吧!', '/images/activities/default.jpg', '2023-05-20 14:00:00', '2023-05-20 17:00:00', '2023-05-13 14:00:00', '2023-05-19 14:00:00', '社区活动中心', 60, 5, 1, '健康,娱乐,社交', 4, 1, '2025-03-13 18:16:28', '2025-05-15 17:33:58');
+INSERT INTO `activities` VALUES (5, '社区篮球赛', '3', '欢迎大家参加本次社区篮球赛,展现你的球技!', '/images/activities/default.jpg', '2023-05-25 19:00:00', '2023-05-25 21:30:00', '2023-05-18 19:00:00', '2023-05-24 19:00:00', '社区体育馆', 40, 5, 1, '健康,娱乐,社交', 5, 1, '2025-03-13 18:16:28', '2025-05-15 17:33:58');
+INSERT INTO `activities` VALUES (6, '社区书籍交换会', '9', '把你家里的旧书带来,和其他人交换心仪的新书吧。', '/images/activities/default.jpg', '2023-06-01 14:00:00', '2023-06-01 17:00:00', '2023-05-25 14:00:00', '2023-05-31 14:00:00', '社区图书馆', 30, 5, 1, '健康,娱乐,社交', 6, 1, '2025-03-13 18:16:28', '2025-05-15 17:33:58');
+INSERT INTO `activities` VALUES (7, '社区环保讲座', '8', '让我们一起学习如何在日常生活中实践环保理念。', '/images/activities/default.jpg', '2023-06-05 19:30:00', '2023-06-05 21:00:00', '2023-05-29 19:30:00', '2023-06-04 19:30:00', '社区活动中心', 50, 5, 1, '健康,娱乐,社交', 7, 1, '2025-03-13 18:16:28', '2025-05-15 17:33:58');
+INSERT INTO `activities` VALUES (8, '社区DIY手工坊', '9', '来学习制作各种有趣的手工艺品吧!', '/images/activities/default.jpg', '2023-06-10 14:00:00', '2023-06-10 17:00:00', '2023-06-03 14:00:00', '2023-06-09 14:00:00', '社区活动中心', 40, 5, 1, '健康,娱乐,社交', 8, 1, '2025-03-13 18:16:28', '2025-05-15 17:33:58');
+INSERT INTO `activities` VALUES (9, '社区烹饪课', '9', '邀请专业厨师为大家讲解美味佳肴的制作方法。', '/images/activities/default.jpg', '2023-06-15 19:00:00', '2023-06-15 21:30:00', '2023-06-08 19:00:00', '2023-06-14 19:00:00', '社区活动中心', 30, 5, 1, '健康,娱乐,社交', 9, 1, '2025-03-13 18:16:28', '2025-05-15 17:33:58');
+INSERT INTO `activities` VALUES (10, '社区户外拓展', '9', '一起来体验户外拓展活动,增强团队合作能力。', '/images/activities/default.jpg', '2023-06-20 09:00:00', '2023-06-20 16:00:00', '2023-06-13 09:00:00', '2023-06-19 09:00:00', '社区公园', 60, 5, 1, '健康,娱乐,社交', 10, 1, '2025-03-13 18:16:28', '2025-05-15 17:33:58');
+INSERT INTO `activities` VALUES (11, '社区音乐会', '1', '欣赏各种精彩的音乐表演,享受美好的音乐时光。', '/images/activities/default.jpg', '2023-06-25 19:30:00', '2023-06-25 21:30:00', '2023-06-18 19:30:00', '2023-06-24 19:30:00', '社区文化中心', 80, NULL, 1, '???,???,???', 1, 1, '2025-03-13 18:17:14', '2025-05-15 17:33:11');
+INSERT INTO `activities` VALUES (12, '社区绘画展', '1', '欣赏社区居民的绘画作品,感受艺术的魅力。', '/images/activities/default.jpg', '2023-07-01 14:00:00', '2023-07-01 17:00:00', '2023-06-24 14:00:00', '2023-06-30 14:00:00', '社区文化中心', 50, NULL, 1, '???,???,???', 2, 1, '2025-03-13 18:17:14', '2025-05-15 17:33:11');
+INSERT INTO `activities` VALUES (13, '社区舞蹈课', '3', '学习各种流行舞蹈,展现自己的舞蹈才能。', '/images/activities/default.jpg', '2023-07-05 19:00:00', '2023-07-05 21:00:00', '2023-06-28 19:00:00', '2023-07-04 19:00:00', '社区活动中心', 40, NULL, 1, '???,???,???', 3, 1, '2025-03-13 18:17:14', '2025-05-15 17:33:11');
+INSERT INTO `activities` VALUES (14, '社区趣味运动会', '3', '参加各种有趣的运动项目,增强身体素质。', '/images/activities/default.jpg', '2023-07-10 09:00:00', '2023-07-10 12:00:00', '2023-07-03 09:00:00', '2023-07-09 09:00:00', '社区体育场', 80, NULL, 1, '???,???,???', 4, 1, '2025-03-13 18:17:14', '2025-05-15 17:33:11');
+INSERT INTO `activities` VALUES (15, '社区电影欣赏', '1', '观看精彩的电影作品,享受电影带来的视听盛宴。', '/images/activities/default.jpg', '2023-07-15 19:00:00', '2023-07-15 21:30:00', '2023-07-08 19:00:00', '2023-07-14 19:00:00', '社区文化中心', 60, NULL, 1, '???,???,???', 5, 1, '2025-03-13 18:17:14', '2025-05-15 17:33:11');
+INSERT INTO `activities` VALUES (16, '社区园艺培训', '6', '学习园艺知识,种植自己喜欢的花草植物。', '/images/activities/default.jpg', '2023-07-20 14:00:00', '2023-07-20 17:00:00', '2023-07-13 14:00:00', '2023-07-19 14:00:00', '社区公园', 30, NULL, 1, '???,???,???', 6, 1, '2025-03-13 18:17:14', '2025-05-15 17:33:11');
+INSERT INTO `activities` VALUES (17, '社区读书会', '9', '一起分享读书心得,探讨有趣的文学作品。', '/images/activities/default.jpg', '2023-07-25 19:30:00', '2023-07-25 21:00:00', '2023-07-18 19:30:00', '2023-07-24 19:30:00', '社区图书馆', 20, NULL, 1, '???,???,???', 7, 1, '2025-03-13 18:17:14', '2025-05-15 17:33:11');
+INSERT INTO `activities` VALUES (18, '社区摄影展', '9', '展示社区居民的摄影作品,欣赏生活中的美好瞬间。', '/images/activities/default.jpg', '2023-08-01 14:00:00', '2023-08-01 17:00:00', '2023-07-25 14:00:00', '2023-07-31 14:00:00', '社区文化中心', 50, NULL, 1, '???,???,???', 8, 1, '2025-03-13 18:17:14', '2025-05-15 17:33:11');
+INSERT INTO `activities` VALUES (19, '社区烹饪大赛', '9', '展示大家的厨艺,品尝各种美味佳肴。', '/images/activities/default.jpg', '2023-08-05 19:00:00', '2023-08-05 21:30:00', '2023-07-29 19:00:00', '2023-08-04 19:00:00', '社区活动中心', 40, NULL, 1, '???,???,???', 9, 1, '2025-03-13 18:17:14', '2025-05-15 17:33:11');
+INSERT INTO `activities` VALUES (20, '社区户外探险', '9', '一起探索大自然,体验户外运动的乐趣。', '/images/activities/default.jpg', '2023-08-10 09:00:00', '2023-08-10 16:00:00', '2023-08-03 09:00:00', '2023-08-09 09:00:00', '社区公园', 60, NULL, 1, '???,???,???', 10, 1, '2025-03-13 18:17:14', '2025-05-15 17:33:11');
+INSERT INTO `activities` VALUES (21, '社区音乐会', '1', '欣赏各种精彩的音乐表演,享受美好的音乐时光。', '/images/activities/default.jpg', '2023-06-25 19:30:00', '2023-06-25 21:30:00', '2023-06-18 19:30:00', '2023-06-24 19:30:00', '社区文化中心', 80, NULL, 1, '健康,娱乐,社交', 1, 1, '2025-03-13 18:17:30', '2025-05-15 17:33:12');
+INSERT INTO `activities` VALUES (22, '社区绘画展', '1', '欣赏社区居民的绘画作品,感受艺术的魅力。', '/images/activities/default.jpg', '2023-07-01 14:00:00', '2023-07-01 17:00:00', '2023-06-24 14:00:00', '2023-06-30 14:00:00', '社区文化中心', 50, NULL, 1, '健康,娱乐,社交', 2, 1, '2025-03-13 18:17:30', '2025-05-15 17:33:12');
+INSERT INTO `activities` VALUES (23, '社区舞蹈课', '3', '学习各种流行舞蹈,展现自己的舞蹈才能。', '/images/activities/default.jpg', '2023-07-05 19:00:00', '2023-07-05 21:00:00', '2023-06-28 19:00:00', '2023-07-04 19:00:00', '社区活动中心', 40, NULL, 1, '健康,娱乐,社交', 3, 1, '2025-03-13 18:17:30', '2025-05-15 17:33:12');
+INSERT INTO `activities` VALUES (24, '社区趣味运动会', '3', '参加各种有趣的运动项目,增强身体素质。', '/images/activities/default.jpg', '2023-07-10 09:00:00', '2023-07-10 12:00:00', '2023-07-03 09:00:00', '2023-07-09 09:00:00', '社区体育场', 80, NULL, 1, '健康,娱乐,社交', 4, 1, '2025-03-13 18:17:30', '2025-05-15 17:33:12');
+INSERT INTO `activities` VALUES (25, '社区电影欣赏', '1', '观看精彩的电影作品,享受电影带来的视听盛宴。', '/images/activities/default.jpg', '2023-07-15 19:00:00', '2023-07-15 21:30:00', '2023-07-08 19:00:00', '2023-07-14 19:00:00', '社区文化中心', 60, NULL, 1, '健康,娱乐,社交', 5, 1, '2025-03-13 18:17:30', '2025-05-15 17:33:12');
+INSERT INTO `activities` VALUES (26, '社区园艺培训', '6', '学习园艺知识,种植自己喜欢的花草植物。', '/images/activities/default.jpg', '2023-07-20 14:00:00', '2023-07-20 17:00:00', '2023-07-13 14:00:00', '2023-07-19 14:00:00', '社区公园', 30, NULL, 1, '健康,娱乐,社交', 6, 1, '2025-03-13 18:17:30', '2025-05-15 17:33:12');
+INSERT INTO `activities` VALUES (27, '社区读书会', '9', '一起分享读书心得,探讨有趣的文学作品。', '/images/activities/default.jpg', '2023-07-25 19:30:00', '2023-07-25 21:00:00', '2023-07-18 19:30:00', '2023-07-24 19:30:00', '社区图书馆', 20, NULL, 1, '健康,娱乐,社交', 7, 1, '2025-03-13 18:17:30', '2025-05-15 17:33:12');
+INSERT INTO `activities` VALUES (28, '社区摄影展', '9', '展示社区居民的摄影作品,欣赏生活中的美好瞬间。', '/images/activities/default.jpg', '2023-08-01 14:00:00', '2023-08-01 17:00:00', '2023-07-25 14:00:00', '2023-07-31 14:00:00', '社区文化中心', 50, NULL, 1, '健康,娱乐,社交', 8, 1, '2025-03-13 18:17:30', '2025-05-15 17:33:12');
+INSERT INTO `activities` VALUES (29, '社区烹饪大赛', '9', '展示大家的厨艺,品尝各种美味佳肴。', '/images/activities/default.jpg', '2023-08-05 19:00:00', '2023-08-05 21:30:00', '2023-07-29 19:00:00', '2023-08-04 19:00:00', '社区活动中心', 40, NULL, 1, '健康,娱乐,社交', 9, 1, '2025-03-13 18:17:30', '2025-05-15 17:33:12');
+INSERT INTO `activities` VALUES (30, '社区户外探险', '9', '一起探索大自然,体验户外运动的乐趣。', '/images/activities/default.jpg', '2023-08-10 09:00:00', '2023-08-10 16:00:00', '2023-08-03 09:00:00', '2023-08-09 09:00:00', '社区公园', 60, NULL, 1, '健康,娱乐,社交', 10, 1, '2025-03-13 18:17:30', '2025-05-15 17:33:12');
 
 -- ----------------------------
 -- Table structure for activity_check_in
@@ -237,7 +237,7 @@ CREATE TABLE `dict_data`  (
   `update_time` datetime NULL DEFAULT NULL COMMENT '更新时间',
   `remark` varchar(500) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '备注',
   PRIMARY KEY (`dict_code`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 145 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '字典数据表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 158 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '字典数据表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of dict_data
@@ -323,6 +323,19 @@ INSERT INTO `dict_data` VALUES (141, 1, '待审核', '0', 'activity_register_sta
 INSERT INTO `dict_data` VALUES (142, 2, '已通过', '1', 'activity_register_status', NULL, NULL, 'N', '0', '', NULL, '', NULL, '已通过');
 INSERT INTO `dict_data` VALUES (143, 3, '已拒绝', '2', 'activity_register_status', NULL, NULL, 'N', '0', '', NULL, '', NULL, '已拒绝');
 INSERT INTO `dict_data` VALUES (144, 4, '已取消', '3', 'activity_register_status', NULL, NULL, 'N', '0', '', NULL, '', NULL, '已取消');
+INSERT INTO `dict_data` VALUES (145, 1, '一般检查', '一般检查', 'physical_exam_category', NULL, NULL, 'N', '0', '', NULL, '', NULL, '体重、血压等一般体检项目');
+INSERT INTO `dict_data` VALUES (146, 2, '抽血检查', '抽血检查', 'physical_exam_category', NULL, NULL, 'N', '0', '', NULL, '', NULL, '血常规、生化等抽血检查项目');
+INSERT INTO `dict_data` VALUES (147, 3, 'X光检查', 'X光检查', 'physical_exam_category', NULL, NULL, 'N', '0', '', NULL, '', NULL, 'X光影像检查项目');
+INSERT INTO `dict_data` VALUES (148, 4, 'B超检查', 'B超检查', 'physical_exam_category', NULL, NULL, 'N', '0', '', NULL, '', NULL, '超声检查项目');
+INSERT INTO `dict_data` VALUES (149, 5, '特殊检查', '特殊检查', 'physical_exam_category', NULL, NULL, 'N', '0', '', NULL, '', NULL, '特殊检查项目');
+INSERT INTO `dict_data` VALUES (150, 6, '妇科检查', '妇科检查', 'physical_exam_category', NULL, NULL, 'N', '0', '', NULL, '', NULL, '妇科相关检查项目');
+INSERT INTO `dict_data` VALUES (151, 7, '其他', '其他', 'physical_exam_category', NULL, NULL, 'N', '0', '', NULL, '', NULL, '其他未分类检查项目');
+INSERT INTO `dict_data` VALUES (152, 1, '血脂检查', '血脂检查', 'physical_exam_subcategory', NULL, NULL, 'N', '0', '', NULL, '', NULL, '血脂相关检查项目');
+INSERT INTO `dict_data` VALUES (153, 1, '血脂检查', '血脂检查', 'physical_exam_subcategory', NULL, NULL, 'N', '0', '', NULL, '', NULL, '血脂相关检查项目');
+INSERT INTO `dict_data` VALUES (154, 2, '血常规', '血常规', 'physical_exam_subcategory', NULL, NULL, 'N', '0', '', NULL, '', NULL, '血液常规检查项目');
+INSERT INTO `dict_data` VALUES (155, 3, '肝功能', '肝功能', 'physical_exam_subcategory', NULL, NULL, 'N', '0', '', NULL, '', NULL, '肝功能检查项目');
+INSERT INTO `dict_data` VALUES (156, 4, '肾功能', '肾功能', 'physical_exam_subcategory', NULL, NULL, 'N', '0', '', NULL, '', NULL, '肾功能检查项目');
+INSERT INTO `dict_data` VALUES (157, 5, '尿常规', '尿常规', 'physical_exam_subcategory', NULL, NULL, 'N', '0', '', NULL, '', NULL, '尿液常规检查项目');
 
 -- ----------------------------
 -- Table structure for dict_type
@@ -340,7 +353,7 @@ CREATE TABLE `dict_type`  (
   `remark` varchar(500) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '备注',
   PRIMARY KEY (`dict_id`) USING BTREE,
   UNIQUE INDEX `dict_type`(`dict_type` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 110 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '字典类型表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 112 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '字典类型表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of dict_type
@@ -348,20 +361,22 @@ CREATE TABLE `dict_type`  (
 INSERT INTO `dict_type` VALUES (1, '用户性别', 'user_sex', '0', 'admin', '2025-05-14 17:23:37', 'admin', '2025-05-14 17:23:37', '用户性别列表');
 INSERT INTO `dict_type` VALUES (2, '菜单状态', 'show_hide', '0', 'admin', '2025-05-14 17:23:37', 'admin', '2025-05-14 17:23:37', '菜单状态列表');
 INSERT INTO `dict_type` VALUES (3, '系统开关', 'normal_disable', '0', 'admin', '2025-05-14 17:23:37', 'admin', '2025-05-14 17:23:37', '系统开关列表');
-INSERT INTO `dict_type` VALUES (6, '系统状态', 'yes_no', '0', 'admin', '2025-05-14 17:23:37', 'admin', '2025-05-14 17:23:37', '系统是否列表');
-INSERT INTO `dict_type` VALUES (7, '通知类型', 'notice_type', '0', 'admin', '2025-05-14 17:23:37', 'admin', '2025-05-14 17:23:37', '通知类型列表');
-INSERT INTO `dict_type` VALUES (8, '通知状态', 'notice_status', '0', 'admin', '2025-05-14 17:23:37', 'admin', '2025-05-14 17:23:37', '通知状态列表');
-INSERT INTO `dict_type` VALUES (9, '操作类型', 'oper_type', '0', 'admin', '2025-05-14 17:23:37', 'admin', '2025-05-14 17:23:37', '操作类型列表');
-INSERT INTO `dict_type` VALUES (10, '系统状态', 'common_status', '0', 'admin', '2025-05-14 17:23:37', 'admin', '2025-05-14 17:23:37', '登录状态列表');
-INSERT INTO `dict_type` VALUES (11, '服务类型', 'service_type', '0', 'admin', '2025-04-05 02:09:58', 'admin', '2025-04-05 02:09:58', '服务项目的类型');
-INSERT INTO `dict_type` VALUES (12, '活动类型', 'activity_type', '0', 'admin', '2025-05-14 17:23:39', 'admin', '2025-05-14 17:23:39', '活动类型列表');
-INSERT INTO `dict_type` VALUES (101, '工单状态', 'order_status', '0', 'admin', '2025-04-05 02:09:40', 'admin', '2025-04-05 02:09:40', '服务工单的状态');
-INSERT INTO `dict_type` VALUES (103, '家庭关系类型', 'kinship_type', '0', 'admin', '2025-05-14 17:28:37', 'admin', '2025-05-14 17:28:37', '老人和家属的关系类型');
-INSERT INTO `dict_type` VALUES (105, '健康等级', 'health_level', '0', 'admin', '2025-05-14 17:28:37', 'admin', '2025-05-14 17:28:37', '老人健康状况分级');
-INSERT INTO `dict_type` VALUES (106, '服务评价等级', 'service_rating', '0', 'admin', '2025-05-14 17:28:37', 'admin', '2025-05-14 17:28:37', '服务评价星级');
-INSERT INTO `dict_type` VALUES (107, '老人风险等级', 'elder_risk_level', '0', 'admin', '2025-05-14 17:28:37', 'admin', '2025-05-14 17:28:37', '老人健康风险分级');
-INSERT INTO `dict_type` VALUES (108, '证件类型', 'id_type', '0', 'admin', '2025-05-14 17:28:37', 'admin', '2025-05-14 17:28:37', '用户证件类型');
-INSERT INTO `dict_type` VALUES (109, '活动报名状态', 'activity_register_status', '0', 'admin', '2025-05-14 17:28:37', 'admin', '2025-05-14 17:28:37', '活动报名审核状态');
+INSERT INTO `dict_type` VALUES (4, '系统状态', 'yes_no', '0', 'admin', '2025-05-15 17:48:07', 'admin', '2025-05-15 17:48:07', '系统是否列表');
+INSERT INTO `dict_type` VALUES (5, '通知类型', 'notice_type', '0', 'admin', '2025-05-15 17:48:07', 'admin', '2025-05-15 17:48:07', '通知类型列表');
+INSERT INTO `dict_type` VALUES (6, '通知状态', 'notice_status', '0', 'admin', '2025-05-15 17:48:08', 'admin', '2025-05-15 17:48:08', '通知状态列表');
+INSERT INTO `dict_type` VALUES (7, '操作类型', 'oper_type', '0', 'admin', '2025-05-15 17:48:09', 'admin', '2025-05-15 17:48:09', '操作类型列表');
+INSERT INTO `dict_type` VALUES (8, '系统状态', 'common_status', '0', 'admin', '2025-05-15 17:48:10', 'admin', '2025-05-15 17:48:10', '登录状态列表');
+INSERT INTO `dict_type` VALUES (9, '服务类型', 'service_type', '0', 'admin', '2025-05-15 17:48:10', 'admin', '2025-05-15 17:48:10', '服务项目的类型');
+INSERT INTO `dict_type` VALUES (10, '活动类型', 'activity_type', '0', 'admin', '2025-05-15 17:48:12', 'admin', '2025-05-15 17:48:12', '活动类型列表');
+INSERT INTO `dict_type` VALUES (11, '工单状态', 'order_status', '0', 'admin', '2025-05-15 17:48:13', 'admin', '2025-05-15 17:48:13', '服务工单的状态');
+INSERT INTO `dict_type` VALUES (12, '家庭关系类型', 'kinship_type', '0', 'admin', '2025-05-15 17:48:14', 'admin', '2025-05-15 17:48:14', '老人和家属的关系类型');
+INSERT INTO `dict_type` VALUES (13, '健康等级', 'health_level', '0', 'admin', '2025-05-15 17:48:15', 'admin', '2025-05-15 17:48:15', '老人健康状况分级');
+INSERT INTO `dict_type` VALUES (14, '服务评价等级', 'service_rating', '0', 'admin', '2025-05-15 17:48:16', 'admin', '2025-05-15 17:48:16', '服务评价星级');
+INSERT INTO `dict_type` VALUES (15, '老人风险等级', 'elder_risk_level', '0', 'admin', '2025-05-15 17:48:17', 'admin', '2025-05-15 17:48:17', '老人健康风险分级');
+INSERT INTO `dict_type` VALUES (16, '证件类型', 'id_type', '0', 'admin', '2025-05-15 17:48:18', 'admin', '2025-05-15 17:48:18', '用户证件类型');
+INSERT INTO `dict_type` VALUES (17, '活动报名状态', 'activity_register_status', '0', 'admin', '2025-05-15 17:48:19', 'admin', '2025-05-15 17:48:19', '活动报名审核状态');
+INSERT INTO `dict_type` VALUES (18, '体检报告分类', 'physical_exam_category', '0', '', '2025-05-15 17:48:20', '', '2025-05-15 17:48:20', '体检报告中的检查项目分类');
+INSERT INTO `dict_type` VALUES (19, '体检报告子类型', 'physical_exam_subcategory', '0', '', '2025-05-15 17:48:23', '', '2025-05-15 17:48:23', '体检报告中的检查项目子类型');
 
 -- ----------------------------
 -- Table structure for elder_kin_relation
@@ -408,7 +423,11 @@ CREATE TABLE `health_alert`  (
   INDEX `idx_alert_time`(`alert_time` ASC) USING BTREE,
   INDEX `idx_alert_level`(`alert_level` ASC) USING BTREE,
   INDEX `idx_status`(`status` ASC) USING BTREE,
-  INDEX `idx_related_data_id`(`related_data_id` ASC) USING BTREE
+  INDEX `idx_related_data_id`(`related_data_id` ASC) USING BTREE,
+  INDEX `fk_health_alert_handler`(`handler_id` ASC) USING BTREE,
+  CONSTRAINT `fk_health_alert_elder` FOREIGN KEY (`elder_id`) REFERENCES `user` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_health_alert_handler` FOREIGN KEY (`handler_id`) REFERENCES `user` (`user_id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `fk_health_alert_monitor` FOREIGN KEY (`related_data_id`) REFERENCES `health_monitoring` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '健康预警表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
@@ -449,10 +468,10 @@ CREATE TABLE `health_monitoring`  (
 -- ----------------------------
 -- Records of health_monitoring
 -- ----------------------------
-INSERT INTO `health_monitoring` VALUES (1, 2, '1', '125/78', 'mmHg', '2025-05-07 09:00:00', NULL, 'normal', NULL, NULL, 0, NULL, NULL, NULL, NULL, '2025-05-06 21:18:04', '2025-05-06 21:18:04');
-INSERT INTO `health_monitoring` VALUES (2, 2, '3', '36.8', '°C', '2025-05-07 11:00:00', NULL, 'normal', NULL, NULL, 0, NULL, NULL, NULL, NULL, '2025-05-06 21:18:04', '2025-05-06 21:18:04');
-INSERT INTO `health_monitoring` VALUES (3, 2, '2', '6.5', 'mmol/L', '2025-05-08 08:30:00', 'DeviceC', 'normal', NULL, NULL, 0, NULL, NULL, NULL, NULL, '2025-05-06 23:52:22', '2025-05-06 23:52:22');
-INSERT INTO `health_monitoring` VALUES (4, 2, '4', '110', 'bpm', '2025-05-08 09:45:00', NULL, 'abnormal', 'medium', 'Heart rate consistently high during monitoring period.', 0, NULL, NULL, NULL, NULL, '2025-05-06 23:52:22', '2025-05-06 23:53:04');
+INSERT INTO `health_monitoring` VALUES (1, 2, '1', '125/78', 'mmHg', '2025-05-07 09:00:00', 'DEV00001', 'normal', NULL, NULL, 0, NULL, NULL, NULL, 15, '2025-05-06 21:18:04', '2025-05-15 17:34:27');
+INSERT INTO `health_monitoring` VALUES (2, 2, '3', '36.8', '°C', '2025-05-07 11:00:00', 'DEV00002', 'normal', NULL, NULL, 0, NULL, NULL, NULL, 15, '2025-05-06 21:18:04', '2025-05-15 17:34:27');
+INSERT INTO `health_monitoring` VALUES (3, 2, '2', '6.5', 'mmol/L', '2025-05-08 08:30:00', 'DeviceC', 'normal', NULL, NULL, 0, NULL, NULL, NULL, 15, '2025-05-06 23:52:22', '2025-05-15 17:34:27');
+INSERT INTO `health_monitoring` VALUES (4, 2, '4', '110', 'bpm', '2025-05-08 09:45:00', 'DEV00004', 'abnormal', 'medium', 'Heart rate consistently high during monitoring period.', 0, NULL, NULL, NULL, 15, '2025-05-06 23:52:22', '2025-05-15 17:34:27');
 
 -- ----------------------------
 -- Table structure for health_records
@@ -573,22 +592,21 @@ CREATE TABLE `notification`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_status`(`status` ASC) USING BTREE,
   INDEX `idx_publish_time`(`publish_time` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 15 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '通知公告表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 16 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '通知公告表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of notification
 -- ----------------------------
-INSERT INTO `notification` VALUES (1, 0, '社区健康讲座通知', '计划于下月举办老年人健康知识讲座，具体时间待定', NULL, 0, '2023-03-27 09:00:00', '2025-03-28 16:40:54', '2025-03-28 16:41:46');
-INSERT INTO `notification` VALUES (2, 0, '端午节活动筹备', '端午节包粽子活动正在筹备中，需要志愿者报名', NULL, 0, '2023-03-27 10:00:00', '2025-03-28 16:41:56', '2023-05-15 14:30:00');
-INSERT INTO `notification` VALUES (3, 0, '系统维护通知', '系统将于今晚23:00-24:00进行维护升级，期间暂停服务', NULL, 1, '2023-03-27 11:00:00', '2025-03-28 16:42:07', '2023-05-20 15:00:00');
-INSERT INTO `notification` VALUES (4, 0, '老年体检安排', '6月1日-6月5日社区医院为65岁以上老人提供免费体检', NULL, 1, '2023-03-27 11:00:00', '2025-03-28 16:42:13', '2023-05-25 09:00:00');
-INSERT INTO `notification` VALUES (5, 0, '防诈骗知识讲座', '5月30日下午2点社区活动中心举办老年人防诈骗讲座', NULL, 1, '2023-03-27 10:00:00', '2025-03-28 16:42:03', '2023-05-28 10:30:00');
-INSERT INTO `notification` VALUES (6, 0, '错误通知示例', '此通知内容有误，已撤回', NULL, 2, '2023-03-27 10:00:00', '2025-03-28 16:42:03', '2023-05-18 08:00:00');
-INSERT INTO `notification` VALUES (7, 0, '活动取消通知', '原定于5月22日的书法班因故取消，时间另行通知', NULL, 2, '2023-03-27 10:00:00', '2025-03-28 16:42:03', '2023-05-21 13:00:00');
-INSERT INTO `notification` VALUES (8, 0, '重要：医保政策更新', '2023年最新医保报销政策已更新，请及时查看', NULL, 1, '2023-03-27 10:00:00', '2025-03-28 16:42:03', '2023-06-01 09:00:00');
-INSERT INTO `notification` VALUES (9, 2, '服务预约通知', '尊敬的刘大毛用户，您的服务预约（预约号：2）预约已创建，等待审核。预约时间：2025-04-29 08:33:00，服务项目：null。', NULL, 0, '2025-04-05 00:33:49', '2025-04-05 00:33:49', '2025-04-05 00:33:49');
-INSERT INTO `notification` VALUES (10, 2, '服务预约通知', '尊敬的刘大毛用户，您的服务预约（预约号：3）预约已创建，等待审核。预约时间：2025-04-29 10:40:00，服务项目：null。', NULL, 0, '2025-04-05 00:39:10', '2025-04-05 00:39:10', '2025-04-05 00:39:10');
-INSERT INTO `notification` VALUES (11, 2, '服务预约通知', '尊敬的刘大毛用户，您的服务预约（预约号：4）预约已创建，等待审核。预约时间：2025-04-29 08:54:00，服务项目：null。', NULL, 0, '2025-04-05 00:54:48', '2025-04-05 00:54:48', '2025-04-05 00:54:48');
+INSERT INTO `notification` VALUES (1, 0, '社区健康讲座通知', '计划于下月举办老年人健康知识讲座，具体时间待定', 'system', 0, '2023-03-27 09:00:00', '2025-05-15 17:34:05', '2025-03-28 16:41:46');
+INSERT INTO `notification` VALUES (2, 0, '端午节活动筹备', '端午节包粽子活动正在筹备中，需要志愿者报名', 'system', 0, '2023-03-27 10:00:00', '2025-05-15 17:34:05', '2023-05-15 14:30:00');
+INSERT INTO `notification` VALUES (3, 0, '系统维护通知', '系统将于今晚23:00-24:00进行维护升级，期间暂停服务', 'system', 1, '2023-03-27 11:00:00', '2025-05-15 17:34:05', '2023-05-20 15:00:00');
+INSERT INTO `notification` VALUES (5, 0, '防诈骗知识讲座', '5月30日下午2点社区活动中心举办老年人防诈骗讲座', 'system', 1, '2023-03-27 10:00:00', '2025-05-15 17:34:05', '2023-05-28 10:30:00');
+INSERT INTO `notification` VALUES (6, 0, '错误通知示例', '此通知内容有误，已撤回', 'system', 2, '2023-03-27 10:00:00', '2025-05-15 17:34:05', '2023-05-18 08:00:00');
+INSERT INTO `notification` VALUES (7, 0, '活动取消通知', '原定于5月22日的书法班因故取消，时间另行通知', 'system', 2, '2023-03-27 10:00:00', '2025-05-15 17:34:05', '2023-05-21 13:00:00');
+INSERT INTO `notification` VALUES (8, 0, '重要：医保政策更新', '2023年最新医保报销政策已更新，请及时查看', 'system', 1, '2023-03-27 10:00:00', '2025-05-15 17:34:05', '2023-06-01 09:00:00');
+INSERT INTO `notification` VALUES (9, 2, '服务预约通知', '尊敬的刘大毛用户，您的服务预约（预约号：2）预约已创建，等待审核。预约时间：2025-04-29 08:33:00，服务项目：null。', 'system', 0, '2025-04-05 00:33:49', '2025-05-15 17:34:05', '2025-04-05 00:33:49');
+INSERT INTO `notification` VALUES (10, 2, '服务预约通知', '尊敬的刘大毛用户，您的服务预约（预约号：3）预约已创建，等待审核。预约时间：2025-04-29 10:40:00，服务项目：null。', 'system', 0, '2025-04-05 00:39:10', '2025-05-15 17:34:05', '2025-04-05 00:39:10');
+INSERT INTO `notification` VALUES (15, 2, '服务预约通知', '尊敬的刘大毛用户，\n\n您的服务预约（预约号：5）预约审核通过。\n\n预约详情：\n- 服务项目：null\n- 预约时间：2025-05-28 15:11:00\n\n您的预约已通过审核，服务人员将按预约时间上门服务，请保持电话畅通。\n\n如有疑问，请联系客服中心。', 'system', 0, '2025-05-15 15:03:14', '2025-05-15 15:03:14', '2025-05-15 15:03:14');
 
 -- ----------------------------
 -- Table structure for physical_exam_report
@@ -596,7 +614,11 @@ INSERT INTO `notification` VALUES (11, 2, '服务预约通知', '尊敬的刘大
 DROP TABLE IF EXISTS `physical_exam_report`;
 CREATE TABLE `physical_exam_report`  (
   `id` bigint NOT NULL AUTO_INCREMENT COMMENT '体检报告ID',
+  `report_no` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '体检报告编号',
   `elder_id` bigint NOT NULL COMMENT '老人ID，关联user表',
+  `elder_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '老人姓名',
+  `age` int NULL DEFAULT NULL COMMENT '年龄',
+  `gender` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '性别',
   `recorder_id` bigint NULL DEFAULT NULL COMMENT '上传人ID，关联user表',
   `date` date NOT NULL COMMENT '体检日期',
   `hospital` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '体检医院',
@@ -614,8 +636,8 @@ CREATE TABLE `physical_exam_report`  (
 -- ----------------------------
 -- Records of physical_exam_report
 -- ----------------------------
-INSERT INTO `physical_exam_report` VALUES (1, 2, 2, '2024-05-01', '市人民医院', '血脂偏高，建议复查', '/upload/physical_exam/57088d81-7643-4cc0-bc25-6032fa57fcce.pdf', '2025-05-13 17:59:09', '2025-05-13 17:59:09');
-INSERT INTO `physical_exam_report` VALUES (2, 2, 2, '2023-11-15', '社区卫生服务中心', '各项指标正常', '/upload/physical_exam/d798d64c-8859-49fb-9477-f483c2163dfd.pdf', '2025-05-13 17:59:09', '2025-05-13 17:59:09');
+INSERT INTO `physical_exam_report` VALUES (1, 'PE20240001', 2, '张三', 75, '男', 2, '2024-05-01', '市人民医院', '血脂偏高，建议复查', '/upload/physical_exam/57088d81-7643-4cc0-bc25-6032fa57fcce.pdf', '2025-05-13 17:59:09', '2025-05-15 17:25:21');
+INSERT INTO `physical_exam_report` VALUES (2, 'PE20230002', 2, '李四', 77, '女', 2, '2023-11-15', '社区卫生服务中心', '各项指标正常', '/upload/physical_exam/d798d64c-8859-49fb-9477-f483c2163dfd.pdf', '2025-05-13 17:59:09', '2025-05-15 17:30:10');
 
 -- ----------------------------
 -- Table structure for physical_exam_report_item
@@ -628,6 +650,9 @@ CREATE TABLE `physical_exam_report_item`  (
   `item_value` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '指标值',
   `item_unit` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '单位',
   `abnormal_flag` tinyint(1) NULL DEFAULT 0 COMMENT '是否异常(0-正常 1-异常)',
+  `category` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '检查项目分类',
+  `remark` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '备注',
+  `normal_range` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '正常参考范围',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_report_id`(`report_id` ASC) USING BTREE,
   CONSTRAINT `fk_report_item_report` FOREIGN KEY (`report_id`) REFERENCES `physical_exam_report` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
@@ -636,14 +661,14 @@ CREATE TABLE `physical_exam_report_item`  (
 -- ----------------------------
 -- Records of physical_exam_report_item
 -- ----------------------------
-INSERT INTO `physical_exam_report_item` VALUES (9, 1, '总胆固醇', '6.2', 'mmol/L', 1);
-INSERT INTO `physical_exam_report_item` VALUES (10, 1, '甘油三酯', '1.8', 'mmol/L', 0);
-INSERT INTO `physical_exam_report_item` VALUES (11, 1, '高密度脂蛋白', '1.1', 'mmol/L', 0);
-INSERT INTO `physical_exam_report_item` VALUES (12, 1, '低密度脂蛋白', '4.0', 'mmol/L', 1);
-INSERT INTO `physical_exam_report_item` VALUES (13, 2, '总胆固醇', '4.8', 'mmol/L', 0);
-INSERT INTO `physical_exam_report_item` VALUES (14, 2, '甘油三酯', '1.2', 'mmol/L', 0);
-INSERT INTO `physical_exam_report_item` VALUES (15, 2, '高密度脂蛋白', '1.3', 'mmol/L', 0);
-INSERT INTO `physical_exam_report_item` VALUES (16, 2, '低密度脂蛋白', '2.5', 'mmol/L', 0);
+INSERT INTO `physical_exam_report_item` VALUES (9, 1, '总胆固醇', '6.2', 'mmol/L', 1, '血脂检查', '注意控制饮食', '3.1-5.7 mmol/L');
+INSERT INTO `physical_exam_report_item` VALUES (10, 1, '甘油三酯', '1.8', 'mmol/L', 0, '血脂检查', '维持良好生活习惯', '0.56-1.7 mmol/L');
+INSERT INTO `physical_exam_report_item` VALUES (11, 1, '高密度脂蛋白', '1.1', 'mmol/L', 0, '血脂检查', 'HDL-C俗称好胆固醇', '1.0-1.6 mmol/L');
+INSERT INTO `physical_exam_report_item` VALUES (12, 1, '低密度脂蛋白', '4.0', 'mmol/L', 1, '血脂检查', 'LDL-C俗称坏胆固醇，需控制在标准范围内', '2.07-3.1 mmol/L');
+INSERT INTO `physical_exam_report_item` VALUES (13, 2, '总胆固醇', '4.8', 'mmol/L', 0, '血脂检查', '注意控制饮食', '3.1-5.7 mmol/L');
+INSERT INTO `physical_exam_report_item` VALUES (14, 2, '甘油三酯', '1.2', 'mmol/L', 0, '血脂检查', '维持良好生活习惯', '0.56-1.7 mmol/L');
+INSERT INTO `physical_exam_report_item` VALUES (15, 2, '高密度脂蛋白', '1.3', 'mmol/L', 0, '血脂检查', 'HDL-C俗称好胆固醇', '1.0-1.6 mmol/L');
+INSERT INTO `physical_exam_report_item` VALUES (16, 2, '低密度脂蛋白', '2.5', 'mmol/L', 0, '血脂检查', 'LDL-C俗称坏胆固醇，需控制在标准范围内', '2.07-3.1 mmol/L');
 
 -- ----------------------------
 -- Table structure for role
@@ -752,7 +777,7 @@ CREATE TABLE `service_order`  (
 -- ----------------------------
 INSERT INTO `service_order` VALUES (3, 2, 1001, 1, '13433432', '1', '2025-04-29 10:40:00', NULL, NULL, NULL, '2025-04-05 00:39:10', NULL, '2025-04-05 00:39:10', NULL);
 INSERT INTO `service_order` VALUES (4, 2, 3002, 1, '要求认真仔细一点的阿姨', '1', '2025-04-29 08:54:00', NULL, NULL, NULL, '2025-04-05 00:54:48', NULL, '2025-04-05 00:54:48', NULL);
-INSERT INTO `service_order` VALUES (5, 2, 1001, 0, '1111111111111111111', NULL, '2025-05-28 15:11:00', NULL, NULL, 'Ldamao', '2025-05-05 17:12:04', 'Ldamao', '2025-05-05 17:12:04', NULL);
+INSERT INTO `service_order` VALUES (5, 2, 1001, 1, '1111111111111111111', '111', '2025-05-28 15:11:00', NULL, NULL, 'Ldamao', '2025-05-05 17:12:04', 'Ldamao', '2025-05-05 17:12:04', NULL);
 
 -- ----------------------------
 -- Table structure for service_review
@@ -833,9 +858,9 @@ CREATE TABLE `user`  (
 -- ----------------------------
 -- Records of user
 -- ----------------------------
-INSERT INTO `user` VALUES (1, 'admin', '123456', '超级管理员', '女', '13800000001', 'bob.builder@hotmail.com', '深圳市南山区科技园中区', '/avatar/zhangdaye.jpg', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'admin', '2025-02-26 04:06:56', NULL, '2025-03-27 22:16:52', '');
-INSERT INTO `user` VALUES (2, 'Ldamao', '123456', '刘大毛', '女', '13800000002', 'mao.builder@hotmail.com', '深圳市南山区科技园中区', '/avatar/zhangdaye.jpg', 1, '', '', '340881199005204216', '1990-05-20', 35, '张伟', '13812345678', '中等，需定期监测血压、血糖，并注意饮食控制。', 'staff', '2025-03-22 19:46:06', NULL, '2025-03-28 15:22:26', '');
-INSERT INTO `user` VALUES (3, 'Lxiaomao', '123456', '刘小毛', '男', '13800000004', 'mao.builder@hotmail.com', '深圳市南山区科技园中区', '/avatar/zhangdaye.jpg', 1, '', '', '', NULL, NULL, '', '', '', 'staff', '2025-03-27 15:38:04', NULL, '2025-03-28 15:22:21', '');
+INSERT INTO `user` VALUES (1, 'admin', '123456', '超级管理员', '女', '13800000002', 'bob.builder@hotmail.com', '深圳市南山区科技园中区', '/avatar/zhangdaye.jpg', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'admin', '2025-02-26 04:06:56', 'admin', '2025-05-15 17:44:24', '');
+INSERT INTO `user` VALUES (2, 'Ldamao', '123456', '刘大毛', '女', '13800000042', 'mao.builder@hotmail.com', '深圳市南山区科技园中区', '/avatar/zhangdaye.jpg', 1, '', '', '340881199005204216', '1990-05-20', 35, '张伟', '13812345678', '中等，需定期监测血压、血糖，并注意饮食控制。', 'staff', '2025-03-22 19:46:06', 'admin', '2025-05-15 17:15:49', '');
+INSERT INTO `user` VALUES (3, 'Lxiaomao', '123456', '刘小毛', '男', '13800000034', 'mao.builder@hotmail.com', '深圳市南山区科技园中区', '/avatar/zhangdaye.jpg', 1, '', '', '', NULL, NULL, '', '', '', 'staff', '2025-03-27 15:38:04', 'admin', '2025-05-15 17:15:55', '');
 INSERT INTO `user` VALUES (25, 'Lshumei', '123456', '刘淑梅', '未知', '15349545835', 'yopsu@mailto.plus', NULL, NULL, 1, '', '', '12345619900101123X', '1990-01-01', 35, '王小明', '13987654321  ', '慢性咳嗽', NULL, NULL, NULL, NULL, '');
 INSERT INTO `user` VALUES (26, 'Wdaniu', '123456', '王大牛', '未知', '13458684687', '23468746@qq.com', NULL, NULL, 1, '', '', '', NULL, NULL, '', '', '', 'admin', '2025-04-06 14:59:16', 'admin', '2025-04-06 14:59:16', '');
 

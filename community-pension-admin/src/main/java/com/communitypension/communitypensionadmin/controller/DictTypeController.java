@@ -32,7 +32,7 @@ public class DictTypeController {
         wrapper.like(dictType.getDictName() != null, DictType::getDictName, dictType.getDictName())
                 .eq(dictType.getStatus() != null, DictType::getStatus, dictType.getStatus())
                 .eq(dictType.getDictType() != null, DictType::getDictType, dictType.getDictType())
-                .orderByDesc(DictType::getCreateTime);
+                .orderByAsc(DictType::getDictId);
         return Result.success(dictTypeService.page(page, wrapper));
     }
     

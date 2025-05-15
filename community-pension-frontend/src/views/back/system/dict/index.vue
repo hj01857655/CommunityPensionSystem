@@ -143,8 +143,8 @@
       <pagination
         v-show="dictTypeStore.dictTypeTotal > 0"
         :total="dictTypeStore.dictTypeTotal"
-        :page.sync="queryParams.pageNum"
-        :limit.sync="queryParams.pageSize"
+        :current="queryParams.current"
+        :size="queryParams.size"
         @pagination="getList"
       />
 
@@ -178,12 +178,12 @@
 </template>
 
 <script setup name="Dict">
-import { ref, reactive, onMounted, computed, getCurrentInstance, toRefs } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { useRouter } from 'vue-router'
-import { formatDateTime } from '@/utils/date'
 import { useDictTypeStore } from '@/stores/back/dictTypeStore'
+import { formatDateTime } from '@/utils/date'
 import { useDict } from '@/utils/dict'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { computed, getCurrentInstance, onMounted, reactive, ref, toRefs } from 'vue'
+import { useRouter } from 'vue-router'
 
 const dictTypeStore = useDictTypeStore()
 const router = useRouter()
@@ -218,8 +218,8 @@ const title = ref("")
 const data = reactive({
   form: {},
   queryParams: {
-    pageNum: 1, //当前页
-    pageSize: 10, //每页条数
+    current: 1, //当前页
+    size: 10, //每页条数
     dictName: undefined, //字典名称
     dictType: undefined, //字典类型
     status: undefined //状态
@@ -233,12 +233,17 @@ const data = reactive({
 const { queryParams, form, rules } = toRefs(data)
 
 // 获取字典类型列表
-const getList = async () => {
-  loading.value=true;
-  await dictTypeStore.fetchDictTypeList(queryParams.value).then(response=>{
-    typeList.value=response.records;
-    total.value=response.total;
-    loading.value=false;
+const getList = async (val) => {
+  loading.value = true;
+  // 如果有分页参数传递过来，更新分页信息
+  if (val) {
+    queryParams.value.current = val.current;
+    queryParams.value.size = val.size;
+  }
+  await dictTypeStore.fetchDictTypeList(queryParams.value).then(response => {
+    typeList.value = response.records;
+    total.value = response.total;
+    loading.value = false;
   })
 }
 
@@ -262,7 +267,7 @@ const reset = () => {
 
 // 搜索按钮操作
 const handleQuery = () => {
-  queryParams.pageNum = 1
+  queryParams.current = 1
   getList();
 }
 
@@ -372,13 +377,13 @@ const handleStatusChange = async (row) => {
 
 // 分页大小改变
 const handleSizeChange = (val) => {
-  queryParams.pageSize = val
+  queryParams.size = val
   getList()
 }
 
 // 页码改变
 const handleCurrentChange = (val) => {
-  queryParams.pageNum = val
+  queryParams.current = val
   getList()
 }
 

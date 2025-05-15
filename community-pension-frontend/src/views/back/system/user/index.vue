@@ -305,6 +305,92 @@
         </template>
       </el-dialog>
       
+      <!-- 添加新的绑定关系对话框 -->
+      <el-dialog 
+        :title="bindType === 'elder' ? '绑定老人' : '绑定家属'" 
+        v-model="bindDialogVisible" 
+        width="500px" 
+        append-to-body
+      >
+        <div v-loading="bindLoading">
+          <!-- 家属绑定老人 -->
+          <template v-if="bindType === 'elder'">
+            <el-form ref="bindFormRef" :model="bindForm" label-width="80px">
+              <el-form-item label="家属信息">
+                <div>{{ bindForm.name }} ({{ bindForm.phone || '未填写电话' }})</div>
+              </el-form-item>
+              <el-form-item label="选择老人" prop="targetId">
+                <el-select v-model="bindForm.targetId" placeholder="请选择要绑定的老人" filterable style="width: 100%">
+                  <el-option
+                    v-for="elder in availableElderList"
+                    :key="elder.value"
+                    :label="elder.label"
+                    :value="elder.value"
+                  />
+                </el-select>
+              </el-form-item>
+              <el-form-item label="关系类型" prop="relationType">
+                <el-select v-model="bindForm.relationType" placeholder="请选择与老人的关系" style="width: 100%">
+                  <el-option label="子女" value="子女" />
+                  <el-option label="配偶" value="配偶" />
+                  <el-option label="兄弟姐妹" value="兄弟姐妹" />
+                  <el-option label="其他亲属" value="其他亲属" />
+                </el-select>
+              </el-form-item>
+            </el-form>
+          </template>
+          
+          <!-- 老人绑定家属 -->
+          <template v-else-if="bindType === 'kin'">
+            <el-form ref="bindFormRef" :model="bindForm" label-width="80px">
+              <el-form-item label="老人信息">
+                <div>{{ bindForm.name }} ({{ bindForm.idCard || '未填写身份证' }})</div>
+              </el-form-item>
+              <el-form-item label="选择家属" prop="targetId">
+                <el-select v-model="bindForm.targetId" placeholder="请选择要绑定的家属" filterable style="width: 100%">
+                  <el-option
+                    v-for="kin in availableKinList"
+                    :key="kin.value"
+                    :label="kin.label"
+                    :value="kin.value"
+                  />
+                </el-select>
+              </el-form-item>
+              <el-form-item label="关系类型" prop="relationType">
+                <el-select v-model="bindForm.relationType" placeholder="请选择与家属的关系" style="width: 100%">
+                  <el-option label="子女" value="子女" />
+                  <el-option label="配偶" value="配偶" />
+                  <el-option label="兄弟姐妹" value="兄弟姐妹" />
+                  <el-option label="其他亲属" value="其他亲属" />
+                </el-select>
+              </el-form-item>
+            </el-form>
+          </template>
+          
+          <!-- 已绑定关系列表 -->
+          <div v-if="currentBindings.length > 0" class="mt-3">
+            <div class="bind-list-title">已绑定{{ bindType === 'elder' ? '老人' : '家属' }}:</div>
+            <el-table :data="currentBindings" style="width: 100%" border stripe>
+              <el-table-column prop="name" :label="bindType === 'elder' ? '老人姓名' : '家属姓名'" />
+              <el-table-column prop="relationType" label="关系类型" />
+              <el-table-column label="操作" width="100" align="center">
+                <template #default="scope">
+                  <el-button type="danger" link @click="handleUnbindRelation(scope.row.userId)">
+                    解绑
+                  </el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+          </div>
+        </div>
+        <template #footer>
+          <div class="dialog-footer">
+            <el-button type="primary" @click="submitBindForm">确定绑定</el-button>
+            <el-button @click="bindDialogVisible = false">关 闭</el-button>
+          </div>
+        </template>
+      </el-dialog>
+      
     </div>
   </template>
   
@@ -749,17 +835,106 @@ import { onMounted, reactive, ref, watch } from 'vue';
             return;
           }
   
-          const success = form.value.userId ?
-            await userStore.handleUpdateUser(form.value) :
-            await userStore.handleAddUser(form.value);
+          // 创建一个新的表单对象，避免修改原始表单
+          let formToSubmit = {};
+          
+          // 如果是家属角色
+          if (form.value.roleIds.includes(2)) {
+            // 仅保留基本信息，不传递绑定相关信息
+            const { 
+              userId, username, name, password, phone, email, 
+              isActive, roleIds, department, position
+            } = form.value;
+            
+            formToSubmit = { 
+              userId, username, name, password, phone, email, 
+              isActive, roleIds, department, position
+            };
+            
+            // 单独处理绑定关系，如果设置了新的elderId和relationship，并且之前没有绑定过
+            if (form.value.elderId && form.value.relationship) {
+              // 获取当前用户绑定的老人列表
+              const existingElders = await userStore.fetchEldersByKinId(form.value.userId);
+              
+              // 检查是否已经绑定了相同的老人
+              const alreadyBound = existingElders && existingElders.some(elder => elder.userId === form.value.elderId);
+              
+              // 如果没有绑定过，则在用户更新成功后进行绑定
+              if (!alreadyBound && form.value.elderId) {
+                // 在提交后会单独调用绑定接口
+              }
+            }
+          }
+          // 如果是老人角色
+          else if (form.value.roleIds.includes(1)) {
+            // 老人角色只保留老人相关信息
+            const {
+              userId, username, name, password, phone, email,
+              isActive, roleIds, idCard, birthday, age,
+              emergencyContactName, emergencyContactPhone, healthCondition
+            } = form.value;
+            
+            formToSubmit = {
+              userId, username, name, password, phone, email,
+              isActive, roleIds, idCard, birthday, age,
+              emergencyContactName, emergencyContactPhone, healthCondition
+            };
+          }
+          // 其他角色
+          else {
+            // 其他角色保留所有基本信息
+            const {
+              userId, username, name, password, phone, email,
+              isActive, roleIds, department, position
+            } = form.value;
+            
+            formToSubmit = {
+              userId, username, name, password, phone, email,
+              isActive, roleIds, department, position
+            };
+          }
+  
+          // 提交处理后的表单
+          const success = await userStore.handleUpdateUser(formToSubmit);
   
           if (success) {
+            // 如果是家属角色，并且设置了新的elderId和relationship，并且更新成功
+            if (form.value.roleIds.includes(2) && form.value.elderId && form.value.relationship) {
+              // 获取当前用户绑定的老人列表
+              const existingElders = await userStore.fetchEldersByKinId(form.value.userId);
+              
+              // 检查是否已经绑定了相同的老人
+              const alreadyBound = existingElders && existingElders.some(elder => elder.userId === form.value.elderId);
+              
+              if (!alreadyBound) {
+                // 单独调用绑定接口
+                try {
+                  await userStore.handleBindElderKinRelation(
+                    form.value.elderId,  // 老人ID
+                    form.value.userId,   // 家属ID
+                    form.value.relationship
+                  );
+                  ElMessage.success('更新用户信息并绑定老人成功');
+                } catch (bindError) {
+                  console.error('绑定老人失败:', bindError);
+                  ElMessage.warning('用户信息更新成功，但绑定老人失败');
+                }
+              }
+            } else {
+              ElMessage.success('更新用户信息成功');
+            }
+            
             dialogVisible.value = false;
             await getList();
           }
         } catch (error) {
           console.error('提交表单失败:', error);
-          ElMessage.error('提交表单失败');
+          // 检查是否是主键冲突的错误
+          if (error.message && error.message.includes('Duplicate entry') && error.message.includes('elder_kin_relation.PRIMARY')) {
+            ElMessage.error('系统自动绑定关系失败：该绑定关系已存在');
+          } else {
+            ElMessage.error('提交表单失败');
+          }
         }
       }
     });
@@ -840,6 +1015,9 @@ import { onMounted, reactive, ref, watch } from 'vue';
         
         // 重新获取老人列表
         await getElderList();
+        
+        // 刷新主列表
+        await getList();
       } else {
         ElMessage.error('解除绑定失败');
       }
@@ -1013,82 +1191,192 @@ import { onMounted, reactive, ref, watch } from 'vue';
         // 如果点击的是关联用户标签，显示关联用户的详情
         await viewUserDetail(relatedUser.userId, true);  // 添加标记表示这是关联用户
       } else {
-        // 如果点击的是"绑定老人"或"绑定家属"文本，继续使用原有逻辑
+        // 如果点击的是"绑定老人"或"绑定家属"文本，打开绑定管理对话框
         // 获取用户详细信息
         const userResponse = await userStore.handleGetUserInfo(user.userId);
         if (!userResponse?.data) {
           ElMessage.error('获取用户信息失败');
           return;
         }
-
-        // 设置编辑模式
-        dialogType.value = 'edit';
-        reset();
         
         const userData = userResponse.data;
-        const roleIds = userData.roleIds || [];
-
-        // 家属角色 - 处理与老人的绑定
+        
+        // 重置绑定表单
+        bindForm.value = {
+          userId: userData.userId,
+          name: userData.name,
+          phone: userData.phone,
+          idCard: userData.idCard,
+          targetId: null,
+          relationType: ''
+        };
+        
+        // 根据角色类型确定绑定类型
         if (hasRole(user, 2)) {
-          isKin.value = true;
+          // 家属绑定老人
+          bindType.value = 'elder';
+          bindLoading.value = true;
+          
+          // 获取家属已绑定的老人列表
+          const elders = await userStore.fetchEldersByKinId(user.userId);
+          currentBindings.value = elders || [];
           
           // 获取可绑定的老人列表
-          await getElderList();
+          await getAvailableElderList();
           
-          // 填充表单数据
-          form.value = {
-            ...userData,
-            userId: user.userId,
-            roleIds: roleIds
-          };
-        }
-        // 老人角色 - 处理与家属的绑定
-        else if (hasRole(user, 1)) {
-          isElder.value = true;
+          bindLoading.value = false;
+        } else if (hasRole(user, 1)) {
+          // 老人绑定家属
+          bindType.value = 'kin';
+          bindLoading.value = true;
           
-          // 获取老人绑定的家属列表
+          // 获取老人已绑定的家属列表
           const kins = await userStore.fetchKinsByElderId(user.userId);
+          currentBindings.value = kins || [];
           
-          // 填充表单数据
-          form.value = {
-            ...userData,
-            userId: user.userId,
-            roleIds: roleIds,
-            kins: kins || []
-          };
+          // 获取可绑定的家属列表
+          await getAvailableKinList();
+          
+          bindLoading.value = false;
         }
         
-        // 修改对话框标题
-        dialogType.value = 'binding';
-        // 显示对话框
-        dialogVisible.value = true;
+        // 显示绑定关系对话框
+        bindDialogVisible.value = true;
       }
     } catch (error) {
       console.error('处理绑定关系失败:', error);
       ElMessage.error('处理绑定关系失败');
+      bindLoading.value = false;
     }
   };
   
-  // 解绑家属
-  const handleUnbindKin = async (kinId) => {
+  // 修复submitBindForm方法
+  const submitBindForm = async () => {
     try {
-      await ElMessageBox.confirm('确认要解除与当前家属的绑定关系吗？', '提示', {
+      if (!bindForm.value.targetId) {
+        ElMessage.warning(`请选择要绑定的${bindType.value === 'elder' ? '老人' : '家属'}`);
+        return;
+      }
+      if (!bindForm.value.relationType) {
+        ElMessage.warning('请选择关系类型');
+        return;
+      }
+      
+      // 在绑定前先检查是否已经存在相同的绑定关系
+      let existingRelations = [];
+      
+      if (bindType.value === 'elder') {
+        // 家属绑定老人 - 检查当前家属是否已经绑定了要选择的老人
+        existingRelations = await userStore.fetchEldersByKinId(bindForm.value.userId);
+        const alreadyBound = existingRelations && existingRelations.some(
+          elder => elder.userId === bindForm.value.targetId
+        );
+        
+        if (alreadyBound) {
+          ElMessage.warning('已经绑定了该老人，无需重复绑定');
+          return;
+        }
+      } else {
+        // 老人绑定家属 - 检查当前老人是否已经绑定了要选择的家属
+        existingRelations = await userStore.fetchKinsByElderId(bindForm.value.userId);
+        const alreadyBound = existingRelations && existingRelations.some(
+          kin => kin.userId === bindForm.value.targetId
+        );
+        
+        if (alreadyBound) {
+          ElMessage.warning('已经绑定了该家属，无需重复绑定');
+          return;
+        }
+      }
+      
+      // 没有重复绑定，执行绑定操作
+      let success;
+      if (bindType.value === 'elder') {
+        // 家属绑定老人
+        success = await userStore.handleBindElderKinRelation(
+          bindForm.value.targetId,  // 老人ID
+          bindForm.value.userId,    // 家属ID
+          bindForm.value.relationType
+        );
+      } else {
+        // 老人绑定家属
+        success = await userStore.handleBindElderKinRelation(
+          bindForm.value.userId,    // 老人ID
+          bindForm.value.targetId,  // 家属ID
+          bindForm.value.relationType
+        );
+      }
+      
+      if (success) {
+        ElMessage.success('绑定关系成功');
+        
+        // 刷新绑定列表
+        if (bindType.value === 'elder') {
+          const elders = await userStore.fetchEldersByKinId(bindForm.value.userId);
+          currentBindings.value = elders || [];
+        } else {
+          const kins = await userStore.fetchKinsByElderId(bindForm.value.userId);
+          currentBindings.value = kins || [];
+        }
+        
+        // 重置表单
+        bindForm.value.targetId = null;
+        bindForm.value.relationType = '';
+        
+        // 刷新主列表
+        await getList();
+      } else {
+        ElMessage.error('绑定关系失败');
+      }
+    } catch (error) {
+      console.error('提交绑定关系失败:', error);
+      // 检查是否是主键冲突的错误
+      if (error.message && error.message.includes('Duplicate entry') && error.message.includes('elder_kin_relation.PRIMARY')) {
+        ElMessage.error('已存在相同的绑定关系，无需重复绑定');
+      } else {
+        ElMessage.error('提交绑定关系失败');
+      }
+    }
+  };
+  
+  // 修复handleUnbindRelation方法
+  const handleUnbindRelation = async (targetUserId) => {
+    try {
+      await ElMessageBox.confirm('确认要解除此绑定关系吗？', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
       });
       
-      const elderId = form.value.userId;
-      
-      // 调用解除绑定接口
-      const success = await userStore.handleUnbindElderKinRelation(elderId, kinId);
+      let success;
+      if (bindType.value === 'elder') {
+        // 解绑家属和老人的关系
+        success = await userStore.handleUnbindElderKinRelation(
+          targetUserId,  // 老人ID
+          bindForm.value.userId  // 家属ID
+        );
+      } else {
+        // 解绑老人和家属的关系
+        success = await userStore.handleUnbindElderKinRelation(
+          bindForm.value.userId,  // 老人ID
+          targetUserId  // 家属ID
+        );
+      }
       
       if (success) {
         ElMessage.success('解除绑定成功');
         
-        // 重新获取家属列表
-        const kins = await userStore.fetchKinsByElderId(elderId);
-        form.value.kins = kins || [];
+        // 刷新绑定列表
+        if (bindType.value === 'elder') {
+          const elders = await userStore.fetchEldersByKinId(bindForm.value.userId);
+          currentBindings.value = elders || [];
+        } else {
+          const kins = await userStore.fetchKinsByElderId(bindForm.value.userId);
+          currentBindings.value = kins || [];
+        }
+        
+        // 刷新主列表
+        await getList();
       } else {
         ElMessage.error('解除绑定失败');
       }
@@ -1139,6 +1427,17 @@ import { onMounted, reactive, ref, watch } from 'vue';
     }
     
     try {
+      // 检查是否已存在相同的绑定关系
+      const existingKins = await userStore.fetchKinsByElderId(kinBindForm.value.elderId);
+      const alreadyBound = existingKins && existingKins.some(
+        kin => kin.userId === kinBindForm.value.kinId
+      );
+      
+      if (alreadyBound) {
+        ElMessage.warning('已经绑定了该家属，无需重复绑定');
+        return;
+      }
+      
       // 调用绑定接口
       const success = await userStore.handleBindElderKinRelation(
         kinBindForm.value.elderId,
@@ -1160,7 +1459,59 @@ import { onMounted, reactive, ref, watch } from 'vue';
       }
     } catch (error) {
       console.error('绑定家属失败:', error);
-      ElMessage.error('绑定家属失败');
+      // 检查是否是主键冲突的错误
+      if (error.message && error.message.includes('Duplicate entry') && error.message.includes('elder_kin_relation.PRIMARY')) {
+        ElMessage.error('已存在相同的绑定关系，无需重复绑定');
+      } else {
+        ElMessage.error('绑定家属失败');
+      }
+    }
+  };
+  
+  // 添加新的绑定关系对话框
+  const bindType = ref('elder');
+  const bindDialogVisible = ref(false);
+  const bindLoading = ref(false);
+  const bindFormRef = ref(null);
+  const bindForm = ref({
+    targetId: null,
+    relationType: ''
+  });
+  const availableElderList = ref([]);
+  const availableKinList = ref([]);
+  const currentBindings = ref([]);
+  
+  const getAvailableElderList = async () => {
+    try {
+      const response = await userStore.fetchElderList();
+      if (response?.data) {
+        availableElderList.value = response.data.map(elder => ({
+          value: elder.userId,
+          label: `${elder.name}（${elder.idCard ? elder.idCard : '未填写身份证'}）`
+        }));
+      } else {
+        availableElderList.value = [];
+      }
+    } catch (error) {
+      console.error('获取可用老人列表失败:', error);
+      ElMessage.error('获取可用老人列表失败');
+    }
+  };
+  
+  const getAvailableKinList = async () => {
+    try {
+      const response = await userStore.fetchUnboundKins();
+      if (response?.data) {
+        availableKinList.value = response.data.map(kin => ({
+          value: kin.userId,
+          label: `${kin.name}（${kin.phone || '未填写电话'}）`
+        }));
+      } else {
+        availableKinList.value = [];
+      }
+    } catch (error) {
+      console.error('获取可用家属列表失败:', error);
+      ElMessage.error('获取可用家属列表失败');
     }
   };
   
@@ -1194,5 +1545,29 @@ import { onMounted, reactive, ref, watch } from 'vue';
   
   .user-detail .el-descriptions__label {
     width: 120px;
+  }
+  
+  /* 添加新的样式 */
+  .link-text {
+    color: #409eff;
+    cursor: pointer;
+  }
+  
+  .link-text:hover {
+    color: #66b1ff;
+    text-decoration: underline;
+  }
+  
+  .mt-3 {
+    margin-top: 16px;
+  }
+  
+  .bind-list-title {
+    font-weight: bold;
+    margin-bottom: 8px;
+    font-size: 14px;
+    color: #606266;
+    border-bottom: 1px solid #ebeef5;
+    padding-bottom: 8px;
   }
   </style>

@@ -62,16 +62,4 @@ public class DictData extends BaseEntity {
      * 状态（0正常 1停用）
      */
     private Integer status;
-
-    /**
-     * 当前页码
-     */
-    @TableField(exist = false)
-    private Integer pageNum = 1;
-
-    /**
-     * 每页数量
-     */
-    @TableField(exist = false)
-    private Integer pageSize = 10;
 } 

@@ -134,8 +134,7 @@ public class DictDataServiceImpl extends ServiceImpl<DictDataMapper, DictData> i
                    // 添加状态条件，默认只查询正常状态
                    .eq(DictData::getStatus, "0")
                    // 添加排序条件
-                   .orderByAsc(DictData::getDictSort)
-                   .orderByDesc(DictData::getUpdateTime);
+                   .orderByAsc(DictData::getDictCode);
 
             // 3. 执行分页查询
             Page<DictData> page = page(new Page<>(pageNum, pageSize), wrapper);

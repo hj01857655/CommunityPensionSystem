@@ -230,7 +230,7 @@ const activeIndex = ref('home');
 const menuItems = [
   { index: 'home', label: '首页' },
   { index: 'service', label: '服务预约' },
-  { index: 'health', label: '健康档案' },
+  { index: 'health', label: '健康中心' },
   { index: 'activity', label: '社区活动' }
 ];
 

@@ -57,7 +57,7 @@ const routes = [
         path: 'health',
         name: 'HealthView',
         component: HealthView,
-        meta: {title: '健康监测', requiresAuth: true, roles: ['elder', 'kin'] }
+        meta: {title: '健康中心', requiresAuth: true, roles: ['elder', 'kin'] }
       },
       {
         path: 'service',

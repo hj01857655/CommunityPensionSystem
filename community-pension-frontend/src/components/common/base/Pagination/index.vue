@@ -7,24 +7,26 @@
             :page-sizes="pageSizes"
             :pager-count="pagerCount"
             :total="total"
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
         />
     </div>
 </template>
 
 <script setup>
-import { computed } from 'vue';
 import { scroll } from '@/utils/scroll';
+import { computed } from 'vue';
 
 const props = defineProps({
     total: {
         type: Number,
         required: true
     },
-    page: {
+    current: {
         type: Number,
         default: 1
     },
-    limit: {
+    size: {
         type: Number,
         default: 20
     },
@@ -54,33 +56,48 @@ const props = defineProps({
     }
 });
 // 定义emit
-const emit=defineEmits();
+const emit = defineEmits(['update:current', 'update:size', 'pagination']);
+
 // 当前页
-const currentPage=computed({
-    get(){
-        return props.limit;
+const currentPage = computed({
+    get() {
+        return props.current;
     },
-    set(val){
-        emit('update:limit',val);
+    set(val) {
+        emit('update:current', val);
     }
 });
-const pageSize=computed({
-    get(){
-        return props.limit;
+
+// 每页条数
+const pageSize = computed({
+    get() {
+        return props.size;
     },
-    set(val){
-        emit('update:limit',val);
+    set(val) {
+        emit('update:size', val);
     }
 });
-const handleSizeChange=(val)=>{
-    if(currentPage.value*val>props.total){
-        currentPage.value=1;
+
+// 页码变化
+const handleSizeChange = (val) => {
+    emit('update:size', val);
+    if (currentPage.value * val > props.total) {
+        currentPage.value = 1;
     }
-    emit('pagination',{page:val,limit:pageSize.value});
-    if(props.autoScroll){
-        scroll(0,800);
+    emit('pagination', { current: currentPage.value, size: val });
+    if (props.autoScroll) {
+        scroll(0, 800);
     }
-}
+};
+
+// 页数变化
+const handleCurrentChange = (val) => {
+    emit('update:current', val);
+    emit('pagination', { current: val, size: pageSize.value });
+    if (props.autoScroll) {
+        scroll(0, 800);
+    }
+};
 </script>
 
 <style scoped>
