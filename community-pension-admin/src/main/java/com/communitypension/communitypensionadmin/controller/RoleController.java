@@ -156,6 +156,12 @@ public class RoleController {
     @Operation(summary = "修改角色状态")
     public Result<String> changeStatus(@RequestBody Role role) {
         try {
+            // 先检查是否是超级管理员角色
+            if (role.getRoleId() != null && role.getRoleId().equals(roleService.ADMIN_ROLE_ID)) {
+                logger.warn("尝试修改超级管理员角色状态被拒绝：{}", role);
+                return Result.error("超级管理员角色状态不允许修改");
+            }
+            
             roleService.checkRoleAllowed(role);
             
             if (roleService.updateById(role)) {
