@@ -1,8 +1,13 @@
-import axios from '@/utils/axios'
+import axios from '@/utils/axios';
 
 /**
  * 角色管理相关接口
  */
+
+/**
+ * 超级管理员角色ID常量
+ */
+export const ADMIN_ROLE_ID = 4;
 
 /**
  * 获取角色列表（分页）

@@ -231,14 +231,14 @@ export const useUserStore = defineStore('user', () => {
     /**
      * 新增用户
      * @param {*} userData
-     * @returns
+     * @returns {Promise<{code: number, data: number, msg: string}>} 成功时返回的data包含新增用户的ID
      */
     const handleAddUser = async (userData) => {
         try {
             const res = await addUser(userData);
             if (res.code === 200) {
                 ElMessage.success('新增用户成功');
-                return res;
+                return res; // 后端应返回新增用户的ID
             }
             ElMessage.error(res.msg || '新增用户失败');
             return null;

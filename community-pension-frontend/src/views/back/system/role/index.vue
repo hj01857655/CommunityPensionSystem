@@ -110,6 +110,7 @@
             :active-value="'1'"
             :inactive-value="'0'"
             @change="handleStatusChange(scope.row)"
+            :disabled="scope.row.roleId === 4"
           />
         </template>
       </el-table-column>
@@ -224,15 +225,15 @@
 </template>
   
 <script setup>
-import { ref, reactive, onMounted, nextTick } from 'vue';
-import { ElMessage, ElMessageBox } from 'element-plus';
 import { listMenu } from '@/api/back/system/menu';
-import { handleTree } from '@/utils/tree';
-import { formatDate } from '@/utils/date';
 import RightToolbar from '@/components/common/base/RightToolbar/index.vue';
 import Pagination from '@/components/common/Pagination.vue';
 import { useRoleStore } from '@/stores/back/roleStore';
+import { formatDate } from '@/utils/date';
+import { handleTree } from '@/utils/tree';
+import { ElMessage, ElMessageBox } from 'element-plus';
 import { storeToRefs } from 'pinia';
+import { nextTick, onMounted, reactive, ref } from 'vue';
 
 const roleStore = useRoleStore();
 const { roleList, total, loading, queryParams, menuTree } = storeToRefs(roleStore);
@@ -388,6 +389,13 @@ const handleSelectionChange = (selection) => {
 
 /** 角色状态修改 */
 const handleStatusChange = async (row) => {
+  // 超级管理员角色不允许修改状态
+  if (row.roleId === 4) {
+    ElMessage.warning('超级管理员角色状态不允许修改');
+    row.status = row.status === "0" ? "1" : "0"; // 恢复状态
+    return;
+  }
+  
   const text = row.status === "0" ? "停用" : "启用";
   try {
     await ElMessageBox.confirm(`确认要${text}${row.roleName}角色吗？`);

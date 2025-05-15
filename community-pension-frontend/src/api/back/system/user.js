@@ -135,7 +135,7 @@ export function assignRole(userId, roleIds) {
  * @param {number} status - 状态值
  */
 export const updateUserStatus = (userId, status) => {
-  return axios.put(`/api/system/user/${userId}/status`, { status });
+  return axios.put(`/api/system/user/${userId}/status`, { isActive: status });
 };
 
 /**

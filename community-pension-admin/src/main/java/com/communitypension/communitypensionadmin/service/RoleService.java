@@ -11,6 +11,10 @@ import java.util.List;
  */
 public interface RoleService extends IService<Role> {
 
+    /**
+     * 超级管理员角色ID
+     */
+    Long ADMIN_ROLE_ID = 4L;
 
     /**
      * 根据条件分页查询角色列表

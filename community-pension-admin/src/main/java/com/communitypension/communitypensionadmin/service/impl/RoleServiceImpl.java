@@ -80,8 +80,8 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
         if (role == null || role.getRoleId() == null) {
             return;
         }
-        // 假设角色ID为1的是超级管理员角色
-        if (role.getRoleId() == 1L) {
+        // 超级管理员角色ID为常量ADMIN_ROLE_ID
+        if (role.getRoleId().equals(ADMIN_ROLE_ID)) {
             throw new RuntimeException("不允许操作超级管理员角色");
         }
     }

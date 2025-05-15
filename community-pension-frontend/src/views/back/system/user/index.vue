@@ -43,8 +43,13 @@
         <el-table-column label="姓名" align="center" prop="name" v-if="columns[3].visible" />
         <el-table-column label="状态" align="center" prop="isActive" v-if="columns[4].visible">
           <template #default="scope">
-            <el-switch v-model="scope.row.isActive" :active-value="1" :inactive-value="0"
-              @change="handleStatusChange(scope.row)" />
+            <el-switch 
+              v-model="scope.row.isActive" 
+              :active-value="1" 
+              :inactive-value="0"
+              :disabled="hasRole(scope.row, 4)" 
+              @change="handleStatusChange(scope.row)" 
+            />
           </template>
         </el-table-column>
         <el-table-column label="手机号码" align="center" prop="phone" v-if="columns[5].visible" />
@@ -150,7 +155,7 @@
             <el-input v-model="form.email" placeholder="请输入邮箱" />
           </el-form-item>
           <el-form-item label="状态" prop="isActive">
-            <el-radio-group v-model="form.isActive">
+            <el-radio-group v-model="form.isActive" :disabled="form.roleIds.includes(4)">
               <el-radio :value="1">正常</el-radio>
               <el-radio :value="0">停用</el-radio>
             </el-radio-group>
@@ -174,7 +179,14 @@
               <el-input v-model="form.emergencyContactPhone" placeholder="请输入紧急联系人电话" />
             </el-form-item>
             <el-form-item label="健康状况" prop="healthCondition">
-              <el-input v-model="form.healthCondition" placeholder="请输入健康状况" />
+              <el-select v-model="form.healthCondition" placeholder="请选择健康状况">
+                <el-option 
+                  v-for="dict in healthLevelOptions" 
+                  :key="dict.dictValue" 
+                  :label="dict.dictLabel" 
+                  :value="dict.dictValue" 
+                />
+              </el-select>
             </el-form-item>
           </template>
   
@@ -259,7 +271,7 @@
               <el-descriptions-item label="身份证号码">{{ detailForm.idCard || '未填写' }}</el-descriptions-item>
               <el-descriptions-item label="出生日期">{{ detailForm.birthday || '未填写' }}</el-descriptions-item>
               <el-descriptions-item label="年龄">{{ detailForm.age || '未填写' }}</el-descriptions-item>
-              <el-descriptions-item label="健康状况">{{ detailForm.healthCondition || '未填写' }}</el-descriptions-item>
+              <el-descriptions-item label="健康状况">{{ getHealthLevelLabel(detailForm.healthCondition) || '未填写' }}</el-descriptions-item>
               <el-descriptions-item label="紧急联系人">{{ detailForm.emergencyContactName || '未填写' }}</el-descriptions-item>
               <el-descriptions-item label="紧急联系电话">{{ detailForm.emergencyContactPhone || '未填写' }}</el-descriptions-item>
               <el-descriptions-item label="绑定家属">
@@ -395,7 +407,8 @@
   </template>
   
   <script setup>
-  import RightToolbar from '@/components/common/base/RightToolbar/index.vue';
+  import { getDictDataByType } from '@/api/back/system/dict/data';
+import RightToolbar from '@/components/common/base/RightToolbar/index.vue';
 import Pagination from '@/components/common/Pagination.vue';
 import { useUserStore } from '@/stores/back/userStore';
 import { formatDate } from '@/utils/date';
@@ -540,6 +553,14 @@ import { onMounted, reactive, ref, watch } from 'vue';
   
   // 状态修改
   const handleStatusChange = async (row) => {
+    // 如果是管理员角色，不允许修改状态
+    if (hasRole(row, 4)) {
+      ElMessage.warning('管理员用户状态不允许修改');
+      // 恢复原来的状态值
+      row.isActive = 1; // 管理员默认为正常状态
+      return;
+    }
+
     const text = row.isActive === 1 ? '启用' : '停用';
     try {
       await ElMessageBox.confirm(`确认要"${text}""${row.username}"用户吗？`, '提示', {
@@ -548,21 +569,15 @@ import { onMounted, reactive, ref, watch } from 'vue';
         type: 'warning'
       });
   
-      // 确保roleIds不为null
-      if (!row.roleIds) {
-        row.roleIds = [];
-      }
+      // 使用handleUpdateStatus函数更新用户状态
+      const res = await userStore.handleUpdateStatus(row.userId, row.isActive);
   
-      const success = await userStore.handleUpdateUser({
-        userId: row.userId,
-        isActive: row.isActive,
-        roleIds: row.roleIds // 添加roleIds
-      });
-  
-      if (!success) {
+      if (!res) {
+        // 如果更新失败，恢复原来的状态值
         row.isActive = row.isActive === 1 ? 0 : 1;
       }
     } catch {
+      // 如果用户取消操作，恢复原来的状态值
       row.isActive = row.isActive === 1 ? 0 : 1;
     }
   };
@@ -829,12 +844,6 @@ import { onMounted, reactive, ref, watch } from 'vue';
     formRef.value?.validate(async (valid) => {
       if (valid) {
         try {
-          // 确保userId存在
-          if (!form.value.userId) {
-            ElMessage.error('用户ID不能为空');
-            return;
-          }
-  
           // 创建一个新的表单对象，避免修改原始表单
           let formToSubmit = {};
           
@@ -843,12 +852,12 @@ import { onMounted, reactive, ref, watch } from 'vue';
             // 仅保留基本信息，不传递绑定相关信息
             const { 
               userId, username, name, password, phone, email, 
-              isActive, roleIds, department, position
+              isActive, roleIds
             } = form.value;
             
             formToSubmit = { 
               userId, username, name, password, phone, email, 
-              isActive, roleIds, department, position
+              isActive, roleIds
             };
             
             // 单独处理绑定关系，如果设置了新的elderId和relationship，并且之前没有绑定过
@@ -880,9 +889,9 @@ import { onMounted, reactive, ref, watch } from 'vue';
               emergencyContactName, emergencyContactPhone, healthCondition
             };
           }
-          // 其他角色
-          else {
-            // 其他角色保留所有基本信息
+          // 如果是社区工作人员角色
+          else if (form.value.roleIds.includes(3)) {
+            // 社区工作人员角色包含department和position字段
             const {
               userId, username, name, password, phone, email,
               isActive, roleIds, department, position
@@ -893,15 +902,57 @@ import { onMounted, reactive, ref, watch } from 'vue';
               isActive, roleIds, department, position
             };
           }
-  
-          // 提交处理后的表单
-          const success = await userStore.handleUpdateUser(formToSubmit);
+          // 如果是管理员角色
+          else if (form.value.roleIds.includes(4)) {
+            // 管理员角色只保留基本信息，并且状态始终为启用
+            const {
+              userId, username, name, password, phone, email,
+              roleIds
+            } = form.value;
+            
+            formToSubmit = {
+              userId, username, name, password, phone, email,
+              isActive: 1, // 管理员始终为启用状态
+              roleIds
+            };
+          }
+          // 其他角色
+          else {
+            // 其他角色只保留基本信息
+            const {
+              userId, username, name, password, phone, email,
+              isActive, roleIds
+            } = form.value;
+            
+            formToSubmit = {
+              userId, username, name, password, phone, email,
+              isActive, roleIds
+            };
+          }
+
+          let success = false;
+          
+          // 区分新增和更新操作
+          if (dialogType.value === 'add') {
+            // 新增用户不需要userId
+            const { userId, ...addData } = formToSubmit;
+            const res = await userStore.handleAddUser(addData);
+            success = !!res;
+            
+            // 如果新增成功，获取返回的userId
+            if (success && res.data) {
+              formToSubmit.userId = res.data;
+            }
+          } else {
+            // 更新用户需要userId
+            success = await userStore.handleUpdateUser(formToSubmit);
+          }
   
           if (success) {
             // 如果是家属角色，并且设置了新的elderId和relationship，并且更新成功
             if (form.value.roleIds.includes(2) && form.value.elderId && form.value.relationship) {
               // 获取当前用户绑定的老人列表
-              const existingElders = await userStore.fetchEldersByKinId(form.value.userId);
+              const existingElders = await userStore.fetchEldersByKinId(formToSubmit.userId);
               
               // 检查是否已经绑定了相同的老人
               const alreadyBound = existingElders && existingElders.some(elder => elder.userId === form.value.elderId);
@@ -911,17 +962,17 @@ import { onMounted, reactive, ref, watch } from 'vue';
                 try {
                   await userStore.handleBindElderKinRelation(
                     form.value.elderId,  // 老人ID
-                    form.value.userId,   // 家属ID
+                    formToSubmit.userId,   // 家属ID
                     form.value.relationship
                   );
-                  ElMessage.success('更新用户信息并绑定老人成功');
+                  ElMessage.success(dialogType.value === 'add' ? '新增用户并绑定老人成功' : '更新用户信息并绑定老人成功');
                 } catch (bindError) {
                   console.error('绑定老人失败:', bindError);
-                  ElMessage.warning('用户信息更新成功，但绑定老人失败');
+                  ElMessage.warning(dialogType.value === 'add' ? '用户新增成功，但绑定老人失败' : '用户信息更新成功，但绑定老人失败');
                 }
               }
             } else {
-              ElMessage.success('更新用户信息成功');
+              ElMessage.success(dialogType.value === 'add' ? '新增用户成功' : '更新用户信息成功');
             }
             
             dialogVisible.value = false;
@@ -1515,8 +1566,31 @@ import { onMounted, reactive, ref, watch } from 'vue';
     }
   };
   
+  // 在表单数据下方添加字典选项
+  const healthLevelOptions = ref([]);
+  
+  // 获取健康状况字典数据
+  const getHealthLevelDict = async () => {
+    try {
+      const response = await getDictDataByType('health_level');
+      if (response.code === 200) {
+        healthLevelOptions.value = response.data;
+      }
+    } catch (error) {
+      console.error('获取健康状况字典数据失败:', error);
+    }
+  };
+  
+  // 根据健康状况值获取标签
+  const getHealthLevelLabel = (value) => {
+    if (!value) return '';
+    const option = healthLevelOptions.value.find(item => item.dictValue === value);
+    return option ? option.dictLabel : value;
+  };
+  
   onMounted(() => {
     getList();
+    getHealthLevelDict(); // 获取健康状况字典数据
   });
   
   </script>
