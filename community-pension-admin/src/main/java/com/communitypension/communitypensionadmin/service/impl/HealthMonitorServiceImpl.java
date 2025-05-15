@@ -9,6 +9,7 @@ import com.communitypension.communitypensionadmin.entity.HealthMonitor;
 import com.communitypension.communitypensionadmin.entity.User;
 import com.communitypension.communitypensionadmin.exception.BusinessException;
 import com.communitypension.communitypensionadmin.mapper.HealthMonitorMapper;
+import com.communitypension.communitypensionadmin.service.HealthAlertService;
 import com.communitypension.communitypensionadmin.service.HealthMonitorService;
 import com.communitypension.communitypensionadmin.service.UserService;
 import com.communitypension.communitypensionadmin.vo.HealthMonitorVO;
@@ -33,6 +34,7 @@ import java.util.stream.Collectors;
 public class HealthMonitorServiceImpl extends ServiceImpl<HealthMonitorMapper, HealthMonitor> implements HealthMonitorService {
 
     private final UserService userService;
+    private final HealthAlertService healthAlertService;
 
     /**
      * 添加健康监测记录
@@ -52,6 +54,17 @@ public class HealthMonitorServiceImpl extends ServiceImpl<HealthMonitorMapper, H
         // 转换为实体并保存
         HealthMonitor monitor = HealthMonitorConverter.toEntity(monitorDTO);
         save(monitor);
+
+        // 检查是否需要生成健康预警
+        try {
+            Long alertId = healthAlertService.generateAlertFromMonitor(monitor.getId());
+            if (alertId != null) {
+                log.info("基于监测记录自动生成健康预警，监测ID: {}, 预警ID: {}", monitor.getId(), alertId);
+            }
+        } catch (Exception e) {
+            log.error("生成健康预警失败，监测ID: {}, 错误: {}", monitor.getId(), e.getMessage(), e);
+            // 预警生成失败不影响监测记录的保存
+        }
 
         return monitor.getId();
     }
@@ -146,7 +159,7 @@ public class HealthMonitorServiceImpl extends ServiceImpl<HealthMonitorMapper, H
             wrapper.in(HealthMonitor::getElderId, elderIds);
         }
         if (monitorType != null) {
-            wrapper.eq(HealthMonitor::getMonitoringType, monitorType);
+            wrapper.eq(HealthMonitor::getMonitoringType, String.valueOf(monitorType));
         }
         if (startDate != null) {
             wrapper.ge(HealthMonitor::getMonitoringTime, LocalDateTime.of(startDate, LocalTime.MIN));
@@ -349,7 +362,24 @@ public class HealthMonitorServiceImpl extends ServiceImpl<HealthMonitorMapper, H
             monitors.add(monitor);
         }
 
-        return saveBatch(monitors);
+        boolean success = saveBatch(monitors);
+        
+        // 为每条监测记录检查是否需要生成健康预警
+        if (success) {
+            for (HealthMonitor monitor : monitors) {
+                try {
+                    Long alertId = healthAlertService.generateAlertFromMonitor(monitor.getId());
+                    if (alertId != null) {
+                        log.info("基于监测记录自动生成健康预警，监测ID: {}, 预警ID: {}", monitor.getId(), alertId);
+                    }
+                } catch (Exception e) {
+                    log.error("生成健康预警失败，监测ID: {}, 错误: {}", monitor.getId(), e.getMessage(), e);
+                    // 预警生成失败不影响其他记录的处理
+                }
+            }
+        }
+
+        return success;
     }
 
     /**
@@ -430,7 +460,7 @@ public class HealthMonitorServiceImpl extends ServiceImpl<HealthMonitorMapper, H
      * 从监测值中提取数值
      *
      * @param monitoringValue 监测值字符串
-     * @param valueType 值类型，如“systolic”或“diastolic”，用于血压等复合值
+     * @param valueType 值类型，如"systolic"或"diastolic"，用于血压等复合值
      * @return 数值，如果无法解析则返回null
      */
     private Double getNumericValue(String monitoringValue, String valueType) {

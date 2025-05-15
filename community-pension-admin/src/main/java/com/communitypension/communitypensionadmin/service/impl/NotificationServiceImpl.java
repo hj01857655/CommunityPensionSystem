@@ -18,7 +18,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import java.util.*;
+import java.util.stream.Collectors;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -96,22 +98,28 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void sendSystemMessage(Long userId, String title, String content, String type) {
+        // 类型默认为系统通知
+        if (type == null || type.isEmpty()) {
+            type = DictTypeConstants.NOTIFICATION_TYPE_SYSTEM;
+        }
+        
         // 获取通知类型标签
         String typeLabel = DictUtils.getDictLabel(DictTypeConstants.NOTIFICATION_TYPE, type);
-
+        
         // 构建通知实体
         Notification notification = Notification.builder()
             .userId(userId)
             .title(title)
             .content(content)
+            .type(type)  // 设置通知类型
             .status(0)  // 未读状态
             .createTime(LocalDateTime.now())
             .build();
-
+        
         // 保存通知
         this.save(notification);
-
-        log.info("发送{}通知给用户{}: {}", typeLabel, userId, title);
+        
+        log.info("发送{}通知给用户{}: {}", typeLabel != null ? typeLabel : type, userId, title);
     }
 
     /**
@@ -175,5 +183,42 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
         sb.append("\n\n如有疑问，请联系客服中心。");
 
         return sb.toString();
+    }
+
+    @Override
+    public List<Map<String, Object>> getRecentNotifications(int limit) {
+        LambdaQueryWrapper<Notification> wrapper = new LambdaQueryWrapper<>();
+        wrapper.orderByDesc(Notification::getCreateTime);
+        wrapper.last("LIMIT " + limit);
+        List<Notification> list = this.list(wrapper);
+        return list.stream().map(n -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", n.getId());
+            map.put("title", n.getTitle());
+            
+            // 使用字典工具类获取通知类型的显示文本
+            String typeText = "通知"; // 默认值
+            if (n.getType() != null && !n.getType().isEmpty()) {
+                String dictLabel = DictUtils.getDictLabel(DictTypeConstants.NOTIFICATION_TYPE, n.getType());
+                if (dictLabel != null && !dictLabel.isEmpty()) {
+                    typeText = dictLabel;
+                }
+            }
+            map.put("type", typeText);
+            
+            map.put("status", getStatusText(n.getStatus()));
+            map.put("date", n.getCreateTime());
+            return map;
+        }).collect(Collectors.toList());
+    }
+
+    private String getStatusText(Integer status) {
+        if (status == null) return "未知";
+        return switch (status) {
+            case 0 -> "草稿";
+            case 1 -> "已发布";
+            case 2 -> "已撤回";
+            default -> "未知";
+        };
     }
 }

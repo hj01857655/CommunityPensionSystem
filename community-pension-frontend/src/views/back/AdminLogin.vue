@@ -36,7 +36,7 @@
 
           <div class="login-options">
             <el-checkbox v-model="remember" label="记住我" tabindex="4" aria-label="记住我" />
-            <el-link type="primary" :underline="false" @click="handleForgotPassword" tabindex="5" aria-label="忘记密码">
+            <el-link type="primary" underline="never" @click="handleForgotPassword" tabindex="5" aria-label="忘记密码">
               忘记密码?
             </el-link>
           </div>
@@ -78,12 +78,12 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
-import { ElMessage } from 'element-plus';
-import { User, Lock } from '@element-plus/icons-vue';
 import { useAdminStore } from '@/stores/back/adminStore';
 import { TokenManager, storageConfig } from '@/utils/axios';
+import { Lock, User } from '@element-plus/icons-vue';
+import { ElMessage } from 'element-plus';
+import { computed, onMounted, reactive, ref } from 'vue';
+import { useRouter } from 'vue-router';
 
 const router = useRouter();
 const adminStore = useAdminStore();

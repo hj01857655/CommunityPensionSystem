@@ -220,7 +220,7 @@ const routes = [
         path: 'health',
         name: 'HealthManagement',
         component: () => import('@/views/back/health/index.vue'),
-        meta: { title: '健康监测管理', icon: 'heart', requiresAuth: true, roles: ['admin', 'staff'] },
+        meta: { title: '健康管理中心', icon: 'heart', requiresAuth: true, roles: ['admin', 'staff'] },
         children: [
           {
             path: 'record',
@@ -234,6 +234,12 @@ const routes = [
             component: () => import('@/views/back/health/HealthMonitor.vue'),
             meta: { title: '健康监测管理', icon: 'heart', requiresAuth: true, roles: ['admin', 'staff'] }
           },
+          {
+            path: 'report',
+            name: 'PhysicalExamReportAdmin',
+            component: () => import('@/views/back/health/PhysicalExamReport.vue'),
+            meta: { title: '体检报告管理', icon: 'heart', requiresAuth: true, roles: ['admin', 'staff'] }
+          }
         ]
       },
       {

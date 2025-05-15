@@ -12,4 +12,12 @@ public interface PhysicalExamReportItemService extends IService<PhysicalExamRepo
      * 根据体检报告ID查询指标列表
      */
     List<PhysicalExamReportItem> getItemsByReportId(Long reportId);
+
+    /**
+     * 根据报告ID和分类获取检查项目
+     * @param reportId 报告ID
+     * @param category 检查类别
+     * @return 检查项目列表
+     */
+    List<PhysicalExamReportItem> getItemsByReportIdAndCategory(Long reportId, String category);
 } 

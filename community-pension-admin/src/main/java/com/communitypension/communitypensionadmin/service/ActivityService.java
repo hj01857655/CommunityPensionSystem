@@ -8,6 +8,8 @@ import com.communitypension.communitypensionadmin.entity.Activity;
 import com.communitypension.communitypensionadmin.vo.ActivityVO;
 
 import jakarta.servlet.http.HttpServletResponse;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -54,4 +56,32 @@ public interface ActivityService extends IService<Activity> {
      * 导出活动列表
      */
     void exportActivityList(String title, Integer status, String startTime, String endTime, HttpServletResponse response);
+    
+    /**
+     * 获取进行中的活动数量
+     */
+    Long getOngoingActivityCount();
+    
+    /**
+     * 根据指定时间获取进行中的活动数量
+     */
+    Long getOngoingActivityCountByTime(LocalDateTime time);
+    
+    /**
+     * 获取指定时间之前创建的活动数量
+     */
+    Long getCountBeforeTime(LocalDateTime time);
+    
+    /**
+     * 获取活动类型分布数据
+     * @return 各活动类型及其数量的映射
+     */
+    Map<String, Long> getActivityCountByType();
+    
+    /**
+     * 获取最近的活动
+     * @param limit 获取活动的数量限制
+     * @return 最近活动列表
+     */
+    List<Map<String, Object>> getRecentActivities(Integer limit);
 }

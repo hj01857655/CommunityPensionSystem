@@ -42,6 +42,11 @@ public class Notification {
     private String content;
     
     /**
+     * 通知类型
+     */
+    private String type;
+    
+    /**
      * 状态：0-未读 1-已读
      */
     private Integer status;

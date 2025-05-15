@@ -15,6 +15,16 @@ import java.util.List;
 public class PhysicalExamReportItemServiceImpl extends ServiceImpl<PhysicalExamReportItemMapper, PhysicalExamReportItem> implements PhysicalExamReportItemService {
     @Override
     public List<PhysicalExamReportItem> getItemsByReportId(Long reportId) {
-        return lambdaQuery().eq(PhysicalExamReportItem::getReportId, reportId).list();
+        return this.lambdaQuery()
+                .eq(PhysicalExamReportItem::getReportId, reportId)
+                .list();
+    }
+    
+    @Override
+    public List<PhysicalExamReportItem> getItemsByReportIdAndCategory(Long reportId, String category) {
+        return this.lambdaQuery()
+                .eq(PhysicalExamReportItem::getReportId, reportId)
+                .eq(PhysicalExamReportItem::getCategory, category)
+                .list();
     }
 } 

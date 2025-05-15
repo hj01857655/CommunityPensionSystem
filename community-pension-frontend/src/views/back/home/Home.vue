@@ -80,6 +80,61 @@
       </el-table>
     </el-card>
 
+    <!-- 底部区域：通知和预警 -->
+    <el-row :gutter="20" class="bottom-row">
+      <!-- 最新通知公告 -->
+      <el-col :span="12">
+        <el-card class="notification-card">
+          <template #header>
+            <div class="notification-header">
+              <span>最新通知公告</span>
+              <el-button type="primary" link @click="showMoreNotifications">查看更多</el-button>
+            </div>
+          </template>
+          <el-empty v-if="!notifications.length" description="暂无通知" />
+          <el-table v-else :data="notifications" style="width: 100%">
+            <el-table-column prop="title" label="标题" show-overflow-tooltip />
+            <el-table-column prop="type" label="类型" width="100" />
+            <el-table-column prop="date" label="发布时间" width="180">
+              <template #default="{ row }">
+                {{ formatDateTime(row.date) }}
+              </template>
+            </el-table-column>
+            <el-table-column prop="status" label="状态" width="100">
+              <template #default="{ row }">
+                <el-tag :type="getNotificationStatusType(row.status)">
+                  {{ row.status }}
+                </el-tag>
+              </template>
+            </el-table-column>
+          </el-table>
+        </el-card>
+      </el-col>
+
+      <!-- 健康预警 -->
+      <el-col :span="12">
+        <el-card class="warning-card">
+          <template #header>
+            <div class="warning-header">
+              <span>健康预警</span>
+              <el-button type="primary" link @click="showMoreWarnings">查看更多</el-button>
+            </div>
+          </template>
+          <el-empty v-if="!warnings.length" description="暂无预警" />
+          <el-table v-else :data="warnings" style="width: 100%">
+            <el-table-column prop="userName" label="老人姓名" width="120" />
+            <el-table-column prop="warningType" label="预警类型" width="120" />
+            <el-table-column prop="warningMessage" label="预警内容" show-overflow-tooltip />
+            <el-table-column prop="warningTime" label="预警时间" width="180">
+              <template #default="{ row }">
+                {{ formatDateTime(row.warningTime) }}
+              </template>
+            </el-table-column>
+          </el-table>
+        </el-card>
+      </el-col>
+    </el-row>
+
     <!-- 更多活动对话框 -->
     <el-dialog
       v-model="dialogVisible"
@@ -104,23 +159,75 @@
         </span>
       </template>
     </el-dialog>
+
+    <!-- 更多通知对话框 -->
+    <el-dialog
+      v-model="notificationDialogVisible"
+      title="通知公告列表"
+      width="80%"
+    >
+      <el-table :data="allNotifications" style="width: 100%">
+        <el-table-column prop="title" label="标题" show-overflow-tooltip />
+        <el-table-column prop="type" label="类型" width="100" />
+        <el-table-column prop="date" label="发布时间" width="180">
+          <template #default="{ row }">
+            {{ formatDateTime(row.date) }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="status" label="状态" width="100">
+          <template #default="{ row }">
+            <el-tag :type="getNotificationStatusType(row.status)">
+              {{ row.status }}
+            </el-tag>
+          </template>
+        </el-table-column>
+      </el-table>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="notificationDialogVisible = false">关闭</el-button>
+        </span>
+      </template>
+    </el-dialog>
+
+    <!-- 更多预警对话框 -->
+    <el-dialog
+      v-model="warningDialogVisible"
+      title="健康预警列表"
+      width="80%"
+    >
+      <el-table :data="allWarnings" style="width: 100%">
+        <el-table-column prop="userName" label="老人姓名" width="120" />
+        <el-table-column prop="warningType" label="预警类型" width="120" />
+        <el-table-column prop="warningMessage" label="预警内容" show-overflow-tooltip />
+        <el-table-column prop="warningTime" label="预警时间" width="180">
+          <template #default="{ row }">
+            {{ formatDateTime(row.warningTime) }}
+          </template>
+        </el-table-column>
+      </el-table>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="warningDialogVisible = false">关闭</el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, nextTick } from 'vue'
-import CountTo from '@/components/common/utils/CountTo/index.vue'
 import {
-  User, Timer, List, Bell,
-  ArrowUp, ArrowDown
-} from '@element-plus/icons-vue'
+  getActivityTypeData,
+  getOverviewStatistics,
+  getRecentActivities,
+  getRecentNotifications,
+  getStatisticsData,
+  getUserTrendData,
+  getWarningData
+} from '@/api/back/dashboard'
+import CountTo from '@/components/common/utils/CountTo/index.vue'
 import * as echarts from 'echarts'
-import { 
-  getTrendData, 
-  getActivityTypes, 
-  getStatistics,
-  getActivities 
-} from '@/mock/dashboard'
+import { ElMessage } from 'element-plus'
+import { nextTick, onMounted, onUnmounted, ref } from 'vue'
 
 // 引用图表DOM
 const trendChartRef = ref(null)
@@ -138,6 +245,13 @@ const statistics = ref([])
 const latestActivities = ref([])
 const allActivities = ref([])
 const dialogVisible = ref(false)
+const loading = ref(false)
+const notifications = ref([])
+const allNotifications = ref([])
+const notificationDialogVisible = ref(false)
+const warnings = ref([])
+const allWarnings = ref([])
+const warningDialogVisible = ref(false)
 
 // 定时刷新
 let refreshTimer = null
@@ -164,57 +278,68 @@ const initTrendChart = () => {
 }
 
 // 更新趋势图数据
-const updateTrendChart = () => {
-  const { dates, newUsers, activeUsers } = getTrendData(timeRange.value)
-  
-  const option = {
-    tooltip: {
-      trigger: 'axis'
-    },
-    legend: {
-      data: ['新增用户', '活跃用户']
-    },
-    grid: {
-      left: '3%',
-      right: '4%',
-      bottom: '3%',
-      containLabel: true
-    },
-    xAxis: {
-      type: 'category',
-      boundaryGap: false,
-      data: dates
-    },
-    yAxis: {
-      type: 'value'
-    },
-    series: [
-      {
-        name: '新增用户',
-        type: 'line',
-        data: newUsers,
-        smooth: true,
-        areaStyle: {
-          opacity: 0.1
-        }
-      },
-      {
-        name: '活跃用户',
-        type: 'line',
-        data: activeUsers,
-        smooth: true,
-        areaStyle: {
-          opacity: 0.1
-        }
+const updateTrendChart = async () => {
+  try {
+    // 使用API获取趋势数据
+    const response = await getUserTrendData(timeRange.value)
+    if (response.code === 200 && response.data) {
+      const { dates, newUsers, activeUsers } = response.data
+      
+      const option = {
+        tooltip: {
+          trigger: 'axis'
+        },
+        legend: {
+          data: ['新增用户', '活跃用户']
+        },
+        grid: {
+          left: '3%',
+          right: '4%',
+          bottom: '3%',
+          containLabel: true
+        },
+        xAxis: {
+          type: 'category',
+          boundaryGap: false,
+          data: dates
+        },
+        yAxis: {
+          type: 'value'
+        },
+        series: [
+          {
+            name: '新增用户',
+            type: 'line',
+            data: newUsers,
+            smooth: true,
+            areaStyle: {
+              opacity: 0.1
+            }
+          },
+          {
+            name: '活跃用户',
+            type: 'line',
+            data: activeUsers,
+            smooth: true,
+            areaStyle: {
+              opacity: 0.1
+            }
+          }
+        ]
       }
-    ]
+      
+      trendChart?.setOption(option)
+    }
+  } catch (error) {
+    console.error('获取用户趋势数据失败:', error)
+    ElMessage.error('获取用户趋势数据失败')
+    
+    // 如果API失败，尝试使用备选方案(例如缓存的数据)或显示错误状态
   }
-  
-  trendChart?.setOption(option)
 }
 
 // 初始化饼图
-const initPieChart = () => {
+const initPieChart = async () => {
   if (!pieChartRef.value) return
   
   pieChart = echarts.init(pieChartRef.value, null, {
@@ -231,55 +356,123 @@ const initPieChart = () => {
       mousewheel: { passive: true }
     }
   })
-  const data = getActivityTypes()
   
-  const option = {
-    tooltip: {
-      trigger: 'item',
-      formatter: '{a} <br/>{b}: {c} ({d}%)'
-    },
-    legend: {
-      orient: 'vertical',
-      left: 'left'
-    },
-    series: [
-      {
-        name: '活动类型',
-        type: 'pie',
-        radius: ['40%', '70%'],
-        avoidLabelOverlap: false,
-        itemStyle: {
-          borderRadius: 10,
-          borderColor: '#fff',
-          borderWidth: 2
+  try {
+    // 使用API获取活动类型数据
+    const response = await getActivityTypeData()
+    if (response.code === 200 && response.data) {
+      const data = response.data
+      
+      const option = {
+        tooltip: {
+          trigger: 'item',
+          formatter: '{a} <br/>{b}: {c} ({d}%)'
         },
-        label: {
-          show: false,
-          position: 'center'
+        legend: {
+          orient: 'vertical',
+          left: 'left'
         },
-        emphasis: {
-          label: {
-            show: true,
-            fontSize: '20',
-            fontWeight: 'bold'
+        series: [
+          {
+            name: '活动类型',
+            type: 'pie',
+            radius: ['40%', '70%'],
+            avoidLabelOverlap: false,
+            itemStyle: {
+              borderRadius: 10,
+              borderColor: '#fff',
+              borderWidth: 2
+            },
+            label: {
+              show: false,
+              position: 'center'
+            },
+            emphasis: {
+              label: {
+                show: true,
+                fontSize: '20',
+                fontWeight: 'bold'
+              }
+            },
+            labelLine: {
+              show: false
+            },
+            data: data
           }
-        },
-        labelLine: {
-          show: false
-        },
-        data: data
+        ]
       }
-    ]
+      
+      pieChart?.setOption(option)
+    }
+  } catch (error) {
+    console.error('获取活动类型数据失败:', error)
+    ElMessage.error('获取活动类型数据失败')
+    
+    // 如果API失败，尝试显示错误状态
   }
-  
-  pieChart?.setOption(option)
 }
 
 // 刷新所有数据
-const refreshData = () => {
-  statistics.value = getStatistics()
-  latestActivities.value = getActivities(3)
-  updateTrendChart()
+const refreshData = async () => {
+  loading.value = true
+  
+  try {
+    // 尝试使用主要统计数据API
+    const statsResponse = await getStatisticsData()
+    if (statsResponse.code === 200 && statsResponse.data) {
+      statistics.value = statsResponse.data
+    } else {
+      // 如果主要API失败，尝试使用备选API
+      try {
+        const overviewResponse = await getOverviewStatistics()
+        if (overviewResponse) {
+          // 转换为列表格式，以适应UI展示
+          statistics.value = Object.entries(overviewResponse).map(([key, value]) => {
+            // 根据键名设置不同的图标
+            let icon = 'User'
+            if (key.includes('activity')) icon = 'List'
+            else if (key.includes('active')) icon = 'Timer'
+            else if (key.includes('ongoing')) icon = 'Bell'
+            
+            return {
+              title: key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()),
+              value: typeof value === 'object' ? value.count : value,
+              trend: typeof value === 'object' ? value.trend || 0 : 0,
+              icon
+            }
+          }).filter(item => item.title && item.value !== undefined)
+        }
+      } catch (fallbackError) {
+        console.error('备选统计API也失败了:', fallbackError)
+      }
+    }
+    
+    // 最新活动
+    const activitiesResponse = await getRecentActivities(3)
+    if (activitiesResponse.code === 200 && activitiesResponse.data) {
+      latestActivities.value = activitiesResponse.data
+    }
+    
+    // 最新通知
+    const notificationsResponse = await getRecentNotifications(5)
+    if (notificationsResponse.code === 200 && notificationsResponse.data) {
+      notifications.value = notificationsResponse.data
+    }
+    
+    // 健康预警
+    const warningsResponse = await getWarningData(5)
+    if (warningsResponse.code === 200 && warningsResponse.data) {
+      warnings.value = warningsResponse.data
+    }
+    
+    // 更新趋势图
+    await updateTrendChart()
+  } catch (error) {
+    console.error('刷新仪表盘数据失败:', error)
+    ElMessage.error('刷新仪表盘数据失败')
+  } finally {
+    loading.value = false
+  }
 }
 
 // 处理时间范围变化
@@ -298,9 +491,62 @@ const getStatusType = (status) => {
 }
 
 // 显示更多活动
-const showMoreActivities = () => {
-  allActivities.value = getActivities(10)
-  dialogVisible.value = true
+const showMoreActivities = async () => {
+  try {
+    const response = await getRecentActivities(10)
+    if (response.code === 200 && response.data) {
+      allActivities.value = response.data
+      dialogVisible.value = true
+    }
+  } catch (error) {
+    console.error('获取更多活动数据失败:', error)
+    ElMessage.error('获取更多活动数据失败')
+  }
+}
+
+// 显示更多通知
+const showMoreNotifications = async () => {
+  try {
+    const response = await getRecentNotifications(10)
+    if (response.code === 200 && response.data) {
+      allNotifications.value = response.data
+      notificationDialogVisible.value = true
+    }
+  } catch (error) {
+    console.error('获取更多通知数据失败:', error)
+    ElMessage.error('获取更多通知数据失败')
+  }
+}
+
+// 显示更多预警
+const showMoreWarnings = async () => {
+  try {
+    const response = await getWarningData(10)
+    if (response.code === 200 && response.data) {
+      allWarnings.value = response.data
+      warningDialogVisible.value = true
+    }
+  } catch (error) {
+    console.error('获取更多预警数据失败:', error)
+    ElMessage.error('获取更多预警数据失败')
+  }
+}
+
+// 格式化日期时间
+const formatDateTime = (dateTime) => {
+  if (!dateTime) return '';
+  const date = new Date(dateTime);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+}
+
+// 获取通知状态对应的类型
+const getNotificationStatusType = (status) => {
+  const types = {
+    '草稿': 'info',
+    '已发布': 'success',
+    '已撤回': 'danger'
+  }
+  return types[status] || 'info'
 }
 
 // 监听窗口大小变化
@@ -419,6 +665,20 @@ onUnmounted(() => {
 
 .activity-card {
   .activity-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+}
+
+.bottom-row {
+  margin-top: 20px;
+}
+
+.notification-card,
+.warning-card {
+  .notification-header,
+  .warning-header {
     display: flex;
     justify-content: space-between;
     align-items: center;

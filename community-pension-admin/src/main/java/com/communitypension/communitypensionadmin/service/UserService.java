@@ -10,6 +10,8 @@ import com.communitypension.communitypensionadmin.entity.User;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -187,4 +189,48 @@ public interface UserService extends IService<User> {
      * @return 老人用户列表
      */
     List<User> getAllElders();
+    
+    /**
+     * 获取指定时间之前创建的用户数量
+     * @param time 指定时间
+     * @return 用户数量
+     */
+    Long getCountBeforeTime(LocalDateTime time);
+    
+    /**
+     * 获取指定天数内的活跃用户数量
+     * @param days 天数
+     * @return 活跃用户数量
+     */
+    Long getActiveUserCount(int days);
+    
+    /**
+     * 获取指定时间范围内的活跃用户数量
+     * @param endDaysBefore 结束时间距今天数
+     * @param startDaysBefore 开始时间距今天数
+     * @return 活跃用户数量
+     */
+    Long getActiveUserCount(int endDaysBefore, int startDaysBefore);
+    
+    /**
+     * 获取指定日期的新增用户数量
+     * @param date 日期
+     * @return 新增用户数量
+     */
+    Long getNewUserCountByDay(LocalDate date);
+    
+    /**
+     * 获取指定日期的活跃用户数量
+     * @param date 日期
+     * @return 活跃用户数量
+     */
+    Long getActiveUserCountByDay(LocalDate date);
+
+    /**
+     * 统计指定时间范围内创建的用户数量
+     * @param startTime 开始时间
+     * @param endTime 结束时间
+     * @return 用户数量
+     */
+    long countByCreateTimeBetween(LocalDateTime startTime, LocalDateTime endTime);
 }

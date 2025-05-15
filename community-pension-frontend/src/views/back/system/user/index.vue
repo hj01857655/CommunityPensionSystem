@@ -33,12 +33,6 @@
         <el-col :span="1.5">
           <el-button type="danger" plain :icon="Delete" :disabled="multiple" @click="handleDelete">删除</el-button>
         </el-col>
-        <el-col :span="1.5">
-          <el-button type="warning" plain :icon="Upload" @click="handleImport">导入</el-button>
-        </el-col>
-        <el-col :span="1.5">
-          <el-button type="info" plain :icon="Download" @click="handleExport">导出</el-button>
-        </el-col>
         <right-toolbar v-model:showSearch="showSearch" @queryTable="getList"></right-toolbar>
       </el-row>
       <!-- 表格 -->
@@ -70,18 +64,24 @@
         <el-table-column label="绑定关系" align="center" v-if="columns[8].visible">
           <template #default="scope">
             <div v-if="hasRole(scope.row, 2)">
-              <el-tag type="warning" v-if="scope.row.elderId">
-                {{ scope.row.relationship || '无' }} - {{ scope.row.elderName ? scope.row.elderName : '已绑定老人' }}
-              </el-tag>
-              <span v-else>未绑定</span>
+              <template v-if="scope.row.elders && scope.row.elders.length > 0">
+                <div v-for="(elder, index) in scope.row.elders" :key="index" style="margin-bottom: 5px;">
+                  <el-tag type="warning" effect="plain" style="cursor: pointer;" @click="handleBindingClick(scope.row, elder)">
+                    {{ elder.relationType || '无关系' }} - {{ elder.name || '老人' }}
+                  </el-tag>
+                </div>
+              </template>
+              <span v-else class="link-text" @click="handleBindingClick(scope.row)">绑定老人</span> 
             </div>
             <div v-else-if="hasRole(scope.row, 1)">
-              <span v-if="scope.row.roleIds && scope.row.roleIds.includes(1)">
-                <el-tag type="info">老人</el-tag>
-              </span>
-              <span v-if="scope.row.roleIds && scope.row.roleIds.includes(2)">
-                <el-tag type="success">家属</el-tag>
-              </span>
+              <template v-if="scope.row.kins && scope.row.kins.length > 0">
+                <div v-for="(kin, index) in scope.row.kins" :key="index" style="margin-bottom: 5px;">
+                  <el-tag type="success" effect="plain" style="cursor: pointer;" @click="handleBindingClick(scope.row, kin)">
+                    {{ kin.relationType || '无关系' }} - {{ kin.name || '家属' }}
+                  </el-tag>
+                </div>
+              </template>
+              <span v-else class="link-text" @click="handleBindingClick(scope.row)">绑定家属</span>
             </div>
             <span v-else>-</span>
           </template>
@@ -120,7 +120,12 @@
       />
   
       <!-- 添加/修改用户对话框 -->
-      <el-dialog :title="dialogType === 'add' ? '添加用户' : '修改用户'" v-model="dialogVisible" width="500px" append-to-body>
+      <el-dialog 
+        :title="dialogType === 'add' ? '添加用户' : (dialogType === 'binding' ? '绑定关系管理' : '修改用户')" 
+        v-model="dialogVisible" 
+        width="500px" 
+        append-to-body
+      >
         <el-form ref="formRef" :model="form" :rules="rules" label-width="80px">
           <el-form-item label="用户账号" prop="username">
             <el-input v-model="form.username" placeholder="用户账号" disabled />
@@ -216,12 +221,89 @@
         </el-form>
         <template #footer>
           <div class="dialog-footer">
-            <el-button type="primary" @click="submitForm">确 定</el-button>
+            <el-button type="primary" @click="submitForm">{{ dialogType === 'binding' ? '保存绑定' : '确 定' }}</el-button>
             <el-button @click="cancel">取 消</el-button>
           </div>
         </template>
       </el-dialog>
   
+      <!-- 用户详情对话框 -->
+      <el-dialog 
+        :title="detailForm && detailForm.isRelatedUser ? `绑定${detailForm.roleIds && detailForm.roleIds.includes(1) ? '老人' : '家属'}详情` : '用户详情'" 
+        v-model="detailDialogVisible" 
+        width="500px" 
+        append-to-body
+      >
+        <div v-loading="detailLoading" class="user-detail">
+          <el-descriptions v-if="detailForm" :column="1" border>
+            <el-descriptions-item label="用户账号">{{ detailForm.username }}</el-descriptions-item>
+            <el-descriptions-item label="姓名">{{ detailForm.name }}</el-descriptions-item>
+            <el-descriptions-item label="手机号码">{{ detailForm.phone }}</el-descriptions-item>
+            <el-descriptions-item label="邮箱">{{ detailForm.email }}</el-descriptions-item>
+            <el-descriptions-item label="角色">
+              <el-tag 
+                v-for="(roleId, index) in detailForm.roleIds" 
+                :key="index"
+                style="margin-right: 4px" 
+                :type="getRoleTagType(roleId)"
+              >
+                {{ roleMap[roleId] }}
+              </el-tag>
+            </el-descriptions-item>
+            <el-descriptions-item label="状态">
+              {{ detailForm.isActive === 1 ? '正常' : '停用' }}
+            </el-descriptions-item>
+            
+            <!-- 老人特有信息 -->
+            <template v-if="detailForm.roleIds && detailForm.roleIds.includes(1)">
+              <el-descriptions-item label="身份证号码">{{ detailForm.idCard || '未填写' }}</el-descriptions-item>
+              <el-descriptions-item label="出生日期">{{ detailForm.birthday || '未填写' }}</el-descriptions-item>
+              <el-descriptions-item label="年龄">{{ detailForm.age || '未填写' }}</el-descriptions-item>
+              <el-descriptions-item label="健康状况">{{ detailForm.healthCondition || '未填写' }}</el-descriptions-item>
+              <el-descriptions-item label="紧急联系人">{{ detailForm.emergencyContactName || '未填写' }}</el-descriptions-item>
+              <el-descriptions-item label="紧急联系电话">{{ detailForm.emergencyContactPhone || '未填写' }}</el-descriptions-item>
+              <el-descriptions-item label="绑定家属">
+                <div v-if="detailForm.kins && detailForm.kins.length > 0">
+                  <div v-for="(kin, index) in detailForm.kins" :key="index" class="mb-1">
+                    <el-tag type="success" effect="plain" style="cursor: pointer;" @click="viewUserDetail(kin.userId)">
+                      {{ kin.relationType || '无关系' }} - {{ kin.name || '家属' }}
+                    </el-tag>
+                  </div>
+                </div>
+                <span v-else>无绑定家属</span>
+              </el-descriptions-item>
+            </template>
+            
+            <!-- 家属特有信息 -->
+            <template v-if="detailForm.roleIds && detailForm.roleIds.includes(2)">
+              <el-descriptions-item label="绑定老人">
+                <div v-if="detailForm.elders && detailForm.elders.length > 0">
+                  <div v-for="(elder, index) in detailForm.elders" :key="index" class="mb-1">
+                    <el-tag type="warning" effect="plain" style="cursor: pointer;" @click="viewUserDetail(elder.userId)">
+                      {{ elder.relationType || '无关系' }} - {{ elder.name || '老人' }}
+                    </el-tag>
+                  </div>
+                </div>
+                <span v-else>无绑定老人</span>
+              </el-descriptions-item>
+            </template>
+            
+            <!-- 社区工作人员特有信息 -->
+            <template v-if="detailForm.roleIds && detailForm.roleIds.includes(3)">
+              <el-descriptions-item label="部门">{{ detailForm.department || '未填写' }}</el-descriptions-item>
+              <el-descriptions-item label="岗位">{{ detailForm.position || '未填写' }}</el-descriptions-item>
+            </template>
+            
+            <el-descriptions-item label="创建时间">{{ formatDate(detailForm.createTime) }}</el-descriptions-item>
+          </el-descriptions>
+        </div>
+        <template #footer>
+          <div class="dialog-footer">
+            <el-button @click="detailDialogVisible = false">关 闭</el-button>
+            <el-button type="primary" @click="handleEditFromDetail">编 辑</el-button>
+          </div>
+        </template>
+      </el-dialog>
       
     </div>
   </template>
@@ -231,7 +313,7 @@
 import Pagination from '@/components/common/Pagination.vue';
 import { useUserStore } from '@/stores/back/userStore';
 import { formatDate } from '@/utils/date';
-import { ArrowDown, Delete, Download, Edit, Plus, Refresh, Search, Upload } from '@element-plus/icons-vue';
+import { ArrowDown, Delete, Edit, Plus, Refresh, Search } from '@element-plus/icons-vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { storeToRefs } from 'pinia';
 import { pinyin } from 'pinyin-pro';
@@ -303,16 +385,35 @@ import { onMounted, reactive, ref, watch } from 'vue';
         user.roleIds = [];
       }
   
-      // 如果是家属角色且有elderId
-      if (hasRole(user, 2) && user.elderId) {
+      // 如果是家属角色
+      if (hasRole(user, 2)) {
         try {
-          // 获取家属绑定的老人名称
-          const elderResponse = await userStore.fetchElderName(user.elderId);
-          if (elderResponse?.data) {
-            user.elderName = elderResponse.data;
+          // 获取家属绑定的所有老人
+          const elders = await userStore.fetchEldersByKinId(user.userId);
+          if (elders && elders.length > 0) {
+            user.elders = elders;
+          } else {
+            user.elders = [];
           }
         } catch (error) {
-          console.error(`获取用户${user.userId}绑定的老人信息失败:`, error);
+          console.error(`获取家属${user.userId}绑定的老人信息失败:`, error);
+          user.elders = [];
+        }
+      }
+  
+      // 如果是老人角色
+      if (hasRole(user, 1)) {
+        try {
+          // 获取老人绑定的所有家属
+          const kins = await userStore.fetchKinsByElderId(user.userId);
+          if (kins && kins.length > 0) {
+            user.kins = kins;
+          } else {
+            user.kins = [];
+          }
+        } catch (error) {
+          console.error(`获取老人${user.userId}绑定的家属信息失败:`, error);
+          user.kins = [];
         }
       }
     });
@@ -403,20 +504,25 @@ import { onMounted, reactive, ref, watch } from 'vue';
     }
   };
   
-  // 导入
-  const handleImport = () => {
-  
-  };
-  
-  // 导出
-  const handleExport = () => {
-  };
+ 
   
   // 对话框相关
   const dialogType = ref('add');
   const dialogVisible = ref(false);
   const roleDialogVisible = ref(false);
+  const detailDialogVisible = ref(false);
+  const detailForm = ref(null);
+  const detailLoading = ref(false);
   const formRef = ref(null);
+  
+  // 家属绑定相关
+  const kinBindDialogVisible = ref(false);
+  const kinBindForm = ref({
+    elderId: null,
+    kinId: null,
+    relationType: ''
+  });
+  const kinList = ref([]);
   
   const form = ref({
     userId: undefined,
@@ -468,7 +574,7 @@ import { onMounted, reactive, ref, watch } from 'vue';
     isElder.value = selectedRoles.includes(1);
   
     // 如果是家属角色，获取可绑定的老人列表
-    if (isKin.value) {
+    if (isKin.value) {  
       getElderList();
     } else {
       // 如果不是家属角色，清空老人相关字段
@@ -581,14 +687,20 @@ import { onMounted, reactive, ref, watch } from 'vue';
   
       const userData = userResponse.data;
       const roleIds = userData.roleIds || [];
-  
+      
+      // 如果是家属角色，则获取与老人的关系信息
+      let relationshipInfo = '';
+      if (roleIds.includes(2) && row.elders && row.elders.length > 0) {
+        relationshipInfo = row.elders[0].relationType || '';
+      }
+      
       // 填充表单数据
       form.value = {
         ...userData,
         userId: row.userId, // 确保设置userId
-        roleIds: roleIds,
+        roleIds: roleIds,   // 获取用户角色
         elderId: userData.bindElderIds?.[0] || null, // 获取绑定的老人ID
-        relationship: userData.relationType || '' // 获取关系类型
+        relationship: relationshipInfo || userData.relationType || '' // 获取关系类型
       };
   
       // 更新角色状态
@@ -758,7 +870,6 @@ import { onMounted, reactive, ref, watch } from 'vue';
       const response = await userStore.fetchUnboundKins();
       if (response?.data) {
         // 处理未绑定老人的家属列表
-        console.log('未绑定老人的家属列表:', response.data);
       }
     } catch (error) {
       console.error('获取未绑定老人的家属列表失败:', error);
@@ -796,29 +907,260 @@ import { onMounted, reactive, ref, watch } from 'vue';
     }
   };
   
-  // 获取老人的所有家属ID
-  const getKinIdsByElder = async (elderId) => {
+  // 编辑用户详情
+  const handleEditFromDetail = () => {
+    if (!detailForm.value) return;
+    
+    // 关闭详情对话框
+    detailDialogVisible.value = false;
+    
+    // 创建一个包含必要信息的行对象，以供handleUpdate使用
+    const row = {
+      userId: detailForm.value.userId,
+      username: detailForm.value.username,
+      roleIds: detailForm.value.roleIds || [],
+      // 如果详情页中已加载了绑定关系，则传递给编辑页面
+      kins: detailForm.value.kins || [],
+      elders: detailForm.value.elders || []
+    };
+    
+    // 延迟一下再打开编辑对话框，避免两个对话框同时操作的问题
+    setTimeout(() => {
+      handleUpdate(row);
+    }, 300);
+  };
+  
+  // 查看用户详情
+  const viewUserDetail = async (userId, isRelatedUser = false) => {
     try {
-      const response = await userStore.handleGetKinIdsByElderId(elderId);
-      if (response?.data) {
-        console.log('老人的所有家属ID:', response.data);
+      // 先关闭当前详情对话框，避免多层嵌套
+      if (detailDialogVisible.value) {
+        detailDialogVisible.value = false;
+        // 延迟一下再打开新的详情对话框
+        await new Promise(resolve => setTimeout(resolve, 300));
       }
+      
+      detailDialogVisible.value = true;
+      detailLoading.value = true;
+      
+      // 获取用户详细信息
+      const response = await userStore.handleGetUserInfo(userId);
+      if (!response?.data) {
+        ElMessage.error('获取用户详情失败');
+        detailDialogVisible.value = false;
+        return;
+      }
+      
+      const userData = response.data;
+      const roleIds = userData.roleIds || [];
+      
+      // 获取绑定关系信息
+      let userWithRelations = { 
+        ...userData,
+        isRelatedUser   // 标记是否为关联用户（绑定关系中的另一方）
+      };
+      
+      // 并行获取绑定关系
+      const promises = [];
+      
+      // 如果是老人角色，获取其绑定的家属信息
+      if (roleIds.includes(1)) {
+        promises.push(
+          userStore.fetchKinsByElderId(userId)
+            .then(kins => {
+              userWithRelations.kins = kins || [];
+            })
+            .catch(error => {
+              console.error('获取绑定家属信息失败:', error);
+              userWithRelations.kins = [];
+            })
+        );
+      }
+      
+      // 如果是家属角色，获取其绑定的老人信息
+      if (roleIds.includes(2)) {
+        promises.push(
+          userStore.fetchEldersByKinId(userId)
+            .then(elders => {
+              userWithRelations.elders = elders || [];
+            })
+            .catch(error => {
+              console.error('获取绑定老人信息失败:', error);
+              userWithRelations.elders = [];
+            })
+        );
+      }
+      
+      // 等待所有绑定关系加载完成
+      await Promise.all(promises);
+      
+      // 更新详情表单
+      detailForm.value = userWithRelations;
+      
     } catch (error) {
-      console.error('获取老人的所有家属ID失败:', error);
-      ElMessage.error('获取老人的所有家属ID失败');
+      console.error('获取用户详情失败:', error);
+      ElMessage.error('获取用户详情失败');
+    } finally {
+      detailLoading.value = false;
     }
   };
   
-  // 获取家属的所有老人ID
-  const getElderIdsByKin = async (kinId) => {
+  // 绑定关系点击
+  const handleBindingClick = async (user, relatedUser) => {
     try {
-      const response = await userStore.handleGetElderIdsByKinId(kinId);
-      if (response?.data) {
-        console.log('家属的所有老人ID:', response.data);
+      // 如果是点击绑定关系标签，应该显示用户详情而不是编辑页面
+      if (relatedUser) {
+        // 如果点击的是关联用户标签，显示关联用户的详情
+        await viewUserDetail(relatedUser.userId, true);  // 添加标记表示这是关联用户
+      } else {
+        // 如果点击的是"绑定老人"或"绑定家属"文本，继续使用原有逻辑
+        // 获取用户详细信息
+        const userResponse = await userStore.handleGetUserInfo(user.userId);
+        if (!userResponse?.data) {
+          ElMessage.error('获取用户信息失败');
+          return;
+        }
+
+        // 设置编辑模式
+        dialogType.value = 'edit';
+        reset();
+        
+        const userData = userResponse.data;
+        const roleIds = userData.roleIds || [];
+
+        // 家属角色 - 处理与老人的绑定
+        if (hasRole(user, 2)) {
+          isKin.value = true;
+          
+          // 获取可绑定的老人列表
+          await getElderList();
+          
+          // 填充表单数据
+          form.value = {
+            ...userData,
+            userId: user.userId,
+            roleIds: roleIds
+          };
+        }
+        // 老人角色 - 处理与家属的绑定
+        else if (hasRole(user, 1)) {
+          isElder.value = true;
+          
+          // 获取老人绑定的家属列表
+          const kins = await userStore.fetchKinsByElderId(user.userId);
+          
+          // 填充表单数据
+          form.value = {
+            ...userData,
+            userId: user.userId,
+            roleIds: roleIds,
+            kins: kins || []
+          };
+        }
+        
+        // 修改对话框标题
+        dialogType.value = 'binding';
+        // 显示对话框
+        dialogVisible.value = true;
       }
     } catch (error) {
-      console.error('获取家属的所有老人ID失败:', error);
-      ElMessage.error('获取家属的所有老人ID失败');
+      console.error('处理绑定关系失败:', error);
+      ElMessage.error('处理绑定关系失败');
+    }
+  };
+  
+  // 解绑家属
+  const handleUnbindKin = async (kinId) => {
+    try {
+      await ElMessageBox.confirm('确认要解除与当前家属的绑定关系吗？', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      });
+      
+      const elderId = form.value.userId;
+      
+      // 调用解除绑定接口
+      const success = await userStore.handleUnbindElderKinRelation(elderId, kinId);
+      
+      if (success) {
+        ElMessage.success('解除绑定成功');
+        
+        // 重新获取家属列表
+        const kins = await userStore.fetchKinsByElderId(elderId);
+        form.value.kins = kins || [];
+      } else {
+        ElMessage.error('解除绑定失败');
+      }
+    } catch (error) {
+      console.error('解除绑定操作取消或失败:', error);
+    }
+  };
+  
+  // 显示家属绑定对话框
+  const showKinBindDialog = async () => {
+    try {
+      // 获取未绑定老人的家属列表
+      const response = await userStore.fetchUnboundKins();
+      if (response?.data) {
+        kinList.value = response.data.map(kin => ({
+          value: kin.userId,
+          label: `${kin.name}（${kin.phone || '未填写电话'}）`
+        }));
+        
+        // 重置绑定表单
+        kinBindForm.value = {
+          elderId: form.value.userId,
+          kinId: null,
+          relationType: ''
+        };
+        
+        // 显示绑定对话框
+        kinBindDialogVisible.value = true;
+      } else {
+        ElMessage.warning('暂无可绑定的家属');
+      }
+    } catch (error) {
+      console.error('获取家属列表失败:', error);
+      ElMessage.error('获取家属列表失败');
+    }
+  };
+  
+  // 提交家属绑定
+  const submitKinBind = async () => {
+    // 基本验证
+    if (!kinBindForm.value.kinId) {
+      ElMessage.warning('请选择要绑定的家属');
+      return;
+    }
+    if (!kinBindForm.value.relationType) {
+      ElMessage.warning('请选择关系类型');
+      return;
+    }
+    
+    try {
+      // 调用绑定接口
+      const success = await userStore.handleBindElderKinRelation(
+        kinBindForm.value.elderId,
+        kinBindForm.value.kinId,
+        kinBindForm.value.relationType
+      );
+      
+      if (success) {
+        ElMessage.success('绑定家属成功');
+        
+        // 关闭绑定对话框
+        kinBindDialogVisible.value = false;
+        
+        // 重新获取家属列表
+        const kins = await userStore.fetchKinsByElderId(kinBindForm.value.elderId);
+        form.value.kins = kins || [];
+      } else {
+        ElMessage.error('绑定家属失败');
+      }
+    } catch (error) {
+      console.error('绑定家属失败:', error);
+      ElMessage.error('绑定家属失败');
     }
   };
   
@@ -844,5 +1186,13 @@ import { onMounted, reactive, ref, watch } from 'vue';
   .fixed-width .el-button--small {
     padding: 7px 10px;
     min-width: 60px;
+  }
+  
+  .mb-1 {
+    margin-bottom: 8px;
+  }
+  
+  .user-detail .el-descriptions__label {
+    width: 120px;
   }
   </style>

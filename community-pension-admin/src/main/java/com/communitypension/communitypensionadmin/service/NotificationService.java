@@ -6,6 +6,8 @@ import com.communitypension.communitypensionadmin.entity.Notification;
 import com.communitypension.communitypensionadmin.entity.ServiceOrder;
 import com.communitypension.communitypensionadmin.entity.User;
 import com.communitypension.communitypensionadmin.query.NotificationQuery;
+import java.util.List;
+import java.util.Map;
 
 public interface NotificationService extends IService<Notification> {
 
@@ -62,4 +64,11 @@ public interface NotificationService extends IService<Notification> {
      * @param message 通知消息
      */
     void sendOrderNotification(ServiceOrder order, User user, String message);
+
+    /**
+     * 获取最新通知公告列表
+     * @param limit 返回条数
+     * @return 通知公告列表
+     */
+    List<Map<String, Object>> getRecentNotifications(int limit);
 }

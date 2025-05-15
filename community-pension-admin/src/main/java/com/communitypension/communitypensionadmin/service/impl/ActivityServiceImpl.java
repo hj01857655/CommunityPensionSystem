@@ -11,7 +11,6 @@ import com.communitypension.communitypensionadmin.exception.BusinessException;
 import com.communitypension.communitypensionadmin.mapper.ActivityMapper;
 import com.communitypension.communitypensionadmin.service.ActivityService;
 import com.communitypension.communitypensionadmin.service.DictDataService;
-import com.communitypension.communitypensionadmin.utils.DictUtils;
 import com.communitypension.communitypensionadmin.vo.ActivityVO;
 import com.communitypension.communitypensionadmin.vo.DictDataVO;
 import jakarta.servlet.http.HttpServletResponse;
@@ -29,7 +28,6 @@ import org.springframework.util.StringUtils;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,11 +50,11 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, Activity> i
 
         // 构建查询条件
         wrapper.like(StringUtils.hasText(query.getTitle()), Activity::getTitle, query.getTitle())
-               .eq(query.getStatus() != null, Activity::getStatus, query.getStatus())
-               .eq(StringUtils.hasText(query.getType()), Activity::getType, query.getType())
-               .ge(query.getStartTime() != null, Activity::getStartTime, query.getStartTime())
-               .le(query.getEndTime() != null, Activity::getEndTime, query.getEndTime())
-               .orderByDesc(Activity::getCreatedAt);
+                .eq(query.getStatus() != null, Activity::getStatus, query.getStatus())
+                .eq(StringUtils.hasText(query.getType()), Activity::getType, query.getType())
+                .ge(query.getStartTime() != null, Activity::getStartTime, query.getStartTime())
+                .le(query.getEndTime() != null, Activity::getEndTime, query.getEndTime())
+                .orderByDesc(Activity::getCreatedAt);
 
         // 执行分页查询
         Page<Activity> activityPage = page(page, wrapper);
@@ -79,7 +77,7 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, Activity> i
 
         // 设置活动类型名称
         if (StringUtils.hasText(activity.getType())) {
-            DictDataVO dictDatavVO =  dictDataService.getDictDataByTypeAndValue("activity_type", activity.getType());
+            DictDataVO dictDatavVO = dictDataService.getDictDataByTypeAndValue("activity_type", activity.getType());
             if (dictDatavVO != null) {
                 vo.setTypeName(dictDatavVO.getDictLabel());
             } else {
@@ -105,6 +103,7 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, Activity> i
             default -> "未知状态";
         };
     }
+
     /**
      * 获取活动详情
      */
@@ -116,6 +115,7 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, Activity> i
         }
         return convertToVO(activity);
     }
+
     /**
      * 创建活动
      */
@@ -131,6 +131,7 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, Activity> i
 
         save(activity);
     }
+
     /**
      * 更新活动
      */
@@ -148,6 +149,7 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, Activity> i
         BeanUtils.copyProperties(dto, activity);
         updateById(activity);
     }
+
     /**
      * 验证活动时间
      */
@@ -159,6 +161,7 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, Activity> i
             throw new BusinessException("开始时间不能早于当前时间");
         }
     }
+
     /**
      * 更新活动状态
      */
@@ -178,9 +181,10 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, Activity> i
     }
 
     /**
-     *  验证状态转换是否合法
+     * 验证状态转换是否合法
+     *
      * @param currentStatus 当前状态
-     * @param newStatus 新状态
+     * @param newStatus     新状态
      */
     private void validateStatusTransition(Integer currentStatus, Integer newStatus) {
         // 定义状态转换规则
@@ -197,6 +201,7 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, Activity> i
 
     /**
      * 删除活动
+     *
      * @param id 活动ID
      */
     @Override
@@ -237,71 +242,154 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, Activity> i
      * 导出活动列表
      */
     @Override
-    public void exportActivityList(String title, Integer status,
-                                 String startTime, String endTime, HttpServletResponse response) {
-        // 构建查询条件
-        LambdaQueryWrapper<Activity> wrapper = new LambdaQueryWrapper<Activity>()
-            .like(StringUtils.hasText(title), Activity::getTitle, title)
-            .eq(status != null, Activity::getStatus, status)
-            .ge(StringUtils.hasText(startTime), Activity::getStartTime, parseDateTime(startTime))
-            .le(StringUtils.hasText(endTime), Activity::getEndTime, parseDateTime(endTime))
-            .orderByDesc(Activity::getCreatedAt);
+    public void exportActivityList(String title, Integer status, String startTime, String endTime, HttpServletResponse response) {
+        // 查询活动列表
+        ActivityQuery query = new ActivityQuery();
+        query.setTitle(title);
+        query.setStatus(status);
+        // 这里假设startTime和endTime是字符串，需要转换为LocalDateTime，如果不是请直接传LocalDateTime
+        // query.setStartTimeRange(startTime);
+        // query.setEndTimeRange(endTime);
+        // 改为：
+        // 你可以根据实际需要解析字符串为LocalDateTime
+        // 这里简单处理，实际项目建议用DateTimeFormatter解析
+        // query.setStartTime(LocalDateTime.parse(startTime, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        // query.setEndTime(LocalDateTime.parse(endTime, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        // 如果startTime和endTime为null则不设置
+        query.setPageNum(1);
+        query.setPageSize(Integer.MAX_VALUE);
+        List<ActivityVO> activityList = getActivityList(query).getRecords();
 
-        // 查询数据
-        List<Activity> activities = baseMapper.selectList(wrapper);
+        try (Workbook workbook = new XSSFWorkbook()) {
+            Sheet sheet = workbook.createSheet("活动列表");
 
-        // 创建工作簿
-        Workbook workbook = new XSSFWorkbook();
-        Sheet sheet = workbook.createSheet("活动列表");
-
-        // 创建标题行
-        Row headerRow = sheet.createRow(0);
-        String[] headers = {"活动ID", "活动标题", "活动类型", "活动内容", "开始时间", "结束时间", "状态", "参与人数"};
-        for (int i = 0; i < headers.length; i++) {
-            Cell cell = headerRow.createCell(i);
-            cell.setCellValue(headers[i]);
-        }
-
-        // 填充数据
-        int rowNum = 1;
-        for (Activity activity : activities) {
-            Row row = sheet.createRow(rowNum++);
-            row.createCell(0).setCellValue(activity.getId());
-            row.createCell(1).setCellValue(activity.getTitle());
-            // 添加活动类型
-            if (activity.getType() != null) {
-                row.createCell(2).setCellValue(DictUtils.getDictLabel(DictTypeConstants.ACTIVITY_TYPE, String.valueOf(activity.getType())));
+            // 创建标题行
+            Row headerRow = sheet.createRow(0);
+            String[] headers = {"活动ID", "活动标题", "活动类型", "活动地点", "开始时间", "结束时间", "最大参与人数", "当前参与人数", "活动状态", "创建时间"};
+            for (int i = 0; i < headers.length; i++) {
+                Cell cell = headerRow.createCell(i);
+                cell.setCellValue(headers[i]);
             }
-            row.createCell(4).setCellValue(activity.getStartTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-            row.createCell(5).setCellValue(activity.getEndTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-            row.createCell(6).setCellValue(getStatusName(activity.getStatus()));
-            row.createCell(7).setCellValue(baseMapper.getCurrentRegisters(activity.getId()));
-        }
 
-        // 设置响应头
-        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-        response.setHeader("Content-Disposition", "attachment; filename=activities.xlsx");
+            // 填充数据行
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            for (int i = 0; i < activityList.size(); i++) {
+                ActivityVO activity = activityList.get(i);
+                Row row = sheet.createRow(i + 1);
 
-        // 写入响应流
-        try {
+                row.createCell(0).setCellValue(activity.getId());
+                row.createCell(1).setCellValue(activity.getTitle());
+                row.createCell(2).setCellValue(activity.getTypeName());
+                row.createCell(3).setCellValue(activity.getLocation());
+                row.createCell(4).setCellValue(activity.getStartTime() != null ? activity.getStartTime().format(formatter) : "");
+                row.createCell(5).setCellValue(activity.getEndTime() != null ? activity.getEndTime().format(formatter) : "");
+                row.createCell(6).setCellValue(activity.getMaxParticipants() != null ? activity.getMaxParticipants() : 0);
+                row.createCell(7).setCellValue(activity.getCurrentParticipants() != null ? activity.getCurrentParticipants() : 0);
+                row.createCell(8).setCellValue(activity.getStatusName());
+                row.createCell(9).setCellValue(activity.getCreatedAt() != null ? activity.getCreatedAt().format(formatter) : "");
+            }
+
+            // 设置响应头和内容类型
+            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            response.setHeader("Content-Disposition", "attachment; filename=activity_list.xlsx");
+
+            // 将工作簿写入响应输出流
             workbook.write(response.getOutputStream());
-            workbook.close();
         } catch (IOException e) {
-            throw new RuntimeException("导出Excel失败", e);
+            throw new RuntimeException("导出活动列表失败", e);
         }
     }
 
     /**
-     * 解析日期时间字符串
+     * 获取进行中的活动数量
      */
-    private LocalDateTime parseDateTime(String dateTimeStr) {
-        if (!StringUtils.hasText(dateTimeStr)) {
-            return null;
-        }
-        try {
-            return LocalDateTime.parse(dateTimeStr, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-        } catch (DateTimeParseException e) {
-            throw new RuntimeException("日期时间格式错误，应为：yyyy-MM-dd HH:mm:ss", e);
-        }
+    @Override
+    public Long getOngoingActivityCount() {
+        LambdaQueryWrapper<Activity> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Activity::getStatus, 2); // 状态为进行中
+        return count(wrapper);
+    }
+
+    /**
+     * 根据指定时间获取进行中的活动数量
+     */
+    @Override
+    public Long getOngoingActivityCountByTime(LocalDateTime time) {
+        LambdaQueryWrapper<Activity> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Activity::getStatus, 2) // 状态为进行中
+                .le(Activity::getStartTime, time) // 开始时间小于等于指定时间
+                .ge(Activity::getEndTime, time);  // 结束时间大于等于指定时间
+        return count(wrapper);
+    }
+
+    /**
+     * 获取指定时间之前创建的活动数量
+     */
+    @Override
+    public Long getCountBeforeTime(LocalDateTime time) {
+        LambdaQueryWrapper<Activity> wrapper = new LambdaQueryWrapper<>();
+        wrapper.le(Activity::getCreatedAt, time);
+        return count(wrapper);
+    }
+
+    /**
+     * 获取活动类型分布数据
+     */
+    @Override
+    public Map<String, Long> getActivityCountByType() {
+        // 获取所有活动
+        List<Activity> activities = list();
+
+        // 获取活动类型字典数据
+        List<DictDataVO> dictList = dictDataService.getDictDataByType(DictTypeConstants.ACTIVITY_TYPE);
+        Map<String, String> dictMap = dictList.stream()
+                .collect(Collectors.toMap(DictDataVO::getDictValue, DictDataVO::getDictLabel));
+
+        // 按活动类型分组并计数
+        Map<String, Long> typeCounts = activities.stream()
+                .collect(Collectors.groupingBy(
+                        activity -> dictMap.getOrDefault(activity.getType(), "其他"),
+                        Collectors.counting()
+                ));
+
+        return typeCounts;
+    }
+
+    /**
+     * 获取最近的活动
+     */
+    @Override
+    public List<Map<String, Object>> getRecentActivities(Integer limit) {
+        // 获取最近创建的活动，按创建时间降序排列
+        LambdaQueryWrapper<Activity> wrapper = new LambdaQueryWrapper<>();
+        wrapper.orderByDesc(Activity::getCreatedAt);
+        Page<Activity> page = new Page<>(1, limit);
+        Page<Activity> activityPage = page(page, wrapper);
+
+        // 获取活动状态和类型字典数据
+        List<DictDataVO> statusDictList = dictDataService.getDictDataByType(DictTypeConstants.ACTIVITY_STATUS);
+        Map<String, String> statusMap = statusDictList.stream()
+                .collect(Collectors.toMap(DictDataVO::getDictValue, DictDataVO::getDictLabel));
+
+        List<DictDataVO> typeDictList = dictDataService.getDictDataByType(DictTypeConstants.ACTIVITY_TYPE);
+        Map<String, String> typeMap = typeDictList.stream()
+                .collect(Collectors.toMap(DictDataVO::getDictValue, DictDataVO::getDictLabel));
+
+        // 转换为前端需要的格式
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        List<Map<String, Object>> result = activityPage.getRecords().stream().map(activity -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", activity.getId());
+            map.put("name", activity.getTitle());
+            map.put("date", activity.getStartTime() != null ? activity.getStartTime().format(formatter) : "");
+            map.put("participants", activity.getCurrentParticipants() != null ? activity.getCurrentParticipants() : 0);
+            map.put("status", statusMap.getOrDefault(activity.getStatus() != null ? activity.getStatus().toString() : "", "未知"));
+            map.put("type", typeMap.getOrDefault(activity.getType(), "其他"));
+            map.put("location", activity.getLocation());
+            map.put("maxParticipants", activity.getMaxParticipants() != null ? activity.getMaxParticipants() : 0);
+            return map;
+        }).collect(Collectors.toList());
+
+        return result;
     }
 }

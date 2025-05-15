@@ -11,7 +11,7 @@
  Target Server Version : 80400 (8.4.0)
  File Encoding         : 65001
 
- Date: 09/05/2025 01:01:53
+ Date: 14/05/2025 21:19:33
 */
 
 SET NAMES utf8mb4;
@@ -111,7 +111,7 @@ CREATE TABLE `activity_check_in`  (
   CONSTRAINT `fk_activity_check_in_elder` FOREIGN KEY (`elder_id`) REFERENCES `user` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_activity_check_in_register` FOREIGN KEY (`register_id`) REFERENCES `activity_register` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_activity_check_in_user` FOREIGN KEY (`check_in_user_id`) REFERENCES `user` (`user_id`) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '活动签到表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '活动签到表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of activity_check_in
@@ -144,12 +144,14 @@ CREATE TABLE `activity_register`  (
   CONSTRAINT `fk_activity_register_activity` FOREIGN KEY (`activity_id`) REFERENCES `activities` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_activity_register_elder` FOREIGN KEY (`elder_id`) REFERENCES `user` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_activity_register_register_user` FOREIGN KEY (`register_user_id`) REFERENCES `user` (`user_id`) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE = InnoDB AUTO_INCREMENT = 15 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '活动报名表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 17 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '活动报名表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of activity_register
 -- ----------------------------
-INSERT INTO `activity_register` VALUES (14, 21, 2, 2, 0, '2025-04-05 22:22:57', 0, NULL, '2025-04-05 22:22:57', '2025-04-05 22:22:57', 0);
+INSERT INTO `activity_register` VALUES (14, 21, 2, 2, 0, '2025-05-14 13:24:30', 0, NULL, '2025-04-05 22:22:57', '2025-04-05 22:22:57', 0);
+INSERT INTO `activity_register` VALUES (15, 22, 2, 2, 0, '2025-05-12 12:41:23', 3, NULL, '2025-05-12 12:41:23', '2025-05-12 12:41:23', 0);
+INSERT INTO `activity_register` VALUES (16, 23, 2, 2, 0, '2025-05-12 19:23:01', 3, NULL, '2025-05-12 19:23:01', '2025-05-12 19:23:01', 0);
 
 -- ----------------------------
 -- Table structure for activity_review
@@ -175,7 +177,7 @@ CREATE TABLE `activity_review`  (
   CONSTRAINT `fk_activity_review_activity` FOREIGN KEY (`activity_id`) REFERENCES `activities` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_activity_review_elder` FOREIGN KEY (`elder_id`) REFERENCES `user` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_activity_review_register` FOREIGN KEY (`register_id`) REFERENCES `activity_register` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '活动评价表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '活动评价表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of activity_review
@@ -205,7 +207,7 @@ CREATE TABLE `config`  (
 INSERT INTO `config` VALUES (1, '主框架页-默认皮肤样式名称', 'sys.index.skinName', 'skin-blue', 'Y', 'admin', '2025-03-19 10:55:25', '', NULL, '蓝色 skin-blue、绿色 skin-green、紫色 skin-purple、红色 skin-red、黄色 skin-yellow');
 INSERT INTO `config` VALUES (2, '用户管理-账号初始密码', 'sys.user.initPassword', '123456', 'Y', 'admin', '2025-03-19 10:55:25', '', NULL, '初始化密码 123456');
 INSERT INTO `config` VALUES (3, '主框架页-侧边栏主题', 'sys.index.sideTheme', 'theme-dark', 'Y', 'admin', '2025-03-19 10:55:25', '', NULL, '深色主题theme-dark，浅色主题theme-light');
-INSERT INTO `config` VALUES (4, '账号自助-验证码开关', 'sys.account.captchaEnabled', 'true', 'Y', 'admin', '2025-03-19 10:55:25', '', NULL, '是否开启验证码功能（true开启，false关闭）');
+INSERT INTO `config` VALUES (4, '账号自助-验证码开关', 'sys.account.captchaEnabled', 'false', 'Y', 'admin', '2025-03-19 10:55:25', '', NULL, '是否开启验证码功能（true开启，false关闭）');
 INSERT INTO `config` VALUES (5, '账号自助-是否开启用户注册功能', 'sys.account.registerUser', 'false', 'Y', 'admin', '2025-03-19 10:55:25', '', NULL, '是否开启注册用户功能（true开启，false关闭）');
 INSERT INTO `config` VALUES (6, '用户登录-黑名单列表', 'sys.login.blackIPList', '', 'Y', 'admin', '2025-03-19 10:55:25', '', NULL, '设置登录IP黑名单限制，多个匹配项以;分隔，支持匹配（*通配、网段）');
 INSERT INTO `config` VALUES (100, '主题颜色', 'sys.index.theme', '#11A983', 'Y', 'admin', '2023-04-22 00:57:18', 'admin', '2023-04-22 00:58:23', NULL);
@@ -235,7 +237,7 @@ CREATE TABLE `dict_data`  (
   `update_time` datetime NULL DEFAULT NULL COMMENT '更新时间',
   `remark` varchar(500) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '备注',
   PRIMARY KEY (`dict_code`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 111 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '字典数据表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 145 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '字典数据表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of dict_data
@@ -287,6 +289,40 @@ INSERT INTO `dict_data` VALUES (107, 3, '服务中', '2', 'order_status', '', 'w
 INSERT INTO `dict_data` VALUES (108, 4, '已完成', '3', 'order_status', '', 'success', 'N', '0', 'admin', '2025-04-05 02:10:48', 'admin', '2025-04-05 02:10:48', '工单已完成状态');
 INSERT INTO `dict_data` VALUES (109, 5, '已取消', '4', 'order_status', '', 'danger', 'N', '0', 'admin', '2025-04-05 02:10:48', 'admin', '2025-04-05 02:10:48', '工单已取消状态');
 INSERT INTO `dict_data` VALUES (110, 6, '已拒绝', '5', 'order_status', '', 'danger', 'N', '0', 'admin', '2025-04-05 02:10:48', 'admin', '2025-04-05 02:10:48', '工单已拒绝状态');
+INSERT INTO `dict_data` VALUES (111, 1, '筹备中', '0', 'activity_status', NULL, NULL, 'N', '0', '', NULL, '', NULL, NULL);
+INSERT INTO `dict_data` VALUES (112, 2, '报名中', '1', 'activity_status', NULL, NULL, 'N', '0', '', NULL, '', NULL, NULL);
+INSERT INTO `dict_data` VALUES (113, 3, '进行中', '2', 'activity_status', NULL, NULL, 'N', '0', '', NULL, '', NULL, NULL);
+INSERT INTO `dict_data` VALUES (114, 4, '已结束', '3', 'activity_status', NULL, NULL, 'N', '0', '', NULL, '', NULL, NULL);
+INSERT INTO `dict_data` VALUES (115, 5, '已取消', '4', 'activity_status', NULL, NULL, 'N', '0', '', NULL, '', NULL, NULL);
+INSERT INTO `dict_data` VALUES (116, 1, '父子', 'father_son', 'kinship_type', NULL, NULL, 'N', '0', '', NULL, '', NULL, '父子关系');
+INSERT INTO `dict_data` VALUES (117, 2, '母女', 'mother_daughter', 'kinship_type', NULL, NULL, 'N', '0', '', NULL, '', NULL, '母女关系');
+INSERT INTO `dict_data` VALUES (118, 3, '配偶', 'spouse', 'kinship_type', NULL, NULL, 'N', '0', '', NULL, '', NULL, '配偶关系');
+INSERT INTO `dict_data` VALUES (119, 4, '子女', 'children', 'kinship_type', NULL, NULL, 'N', '0', '', NULL, '', NULL, '子女关系');
+INSERT INTO `dict_data` VALUES (120, 5, '兄弟姐妹', 'siblings', 'kinship_type', NULL, NULL, 'N', '0', '', NULL, '', NULL, '兄弟姐妹关系');
+INSERT INTO `dict_data` VALUES (121, 6, '其他', 'other', 'kinship_type', NULL, NULL, 'N', '0', '', NULL, '', NULL, '其他关系');
+INSERT INTO `dict_data` VALUES (122, 1, '健康', 'healthy', 'health_level', NULL, NULL, 'Y', '0', '', NULL, '', NULL, '健康');
+INSERT INTO `dict_data` VALUES (123, 2, '亚健康', 'subhealthy', 'health_level', NULL, NULL, 'N', '0', '', NULL, '', NULL, '亚健康');
+INSERT INTO `dict_data` VALUES (124, 3, '慢病', 'chronic', 'health_level', NULL, NULL, 'N', '0', '', NULL, '', NULL, '慢性病');
+INSERT INTO `dict_data` VALUES (125, 4, '重病', 'serious', 'health_level', NULL, NULL, 'N', '0', '', NULL, '', NULL, '重病');
+INSERT INTO `dict_data` VALUES (126, 5, '残疾', 'disabled', 'health_level', NULL, NULL, 'N', '0', '', NULL, '', NULL, '残疾');
+INSERT INTO `dict_data` VALUES (127, 1, '非常满意', '5', 'service_rating', NULL, NULL, 'Y', '0', '', NULL, '', NULL, '5星');
+INSERT INTO `dict_data` VALUES (128, 2, '满意', '4', 'service_rating', NULL, NULL, 'N', '0', '', NULL, '', NULL, '4星');
+INSERT INTO `dict_data` VALUES (129, 3, '一般', '3', 'service_rating', NULL, NULL, 'N', '0', '', NULL, '', NULL, '3星');
+INSERT INTO `dict_data` VALUES (130, 4, '不满意', '2', 'service_rating', NULL, NULL, 'N', '0', '', NULL, '', NULL, '2星');
+INSERT INTO `dict_data` VALUES (131, 5, '非常不满意', '1', 'service_rating', NULL, NULL, 'N', '0', '', NULL, '', NULL, '1星');
+INSERT INTO `dict_data` VALUES (132, 1, '高风险', 'high', 'elder_risk_level', NULL, NULL, 'N', '0', '', NULL, '', NULL, '高风险');
+INSERT INTO `dict_data` VALUES (133, 2, '中风险', 'medium', 'elder_risk_level', NULL, NULL, 'N', '0', '', NULL, '', NULL, '中风险');
+INSERT INTO `dict_data` VALUES (134, 3, '低风险', 'low', 'elder_risk_level', NULL, NULL, 'Y', '0', '', NULL, '', NULL, '低风险');
+INSERT INTO `dict_data` VALUES (135, 1, '身份证', 'id_card', 'id_type', NULL, NULL, 'Y', '0', '', NULL, '', NULL, '身份证');
+INSERT INTO `dict_data` VALUES (136, 2, '护照', 'passport', 'id_type', NULL, NULL, 'N', '0', '', NULL, '', NULL, '护照');
+INSERT INTO `dict_data` VALUES (137, 3, '军官证', 'officer_card', 'id_type', NULL, NULL, 'N', '0', '', NULL, '', NULL, '军官证');
+INSERT INTO `dict_data` VALUES (138, 4, '港澳通行证', 'hk_macao_permit', 'id_type', NULL, NULL, 'N', '0', '', NULL, '', NULL, '港澳通行证');
+INSERT INTO `dict_data` VALUES (139, 5, '台胞证', 'taiwan_permit', 'id_type', NULL, NULL, 'N', '0', '', NULL, '', NULL, '台胞证');
+INSERT INTO `dict_data` VALUES (140, 6, '其他', 'other', 'id_type', NULL, NULL, 'N', '0', '', NULL, '', NULL, '其他证件');
+INSERT INTO `dict_data` VALUES (141, 1, '待审核', '0', 'activity_register_status', NULL, NULL, 'Y', '0', '', NULL, '', NULL, '待审核');
+INSERT INTO `dict_data` VALUES (142, 2, '已通过', '1', 'activity_register_status', NULL, NULL, 'N', '0', '', NULL, '', NULL, '已通过');
+INSERT INTO `dict_data` VALUES (143, 3, '已拒绝', '2', 'activity_register_status', NULL, NULL, 'N', '0', '', NULL, '', NULL, '已拒绝');
+INSERT INTO `dict_data` VALUES (144, 4, '已取消', '3', 'activity_register_status', NULL, NULL, 'N', '0', '', NULL, '', NULL, '已取消');
 
 -- ----------------------------
 -- Table structure for dict_type
@@ -304,22 +340,28 @@ CREATE TABLE `dict_type`  (
   `remark` varchar(500) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '备注',
   PRIMARY KEY (`dict_id`) USING BTREE,
   UNIQUE INDEX `dict_type`(`dict_type` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 103 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '字典类型表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 110 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '字典类型表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of dict_type
 -- ----------------------------
-INSERT INTO `dict_type` VALUES (1, '用户性别', 'user_sex', '0', 'admin', '2025-04-01 10:49:39', '', '2025-04-01 10:49:39', '用户性别列表');
-INSERT INTO `dict_type` VALUES (2, '菜单状态', 'show_hide', '0', 'admin', '2025-04-01 10:49:39', '', '2025-04-01 10:49:39', '菜单状态列表');
-INSERT INTO `dict_type` VALUES (3, '系统开关', 'normal_disable', '0', 'admin', '2025-04-01 10:49:39', '', '2025-04-01 10:49:39', '系统开关列表');
-INSERT INTO `dict_type` VALUES (6, '系统状态', 'yes_no', '0', 'admin', '2025-04-01 10:49:39', '', '2025-04-01 10:49:39', '系统是否列表');
-INSERT INTO `dict_type` VALUES (7, '通知类型', 'notice_type', '0', 'admin', '2025-04-01 10:49:39', '', '2025-04-01 10:49:39', '通知类型列表');
-INSERT INTO `dict_type` VALUES (8, '通知状态', 'notice_status', '0', 'admin', '2025-04-01 10:49:39', '', '2025-04-01 10:49:39', '通知状态列表');
-INSERT INTO `dict_type` VALUES (9, '操作类型', 'oper_type', '0', 'admin', '2025-04-01 10:49:39', '', '2025-04-01 10:49:39', '操作类型列表');
-INSERT INTO `dict_type` VALUES (10, '系统状态', 'common_status', '0', 'admin', '2025-04-01 10:49:39', '', '2025-04-01 10:49:39', '登录状态列表');
+INSERT INTO `dict_type` VALUES (1, '用户性别', 'user_sex', '0', 'admin', '2025-05-14 17:23:37', 'admin', '2025-05-14 17:23:37', '用户性别列表');
+INSERT INTO `dict_type` VALUES (2, '菜单状态', 'show_hide', '0', 'admin', '2025-05-14 17:23:37', 'admin', '2025-05-14 17:23:37', '菜单状态列表');
+INSERT INTO `dict_type` VALUES (3, '系统开关', 'normal_disable', '0', 'admin', '2025-05-14 17:23:37', 'admin', '2025-05-14 17:23:37', '系统开关列表');
+INSERT INTO `dict_type` VALUES (6, '系统状态', 'yes_no', '0', 'admin', '2025-05-14 17:23:37', 'admin', '2025-05-14 17:23:37', '系统是否列表');
+INSERT INTO `dict_type` VALUES (7, '通知类型', 'notice_type', '0', 'admin', '2025-05-14 17:23:37', 'admin', '2025-05-14 17:23:37', '通知类型列表');
+INSERT INTO `dict_type` VALUES (8, '通知状态', 'notice_status', '0', 'admin', '2025-05-14 17:23:37', 'admin', '2025-05-14 17:23:37', '通知状态列表');
+INSERT INTO `dict_type` VALUES (9, '操作类型', 'oper_type', '0', 'admin', '2025-05-14 17:23:37', 'admin', '2025-05-14 17:23:37', '操作类型列表');
+INSERT INTO `dict_type` VALUES (10, '系统状态', 'common_status', '0', 'admin', '2025-05-14 17:23:37', 'admin', '2025-05-14 17:23:37', '登录状态列表');
 INSERT INTO `dict_type` VALUES (11, '服务类型', 'service_type', '0', 'admin', '2025-04-05 02:09:58', 'admin', '2025-04-05 02:09:58', '服务项目的类型');
-INSERT INTO `dict_type` VALUES (12, '活动类型', 'activity_type', '0', 'admin', '2025-04-01 10:49:39', '', '2025-04-01 10:49:39', '活动类型列表');
+INSERT INTO `dict_type` VALUES (12, '活动类型', 'activity_type', '0', 'admin', '2025-05-14 17:23:39', 'admin', '2025-05-14 17:23:39', '活动类型列表');
 INSERT INTO `dict_type` VALUES (101, '工单状态', 'order_status', '0', 'admin', '2025-04-05 02:09:40', 'admin', '2025-04-05 02:09:40', '服务工单的状态');
+INSERT INTO `dict_type` VALUES (103, '家庭关系类型', 'kinship_type', '0', 'admin', '2025-05-14 17:28:37', 'admin', '2025-05-14 17:28:37', '老人和家属的关系类型');
+INSERT INTO `dict_type` VALUES (105, '健康等级', 'health_level', '0', 'admin', '2025-05-14 17:28:37', 'admin', '2025-05-14 17:28:37', '老人健康状况分级');
+INSERT INTO `dict_type` VALUES (106, '服务评价等级', 'service_rating', '0', 'admin', '2025-05-14 17:28:37', 'admin', '2025-05-14 17:28:37', '服务评价星级');
+INSERT INTO `dict_type` VALUES (107, '老人风险等级', 'elder_risk_level', '0', 'admin', '2025-05-14 17:28:37', 'admin', '2025-05-14 17:28:37', '老人健康风险分级');
+INSERT INTO `dict_type` VALUES (108, '证件类型', 'id_type', '0', 'admin', '2025-05-14 17:28:37', 'admin', '2025-05-14 17:28:37', '用户证件类型');
+INSERT INTO `dict_type` VALUES (109, '活动报名状态', 'activity_register_status', '0', 'admin', '2025-05-14 17:28:37', 'admin', '2025-05-14 17:28:37', '活动报名审核状态');
 
 -- ----------------------------
 -- Table structure for elder_kin_relation
@@ -338,6 +380,40 @@ CREATE TABLE `elder_kin_relation`  (
 -- ----------------------------
 INSERT INTO `elder_kin_relation` VALUES (2, 3, '父子');
 INSERT INTO `elder_kin_relation` VALUES (25, 26, '子女');
+
+-- ----------------------------
+-- Table structure for health_alert
+-- ----------------------------
+DROP TABLE IF EXISTS `health_alert`;
+CREATE TABLE `health_alert`  (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `elder_id` bigint NOT NULL COMMENT '老人ID',
+  `alert_type` int NOT NULL COMMENT '预警类型：1-血压异常，2-血糖异常，3-心率异常，4-体温异常，5-活动异常，6-用药提醒，7-复查提醒，8-其他异常',
+  `alert_level` int NOT NULL COMMENT '预警级别：1-低，2-中，3-高，4-紧急',
+  `alert_source` int NOT NULL COMMENT '预警来源：1-系统自动监测，2-穿戴设备，3-人工录入，4-定期检查',
+  `title` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '预警标题',
+  `content` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '预警内容',
+  `alert_time` datetime NOT NULL COMMENT '预警时间',
+  `status` int NOT NULL DEFAULT 0 COMMENT '处理状态：0-未处理，1-已处理，2-已忽略',
+  `handler_id` bigint NULL DEFAULT NULL COMMENT '处理人ID',
+  `handle_time` datetime NULL DEFAULT NULL COMMENT '处理时间',
+  `handle_note` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '处理备注',
+  `related_data_id` bigint NULL DEFAULT NULL COMMENT '相关数据ID(如监测记录ID)',
+  `notified` int NOT NULL DEFAULT 0 COMMENT '是否已通知：0-未通知，1-已通知',
+  `notify_time` datetime NULL DEFAULT NULL COMMENT '通知时间',
+  `create_time` datetime NOT NULL COMMENT '创建时间',
+  `update_time` datetime NOT NULL COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_elder_id`(`elder_id` ASC) USING BTREE,
+  INDEX `idx_alert_time`(`alert_time` ASC) USING BTREE,
+  INDEX `idx_alert_level`(`alert_level` ASC) USING BTREE,
+  INDEX `idx_status`(`status` ASC) USING BTREE,
+  INDEX `idx_related_data_id`(`related_data_id` ASC) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '健康预警表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of health_alert
+-- ----------------------------
 
 -- ----------------------------
 -- Table structure for health_monitoring
@@ -410,7 +486,7 @@ CREATE TABLE `health_records`  (
 -- ----------------------------
 -- Records of health_records
 -- ----------------------------
-INSERT INTO `health_records` VALUES (15, 2, '120/80', 75, 5.60, 36.5, 65.00, 170.00, NULL, '', '', '轻度感冒', '2025-04-08 05:05:08', '阿莫西林', '2025-04-08 05:05:08', 2, '初始记录', '2025-04-08 13:01:17', '2025-04-08 13:05:07');
+INSERT INTO `health_records` VALUES (15, 2, '120/80', 75, 5.60, 36.5, 65.00, 170.00, 22.50, '高血压', '青霉素', '轻度感冒', '2025-05-14 13:34:45', '阿莫西林', '2025-05-14 13:34:45', 2, '初始记录', '2025-04-08 13:01:17', '2025-05-14 13:34:46');
 
 -- ----------------------------
 -- Table structure for menu
@@ -489,6 +565,7 @@ CREATE TABLE `notification`  (
   `user_id` bigint NOT NULL COMMENT '用户ID',
   `title` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '通知标题',
   `content` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '通知内容',
+  `type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '通知类型',
   `status` tinyint NOT NULL DEFAULT 0 COMMENT '状态：0-草稿 1-已发布 2-已撤回',
   `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
@@ -501,18 +578,72 @@ CREATE TABLE `notification`  (
 -- ----------------------------
 -- Records of notification
 -- ----------------------------
-INSERT INTO `notification` VALUES (1, 0, '社区健康讲座通知', '计划于下月举办老年人健康知识讲座，具体时间待定', 0, '2023-03-27 09:00:00', '2025-03-28 16:40:54', '2025-03-28 16:41:46');
-INSERT INTO `notification` VALUES (2, 0, '端午节活动筹备', '端午节包粽子活动正在筹备中，需要志愿者报名', 0, '2023-03-27 10:00:00', '2025-03-28 16:41:56', '2023-05-15 14:30:00');
-INSERT INTO `notification` VALUES (3, 0, '系统维护通知', '系统将于今晚23:00-24:00进行维护升级，期间暂停服务', 1, '2023-03-27 11:00:00', '2025-03-28 16:42:07', '2023-05-20 15:00:00');
-INSERT INTO `notification` VALUES (4, 0, '老年体检安排', '6月1日-6月5日社区医院为65岁以上老人提供免费体检', 1, '2023-03-27 11:00:00', '2025-03-28 16:42:13', '2023-05-25 09:00:00');
-INSERT INTO `notification` VALUES (5, 0, '防诈骗知识讲座', '5月30日下午2点社区活动中心举办老年人防诈骗讲座', 1, '2023-03-27 10:00:00', '2025-03-28 16:42:03', '2023-05-28 10:30:00');
-INSERT INTO `notification` VALUES (6, 0, '错误通知示例', '此通知内容有误，已撤回', 2, '2023-03-27 10:00:00', '2025-03-28 16:42:03', '2023-05-18 08:00:00');
-INSERT INTO `notification` VALUES (7, 0, '活动取消通知', '原定于5月22日的书法班因故取消，时间另行通知', 2, '2023-03-27 10:00:00', '2025-03-28 16:42:03', '2023-05-21 13:00:00');
-INSERT INTO `notification` VALUES (8, 0, '重要：医保政策更新', '2023年最新医保报销政策已更新，请及时查看', 1, '2023-03-27 10:00:00', '2025-03-28 16:42:03', '2023-06-01 09:00:00');
-INSERT INTO `notification` VALUES (9, 2, '服务预约通知', '尊敬的刘大毛用户，您的服务预约（预约号：2）预约已创建，等待审核。预约时间：2025-04-29 08:33:00，服务项目：null。', 0, '2025-04-05 00:33:49', '2025-04-05 00:33:49', '2025-04-05 00:33:49');
-INSERT INTO `notification` VALUES (10, 2, '服务预约通知', '尊敬的刘大毛用户，您的服务预约（预约号：3）预约已创建，等待审核。预约时间：2025-04-29 10:40:00，服务项目：null。', 0, '2025-04-05 00:39:10', '2025-04-05 00:39:10', '2025-04-05 00:39:10');
-INSERT INTO `notification` VALUES (11, 2, '服务预约通知', '尊敬的刘大毛用户，您的服务预约（预约号：4）预约已创建，等待审核。预约时间：2025-04-29 08:54:00，服务项目：null。', 0, '2025-04-05 00:54:48', '2025-04-05 00:54:48', '2025-04-05 00:54:48');
-INSERT INTO `notification` VALUES (12, 2, '服务预约通知', '尊敬的刘大毛用户，您的服务预约（预约号：4）预约审核通过。预约时间：2025-04-29 08:54:00，服务项目：null。', 0, '2025-04-05 01:43:34', '2025-04-05 01:43:34', '2025-04-05 01:43:34');
+INSERT INTO `notification` VALUES (1, 0, '社区健康讲座通知', '计划于下月举办老年人健康知识讲座，具体时间待定', NULL, 0, '2023-03-27 09:00:00', '2025-03-28 16:40:54', '2025-03-28 16:41:46');
+INSERT INTO `notification` VALUES (2, 0, '端午节活动筹备', '端午节包粽子活动正在筹备中，需要志愿者报名', NULL, 0, '2023-03-27 10:00:00', '2025-03-28 16:41:56', '2023-05-15 14:30:00');
+INSERT INTO `notification` VALUES (3, 0, '系统维护通知', '系统将于今晚23:00-24:00进行维护升级，期间暂停服务', NULL, 1, '2023-03-27 11:00:00', '2025-03-28 16:42:07', '2023-05-20 15:00:00');
+INSERT INTO `notification` VALUES (4, 0, '老年体检安排', '6月1日-6月5日社区医院为65岁以上老人提供免费体检', NULL, 1, '2023-03-27 11:00:00', '2025-03-28 16:42:13', '2023-05-25 09:00:00');
+INSERT INTO `notification` VALUES (5, 0, '防诈骗知识讲座', '5月30日下午2点社区活动中心举办老年人防诈骗讲座', NULL, 1, '2023-03-27 10:00:00', '2025-03-28 16:42:03', '2023-05-28 10:30:00');
+INSERT INTO `notification` VALUES (6, 0, '错误通知示例', '此通知内容有误，已撤回', NULL, 2, '2023-03-27 10:00:00', '2025-03-28 16:42:03', '2023-05-18 08:00:00');
+INSERT INTO `notification` VALUES (7, 0, '活动取消通知', '原定于5月22日的书法班因故取消，时间另行通知', NULL, 2, '2023-03-27 10:00:00', '2025-03-28 16:42:03', '2023-05-21 13:00:00');
+INSERT INTO `notification` VALUES (8, 0, '重要：医保政策更新', '2023年最新医保报销政策已更新，请及时查看', NULL, 1, '2023-03-27 10:00:00', '2025-03-28 16:42:03', '2023-06-01 09:00:00');
+INSERT INTO `notification` VALUES (9, 2, '服务预约通知', '尊敬的刘大毛用户，您的服务预约（预约号：2）预约已创建，等待审核。预约时间：2025-04-29 08:33:00，服务项目：null。', NULL, 0, '2025-04-05 00:33:49', '2025-04-05 00:33:49', '2025-04-05 00:33:49');
+INSERT INTO `notification` VALUES (10, 2, '服务预约通知', '尊敬的刘大毛用户，您的服务预约（预约号：3）预约已创建，等待审核。预约时间：2025-04-29 10:40:00，服务项目：null。', NULL, 0, '2025-04-05 00:39:10', '2025-04-05 00:39:10', '2025-04-05 00:39:10');
+INSERT INTO `notification` VALUES (11, 2, '服务预约通知', '尊敬的刘大毛用户，您的服务预约（预约号：4）预约已创建，等待审核。预约时间：2025-04-29 08:54:00，服务项目：null。', NULL, 0, '2025-04-05 00:54:48', '2025-04-05 00:54:48', '2025-04-05 00:54:48');
+
+-- ----------------------------
+-- Table structure for physical_exam_report
+-- ----------------------------
+DROP TABLE IF EXISTS `physical_exam_report`;
+CREATE TABLE `physical_exam_report`  (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '体检报告ID',
+  `elder_id` bigint NOT NULL COMMENT '老人ID，关联user表',
+  `recorder_id` bigint NULL DEFAULT NULL COMMENT '上传人ID，关联user表',
+  `date` date NOT NULL COMMENT '体检日期',
+  `hospital` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '体检医院',
+  `main_result` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '主要结论',
+  `file_url` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '报告文件URL',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_elder_id`(`elder_id` ASC) USING BTREE,
+  INDEX `idx_recorder_id`(`recorder_id` ASC) USING BTREE,
+  CONSTRAINT `fk_exam_elder` FOREIGN KEY (`elder_id`) REFERENCES `user` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_exam_recorder` FOREIGN KEY (`recorder_id`) REFERENCES `user` (`user_id`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '体检报告表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of physical_exam_report
+-- ----------------------------
+INSERT INTO `physical_exam_report` VALUES (1, 2, 2, '2024-05-01', '市人民医院', '血脂偏高，建议复查', '/upload/physical_exam/57088d81-7643-4cc0-bc25-6032fa57fcce.pdf', '2025-05-13 17:59:09', '2025-05-13 17:59:09');
+INSERT INTO `physical_exam_report` VALUES (2, 2, 2, '2023-11-15', '社区卫生服务中心', '各项指标正常', '/upload/physical_exam/d798d64c-8859-49fb-9477-f483c2163dfd.pdf', '2025-05-13 17:59:09', '2025-05-13 17:59:09');
+
+-- ----------------------------
+-- Table structure for physical_exam_report_item
+-- ----------------------------
+DROP TABLE IF EXISTS `physical_exam_report_item`;
+CREATE TABLE `physical_exam_report_item`  (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `report_id` bigint NOT NULL COMMENT '体检报告ID，关联physical_exam_report表',
+  `item_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '指标名称',
+  `item_value` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '指标值',
+  `item_unit` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '单位',
+  `abnormal_flag` tinyint(1) NULL DEFAULT 0 COMMENT '是否异常(0-正常 1-异常)',
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_report_id`(`report_id` ASC) USING BTREE,
+  CONSTRAINT `fk_report_item_report` FOREIGN KEY (`report_id`) REFERENCES `physical_exam_report` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE = InnoDB AUTO_INCREMENT = 17 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '体检报告指标表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of physical_exam_report_item
+-- ----------------------------
+INSERT INTO `physical_exam_report_item` VALUES (9, 1, '总胆固醇', '6.2', 'mmol/L', 1);
+INSERT INTO `physical_exam_report_item` VALUES (10, 1, '甘油三酯', '1.8', 'mmol/L', 0);
+INSERT INTO `physical_exam_report_item` VALUES (11, 1, '高密度脂蛋白', '1.1', 'mmol/L', 0);
+INSERT INTO `physical_exam_report_item` VALUES (12, 1, '低密度脂蛋白', '4.0', 'mmol/L', 1);
+INSERT INTO `physical_exam_report_item` VALUES (13, 2, '总胆固醇', '4.8', 'mmol/L', 0);
+INSERT INTO `physical_exam_report_item` VALUES (14, 2, '甘油三酯', '1.2', 'mmol/L', 0);
+INSERT INTO `physical_exam_report_item` VALUES (15, 2, '高密度脂蛋白', '1.3', 'mmol/L', 0);
+INSERT INTO `physical_exam_report_item` VALUES (16, 2, '低密度脂蛋白', '2.5', 'mmol/L', 0);
 
 -- ----------------------------
 -- Table structure for role
@@ -742,7 +873,7 @@ CREATE TABLE `warning_record`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `user_id`(`user_id` ASC) USING BTREE,
   CONSTRAINT `warning_record_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '预警记录表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '预警记录表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of warning_record

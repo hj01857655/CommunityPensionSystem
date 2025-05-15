@@ -114,7 +114,7 @@
           <el-icon>
             <FirstAidKit />
           </el-icon>
-          <span>健康监测管理</span>
+          <span>健康管理中心</span>
         </template>
         <el-menu-item index="/admin/health/record">
           <template #title>
@@ -130,6 +130,14 @@
               <FirstAidKit />
             </el-icon>
             <span>健康监测管理</span>
+          </template>
+        </el-menu-item>
+        <el-menu-item index="/admin/health/report">
+          <template #title>
+            <el-icon>
+              <FirstAidKit />
+            </el-icon>
+            <span>体检报告管理</span>
           </template>
         </el-menu-item>
       </el-sub-menu>

@@ -3,7 +3,7 @@
       <el-row :gutter="20">
         <!-- 系统设置 -->
         <el-col :span="24" :lg="12">
-          <el-card shadow="hover" class="settings-card">
+          <el-card shadow="hover" class="settings-card" v-loading="loading.system">
             <template #header>
               <div class="card-header">
                 <h3>系统设置</h3>
@@ -69,7 +69,7 @@
         
         <!-- 安全设置 -->
         <el-col :span="24" :lg="12">
-          <el-card shadow="hover" class="settings-card">
+          <el-card shadow="hover" class="settings-card" v-loading="loading.security">
             <template #header>
               <div class="card-header">
                 <h3>安全设置</h3>
@@ -132,7 +132,7 @@
           </el-card>
           
           <!-- 数据备份 -->
-          <el-card shadow="hover" class="settings-card">
+          <el-card shadow="hover" class="settings-card" v-loading="loading.backup">
             <template #header>
               <div class="card-header">
                 <h3>数据备份</h3>
@@ -204,20 +204,31 @@
   </template>
   
   <script setup>
-  import { ref, reactive, onMounted } from 'vue'
-  import { ElMessage, ElMessageBox } from 'element-plus'
-  import { Plus } from '@element-plus/icons-vue'
+  import {
+  createBackup,
+  deleteBackup,
+  downloadBackup,
+  getBackupList,
+  getSecuritySettings,
+  getSystemSettings,
+  restoreBackup,
+  updateSecuritySettings,
+  updateSystemSettings
+} from '@/api/back/system/config'
+import { Plus } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { onMounted, reactive, ref } from 'vue'
   
   // 系统设置表单
   const systemFormRef = ref(null)
   const systemForm = reactive({
-    systemName: '社区养老系统',
-    logo: 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png',
-    description: '为社区老人提供全方位的养老服务和健康管理',
-    icp: '京ICP备12345678号',
-    contactPhone: '400-123-4567',
-    contactEmail: 'support@example.com',
-    version: 'v1.0.0'
+    systemName: '',
+    logo: '',
+    description: '',
+    icp: '',
+    contactPhone: '',
+    contactEmail: '',
+    version: ''
   })
   
   // 安全设置表单
@@ -234,26 +245,14 @@
   })
   
   // 备份记录
-  const backupRecords = ref([
-    {
-      id: 1,
-      fileName: 'backup_20250225_120000.sql',
-      size: '2.5MB',
-      createTime: '2025-02-25 12:00:00'
-    },
-    {
-      id: 2,
-      fileName: 'backup_20250224_120000.sql',
-      size: '2.4MB',
-      createTime: '2025-02-24 12:00:00'
-    },
-    {
-      id: 3,
-      fileName: 'backup_20250223_120000.sql',
-      size: '2.3MB',
-      createTime: '2025-02-23 12:00:00'
-    }
-  ])
+  const backupRecords = ref([])
+  
+  // 加载状态
+  const loading = ref({
+    system: false,
+    security: false,
+    backup: false
+  })
   
   // 恢复数据对话框
   const restoreDialogVisible = ref(false)
@@ -318,34 +317,148 @@
     }
   }
   
-  // 保存系统设置
-  const saveSystemSettings = () => {
-    systemFormRef.value.validate((valid) => {
-      if (valid) {
-        // 这里应该调用API保存系统设置
-        ElMessage.success('系统设置保存成功')
+  // 加载系统设置
+  const loadSystemSettings = async () => {
+    loading.value.system = true;
+    try {
+      const res = await getSystemSettings();
+      if (res.code === 200) {
+        const data = res.data;
+        systemForm.systemName = data.systemName || '社区养老系统';
+        systemForm.logo = data.logo || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png';
+        systemForm.description = data.description || '为社区老人提供全方位的养老服务和健康管理';
+        systemForm.icp = data.icp || '京ICP备12345678号';
+        systemForm.contactPhone = data.contactPhone || '400-123-4567';
+        systemForm.contactEmail = data.contactEmail || 'support@example.com';
+        systemForm.version = data.version || 'v1.0.0';
+      } else {
+        ElMessage.error(res.msg || '获取系统设置失败');
       }
-    })
-  }
+    } catch (error) {
+      console.error('获取系统设置出错:', error);
+      ElMessage.error('获取系统设置失败，请确保后端服务已启动');
+      // 使用默认值
+      systemForm.systemName = '社区养老系统';
+      systemForm.logo = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png';
+      systemForm.description = '为社区老人提供全方位的养老服务和健康管理';
+      systemForm.icp = '京ICP备12345678号';
+      systemForm.contactPhone = '400-123-4567';
+      systemForm.contactEmail = 'support@example.com';
+      systemForm.version = 'v1.0.0';
+    } finally {
+      loading.value.system = false;
+    }
+  };
+  
+  // 加载安全设置
+  const loadSecuritySettings = async () => {
+    loading.value.security = true;
+    try {
+      const res = await getSecuritySettings();
+      if (res.code === 200) {
+        const data = res.data;
+        securityForm.passwordMinLength = data.passwordMinLength || 8;
+        securityForm.passwordComplexity = data.passwordComplexity || 'medium';
+        securityForm.loginFailLockCount = data.loginFailLockCount || 5;
+        securityForm.accountLockTime = data.accountLockTime || 30;
+        securityForm.sessionTimeout = data.sessionTimeout || 30;
+        securityForm.enableCaptcha = data.enableCaptcha === 'true' || data.enableCaptcha === true;
+        securityForm.enableIpRestriction = data.enableIpRestriction === 'true' || data.enableIpRestriction === true;
+        securityForm.allowedIps = data.allowedIps || '';
+      } else {
+        ElMessage.error(res.msg || '获取安全设置失败');
+      }
+    } catch (error) {
+      console.error('获取安全设置出错:', error);
+      ElMessage.error('获取安全设置失败，请确保后端服务已启动');
+      // 使用默认值
+      securityForm.passwordMinLength = 8;
+      securityForm.passwordComplexity = 'medium';
+      securityForm.loginFailLockCount = 5;
+      securityForm.accountLockTime = 30;
+      securityForm.sessionTimeout = 30;
+      securityForm.enableCaptcha = true;
+      securityForm.enableIpRestriction = false;
+      securityForm.allowedIps = '';
+    } finally {
+      loading.value.security = false;
+    }
+  };
+  
+  // 加载备份记录
+  const loadBackupList = async () => {
+    loading.value.backup = true;
+    try {
+      const res = await getBackupList();
+      if (res.code === 200) {
+        backupRecords.value = res.data || [];
+      } else {
+        ElMessage.error(res.msg || '获取备份记录失败');
+      }
+    } catch (error) {
+      console.error('获取备份记录出错:', error);
+      ElMessage.error('获取备份记录失败，请确保后端服务已启动');
+      // 使用空数组
+      backupRecords.value = [];
+    } finally {
+      loading.value.backup = false;
+    }
+  };
+  
+  // 保存系统设置
+  const saveSystemSettings = async () => {
+    systemFormRef.value.validate(async (valid) => {
+      if (valid) {
+        loading.value.system = true;
+        try {
+          const res = await updateSystemSettings(systemForm);
+          if (res.code === 200) {
+            ElMessage.success('系统设置保存成功');
+          } else {
+            ElMessage.error(res.msg || '保存系统设置失败');
+          }
+        } catch (error) {
+          console.error('保存系统设置出错:', error);
+          ElMessage.error('保存系统设置失败，请确保后端服务已启动');
+        } finally {
+          loading.value.system = false;
+        }
+      }
+    });
+  };
   
   // 重置系统设置表单
   const resetSystemForm = () => {
-    systemFormRef.value.resetFields()
-  }
+    systemFormRef.value.resetFields();
+    loadSystemSettings(); // 重新加载系统设置
+  };
   
   // 保存安全设置
-  const saveSecuritySettings = () => {
-    securityFormRef.value.validate((valid) => {
+  const saveSecuritySettings = async () => {
+    securityFormRef.value.validate(async (valid) => {
       if (valid) {
-        // 这里应该调用API保存安全设置
-        ElMessage.success('安全设置保存成功')
+        loading.value.security = true;
+        try {
+          const res = await updateSecuritySettings(securityForm);
+          if (res.code === 200) {
+            ElMessage.success('安全设置保存成功');
+          } else {
+            ElMessage.error(res.msg || '保存安全设置失败');
+          }
+        } catch (error) {
+          console.error('保存安全设置出错:', error);
+          ElMessage.error('保存安全设置失败，请确保后端服务已启动');
+        } finally {
+          loading.value.security = false;
+        }
       }
-    })
-  }
+    });
+  };
   
   // 重置安全设置表单
   const resetSecurityForm = () => {
     securityFormRef.value.resetFields()
+    loadSecuritySettings() // 重新加载安全设置
   }
   
   // 立即备份
@@ -358,45 +471,47 @@
         cancelButtonText: '取消',
         type: 'info'
       }
-    ).then(() => {
-      // 这里应该调用API进行数据备份
-      ElMessage.success('数据备份成功')
-      
-      // 模拟添加新的备份记录
-      const now = new Date()
-      const fileName = `backup_${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}.sql`
-      const newBackup = {
-        id: backupRecords.value.length + 1,
-        fileName,
-        size: '2.6MB',
-        createTime: now.toLocaleString()
+    ).then(async () => {
+      try {
+        const res = await createBackup();
+        if (res.code === 200) {
+          ElMessage.success('数据备份成功');
+          loadBackupList(); // 重新加载备份列表
+        } else {
+          ElMessage.error(res.msg || '数据备份失败');
+        }
+      } catch (error) {
+        console.error('数据备份出错:', error);
+        ElMessage.error('数据备份失败，请确保后端服务已启动并检查备份目录权限');
       }
-      backupRecords.value.unshift(newBackup)
     }).catch(() => {
       // 取消备份
-    })
-  }
+    });
+  };
   
   // 恢复数据
   const handleRestore = () => {
-    selectedBackup.value = ''
-    restorePassword.value = ''
-    restoreDialogVisible.value = true
-  }
+    if (backupRecords.value.length === 0) {
+      ElMessage.warning('没有可用的备份文件，请先创建备份');
+      return;
+    }
+    selectedBackup.value = '';
+    restorePassword.value = '';
+    restoreDialogVisible.value = true;
+  };
   
   // 确认恢复数据
-  const confirmRestore = () => {
+  const confirmRestore = async () => {
     if (!selectedBackup.value) {
-      ElMessage.warning('请选择备份文件')
-      return
+      ElMessage.warning('请选择备份文件');
+      return;
     }
     
     if (!restorePassword.value) {
-      ElMessage.warning('请输入管理员密码')
-      return
+      ElMessage.warning('请输入管理员密码');
+      return;
     }
     
-    // 这里应该验证密码并调用API恢复数据
     ElMessageBox.confirm(
       '恢复数据将覆盖当前系统数据，确定要继续吗？',
       '警告',
@@ -405,23 +520,60 @@
         cancelButtonText: '取消',
         type: 'warning'
       }
-    ).then(() => {
-      // 模拟恢复过程
-      ElMessage.success('数据恢复成功，系统将在3秒后自动刷新')
-      setTimeout(() => {
-        window.location.reload()
-      }, 3000)
-      restoreDialogVisible.value = false
+    ).then(async () => {
+      try {
+        const res = await restoreBackup({
+          backupId: selectedBackup.value,
+          password: restorePassword.value
+        });
+        if (res.code === 200) {
+          ElMessage.success('数据恢复成功，系统将在3秒后自动刷新');
+          setTimeout(() => {
+            window.location.reload();
+          }, 3000);
+          restoreDialogVisible.value = false;
+        } else {
+          ElMessage.error(res.msg || '数据恢复失败');
+        }
+      } catch (error) {
+        console.error('数据恢复出错:', error);
+        ElMessage.error('数据恢复失败，请确保后端服务已启动或密码输入正确');
+      }
     }).catch(() => {
       // 取消恢复
-    })
-  }
+    });
+  };
   
   // 下载备份
-  const handleDownload = (row) => {
-    // 这里应该调用API下载备份文件
-    ElMessage.success(`正在下载备份文件：${row.fileName}`)
-  }
+  const handleDownload = async (row) => {
+    try {
+      const response = await downloadBackup(row.fileName);
+      
+      // 从响应头中获取文件名
+      const contentDisposition = response.headers['content-disposition'];
+      let filename = row.fileName;
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+        if (filenameMatch) {
+          filename = filenameMatch[1];
+        }
+      }
+      
+      // 创建下载链接
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      ElMessage.success(`备份文件下载完成`);
+    } catch (error) {
+      console.error('下载备份文件出错:', error);
+      ElMessage.error('下载备份文件失败，请确保后端服务已启动');
+    }
+  };
   
   // 删除备份
   const handleDeleteBackup = (row) => {
@@ -433,17 +585,28 @@
         cancelButtonText: '取消',
         type: 'warning'
       }
-    ).then(() => {
-      // 这里应该调用API删除备份文件
-      backupRecords.value = backupRecords.value.filter(record => record.id !== row.id)
-      ElMessage.success('备份文件删除成功')
+    ).then(async () => {
+      try {
+        const res = await deleteBackup(row.fileName);
+        if (res.code === 200) {
+          ElMessage.success('备份文件删除成功');
+          loadBackupList(); // 重新加载备份列表
+        } else {
+          ElMessage.error(res.msg || '删除备份文件失败');
+        }
+      } catch (error) {
+        console.error('删除备份文件出错:', error);
+        ElMessage.error('删除备份文件失败，请确保后端服务已启动');
+      }
     }).catch(() => {
       // 取消删除
-    })
-  }
+    });
+  };
   
   onMounted(() => {
-    // 这里可以调用API获取系统设置和安全设置
+    loadSystemSettings()
+    loadSecuritySettings()
+    loadBackupList()
   })
   </script>
   

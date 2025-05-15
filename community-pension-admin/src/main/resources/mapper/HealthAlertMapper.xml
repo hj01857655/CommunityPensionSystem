@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.communitypension.communitypensionadmin.mapper.HealthAlertMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="HealthAlertResultMap" type="com.communitypension.communitypensionadmin.vo.HealthAlertVO">
+        <id column="id" property="id"/>
+        <result column="elder_id" property="elderId"/>
+        <result column="elder_name" property="elderName"/>
+        <result column="alert_type" property="alertType"/>
+        <result column="alert_type_name" property="alertTypeName"/>
+        <result column="alert_level" property="alertLevel"/>
+        <result column="alert_level_name" property="alertLevelName"/>
+        <result column="alert_source" property="alertSource"/>
+        <result column="alert_source_name" property="alertSourceName"/>
+        <result column="title" property="title"/>
+        <result column="content" property="content"/>
+        <result column="alert_time" property="alertTime"/>
+        <result column="status" property="status"/>
+        <result column="status_name" property="statusName"/>
+        <result column="handler_id" property="handlerId"/>
+        <result column="handler_name" property="handlerName"/>
+        <result column="handle_time" property="handleTime"/>
+        <result column="handle_note" property="handleNote"/>
+        <result column="related_data_id" property="relatedDataId"/>
+        <result column="notified" property="notified"/>
+        <result column="notify_time" property="notifyTime"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <!-- 基础列 -->
+    <sql id="Base_Column_List">
+        a.id, a.elder_id, a.alert_type, a.alert_level, a.alert_source, a.title, a.content, 
+        a.alert_time, a.status, a.handler_id, a.handle_time, a.handle_note, a.related_data_id, 
+        a.notified, a.notify_time, a.create_time, a.update_time
+    </sql>
+
+    <!-- 带字典转换的列 -->
+    <sql id="With_Dict_Column_List">
+        <include refid="Base_Column_List"/>,
+        u.name as elder_name,
+        h.name as handler_name,
+        CASE a.alert_type
+            WHEN 1 THEN '血压异常'
+            WHEN 2 THEN '血糖异常'
+            WHEN 3 THEN '心率异常'
+            WHEN 4 THEN '体温异常'
+            WHEN 5 THEN '活动异常'
+            WHEN 6 THEN '用药提醒'
+            WHEN 7 THEN '复查提醒'
+            WHEN 8 THEN '其他异常'
+            ELSE '未知类型'
+        END as alert_type_name,
+        CASE a.alert_level
+            WHEN 1 THEN '低'
+            WHEN 2 THEN '中'
+            WHEN 3 THEN '高'
+            WHEN 4 THEN '紧急'
+            ELSE '未知级别'
+        END as alert_level_name,
+        CASE a.alert_source
+            WHEN 1 THEN '系统自动监测'
+            WHEN 2 THEN '穿戴设备'
+            WHEN 3 THEN '人工录入'
+            WHEN 4 THEN '定期检查'
+            ELSE '未知来源'
+        END as alert_source_name,
+        CASE a.status
+            WHEN 0 THEN '未处理'
+            WHEN 1 THEN '已处理'
+            WHEN 2 THEN '已忽略'
+            ELSE '未知状态'
+        END as status_name
+    </sql>
+
+    <!-- 分页查询健康预警列表 -->
+    <select id="selectHealthAlertPage" resultMap="HealthAlertResultMap">
+        SELECT 
+            <include refid="With_Dict_Column_List"/>
+        FROM 
+            health_alert a
+        LEFT JOIN 
+            sys_user u ON a.elder_id = u.id
+        LEFT JOIN 
+            sys_user h ON a.handler_id = h.id
+        <where>
+            <if test="elderId != null">
+                AND a.elder_id = #{elderId}
+            </if>
+            <if test="elderName != null and elderName != ''">
+                AND u.name LIKE CONCAT('%', #{elderName}, '%')
+            </if>
+            <if test="alertType != null">
+                AND a.alert_type = #{alertType}
+            </if>
+            <if test="alertLevel != null">
+                AND a.alert_level = #{alertLevel}
+            </if>
+            <if test="status != null">
+                AND a.status = #{status}
+            </if>
+            <if test="startTime != null">
+                AND a.alert_time &gt;= #{startTime}
+            </if>
+            <if test="endTime != null">
+                AND a.alert_time &lt;= #{endTime}
+            </if>
+        </where>
+        ORDER BY 
+            a.alert_level DESC, a.alert_time DESC
+    </select>
+
+    <!-- 获取健康预警详情 -->
+    <select id="selectHealthAlertDetail" resultMap="HealthAlertResultMap">
+        SELECT 
+            <include refid="With_Dict_Column_List"/>
+        FROM 
+            health_alert a
+        LEFT JOIN 
+            sys_user u ON a.elder_id = u.id
+        LEFT JOIN 
+            sys_user h ON a.handler_id = h.id
+        WHERE 
+            a.id = #{id}
+    </select>
+
+    <!-- 获取老人未处理的健康预警数量 -->
+    <select id="countUnhandledAlertsByElderId" resultType="int">
+        SELECT 
+            COUNT(*)
+        FROM 
+            health_alert
+        WHERE 
+            elder_id = #{elderId}
+            AND status = 0
+    </select>
+
+    <!-- 获取老人最近的健康预警列表 -->
+    <select id="selectRecentAlertsByElderId" resultMap="HealthAlertResultMap">
+        SELECT 
+            <include refid="With_Dict_Column_List"/>
+        FROM 
+            health_alert a
+        LEFT JOIN 
+            sys_user u ON a.elder_id = u.id
+        LEFT JOIN 
+            sys_user h ON a.handler_id = h.id
+        WHERE 
+            a.elder_id = #{elderId}
+        ORDER BY 
+            a.alert_time DESC
+        LIMIT 
+            #{limit}
+    </select>
+
+    <!-- 获取所有未处理的紧急预警 -->
+    <select id="selectUnhandledEmergencyAlerts" resultMap="HealthAlertResultMap">
+        SELECT 
+            <include refid="With_Dict_Column_List"/>
+        FROM 
+            health_alert a
+        LEFT JOIN 
+            sys_user u ON a.elder_id = u.id
+        LEFT JOIN 
+            sys_user h ON a.handler_id = h.id
+        WHERE 
+            a.status = 0
+            AND a.alert_level = 4
+        ORDER BY 
+            a.alert_time DESC
+    </select>
+
+</mapper> 

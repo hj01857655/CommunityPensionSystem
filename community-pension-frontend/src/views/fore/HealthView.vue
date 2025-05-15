@@ -168,6 +168,11 @@
                   </el-button>
                   <span style="color: #999; font-size: 13px; margin-left: 8px;">最后更新时间：{{ formatDateTime(healthForm.recordTime) }}</span>
                 </div>
+
+                <!-- 体检报告部分 -->
+                <el-divider content-position="left">体检报告</el-divider>
+                <PhysicalExamReport />
+
               </template>
               <template v-else>
                 <div v-if="!loading" class="empty-data-placeholder">
@@ -190,9 +195,6 @@
             </div>
           </div>
         </el-tab-pane>
-        <el-tab-pane label="体检报告" name="exam">
-          <PhysicalExamReport ref="physicalExamReportRef" />
-        </el-tab-pane>
       </el-tabs>
     </el-card>
   </div>
@@ -201,6 +203,7 @@
 <script setup>
 import { addHealthData, getHealthData, updateHealthData } from '@/api/fore/health'
 import { useHealthMonitorStore } from '@/stores/fore/healthMonitorStore'
+import { usePhysicalExamReportStore } from '@/stores/fore/physicalExamReportStore'
 import { useUserStore } from '@/stores/fore/userStore'
 import { Document, Download, Edit, RefreshRight } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
@@ -232,6 +235,13 @@ const trendChartRef = ref(null)
 const monitorList = computed(() => healthMonitorStore.monitorList)
 const monitorTotal = computed(() => healthMonitorStore.total)
 const monitorLoading = computed(() => healthMonitorStore.loading)
+
+// 使用体检报告store
+const physicalExamReportStore = usePhysicalExamReportStore()
+const reportList = computed(() => physicalExamReportStore.reportList)
+const fetchPhysicalExamReports = async () => {
+  await physicalExamReportStore.fetchList({ pageNum: currentPage.value, pageSize: pageSize.value })
+}
 
 const healthForm = ref({
   id: null,
@@ -443,9 +453,6 @@ const handleTabChange = (tabName) => {
     })
   } else if (tabName === 'profile') {
     fetchHealthData()
-  } else if (tabName === 'exam') {
-    // 每次切换到体检报告tab都刷新
-    physicalExamReportRef.value?.onSearch?.()
   }
 }
 
@@ -841,13 +848,6 @@ const initHealthData = async () => {
     else if (activeTab.value === 'monitor') {
       await fetchHealthMonitorList();
     }
-    // 如果当前是体检报告Tab，加载体检报告数据
-    else if (activeTab.value === 'exam') {
-      // 等待DOM渲染完成后调用搜索方法
-      nextTick(() => {
-        physicalExamReportRef.value?.onSearch?.();
-      });
-    }
   } catch (error) {
     console.error('初始化健康数据失败:', error);
     ElMessage.error('初始化健康数据失败，请刷新页面重试');
@@ -862,6 +862,9 @@ onMounted(async () => {
   if (monitorList.value.some(item => item.monitoringStatus === 'abnormal')) {
     ElMessage.warning('检测到健康异常，请及时关注！');
   }
+
+  // 在组件挂载时获取体检报告数据
+  await fetchPhysicalExamReports();
 })
 
 // 监听Tab变化，确保数据加载完整
@@ -872,7 +875,7 @@ watch(activeTab, (newTab) => {
       checkAndRetryLoadHealthData();
     });
   }
-});
+})
 </script>
 
 <style scoped>
