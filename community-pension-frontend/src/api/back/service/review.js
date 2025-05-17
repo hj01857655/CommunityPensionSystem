@@ -14,20 +14,21 @@ import axios from '@/utils/axios';
  * @returns {Promise<{code: number, data: {records: Array, total: number}, msg: string}>}
  */
 export const getServiceReviewList = (query) => {
-  // 修正参数映射，并仅在有值时发送 serviceId 和 status
   const params = {
     pageNum: query.current || 1,
     pageSize: query.size || 10
   };
-  // 仅当 serviceId 不是 null 或 undefined 时添加
   if (query.serviceId !== null && query.serviceId !== undefined) {
     params.serviceId = query.serviceId;
   }
-  // 仅当 status 不是 null、undefined 或空字符串 (代表'全部') 时添加
   if (query.status !== null && query.status !== undefined && query.status !== '') {
     params.status = query.status;
   }
-  
+  if (query.userName) params.userName = query.userName;
+  if (query.serviceName) params.serviceName = query.serviceName;
+  if (query.score) params.score = query.score;
+  if (query.beginTime) params.beginTime = query.beginTime;
+  if (query.endTime) params.endTime = query.endTime;
   return axios.get('/api/service/review/list', { params });
 };
 

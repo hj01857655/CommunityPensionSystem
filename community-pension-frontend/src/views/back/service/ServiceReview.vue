@@ -110,10 +110,10 @@
 <script setup>
 import { useServiceReviewStore } from '@/stores/back/service/review';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { onActivated, onMounted, reactive, ref } from 'vue';
+import { computed, onActivated, onMounted, reactive, ref } from 'vue';
 
 const serviceReviewStore = useServiceReviewStore();
-const reviewList = serviceReviewStore.reviewList;
+const reviewList = computed(() => serviceReviewStore.reviewList);
 const total = serviceReviewStore.total;
 const loading = serviceReviewStore.loading;
 
