@@ -35,7 +35,7 @@
 
 <script setup>
 import { ElMessage } from 'element-plus'
-import { computed, defineExpose, nextTick, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import VueECharts from 'vue-echarts'
 
 const props = defineProps({
@@ -184,8 +184,6 @@ function resizeChart(retry = 10) {
     chart.resize()
   }
 }
-
-defineExpose({ resizeChart })
 </script>
 
 <style scoped>
