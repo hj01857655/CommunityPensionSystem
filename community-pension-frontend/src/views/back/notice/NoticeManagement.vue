@@ -225,12 +225,12 @@ const handleQuery = () => {
 
 // 添加通知
 const handleAdd = () => {
-    router.push('/admin/notice/publish');
+    router.push('/admin/notices/publish');
 };
 
 // 编辑通知
 const handleEdit = (row) => {
-    router.push(`/admin/notice/publish?id=${row.id}`);
+    router.push(`/admin/notices/publish?id=${row.id}`);
 };
 
 // 预览通知
