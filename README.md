@@ -147,7 +147,7 @@
 ### 开发环境搭建
 1. 克隆项目
 ```bash
-git clone https://github.com/hj01857655/community-pension-system.git
+git clone https://github.com/liaojun2719/community-pension-system.git
 ```
 
 2. 后端服务启动
