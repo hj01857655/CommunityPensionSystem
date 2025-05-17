@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 
 /**
  * 用户角色关联表user_role
- * @author hj01857655
+ * @author liaojun2719
  */
 @Data
 @NoArgsConstructor
