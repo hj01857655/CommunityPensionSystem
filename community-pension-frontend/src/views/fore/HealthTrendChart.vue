@@ -136,6 +136,12 @@ function checkChartVisible() {
 
 onMounted(() => {
   requestAnimationFrame(checkChartVisible)
+  if (filteredData.value.length === 0 && props.data.length > 0) {
+    const firstTypeWithData = typeOptions.find(opt => props.data.some(item => item.monitoringType === opt.value))
+    if (firstTypeWithData) {
+      selectedType.value = firstTypeWithData.value
+    }
+  }
 })
 
 watch([filteredData, selectedType], async () => {

@@ -88,4 +88,14 @@ public class ActivityRegisterVO {
      * 是否已签到
      */
     private Boolean hasCheckedIn;
+
+    /**
+     * 活动状态
+     */
+    private Integer activityStatus;
+
+    /**
+     * 活动状态名称
+     */
+    private String activityStatusName;
 }

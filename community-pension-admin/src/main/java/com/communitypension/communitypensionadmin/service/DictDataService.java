@@ -66,7 +66,7 @@ public interface DictDataService extends IService<DictData> {
     /**
      * 分页查询字典数据列表
      */
-    Page<DictDataVO> getDictDataList(Integer pageNum, Integer pageSize, String dictType, String dictLabel, String dictValue);
+    Page<DictDataVO> getDictDataList(Integer pageNum, Integer pageSize, String dictType, String dictLabel, String dictValue, String status);
 
     /**
      * 获取字典数据详情

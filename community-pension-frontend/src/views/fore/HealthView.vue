@@ -1,7 +1,7 @@
 <template>
   <div class="health-view">
     <el-card class="content-card" shadow="hover">
-      <h3>健康档案</h3>
+      <h3>健康中心</h3>
       <el-tabs v-model="activeTab" @tab-change="handleTabChange" lazy>
         <el-tab-pane label="健康监测记录" name="monitor">
           <!-- 趋势图区域 -->

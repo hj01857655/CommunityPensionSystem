@@ -2,10 +2,10 @@
 <template>
   <div class="app-container">
       <!-- 搜索区域 -->
-      <el-form :model="queryParams" ref="queryRef" :inline="true" v-show="showSearch">
+      <el-form :model="data.queryParams" ref="queryRef" :inline="true" v-show="showSearch">
         <el-form-item label="字典名称" prop="dictName">
           <el-input
-            v-model="queryParams.dictName"
+            v-model="data.queryParams.dictName"
             placeholder="请输入字典名称"
             clearable
             @keyup.enter="handleQuery"
@@ -13,14 +13,14 @@
         </el-form-item>
         <el-form-item label="字典类型" prop="dictType">
           <el-input
-            v-model="queryParams.dictType"
+            v-model="data.queryParams.dictType"
             placeholder="请输入字典类型"
             clearable
             @keyup.enter="handleQuery"
           />
         </el-form-item>
         <el-form-item label="状态" prop="status">
-          <el-select v-model="queryParams.status" placeholder="字典状态" clearable style="width: 200px">
+          <el-select v-model="data.queryParams.status" placeholder="字典状态" clearable style="width: 200px">
             <el-option
               v-for="dict in statusOptions"
               :key="dict.value"
@@ -143,28 +143,28 @@
       <pagination
         v-show="dictTypeStore.dictTypeTotal > 0"
         :total="dictTypeStore.dictTypeTotal"
-        :current="queryParams.current"
-        :size="queryParams.size"
+        :page="data.queryParams.current"
+        :limit="data.queryParams.size"
         @pagination="getList"
       />
 
     <!-- 添加或修改字典类型对话框 -->
     <el-dialog :title="title" v-model="open" width="500px" append-to-body>
-      <el-form ref="dictRef" :model="form" :rules="rules" label-width="80px">
+      <el-form ref="dictRef" :model="data.form" :rules="data.rules" label-width="80px">
         <el-form-item label="字典名称" prop="dictName">
-          <el-input v-model="form.dictName" placeholder="请输入字典名称" />
+          <el-input v-model="data.form.dictName" placeholder="请输入字典名称" />
         </el-form-item>
         <el-form-item label="字典类型" prop="dictType">
-          <el-input v-model="form.dictType" placeholder="请输入字典类型" />
+          <el-input v-model="data.form.dictType" placeholder="请输入字典类型" />
         </el-form-item>
         <el-form-item label="状态" prop="status">
-          <el-radio-group v-model="form.status">
+          <el-radio-group v-model="data.form.status">
             <el-radio :value="1">正常</el-radio>
             <el-radio :value="0">停用</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="备注" prop="remark">
-          <el-input v-model="form.remark" type="textarea" placeholder="请输入内容" />
+          <el-input v-model="data.form.remark" type="textarea" placeholder="请输入内容" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -216,7 +216,6 @@ const total = ref(0)
 const title = ref("")
 
 const data = reactive({
-  form: {},
   queryParams: {
     current: 1, //当前页
     size: 10, //每页条数
@@ -224,23 +223,28 @@ const data = reactive({
     dictType: undefined, //字典类型
     status: undefined //状态
   },
+  form: {
+    dictId: undefined,
+    dictName: undefined,
+    dictType: undefined,
+    status: 1,
+    remark: undefined
+  },
   rules: {
     dictName: [{ required: true, message: "字典名称不能为空", trigger: "blur" }],
     dictType: [{ required: true, message: "字典类型不能为空", trigger: "blur" }]
   }
 })
 
-const { queryParams, form, rules } = toRefs(data)
-
 // 获取字典类型列表
 const getList = async (val) => {
   loading.value = true;
   // 如果有分页参数传递过来，更新分页信息
   if (val) {
-    queryParams.value.current = val.current;
-    queryParams.value.size = val.size;
+    data.queryParams.current = val.page;
+    data.queryParams.size = val.limit;
   }
-  await dictTypeStore.fetchDictTypeList(queryParams.value).then(response => {
+  await dictTypeStore.fetchDictTypeList(data.queryParams).then(response => {
     typeList.value = response.records;
     total.value = response.total;
     loading.value = false;
@@ -255,7 +259,7 @@ const cancel = () => {
 
 // 表单重置
 const reset = () => {
-  form.value = {
+  data.form = {
     dictId: undefined,
     dictName: undefined,
     dictType: undefined,
@@ -267,15 +271,15 @@ const reset = () => {
 
 // 搜索按钮操作
 const handleQuery = () => {
-  queryParams.current = 1
+  data.queryParams.current = 1
   getList();
 }
 
 // 重置按钮操作
 const resetQuery = () => {
-  queryParams.dictName = undefined
-  queryParams.dictType = undefined
-  queryParams.status = undefined
+  data.queryParams.dictName = undefined
+  data.queryParams.dictType = undefined
+  data.queryParams.status = undefined
   handleQuery()
 }
 
@@ -300,7 +304,7 @@ const handleUpdate = (row) => {
   dictTypeStore.fetchDictTypeDetail(dictId).then(response => {
     if (response.code === 200 && response.data) {
       // 使用 Object.assign 确保所有字段都被正确赋值
-      Object.assign(form.value, response.data)
+      Object.assign(data.form, response.data)
       open.value = true
       title.value = "修改字典类型"
     } else {
@@ -317,11 +321,11 @@ const submitForm = async () => {
   proxy.$refs['dictRef'].validate(async (valid) => {
     if (valid) {
       try {
-        if (form.value.dictId != undefined) {
-          await dictTypeStore.updateDictTypeInfo(form.value)
+        if (data.form.dictId != undefined) {
+          await dictTypeStore.updateDictTypeInfo(data.form)
           ElMessage.success("修改成功")
         } else {
-          await dictTypeStore.createNewDictType(form.value)
+          await dictTypeStore.createNewDictType(data.form)
           ElMessage.success("新增成功")
         }
         open.value = false
@@ -350,7 +354,7 @@ const handleDelete = (row) => {
 
 // 导出按钮操作
 const handleExport = () => {
-  dictTypeStore.exportDictType(queryParams)
+  dictTypeStore.exportDictType(data.queryParams)
 }
 
 // 刷新缓存按钮操作
@@ -377,13 +381,13 @@ const handleStatusChange = async (row) => {
 
 // 分页大小改变
 const handleSizeChange = (val) => {
-  queryParams.size = val
+  data.queryParams.size = val
   getList()
 }
 
 // 页码改变
 const handleCurrentChange = (val) => {
-  queryParams.current = val
+  data.queryParams.current = val
   getList()
 }
 

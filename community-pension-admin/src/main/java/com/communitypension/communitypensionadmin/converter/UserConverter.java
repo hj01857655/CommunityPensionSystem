@@ -8,6 +8,8 @@ import com.communitypension.communitypensionadmin.vo.UserVO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
+import com.communitypension.communitypensionadmin.utils.DictUtils;
+import com.communitypension.communitypensionadmin.constant.DictTypeConstants;
 
 import java.util.List;
 
@@ -143,14 +145,9 @@ public interface UserConverter {
      */
     @Named("getStatusName")
     default String getStatusName(Byte isActive) {
-        if (isActive == null) {
-            return "未知";
-        }
-        return switch (isActive) {
-            case 0 -> "禁用";
-            case 1 -> "正常";
-            case 2 -> "锁定";
-            default -> "未知";
-        };
+        return DictUtils.getDictLabel(
+            DictTypeConstants.USER_STATUS,
+            isActive == null ? null : String.valueOf(isActive)
+        );
     }
 }

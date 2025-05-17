@@ -1,148 +1,106 @@
 <template>
   <div class="app-container">
-    <el-form :model="queryParams" ref="queryForm" :inline="true" v-show="showSearch" label-width="68px">
-      <el-form-item label="服务名称" prop="serviceName">
-        <el-input
-          v-model="queryParams.serviceName"
-          placeholder="请输入服务名称"
-          clearable
-          style="width: 240px"
-          @keyup.enter="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="用户名" prop="userName">
-        <el-input
-          v-model="queryParams.userName"
-          placeholder="请输入用户名"
-          clearable
-          style="width: 240px"
-          @keyup.enter="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="评分" prop="score">
-        <el-select v-model="queryParams.score" placeholder="评分" clearable style="width: 240px">
-          <el-option label="1星" value="1" />
-          <el-option label="2星" value="2" />
-          <el-option label="3星" value="3" />
-          <el-option label="4星" value="4" />
-          <el-option label="5星" value="5" />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="创建时间">
-        <el-date-picker
-          v-model="dateRange"
-          style="width: 240px"
-          value-format="YYYY-MM-DD"
-          type="daterange"
-          range-separator="-"
-          start-placeholder="开始日期"
-          end-placeholder="结束日期"
-        ></el-date-picker>
-      </el-form-item>
-      <el-form-item>
-        <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
-        <el-button icon="Refresh" @click="resetQuery">重置</el-button>
-      </el-form-item>
+    <!-- 搜索表单 -->
+    <el-form :model="queryParams" ref="queryForm" :inline="true" label-width="100px">
+      <el-row :gutter="16">
+        <el-col :span="8">
+          <el-form-item label="用户姓名" prop="userName">
+            <el-input v-model="queryParams.userName" placeholder="请输入用户姓名" clearable />
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="服务名称" prop="serviceName">
+            <el-input v-model="queryParams.serviceName" placeholder="请输入服务名称" clearable />
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="评分" prop="score">
+            <el-input v-model="queryParams.score" placeholder="请输入评分" clearable />
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row :gutter="16" style="margin-top: 8px;">
+        <el-col :span="8">
+          <el-form-item label="评价时间">
+            <el-date-picker v-model="queryParams.dateRange" type="daterange" range-separator="-" start-placeholder="开始日期" end-placeholder="结束日期" value-format="YYYY-MM-DD" style="width: 100%" />
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item>
+            <el-button type="primary" @click="handleQuery">查询</el-button>
+            <el-button @click="resetQuery">重置</el-button>
+          </el-form-item>
+        </el-col>
+      </el-row>
     </el-form>
 
-    <el-row :gutter="10" class="mb8">
-      <el-col :span="1.5">
-        <el-button
-          type="danger"
-          plain
-          icon="Delete"
-          :disabled="multiple"
-          @click="handleDelete"
-        >删除</el-button>
-      </el-col>
-      <el-col :span="1.5">
-        <el-button
-          type="warning"
-          plain
-          icon="Download"
-          @click="handleExport"
-        >导出</el-button>
-      </el-col>
-      <right-toolbar v-model:showSearch="showSearch" @queryTable="getList"></right-toolbar>
-    </el-row>
-
+    <!-- 表格 -->
     <el-table v-loading="loading" :data="reviewList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="评价ID" align="center" prop="reviewId" width="80" />
-      <el-table-column label="订单号" align="center" prop="orderNo" width="180" />
-      <el-table-column label="用户名" align="center" prop="userName" :show-overflow-tooltip="true" />
-      <el-table-column label="服务名称" align="center" prop="serviceName" :show-overflow-tooltip="true" />
-      <el-table-column label="评分" align="center" prop="score">
+      <el-table-column label="评价ID" prop="id" width="80" align="center" />
+      <el-table-column label="服务ID" prop="serviceId" width="80" align="center" />
+      <el-table-column label="老人姓名" prop="elderName" min-width="100" align="center" />
+      <el-table-column label="评价人" prop="reviewUserName" min-width="100" align="center" />
+      <el-table-column label="服务名称" prop="serviceName" min-width="120" align="center" />
+      <el-table-column label="评价类型" prop="reviewTypeName" min-width="100" align="center" />
+      <el-table-column label="评分" prop="rating" width="80" align="center" />
+      <el-table-column label="评价内容" prop="content" min-width="180" align="center" show-overflow-tooltip />
+      <el-table-column label="评价时间" prop="reviewTime" width="160" align="center" />
+      <el-table-column label="回复内容" prop="adminReply" min-width="180" align="center" show-overflow-tooltip />
+      <el-table-column label="回复时间" prop="replyTime" width="160" align="center" />
+      <el-table-column label="操作" width="180" align="center">
         <template #default="scope">
-          <el-rate
-            v-model="scope.row.score"
-            disabled
-            show-score
-            text-color="#ff9900"
-          />
-        </template>
-      </el-table-column>
-      <el-table-column label="评价内容" align="center" prop="content" :show-overflow-tooltip="true" />
-      <el-table-column label="评价时间" align="center" prop="createTime" width="180">
-        <template #default="scope">
-          <span>{{ formatDate(scope.row.createTime) }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
-        <template #default="scope">
-          <el-button
-            link
-            icon="View"
-            @click="handleView(scope.row)"
-          >查看</el-button>
-          <el-button
-            link
-            icon="Delete"
-            @click="handleDelete(scope.row)"
-          >删除</el-button>
+          <el-button type="primary" link @click="handleDetail(scope.row)">详情</el-button>
+          <el-button type="success" link v-if="!scope.row.adminReply" @click="handleReply(scope.row)">回复</el-button>
+          <el-button type="danger" link @click="handleDelete(scope.row)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
-    
-    <pagination
-      v-show="total > 0"
+
+    <!-- 分页 -->
+    <el-pagination
+      v-if="total > 0"
       :total="total"
-      v-model:page="queryParams.current"
-      v-model:limit="queryParams.size"
-      @pagination="getList"
+      v-model:current-page="queryParams.current"
+      v-model:page-size="queryParams.size"
+      @current-change="handleCurrentChange"
+      @size-change="handleSizeChange"
+      layout="total, sizes, prev, pager, next, jumper"
     />
 
-    <!-- 查看评价详情对话框 -->
-    <el-dialog title="评价详情" v-model="open" width="700px" append-to-body>
+    <!-- 详情对话框 -->
+    <el-dialog title="评价详情" v-model="detailDialogVisible" width="600px" append-to-body>
       <el-descriptions :column="2" border>
-        <el-descriptions-item label="评价ID">{{ form.reviewId }}</el-descriptions-item>
-        <el-descriptions-item label="订单号">{{ form.orderNo }}</el-descriptions-item>
-        <el-descriptions-item label="用户名">{{ form.userName }}</el-descriptions-item>
-        <el-descriptions-item label="服务名称">{{ form.serviceName }}</el-descriptions-item>
-        <el-descriptions-item label="评分" :span="2">
-          <el-rate
-            v-model="form.score"
-            disabled
-            show-score
-            text-color="#ff9900"
-          />
-        </el-descriptions-item>
-        <el-descriptions-item label="评价内容" :span="2">{{ form.content }}</el-descriptions-item>
-        <el-descriptions-item label="评价图片" :span="2" v-if="form.images && form.images.length > 0">
-          <el-image 
-            v-for="(url, index) in form.images" 
-            :key="index"
-            style="width: 100px; height: 100px; margin-right: 10px;"
-            :src="url" 
-            :preview-src-list="form.images"
-          />
-        </el-descriptions-item>
-        <el-descriptions-item label="评价时间">{{ formatDate(form.createTime) }}</el-descriptions-item>
-        <el-descriptions-item label="更新时间">{{ formatDate(form.updateTime) }}</el-descriptions-item>
+        <el-descriptions-item label="评价ID">{{ currentReview.id }}</el-descriptions-item>
+        <el-descriptions-item label="服务ID">{{ currentReview.serviceId }}</el-descriptions-item>
+        <el-descriptions-item label="老人姓名">{{ currentReview.elderName }}</el-descriptions-item>
+        <el-descriptions-item label="评价人">{{ currentReview.reviewUserName }}</el-descriptions-item>
+        <el-descriptions-item label="服务名称">{{ currentReview.serviceName }}</el-descriptions-item>
+        <el-descriptions-item label="评价类型">{{ currentReview.reviewTypeName }}</el-descriptions-item>
+        <el-descriptions-item label="评分">{{ currentReview.rating }}</el-descriptions-item>
+        <el-descriptions-item label="评价内容" :span="2">{{ currentReview.content }}</el-descriptions-item>
+        <el-descriptions-item label="评价时间">{{ currentReview.reviewTime }}</el-descriptions-item>
+        <el-descriptions-item label="回复内容" :span="2">{{ currentReview.adminReply }}</el-descriptions-item>
+        <el-descriptions-item label="回复时间">{{ currentReview.replyTime }}</el-descriptions-item>
       </el-descriptions>
       <template #footer>
         <div class="dialog-footer">
-          <el-button @click="open = false">关 闭</el-button>
+          <el-button @click="detailDialogVisible = false">关闭</el-button>
+        </div>
+      </template>
+    </el-dialog>
+
+    <!-- 回复对话框 -->
+    <el-dialog title="回复评价" v-model="replyDialogVisible" width="500px" append-to-body>
+      <el-form ref="replyFormRef" :model="replyForm" :rules="replyRules" label-width="80px">
+        <el-form-item label="回复内容" prop="adminReply">
+          <el-input v-model="replyForm.adminReply" type="textarea" :rows="3" placeholder="请输入回复内容" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="replyDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="submitReply">确定</el-button>
         </div>
       </template>
     </el-dialog>
@@ -150,177 +108,133 @@
 </template>
 
 <script setup>
-import { useServiceReviewStore } from '@/stores/back/service';
-import { formatDate } from '@/utils/date';
+import { useServiceReviewStore } from '@/stores/back/service/review';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { onMounted, ref } from 'vue';
+import { onActivated, onMounted, reactive, ref } from 'vue';
 
 const serviceReviewStore = useServiceReviewStore();
+const reviewList = serviceReviewStore.reviewList;
+const total = serviceReviewStore.total;
+const loading = serviceReviewStore.loading;
 
-const reviewList = ref([]);
-const open = ref(false);
-const loading = ref(false);
-const showSearch = ref(true);
-const ids = ref([]);
-const single = ref(true);
-const multiple = ref(true);
-const total = ref(0);
-const dateRange = ref([]);
-
-// 查询参数
-const queryParams = ref({
+const queryParams = reactive({
   current: 1,
   size: 10,
-  serviceName: undefined,
-  userName: undefined,
-  score: undefined,
-  beginTime: undefined,
-  endTime: undefined
+  userName: '',
+  serviceName: '',
+  score: '',
+  dateRange: []
 });
 
-// 表单参数
-const form = ref({
-  reviewId: undefined,
-  orderId: undefined,
-  orderNo: undefined,
-  userId: undefined,
-  userName: undefined,
-  serviceId: undefined,
-  serviceName: undefined,
-  score: 5,
-  content: undefined,
-  images: [],
-  createTime: undefined,
-  updateTime: undefined
-});
-
-/** 查询评价列表 */
-async function getList() {
-  loading.value = true;
-  try {
-    // 处理时间范围
-    if (dateRange.value && dateRange.value.length > 0) {
-      queryParams.value.beginTime = dateRange.value[0];
-      queryParams.value.endTime = dateRange.value[1];
-    } else {
-      queryParams.value.beginTime = undefined;
-      queryParams.value.endTime = undefined;
-    }
-
-    const response = await serviceReviewStore.getReviewList(queryParams.value);
-    if (response && response.records) {
-      reviewList.value = response.records;
-      total.value = response.total;
-    }
-  } catch (error) {
-    console.error("获取评价列表失败:", error);
-  } finally {
-    loading.value = false;
-  }
-}
-
-/** 表单重置 */
-function reset() {
-  form.value = {
-    reviewId: undefined,
-    orderId: undefined,
-    orderNo: undefined,
-    userId: undefined,
-    userName: undefined,
-    serviceId: undefined,
-    serviceName: undefined,
-    score: 5,
-    content: undefined,
-    images: [],
-    createTime: undefined,
-    updateTime: undefined
+const handleQuery = async () => {
+  const params = {
+    ...queryParams,
+    beginTime: queryParams.dateRange?.[0] || '',
+    endTime: queryParams.dateRange?.[1] || ''
   };
-}
+  await serviceReviewStore.getReviewList(params);
+};
 
-/** 搜索按钮操作 */
-function handleQuery() {
-  queryParams.value.current = 1;
-  getList();
-}
-
-/** 重置按钮操作 */
-function resetQuery() {
-  dateRange.value = [];
-  queryParams.value = {
-    current: 1,
-    size: 10,
-    serviceName: undefined,
-    userName: undefined,
-    score: undefined,
-    beginTime: undefined,
-    endTime: undefined
-  };
+const resetQuery = () => {
+  queryParams.userName = '';
+  queryParams.serviceName = '';
+  queryParams.score = '';
+  queryParams.dateRange = [];
   handleQuery();
-}
+};
 
-/** 多选框选中数据 */
-function handleSelectionChange(selection) {
-  ids.value = selection.map(item => item.reviewId);
-  single.value = selection.length !== 1;
-  multiple.value = !selection.length;
-}
+const handleCurrentChange = (val) => {
+  queryParams.current = val;
+  handleQuery();
+};
+const handleSizeChange = (val) => {
+  queryParams.size = val;
+  handleQuery();
+};
 
-/** 查看按钮操作 */
-async function handleView(row) {
-  reset();
-  const reviewId = row.reviewId || ids.value[0];
+const multipleSelection = ref([]);
+const handleSelectionChange = (selection) => {
+  multipleSelection.value = selection;
+};
+
+const detailDialogVisible = ref(false);
+const currentReview = ref({});
+const handleDetail = async (row) => {
   try {
-    const response = await serviceReviewStore.getReviewDetail(reviewId);
-    if (response) {
-      form.value = response;
-      open.value = true;
-    }
+    const data = await serviceReviewStore.getReviewDetail(row.id);
+    currentReview.value = data;
+    detailDialogVisible.value = true;
   } catch (error) {
-    console.error("获取评价详情失败:", error);
-    ElMessage.error("获取评价详情失败");
+    ElMessage.error(error.message || '获取评价详情失败');
   }
-}
+};
 
-/** 删除按钮操作 */
-function handleDelete(row) {
-  const reviewIds = row.reviewId || ids.value;
-  ElMessageBox.confirm('是否确认删除评价编号为"' + reviewIds + '"的数据项?', "警告", {
-    confirmButtonText: "确定",
-    cancelButtonText: "取消",
-    type: "warning"
-  }).then(async function() {
-    try {
-      await serviceReviewStore.deleteReview(reviewIds);
-      getList();
-      ElMessage.success("删除成功");
-    } catch (error) {
-      console.error("删除评价失败:", error);
-      ElMessage.error("删除失败");
+const replyDialogVisible = ref(false);
+const replyForm = ref({
+  reviewId: '',
+  adminReply: ''
+});
+const replyRules = {
+  adminReply: [
+    { required: true, message: '请输入回复内容', trigger: 'blur' }
+  ]
+};
+const replyFormRef = ref(null);
+const handleReply = (row) => {
+  replyForm.value = {
+    reviewId: row.id,
+    adminReply: ''
+  };
+  replyDialogVisible.value = true;
+};
+const submitReply = async () => {
+  replyFormRef.value.validate(async (valid) => {
+    if (valid) {
+      try {
+        const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+        await serviceReviewStore.replyReview({
+          reviewId: replyForm.value.reviewId,
+          reply: replyForm.value.adminReply,
+          adminId: userInfo.userId
+        });
+        ElMessage.success('回复成功');
+        replyDialogVisible.value = false;
+        handleQuery();
+      } catch (error) {
+        ElMessage.error(error.message || '回复失败');
+      }
     }
   });
-}
+};
 
-/** 导出按钮操作 */
-function handleExport() {
-  // 处理时间范围
-  if (dateRange.value && dateRange.value.length > 0) {
-    queryParams.value.beginTime = dateRange.value[0];
-    queryParams.value.endTime = dateRange.value[1];
-  } else {
-    queryParams.value.beginTime = undefined;
-    queryParams.value.endTime = undefined;
-  }
-  
-  serviceReviewStore.exportList(queryParams.value);
-}
+const handleDelete = (row) => {
+  ElMessageBox.confirm('确认删除该服务评价?', '警告', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning'
+  }).then(async () => {
+    try {
+      await serviceReviewStore.deleteReview(row.id);
+      ElMessage.success('删除成功');
+      handleQuery();
+    } catch (error) {
+      ElMessage.error(error.message || '删除失败');
+    }
+  }).catch(() => {});
+};
 
 onMounted(() => {
-  getList();
+  serviceReviewStore.resetState && serviceReviewStore.resetState();
+  handleQuery();
+});
+onActivated && onActivated(() => {
+  serviceReviewStore.resetState && serviceReviewStore.resetState();
+  handleQuery();
 });
 </script>
 
 <style scoped>
-.el-tag + .el-tag {
-  margin-left: 10px;
+.el-form {
+  margin-bottom: 20px;
 }
 </style>

@@ -120,8 +120,8 @@
               <!-- 活动状态列 -->
               <el-table-column label="活动状态" width="100">
                 <template #default="{ row }">
-                  <el-tag :type="getStatusType(row.status)" effect="plain" class="activity-status-tag">
-                    {{ getStatusText(row.status) }}
+                  <el-tag :type="getStatusType(row.activityStatus)" effect="plain" class="activity-status-tag">
+                    {{ row.activityStatusName }}
                   </el-tag>
                 </template>
               </el-table-column>
@@ -465,7 +465,12 @@ import { useRoute, useRouter } from 'vue-router'
             // 其他信息
             typeName: record.registerTypeName || '其他',
             location: activityDetail.location || '地点待定',
+            // 活动本身状态
+            activityStatus: activityDetail.status,
+            activityStatusName: activityDetail.statusName,
+            // 报名状态
             status: record.status ?? 0,
+            statusName: record.statusName,
             // 扩展信息
             registerInfo: `${record.elderName} (${record.registerTypeName})`,
             registerTimeFormatted: formatDateTime(record.registerTime, 'YYYY-MM-DD HH:mm')

@@ -18,6 +18,11 @@ public class DictTypeConstants {
     public static final String ACTIVITY_STATUS = "activity_status";
     
     /**
+     * 活动报名状态
+     */
+    public static final String ACTIVITY_REGISTER_STATUS = "activity_register_status";
+    
+    /**
      * 用户性别
      */
     public static final String USER_GENDER = "user_gender";
@@ -36,6 +41,11 @@ public class DictTypeConstants {
      * 服务状态
      */
     public static final String SERVICE_STATUS = "service_status";
+    
+    /**
+     * 服务评价状态
+     */
+    public static final String SERVICE_REVIEW_STATUS = "service_review_status";
     
     /**
      * 订单状态
@@ -76,4 +86,4 @@ public class DictTypeConstants {
      * 服务通知
      */
     public static final String NOTICE_TYPE_SERVICE = "service";
-} 
+}

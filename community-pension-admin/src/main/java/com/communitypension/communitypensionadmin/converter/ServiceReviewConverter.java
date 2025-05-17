@@ -5,6 +5,8 @@ import com.communitypension.communitypensionadmin.entity.ServiceReview;
 import com.communitypension.communitypensionadmin.entity.User;
 import com.communitypension.communitypensionadmin.vo.ServiceReviewVO;
 import org.springframework.beans.BeanUtils;
+import com.communitypension.communitypensionadmin.utils.DictUtils;
+import com.communitypension.communitypensionadmin.constant.DictTypeConstants;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -74,7 +76,12 @@ public class ServiceReviewConverter {
         }
         
         // 设置状态名称
-        vo.setStatusName(getStatusName(entity.getStatus()));
+        vo.setStatusName(
+            DictUtils.getDictLabel(
+                DictTypeConstants.SERVICE_REVIEW_STATUS,
+                entity.getStatus() == null ? null : String.valueOf(entity.getStatus())
+            )
+        );
         
         return vo;
     }

@@ -1,58 +1,43 @@
 <template>
   <div class="app-container">
-    <el-form :model="queryParams" ref="queryForm" :inline="true" v-show="showSearch" label-width="68px">
-      <el-form-item label="订单号" prop="orderNo">
-        <el-input
-          v-model="queryParams.orderNo"
-          placeholder="请输入订单号"
-          clearable
-          style="width: 240px"
-          @keyup.enter="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="用户名" prop="userName">
-        <el-input
-          v-model="queryParams.userName"
-          placeholder="请输入用户名"
-          clearable
-          style="width: 240px"
-          @keyup.enter="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="服务名称" prop="serviceName">
-        <el-input
-          v-model="queryParams.serviceName"
-          placeholder="请输入服务名称"
-          clearable
-          style="width: 240px"
-          @keyup.enter="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="订单状态" prop="status">
-        <el-select v-model="queryParams.status" placeholder="订单状态" clearable style="width: 240px">
-          <el-option
-            v-for="dict in statusOptions"
-            :key="dict.value"
-            :label="dict.label"
-            :value="dict.value"
-          />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="创建时间">
-        <el-date-picker
-          v-model="dateRange"
-          style="width: 240px"
-          value-format="YYYY-MM-DD"
-          type="daterange"
-          range-separator="-"
-          start-placeholder="开始日期"
-          end-placeholder="结束日期"
-        ></el-date-picker>
-      </el-form-item>
-      <el-form-item>
-        <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
-        <el-button icon="Refresh" @click="resetQuery">重置</el-button>
-      </el-form-item>
+    <el-form :model="queryParams" ref="queryForm" :inline="true" v-show="showSearch" label-width="100px">
+      <el-row :gutter="16">
+        <el-col :span="8">
+          <el-form-item label="订单号" prop="orderNo">
+            <el-input v-model="queryParams.orderNo" placeholder="请输入订单号" clearable style="width: 100%" @keyup.enter="handleQuery" />
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="用户名" prop="userName">
+            <el-input v-model="queryParams.userName" placeholder="请输入用户名" clearable style="width: 100%" @keyup.enter="handleQuery" />
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="服务名称" prop="serviceName">
+            <el-input v-model="queryParams.serviceName" placeholder="请输入服务名称" clearable style="width: 100%" @keyup.enter="handleQuery" />
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row :gutter="16" style="margin-top: 8px;">
+        <el-col :span="8">
+          <el-form-item label="订单状态" prop="status">
+            <el-select v-model="queryParams.status" placeholder="订单状态" clearable style="width: 100%">
+              <el-option v-for="dict in statusOptions" :key="dict.value" :label="dict.label" :value="dict.value" />
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="创建时间">
+            <el-date-picker v-model="dateRange" style="width: 100%" value-format="YYYY-MM-DD" type="daterange" range-separator="-" start-placeholder="开始日期" end-placeholder="结束日期" />
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item>
+            <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
+            <el-button icon="Refresh" @click="resetQuery">重置</el-button>
+          </el-form-item>
+        </el-col>
+      </el-row>
     </el-form>
 
     <el-row :gutter="10" class="mb8">
@@ -69,27 +54,22 @@
 
     <el-table v-loading="loading" :data="orderList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="订单ID" align="center" prop="orderId" width="80" />
-      <el-table-column label="订单号" align="center" prop="orderNo" width="180" />
-      <el-table-column label="用户名" align="center" prop="userName" :show-overflow-tooltip="true" />
-      <el-table-column label="服务名称" align="center" prop="serviceName" :show-overflow-tooltip="true" />
-      <el-table-column label="订单金额" align="center" prop="amount">
+      <el-table-column label="工单ID" align="center" prop="id" width="80" />
+      <el-table-column label="用户名" align="center" prop="userName" :show-overflow-tooltip="true" min-width="100" />
+      <el-table-column label="服务名称" align="center" prop="serviceName" :show-overflow-tooltip="true" min-width="160" />
+      <el-table-column label="服务类型" align="center" prop="serviceTypeName" :show-overflow-tooltip="true" min-width="120" />
+      <el-table-column label="预约时间" align="center" prop="scheduleTime" width="180">
         <template #default="scope">
-          <span>{{ scope.row.amount }}元</span>
+          <span>{{ formatDate(scope.row.scheduleTime) }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="服务时间" align="center" prop="serviceTime" width="180">
+      <el-table-column label="状态" align="center" prop="statusName">
         <template #default="scope">
-          <span>{{ formatDate(scope.row.serviceTime) }}</span>
+          <el-tag>{{ scope.row.statusName }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="订单状态" align="center" prop="status">
-        <template #default="scope">
-          <el-tag :type="statusTagType(scope.row.status)">
-            {{ statusLabel(scope.row.status) }}
-          </el-tag>
-        </template>
-      </el-table-column>
+      <el-table-column label="申请原因" align="center" prop="applyReason" :show-overflow-tooltip="true" min-width="140" />
+      <el-table-column label="审核备注" align="center" prop="reviewRemark" :show-overflow-tooltip="true" min-width="140" />
       <el-table-column label="创建时间" align="center" prop="createTime" width="180">
         <template #default="scope">
           <span>{{ formatDate(scope.row.createTime) }}</span>
@@ -97,23 +77,19 @@
       </el-table-column>
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template #default="scope">
-          <el-button
-            link
-            icon="View"
-            @click="handleView(scope.row)"
-          >查看</el-button>
-          <el-button
-            link
-            icon="Edit"
-            @click="handleUpdate(scope.row)"
-            v-if="scope.row.status === '1'"
-          >处理</el-button>
-          <el-button
-            link
-            icon="Delete"
-            @click="handleDelete(scope.row)"
-            v-if="scope.row.status === '0'"
-          >取消</el-button>
+          <el-button link icon="View" @click="handleView(scope.row)">查看</el-button>
+          <!-- 根据当前状态显示对应的操作按钮 -->
+          <template v-if="scope.row.status === '0'">
+            <el-button link type="success" icon="Check" @click="handleStatusUpdate(scope.row, '1')">接单</el-button>
+            <el-button link type="danger" icon="Close" @click="handleStatusUpdate(scope.row, '5')">拒绝</el-button>
+          </template>
+          <template v-else-if="scope.row.status === '1'">
+            <el-button link type="primary" icon="VideoPlay" @click="handleStatusUpdate(scope.row, '2')">开始服务</el-button>
+          </template>
+          <template v-else-if="scope.row.status === '2'">
+            <el-button link type="success" icon="CircleCheck" @click="handleStatusUpdate(scope.row, '3')">完成服务</el-button>
+          </template>
+          <el-button link type="danger" icon="Delete" @click="handleDelete(scope.row)" v-if="['0', '1', '2'].includes(scope.row.status)">取消</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -127,17 +103,16 @@
     />
 
     <!-- 查看订单详情对话框 -->
-    <el-dialog title="订单详情" v-model="viewOpen" width="700px" append-to-body>
+    <el-dialog title="工单详情" v-model="viewOpen" width="700px" append-to-body>
       <el-descriptions :column="2" border>
-        <el-descriptions-item label="订单号">{{ form.orderNo }}</el-descriptions-item>
+        <el-descriptions-item label="工单ID">{{ form.id }}</el-descriptions-item>
         <el-descriptions-item label="用户名">{{ form.userName }}</el-descriptions-item>
         <el-descriptions-item label="服务名称">{{ form.serviceName }}</el-descriptions-item>
-        <el-descriptions-item label="订单金额">{{ form.amount }}元</el-descriptions-item>
-        <el-descriptions-item label="服务时间">{{ formatDate(form.serviceTime) }}</el-descriptions-item>
-        <el-descriptions-item label="订单状态">{{ statusLabel(form.status) }}</el-descriptions-item>
-        <el-descriptions-item label="联系电话">{{ form.phone }}</el-descriptions-item>
-        <el-descriptions-item label="服务地址">{{ form.address }}</el-descriptions-item>
-        <el-descriptions-item label="备注" :span="2">{{ form.remark }}</el-descriptions-item>
+        <el-descriptions-item label="服务类型">{{ form.serviceTypeName }}</el-descriptions-item>
+        <el-descriptions-item label="预约时间">{{ formatDate(form.scheduleTime) }}</el-descriptions-item>
+        <el-descriptions-item label="状态">{{ form.statusName }}</el-descriptions-item>
+        <el-descriptions-item label="申请原因">{{ form.applyReason }}</el-descriptions-item>
+        <el-descriptions-item label="审核备注">{{ form.reviewRemark }}</el-descriptions-item>
         <el-descriptions-item label="创建时间">{{ formatDate(form.createTime) }}</el-descriptions-item>
         <el-descriptions-item label="更新时间">{{ formatDate(form.updateTime) }}</el-descriptions-item>
       </el-descriptions>
@@ -151,19 +126,13 @@
     <!-- 处理订单对话框 -->
     <el-dialog :title="title" v-model="open" width="500px" append-to-body>
       <el-form ref="orderForm" :model="form" :rules="rules" label-width="80px">
-        <el-form-item label="订单状态" prop="status">
-          <el-select v-model="form.status" placeholder="请选择订单状态">
-            <el-option
-              v-for="dict in statusOptions"
-              :key="dict.value"
-              :label="dict.label"
-              :value="dict.value"
-              :disabled="dict.value === '0'"
-            />
+        <el-form-item label="状态" prop="status">
+          <el-select v-model="form.status" placeholder="请选择状态">
+            <el-option v-for="dict in statusOptions" :key="dict.value" :label="dict.label" :value="dict.value" />
           </el-select>
         </el-form-item>
-        <el-form-item label="处理备注" prop="handleRemark">
-          <el-input v-model="form.handleRemark" type="textarea" placeholder="请输入处理备注" />
+        <el-form-item label="审核备注" prop="reviewRemark">
+          <el-input v-model="form.reviewRemark" type="textarea" placeholder="请输入审核备注" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -220,19 +189,17 @@ const queryParams = ref({
 
 // 表单参数
 const form = ref({
-  orderId: undefined,
-  orderNo: undefined,
+  id: undefined,
   userId: undefined,
   userName: undefined,
   serviceId: undefined,
   serviceName: undefined,
-  amount: undefined,
-  serviceTime: undefined,
+  serviceTypeName: undefined,
+  scheduleTime: undefined,
   status: undefined,
-  phone: undefined,
-  address: undefined,
-  remark: undefined,
-  handleRemark: undefined,
+  statusName: undefined,
+  applyReason: undefined,
+  reviewRemark: undefined,
   createTime: undefined,
   updateTime: undefined
 });
@@ -242,31 +209,14 @@ const rules = {
   status: [
     { required: true, message: "订单状态不能为空", trigger: "change" }
   ],
-  handleRemark: [
-    { required: true, message: "处理备注不能为空", trigger: "blur" }
+  reviewRemark: [
+    { required: true, message: "审核备注不能为空", trigger: "blur" }
   ]
 };
 
 const orderForm = ref(null);
 
-// 状态标签类型
-const statusTagType = (status) => {
-  const map = {
-    "0": "info",
-    "1": "primary",
-    "2": "warning",
-    "3": "success",
-    "4": "danger",
-    "5": "danger"
-  };
-  return map[status] || "info";
-};
-
-// 状态显示文本
-const statusLabel = (status) => {
-  const option = statusOptions.find(item => item.value === status);
-  return option ? option.label : "";
-};
+const canHandleStatus = ['0', '1', '2'];
 
 /** 查询订单列表 */
 async function getList() {
@@ -302,19 +252,17 @@ function cancel() {
 /** 表单重置 */
 function reset() {
   form.value = {
-    orderId: undefined,
-    orderNo: undefined,
+    id: undefined,
     userId: undefined,
     userName: undefined,
     serviceId: undefined,
     serviceName: undefined,
-    amount: undefined,
-    serviceTime: undefined,
+    serviceTypeName: undefined,
+    scheduleTime: undefined,
     status: undefined,
-    phone: undefined,
-    address: undefined,
-    remark: undefined,
-    handleRemark: undefined,
+    statusName: undefined,
+    applyReason: undefined,
+    reviewRemark: undefined,
     createTime: undefined,
     updateTime: undefined
   };
@@ -347,7 +295,7 @@ function resetQuery() {
 
 /** 多选框选中数据 */
 function handleSelectionChange(selection) {
-  ids.value = selection.map(item => item.orderId);
+  ids.value = selection.map(item => item.id);
   single.value = selection.length !== 1;
   multiple.value = !selection.length;
 }
@@ -355,7 +303,7 @@ function handleSelectionChange(selection) {
 /** 查看按钮操作 */
 async function handleView(row) {
   reset();
-  const orderId = row.orderId || ids.value[0];
+  const orderId = row.id || ids.value[0];
   try {
     const response = await serviceOrderStore.getOrderDetail(orderId);
     if (response) {
@@ -371,7 +319,7 @@ async function handleView(row) {
 /** 处理按钮操作 */
 async function handleUpdate(row) {
   reset();
-  const orderId = row.orderId || ids.value[0];
+  const orderId = row.id || ids.value[0];
   try {
     const response = await serviceOrderStore.getOrderDetail(orderId);
     if (response) {
@@ -392,7 +340,7 @@ async function submitForm() {
   await orderForm.value.validate(async (valid) => {
     if (valid) {
       try {
-        await serviceOrderStore.reviewOrder(form.value.orderId, form.value);
+        await serviceOrderStore.reviewOrder(form.value.id, form.value);
         ElMessage.success("处理成功");
         open.value = false;
         getList();
@@ -406,7 +354,7 @@ async function submitForm() {
 
 /** 取消订单按钮操作 */
 function handleDelete(row) {
-  const orderIds = row.orderId || ids.value;
+  const orderIds = row.id || ids.value;
   ElMessageBox.confirm('是否确认取消订单编号为"' + orderIds + '"的数据项?', "警告", {
     confirmButtonText: "确定",
     cancelButtonText: "取消",
@@ -435,6 +383,18 @@ function handleExport() {
   }
   
   serviceOrderStore.exportList(queryParams.value);
+}
+
+/** 状态更新 */
+async function handleStatusUpdate(row, status) {
+  try {
+    await serviceOrderStore.updateOrderStatus(row.id, status);
+    ElMessage.success("状态更新成功");
+    getList();
+  } catch (error) {
+    console.error("状态更新失败:", error);
+    ElMessage.error("状态更新失败");
+  }
 }
 
 onMounted(() => {

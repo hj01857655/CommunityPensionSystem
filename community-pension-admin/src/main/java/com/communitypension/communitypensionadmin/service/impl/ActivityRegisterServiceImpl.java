@@ -27,6 +27,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.communitypension.communitypensionadmin.utils.DictUtils;
+import com.communitypension.communitypensionadmin.constant.DictTypeConstants;
+
 /**
  * 活动报名Service实现类
  */
@@ -242,10 +245,18 @@ public class ActivityRegisterServiceImpl extends ServiceImpl<ActivityRegisterMap
         ActivityRegisterVO vo = new ActivityRegisterVO();
         BeanUtils.copyProperties(register, vo);
 
-        // 设置活动标题
+        // 设置活动标题和活动状态
         Activity activity = activityService.getById(register.getActivityId());
         if (activity != null) {
             vo.setActivityTitle(activity.getTitle());
+            vo.setActivityStatus(activity.getStatus());
+            // 通过字典工具类获取活动状态名称
+            vo.setActivityStatusName(
+                DictUtils.getDictLabel(
+                    DictTypeConstants.ACTIVITY_STATUS,
+                    activity.getStatus() == null ? null : String.valueOf(activity.getStatus())
+                )
+            );
         }
 
         // 设置老人姓名
@@ -267,7 +278,12 @@ public class ActivityRegisterServiceImpl extends ServiceImpl<ActivityRegisterMap
         vo.setHasCheckedIn(register.getStatus() == 4);
 
         // 设置状态名称
-        vo.setStatusName(getStatusName(register.getStatus()));
+        vo.setStatusName(
+            DictUtils.getDictLabel(
+                DictTypeConstants.ACTIVITY_REGISTER_STATUS,
+                register.getStatus() == null ? null : String.valueOf(register.getStatus())
+            )
+        );
 
         return vo;
     }
@@ -284,24 +300,6 @@ public class ActivityRegisterServiceImpl extends ServiceImpl<ActivityRegisterMap
             case 0 -> "老人自己报名";
             case 1 -> "家属代报名";
             default -> "未知类型";
-        };
-    }
-
-    /**
-     * 获取状态名称
-     */
-    private String getStatusName(Integer status) {
-        if (status == null) {
-            return "未知状态";
-        }
-
-        return switch (status) {
-            case 0 -> "待审核";
-            case 1 -> "已通过";
-            case 2 -> "已拒绝";
-            case 3 -> "已取消";
-            case 4 -> "已签到";
-            default -> "未知状态";
         };
     }
 

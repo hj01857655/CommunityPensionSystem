@@ -159,12 +159,6 @@ const routes = [
                         path: 'user/profile',
                         component: () => import('@/views/back/system/user/profile/index.vue'),
                         meta: {title: '个人中心', icon: 'User', requiresAuth: true, roles: ['admin', 'staff']}
-                    },
-                    {
-                        path: 'example',
-                        name: 'ExamplePage',
-                        component: () => import('@/views/back/system/example/index.vue'),
-                        meta: {title: '组件示例', icon: 'Document', requiresAuth: true, roles: ['admin', 'staff']}
                     }
                 ]
             },

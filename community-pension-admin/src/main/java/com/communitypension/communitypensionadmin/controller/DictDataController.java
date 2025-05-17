@@ -27,6 +27,7 @@ public class DictDataController {
      * @param dictType
      * @param dictLabel
      * @param dictValue
+     * @param status
      * @return
      */
     @GetMapping("/list")
@@ -35,8 +36,9 @@ public class DictDataController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String dictType,
             @RequestParam(required = false) String dictLabel,
-            @RequestParam(required = false) String dictValue) {
-        Page<DictDataVO> pageVO = dictDataService.getDictDataList(current, size, dictType, dictLabel, dictValue);
+            @RequestParam(required = false) String dictValue,
+            @RequestParam(required = false) String status) {
+        Page<DictDataVO> pageVO = dictDataService.getDictDataList(current, size, dictType, dictLabel, dictValue, status);
         return Result.success(pageVO);
     }
     /**

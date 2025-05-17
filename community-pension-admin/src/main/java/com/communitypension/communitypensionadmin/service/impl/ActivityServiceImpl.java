@@ -88,20 +88,14 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, Activity> i
         }
 
         // 设置状态名称
-        vo.setStatusName(getStatusName(activity.getStatus()));
+        vo.setStatusName(
+            com.communitypension.communitypensionadmin.utils.DictUtils.getDictLabel(
+                com.communitypension.communitypensionadmin.constant.DictTypeConstants.ACTIVITY_STATUS,
+                activity.getStatus() == null ? null : String.valueOf(activity.getStatus())
+            )
+        );
 
         return vo;
-    }
-
-    private String getStatusName(Integer status) {
-        return switch (status) {
-            case 0 -> "筹备中";
-            case 1 -> "报名中";
-            case 2 -> "进行中";
-            case 3 -> "已结束";
-            case 4 -> "已取消";
-            default -> "未知状态";
-        };
     }
 
     /**

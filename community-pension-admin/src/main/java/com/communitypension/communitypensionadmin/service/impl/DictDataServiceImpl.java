@@ -120,32 +120,28 @@ public class DictDataServiceImpl extends ServiceImpl<DictDataMapper, DictData> i
      * 分页查询字典数据列表
      */
     @Override
-    public Page<DictDataVO> getDictDataList(Integer pageNum, Integer pageSize, String dictType, String dictLabel, String dictValue) {
+    public Page<DictDataVO> getDictDataList(Integer pageNum, Integer pageSize, String dictType, String dictLabel, String dictValue, String status) {
         // 1. 参数校验
         pageNum = pageNum == null || pageNum < 1 ? 1 : pageNum;
         pageSize = pageSize == null || pageSize < 1 ? 10 : pageSize;
-        
         try {
             // 2. 构建查询条件
             LambdaQueryWrapper<DictData> wrapper = new LambdaQueryWrapper<>();
             wrapper.like(StringUtils.hasText(dictType), DictData::getDictType, dictType)
                    .like(StringUtils.hasText(dictLabel), DictData::getDictLabel, dictLabel)
-                   .like(StringUtils.hasText(dictValue), DictData::getDictValue, dictValue)
-                   // 添加状态条件，默认只查询正常状态
-                   .eq(DictData::getStatus, "0")
-                   // 添加排序条件
-                   .orderByAsc(DictData::getDictCode);
-
+                   .like(StringUtils.hasText(dictValue), DictData::getDictValue, dictValue);
+            if (StringUtils.hasText(status)) {
+                wrapper.eq(DictData::getStatus, status);
+            }
+            wrapper.orderByAsc(DictData::getDictCode);
             // 3. 执行分页查询
             Page<DictData> page = page(new Page<>(pageNum, pageSize), wrapper);
-            
             // 4. 转换为VO对象
             Page<DictDataVO> voPage = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());
             List<DictDataVO> voList = page.getRecords().stream()
                     .map(this::convertToVO)
                     .toList();
             voPage.setRecords(voList);
-            
             return voPage;
         } catch (Exception e) {
             log.error("获取字典数据列表失败", e);

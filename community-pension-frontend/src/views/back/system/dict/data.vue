@@ -24,11 +24,12 @@
         </el-form-item>
         <el-form-item label="状态" prop="status">
           <el-select v-model="queryParams.status" placeholder="字典状态" clearable style="width:200px">
+            <el-option label="全部" :value="''" />
             <el-option
               v-for="dict in normal_disable"
               :key="dict.value"
               :label="dict.label"
-              :value="dict.value"
+              :value="String(dict.value)"
             />
           </el-select>
         </el-form-item>
@@ -228,7 +229,7 @@ const queryParams = reactive({
   size: 10,
   dictType: route.params.dictType,
   dictLabel: undefined,
-  status: undefined
+  status: '' // 默认查全部
 })
 
 // 表单参数
@@ -364,7 +365,7 @@ const handleQuery = () => {
 const resetQuery = () => {
   queryParams.dictType = route.params.dictType  // 重置时保持当前字典类型
   queryParams.dictLabel = undefined
-  queryParams.status = undefined
+  queryParams.status = ''
   handleQuery()
 }
 

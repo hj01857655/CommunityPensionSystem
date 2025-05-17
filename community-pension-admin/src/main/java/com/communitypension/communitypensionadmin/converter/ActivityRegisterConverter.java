@@ -6,6 +6,8 @@ import com.communitypension.communitypensionadmin.entity.ActivityRegister;
 import com.communitypension.communitypensionadmin.entity.User;
 import com.communitypension.communitypensionadmin.vo.ActivityRegisterExportVO;
 import com.communitypension.communitypensionadmin.vo.ActivityRegisterVO;
+import com.communitypension.communitypensionadmin.utils.DictUtils;
+import com.communitypension.communitypensionadmin.constant.DictTypeConstants;
 import org.springframework.beans.BeanUtils;
 
 import java.util.ArrayList;
@@ -62,7 +64,12 @@ public class ActivityRegisterConverter {
         vo.setRegisterTypeName(getRegisterTypeName(entity.getRegisterType()));
 
         // 设置状态名称
-        vo.setStatusName(getStatusName(entity.getStatus()));
+        vo.setStatusName(
+            DictUtils.getDictLabel(
+                DictTypeConstants.ACTIVITY_REGISTER_STATUS,
+                entity.getStatus() == null ? null : String.valueOf(entity.getStatus())
+            )
+        );
 
         // 设置是否已签到
         vo.setHasCheckedIn(false); // 默认为未签到
@@ -128,7 +135,12 @@ public class ActivityRegisterConverter {
 
         vo.setRegisterTime(entity.getRegisterTime());
         // 签到时间已移至ActivityCheckIn实体类中，这里不再设置
-        vo.setStatusName(getStatusName(entity.getStatus()));
+        vo.setStatusName(
+            DictUtils.getDictLabel(
+                DictTypeConstants.ACTIVITY_REGISTER_STATUS,
+                entity.getStatus() == null ? null : String.valueOf(entity.getStatus())
+            )
+        );
         vo.setRemark(entity.getRemark());
 
         return vo;
@@ -171,27 +183,6 @@ public class ActivityRegisterConverter {
             case 0 -> "老人自己报名";
             case 1 -> "家属代报名";
             default -> "未知类型";
-        };
-    }
-
-    /**
-     * 获取状态名称
-     *
-     * @param status 状态码
-     * @return 状态名称
-     */
-    private static String getStatusName(Integer status) {
-        if (status == null) {
-            return "未知状态";
-        }
-
-        return switch (status) {
-            case 0 -> "待审核";
-            case 1 -> "已通过";
-            case 2 -> "已拒绝";
-            case 3 -> "已取消";
-            case 4 -> "已签到";
-            default -> "未知状态";
         };
     }
 }

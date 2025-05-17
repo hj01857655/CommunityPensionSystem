@@ -70,14 +70,6 @@
             <span>系统设置</span>
           </template>
         </el-menu-item>
-        <el-menu-item index="/admin/system/example">
-          <template #title>
-            <el-icon>
-              <Document />
-            </el-icon>
-            <span>组件示例</span>
-          </template>
-        </el-menu-item>
       </el-sub-menu>
       <!-- 数据分析看板 -->
 

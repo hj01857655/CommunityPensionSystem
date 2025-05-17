@@ -8,7 +8,8 @@ import {
   reviewServiceOrder,
   assignServiceOrder,
   startServiceOrder,
-  completeServiceOrder
+  completeServiceOrder,
+  exportServiceOrder
 } from '@/api/back/service/order';
 
 export const useServiceOrderStore = defineStore('serviceOrder', () => {
@@ -33,19 +34,15 @@ export const useServiceOrderStore = defineStore('serviceOrder', () => {
         current: params.current,
         size: params.size,
         serviceName: params.serviceName,
+        userName: params.userName,
+        serviceType: params.serviceType,
         status: params.status,
-        startTime: params.startTime,
+        beginTime: params.beginTime,
         endTime: params.endTime
       });
       console.log('工单列表原始数据:', res);
       if (res.code === 200) {
-        // 处理数据字段映射
-        orderList.value = res.data.records.map(item => ({
-          ...item,
-          appointmentTime: item.scheduleTime, // 映射预约时间字段
-          elderName: item.userName // 映射服务对象字段
-        }));
-        console.log('处理后的工单列表:', orderList.value);
+        orderList.value = res.data.records;
         total.value = res.data.total;
         return res.data;
       } else {
@@ -162,6 +159,91 @@ export const useServiceOrderStore = defineStore('serviceOrder', () => {
     }
   };
 
+  // 删除服务订单
+  const deleteOrder = async (orderIds) => {
+    try {
+      // 如果是数组，转为逗号分隔的字符串
+      const ids = Array.isArray(orderIds) ? orderIds.join(',') : orderIds;
+      const res = await axios.delete(`/api/service/order/${ids}`);
+      if (res.code === 200) {
+        return res.data;
+      } else {
+        throw new Error(res.message || '删除服务订单失败');
+      }
+    } catch (error) {
+      console.error('删除服务订单失败:', error);
+      throw error;
+    }
+  };
+
+  // 导出服务订单
+  const exportOrder = async (params) => {
+    try {
+      return await exportServiceOrder(params);
+    } catch (error) {
+      console.error('导出服务订单失败:', error);
+      throw error;
+    }
+  };
+
+  // 更新订单状态（状态流转）
+  const updateOrderStatus = async (orderId, status) => {
+    try {
+      if (!orderId) {
+        throw new Error('订单ID不能为空');
+      }
+      
+      let res;
+      
+      // 根据目标状态调用不同的API
+      switch (status) {
+        case '1': // 接单
+          res = await reviewServiceOrder(orderId, { status: 1, reviewRemark: '已接单' });
+          break;
+        case '2': // 开始服务
+          res = await startServiceOrder(orderId);
+          break;
+        case '3': // 完成服务
+          res = await completeServiceOrder(orderId, 0); // 实际时长暂时设为0
+          break;
+        case '4': // 取消
+          res = await reviewServiceOrder(orderId, { status: 4, reviewRemark: '已取消' });
+          break;
+        case '5': // 拒绝
+          res = await reviewServiceOrder(orderId, { status: 5, reviewRemark: '已拒绝' });
+          break;
+        default:
+          throw new Error('不支持的状态值');
+      }
+      
+      if (res.code === 200) {
+        return res.data;
+      } else {
+        throw new Error(res.message || '更新订单状态失败');
+      }
+    } catch (error) {
+      console.error('更新订单状态失败:', error);
+      throw error;
+    }
+  };
+
+  // 取消订单
+  const cancelOrder = async (orderIds) => {
+    try {
+      // 如果是数组，转为逗号分隔的字符串
+      const ids = Array.isArray(orderIds) ? orderIds.join(',') : orderIds;
+      const res = await axios.delete(`/api/service/order/${ids}`);
+      if (res.code === 200) {
+        return res.data;
+      } else {
+        throw new Error(res.message || '取消服务订单失败');
+      }
+    } catch (error) {
+      console.error('取消服务订单失败:', error);
+      throw error;
+    }
+  };
+
   return {
     orderList,
     total,
@@ -173,6 +255,10 @@ export const useServiceOrderStore = defineStore('serviceOrder', () => {
     assignOrder,
     startOrder,
     completeOrder,
+    deleteOrder,
+    exportOrder,
+    updateOrderStatus,
+    cancelOrder,
     resetState
   };
-}); 
+});
