@@ -79,17 +79,17 @@
         <template #default="scope">
           <el-button link icon="View" @click="handleView(scope.row)">查看</el-button>
           <!-- 根据当前状态显示对应的操作按钮 -->
-          <template v-if="scope.row.status === '0'">
+          <template v-if="scope.row.status == 0">
             <el-button link type="success" icon="Check" @click="handleStatusUpdate(scope.row, '1')">接单</el-button>
             <el-button link type="danger" icon="Close" @click="handleStatusUpdate(scope.row, '5')">拒绝</el-button>
           </template>
-          <template v-else-if="scope.row.status === '1'">
+          <template v-else-if="scope.row.status == 1">
             <el-button link type="primary" icon="VideoPlay" @click="handleStatusUpdate(scope.row, '2')">开始服务</el-button>
           </template>
-          <template v-else-if="scope.row.status === '2'">
+          <template v-else-if="scope.row.status == 2">
             <el-button link type="success" icon="CircleCheck" @click="handleStatusUpdate(scope.row, '3')">完成服务</el-button>
           </template>
-          <el-button link type="danger" icon="Delete" @click="handleDelete(scope.row)" v-if="['0', '1', '2'].includes(scope.row.status)">取消</el-button>
+          <el-button link type="danger" icon="Delete" @click="handleDelete(scope.row)" v-if="[0, 1, 2].includes(Number(scope.row.status))">取消</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -232,9 +232,17 @@ async function getList() {
     }
 
     const response = await serviceOrderStore.getOrderList(queryParams.value);
+    console.log('orderList response:', response);
     if (response && response.records) {
       orderList.value = response.records;
       total.value = response.total;
+      response.records.forEach(item => {
+        if (!item.id) {
+          console.error('警告：有工单数据缺少id字段', item);
+        } else {
+          console.log('工单ID:', item.id, '工单数据:', item);
+        }
+      });
     }
   } catch (error) {
     console.error("获取订单列表失败:", error);
@@ -387,6 +395,11 @@ function handleExport() {
 
 /** 状态更新 */
 async function handleStatusUpdate(row, status) {
+  console.log('handleStatusUpdate row:', row);
+  if (!row.id) {
+    ElMessage.error('工单ID不存在，无法更新状态！');
+    return;
+  }
   try {
     await serviceOrderStore.updateOrderStatus(row.id, status);
     ElMessage.success("状态更新成功");

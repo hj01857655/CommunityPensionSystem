@@ -75,14 +75,13 @@ export const startServiceOrder = (id) => {
  * 完成服务
  * @param {Object} data - 完成数据
  * @param {number} data.id - 工单ID
- * @param {number} data.actualDuration - 实际服务时长
+ * @param {number} data.duration - 实际服务时长
+ * @param {number} data.fee - 费用
  * @returns {Promise<{code: number, msg: string}>}
  */
 export const completeServiceOrder = (data) => {
-  const { id, actualDuration } = data;
-  return axios.post(`/api/service/order/${id}/complete`, {
-    actualDuration
-  });
+  const { id, duration, fee } = data;
+  return axios.post(`/api/service/order/${id}/complete?duration=${duration}&fee=${fee}`);
 };
 
 /**

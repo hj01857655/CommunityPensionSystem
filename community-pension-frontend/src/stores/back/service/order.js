@@ -1,16 +1,16 @@
+import {
+  assignServiceOrder,
+  completeServiceOrder,
+  createServiceOrder,
+  exportServiceOrder,
+  getServiceOrderDetail,
+  getServiceOrderList,
+  reviewServiceOrder,
+  startServiceOrder
+} from '@/api/back/service/order';
+import axios from '@/utils/axios'; // 修正axios导入路径
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import axios from '@/utils/axios'; // 修正axios导入路径
-import { 
-  getServiceOrderList,
-  getServiceOrderDetail,
-  createServiceOrder,
-  reviewServiceOrder,
-  assignServiceOrder,
-  startServiceOrder,
-  completeServiceOrder,
-  exportServiceOrder
-} from '@/api/back/service/order';
 
 export const useServiceOrderStore = defineStore('serviceOrder', () => {
   // 状态
@@ -142,17 +142,15 @@ export const useServiceOrderStore = defineStore('serviceOrder', () => {
   };
 
   // 完成服务
-  const completeOrder = async (orderId, actualDuration) => {
+  const completeOrder = async (orderId, duration = 0, fee = 0) => {
     try {
       const res = await completeServiceOrder({
         id: orderId,
-        actualDuration
+        duration,
+        fee
       });
-      if (res.code === 200) {
-        return res.data;
-      } else {
-        throw new Error(res.message || '完成服务失败');
-      }
+      // 返回完整响应对象
+      return res;
     } catch (error) {
       console.error('完成服务失败:', error);
       throw error;
@@ -204,7 +202,7 @@ export const useServiceOrderStore = defineStore('serviceOrder', () => {
           res = await startServiceOrder(orderId);
           break;
         case '3': // 完成服务
-          res = await completeServiceOrder(orderId, 0); // 实际时长暂时设为0
+          res = await completeOrder(orderId, 0, 0); // duration=0, fee=0
           break;
         case '4': // 取消
           res = await reviewServiceOrder(orderId, { status: 4, reviewRemark: '已取消' });
