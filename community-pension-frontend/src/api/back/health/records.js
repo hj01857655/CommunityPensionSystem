@@ -1,11 +1,10 @@
 import axios from '@/utils/axios'; // 使用您封装的 Axios 实例
 
-// 获取健康档案
-export const getHealthRecords = (elderId) => {
-    return axios.get('/api/health/record/getHealthRecords', {
-        params: { elderId }
-    }).catch(error => {
-        console.error('Error fetching health records:', error);
+// 获取健康档案详情
+export const getHealthRecords = (id) => {
+    return axios.get(`/api/health/record/${id}`)
+    .catch(error => {
+        console.error('Error fetching health record details:', error);
         throw error;
     });
 };
@@ -38,9 +37,13 @@ export const deleteHealthRecord = (id) => {
 };
 
 // 获取所有健康档案
-export const listHealthRecords = (page, size) => {
+export const listHealthRecords = (page, size, params = {}) => {
     return axios.get('/api/health/record/list', {
-        params: { page, size }
+        params: { 
+            page, 
+            size,
+            ...params
+        }
     }).catch(error => {
         console.error('Error fetching health records list:', error);
         throw error;

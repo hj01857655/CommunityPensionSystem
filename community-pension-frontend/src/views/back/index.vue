@@ -5,7 +5,13 @@
     </el-aside>
     <el-container>
       <el-header height="60px" class="header-container">
-        <Header :is-collapse="isCollapse" @toggle-sidebar="toggleSidebar" />
+        <Header 
+          :is-collapse="isCollapse" 
+          @toggle-sidebar="toggleSidebar"
+          @change-nav-mode="handleNavModeChange"
+          @toggle-tags="handleTagsToggle"
+          @toggle-fixed-header="handleFixedHeaderToggle"
+        />
       </el-header>
       <div class="main-container">
         <TagsView
@@ -34,7 +40,7 @@ import TagsView from '@/components/back/layout/TagsView.vue';
 import { useAdminStore } from '@/stores/back/adminStore';
 import { useTagsViewStore } from '@/stores/tagsView';
 import { ElMessage } from 'element-plus';
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
 const router = useRouter();
@@ -42,9 +48,52 @@ const adminStore = useAdminStore();
 const tagsViewStore = useTagsViewStore();
 const isCollapse = ref(false);
 
+// 布局相关状态
+const navMode = ref(localStorage.getItem('navMode') || 'side');
+const showTagsView = ref(localStorage.getItem('showTags') !== 'false');
+const fixedHeader = ref(localStorage.getItem('fixedHeader') !== 'false');
+
 const toggleSidebar = () => {
   isCollapse.value = !isCollapse.value;
 };
+
+// 处理导航模式变更
+const handleNavModeChange = (mode) => {
+  navMode.value = mode;
+  // 这里可以添加导航模式变更的逻辑
+  ElMessage.success(`导航模式已切换为: ${mode === 'side' ? '侧边菜单模式' : '顶部菜单模式'}`);
+};
+
+// 处理标签页显示切换
+const handleTagsToggle = (value) => {
+  showTagsView.value = value;
+  // 这里可以添加标签页显示切换的逻辑
+  ElMessage.success(`标签页显示已${value ? '开启' : '关闭'}`);
+};
+
+// 处理固定Header切换
+const handleFixedHeaderToggle = (value) => {
+  fixedHeader.value = value;
+  // 这里可以添加固定Header切换的逻辑
+  document.body.classList.toggle('fixed-header', value);
+  ElMessage.success(`固定Header已${value ? '开启' : '关闭'}`);
+};
+
+// 监听导航模式变化，应用相应的样式
+watch(navMode, (newMode) => {
+  document.body.classList.toggle('top-nav-mode', newMode === 'top');
+  document.body.classList.toggle('side-nav-mode', newMode === 'side');
+});
+
+// 在组件挂载时初始化布局样式
+onMounted(() => {
+  // 应用导航模式样式
+  document.body.classList.toggle('top-nav-mode', navMode.value === 'top');
+  document.body.classList.toggle('side-nav-mode', navMode.value === 'side');
+  
+  // 应用固定Header样式
+  document.body.classList.toggle('fixed-header', fixedHeader.value);
+});
 
 // TagsView 相关方法
 const removeTab = (view) => {

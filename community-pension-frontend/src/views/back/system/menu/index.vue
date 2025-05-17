@@ -1,6 +1,6 @@
 <template>
   <div class="app-container">
-    <el-form :model="queryParams" ref="queryRef" :inline="true" v-show="showSearch" label-width="68px">
+    <el-form :model="queryParams" ref="queryRef" :inline="true" v-show="showSearch" label-width="80px">
       <el-form-item label="菜单名称" prop="menuName">
         <el-input v-model="queryParams.menuName" placeholder="请输入菜单名称" clearable style="width: 200px" @keyup.enter="handleQuery" />
       </el-form-item>
@@ -90,9 +90,9 @@
 
         <el-form-item label="菜单类型" prop="menuType">
           <el-radio-group v-model="form.menuType">
-            <el-radio value="M">目录</el-radio>
-            <el-radio value="C">菜单</el-radio>
-            <el-radio value="F">按钮</el-radio>
+            <el-radio :value="'M'">目录</el-radio>
+            <el-radio :value="'C'">菜单</el-radio>
+            <el-radio :value="'F'">按钮</el-radio>
           </el-radio-group>
         </el-form-item>
 

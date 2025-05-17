@@ -170,7 +170,14 @@ export const useAdminStore = defineStore('admin', {
 
           // 存储用户角色
           const roleName = user.roleId === 4 ? 'admin' : 'staff';
-          localStorage.setItem('userRole', roleName);
+          sessionStorage.setItem('userRole', roleName);
+          
+          // 存储用户信息到sessionStorage，包含角色信息
+          const userInfoWithRoles = {
+            ...user,
+            roles: [roleName] // 确保roles是数组格式
+          };
+          sessionStorage.setItem('admin-user-info', JSON.stringify(userInfoWithRoles));
 
           return response;
         }

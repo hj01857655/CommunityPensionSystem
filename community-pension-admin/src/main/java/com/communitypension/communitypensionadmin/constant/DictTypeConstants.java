@@ -55,20 +55,25 @@ public class DictTypeConstants {
     /**
      * 通知类型
      */
-    public static final String NOTIFICATION_TYPE = "notification_type";
+    public static final String NOTICE_TYPE = "notice_type";
+    
+    /**
+     * 通知状态
+     */
+    public static final String NOTICE_STATUS = "notice_status";
     
     /**
      * 系统通知
      */
-    public static final String NOTIFICATION_TYPE_SYSTEM = "system";
+    public static final String NOTICE_TYPE_SYSTEM = "system";
     
     /**
      * 活动通知
      */
-    public static final String NOTIFICATION_TYPE_ACTIVITY = "activity";
+    public static final String NOTICE_TYPE_ACTIVITY = "activity";
     
     /**
      * 服务通知
      */
-    public static final String NOTIFICATION_TYPE_SERVICE = "service";
+    public static final String NOTICE_TYPE_SERVICE = "service";
 } 

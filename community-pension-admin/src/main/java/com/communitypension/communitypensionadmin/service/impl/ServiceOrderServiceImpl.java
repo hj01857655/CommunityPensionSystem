@@ -25,6 +25,7 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -47,12 +48,23 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class ServiceOrderServiceImpl extends ServiceImpl<ServiceOrderMapper, ServiceOrder> implements ServiceOrderService {
     // 服务项目Service
     private final ServiceItemService serviceItemService;
     private final UserService userService;
-    private final NotificationService notificationService;
+    private NotificationService notificationService;
+
+    // 使用构造函数注入必需的依赖
+    public ServiceOrderServiceImpl(ServiceItemService serviceItemService, UserService userService) {
+        this.serviceItemService = serviceItemService;
+        this.userService = userService;
+    }
+    
+    // 使用setter方法注入NotificationService，解决循环依赖
+    @Autowired
+    public void setNotificationService(NotificationService notificationService) {
+        this.notificationService = notificationService;
+    }
 
     /**
      * 根据分页参数查询预约记录

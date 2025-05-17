@@ -51,8 +51,8 @@ public class HealthRecordConverter {
     /**
      * 实体转VO
      *
-     * @param entity 实体对象
-     * @param elder 老人对象
+     * @param entity   实体对象
+     * @param elder    老人对象
      * @param recorder 记录人对象
      * @return VO对象
      */
@@ -65,7 +65,7 @@ public class HealthRecordConverter {
 
         // 设置老人信息
         if (elder != null) {
-            vo.setElderName(elder.getUsername());
+            vo.setElderName(elder.getName());
             vo.setElderGender(elder.getGender());
 
             // 计算年龄
@@ -78,7 +78,7 @@ public class HealthRecordConverter {
 
         // 设置记录人信息
         if (recorder != null) {
-            vo.setRecorderName(recorder.getUsername());
+            vo.setRecorderName(recorder.getName());
         }
 
         return vo;
@@ -89,7 +89,7 @@ public class HealthRecordConverter {
      *
      * @param entities 实体列表
      * @param elderMap 老人Map
-     * @param userMap 用户Map
+     * @param userMap  用户Map
      * @return VO列表
      */
     public static List<HealthRecordVO> toVOList(List<HealthRecord> entities, Map<Long, User> elderMap, Map<Long, User> userMap) {

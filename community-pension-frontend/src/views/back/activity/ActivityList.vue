@@ -192,7 +192,7 @@ import { ArrowDown, Plus, Edit, Delete, Search, Refresh, View, Download, Check }
 import { getDictDataByType } from '@/api/back/system/dict/data'
 import { useActivityStore } from '@/stores/back/activityStore'
 import RightToolbar from '@/components/common/base/RightToolbar/index.vue'
-import Pagination from '@/components/common/Pagination.vue'
+import Pagination from '@/components/common/table/Pagination.vue'
 
 const activityStore = useActivityStore()
 

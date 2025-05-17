@@ -3,8 +3,10 @@ import {
   getKinListByElderId,
   getUnboundElders,
   unbindElderKinRelation,
-  userLogin
+  userLogin,
+  updateUserInfo
 } from '@/api/fore/user';
+import { getHealthRecords as getHealthRecordsApi } from '@/api/fore/health';
 import { getAvatarUrl } from '@/utils/avatarUtils'; // 导入头像工具函数
 import axios, { TokenManager } from '@/utils/axios';
 import { ElMessage } from 'element-plus';
@@ -112,6 +114,8 @@ export const useUserStore = defineStore('foreground-user', () => {
         emergencyContactName: user.emergencyContactName,
         emergencyContactPhone: user.emergencyContactPhone,
         healthCondition: user.healthCondition,
+        allergy: user.allergy || '',
+        medicalHistory: user.medicalHistory || '',
         // 绑定ID列表
         kinIds: user.kinIds || [],
         elderIds: user.elderIds || []
@@ -313,28 +317,72 @@ export const useUserStore = defineStore('foreground-user', () => {
     return true;
   };
 
-  const updateUserInfo = async (userData) => {
+  /**
+   * 更新用户信息
+   * @param {Object} userData - 用户数据
+   * @returns {Promise<boolean>} - 是否更新成功
+   */
+  const handleUpdateUserInfo = async (userData) => {
     try {
-      // 此处可以添加API调用来更新后端数据
-      const response = await updateUserInfo(userData);
-      
-      // 更新本地存储
-      userInfo.value = { ...userInfo.value, ...userData };
-      localStorage.setItem('fore-userInfo', JSON.stringify(userInfo.value));
-      
-      // 根据角色更新特定信息
-      if (roleId.value === 1) { // 老人
-        elderInfo.value = { ...elderInfo.value, ...userData };
-        localStorage.setItem('elderInfo', JSON.stringify(elderInfo.value));
-      } else if (roleId.value === 2) { // 家属
-        kinInfo.value = { ...kinInfo.value, ...userData };
-        localStorage.setItem('kinInfo', JSON.stringify(kinInfo.value));
+      loading.value = true;
+      // 确保userData中包含userId
+      if (!userData.userId) {
+        if (userData.id) {
+          userData.userId = userData.id;
+        } else if (userInfo.value && userInfo.value.userId) {
+          userData.userId = userInfo.value.userId;
+        } else if (userInfo.value && userInfo.value.id) {
+          userData.userId = userInfo.value.id;
+        }
       }
       
-      return true;
+      // 创建一个只包含必要字段的数据对象
+      const updateData = {
+        userId: userData.userId,
+        name: userData.name,
+        gender: userData.gender,
+        birthday: userData.birthday,
+        idCard: userData.idCard,
+        phone: userData.phone,
+        address: userData.address,
+        email: userData.email,
+        emergencyContactName: userData.emergencyContactName,
+        emergencyContactPhone: userData.emergencyContactPhone,
+        healthCondition: userData.healthCondition,
+        allergy: userData.allergy,
+        medicalHistory: userData.medicalHistory,
+        avatar: userData.avatar
+      };
+      
+      console.log('userStore中处理后的用户数据:', updateData);
+      
+      if (!updateData.userId) {
+        console.error('无法获取用户ID，更新失败');
+        return false;
+      }
+      
+      const response = await updateUserInfo(updateData);
+      if (response.code === 200) {
+        // 更新store中的用户信息
+        userInfo.value = response.data;
+        
+        // 根据角色更新特定信息
+        if (roleId.value === 1) { // 老人
+          elderInfo.value = { ...elderInfo.value, ...response.data };
+          localStorage.setItem('elderInfo', JSON.stringify(elderInfo.value));
+        } else if (roleId.value === 2) { // 家属
+          kinInfo.value = { ...kinInfo.value, ...response.data };
+          localStorage.setItem('kinInfo', JSON.stringify(kinInfo.value));
+        }
+        
+        return true;
+      }
+      return false;
     } catch (error) {
       console.error('更新用户信息失败:', error);
       return false;
+    } finally {
+      loading.value = false;
     }
   };
 
@@ -422,16 +470,36 @@ export const useUserStore = defineStore('foreground-user', () => {
 
   const getHealthRecords = async (elderId) => {
     try {
-      const response = await axios.get('/api/health-records/getHealthRecords', {
-        params: { elderId }
-      });
-      if (response.data.code === 200) {
-        return response.data;
+      // 使用正确的API路径 - 从health.js中获取
+      const response = await getHealthRecordsApi(elderId);
+      
+      // 如果成功获取健康记录
+      if (response.code === 200 && response.data) {
+        return response;
       }
-      return null;
+      
+      // 如果未获取到数据，返回空对象
+      return {
+        code: 200,
+        data: {
+          allergy: '',
+          medicalHistory: '',
+          healthCondition: ''
+        },
+        msg: '未找到健康信息'
+      };
     } catch (error) {
       console.error('获取健康记录失败:', error);
-      return null;
+      // 返回默认值而非null，确保前端不会因API错误而崩溃
+      return {
+        code: 500,
+        data: {
+          allergy: '',
+          medicalHistory: '',
+          healthCondition: ''
+        },
+        msg: '获取健康信息失败'
+      };
     }
   };
 
@@ -454,7 +522,7 @@ export const useUserStore = defineStore('foreground-user', () => {
     login,
     getUserInfo,
     logout,
-    updateUserInfo,
+    handleUpdateUserInfo,
     getElderInfo,
     fetchUnboundElders,
     fetchKinListByElderId,

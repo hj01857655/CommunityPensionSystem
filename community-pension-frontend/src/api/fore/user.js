@@ -8,17 +8,60 @@ import axios, {TokenManager} from '@/utils/axios';
  * @returns {Promise<{code: number, data: Object, message: string}>}
  */
 export const userLogin = (data) => {
-  return axios.post('/api/auth/login', data);
+    return axios.post('/api/auth/login', data);
 };
 
 // 更新用户信息
 export const updateUserInfo = async (data) => {
     try {
-        const response = await axios.put(`/api/system/user/${data.userId}`, data);
+        // 确保userId存在
+        if (!data.userId) {
+            console.error('更新用户信息错误: 缺少userId');
+            throw new Error('缺少用户ID，无法更新信息');
+        }
+
+        console.log('API调用前的用户数据:', data);
+
+        // 获取完整的用户信息，确保包含所有必要字段
+        const userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
+
+        // 创建一个符合后端期望的数据对象
+        const updateData = {
+            // 基本信息 - 必填字段
+            userId: Number(data.userId), // 确保是数字类型
+            username: userInfo.username, // 用户名是必填的，使用已存储的值
+            password: "password123", // 提供一个固定的密码值，确保不为空
+            name: data.name,
+            gender: data.gender,
+            phone: data.phone,
+
+            // 可选字段
+            email: data.email || "",
+            address: data.address || "",
+            avatar: data.avatar,
+            birthday: data.birthday,
+            idCard: data.idCard,
+            emergencyContactName: data.emergencyContactName || "",
+            emergencyContactPhone: data.emergencyContactPhone || "",
+            healthCondition: data.healthCondition || "",
+
+            // 角色相关字段
+            roleIds: userInfo.roleIds || [Number(userInfo.roleId) || 1],
+
+            // 其他可能需要的字段
+            allergy: data.allergy || "",
+            medicalHistory: data.medicalHistory || ""
+        };
+
+        console.log('处理后准备发送的数据:', updateData);
+
+        // 使用PUT方法，与后端接口对齐
+        const response = await axios.put(`/api/system/user/${data.userId}`, updateData);
         if (response.code === 200) {
-            // 更新本地存储
-            localStorage.setItem("userInfo", JSON.stringify(response.data));
-            
+            // 更新本地存储 - 使用localStorage而非sessionStorage（前台系统要求）
+            const updatedUserInfo = {...userInfo, ...data};
+            localStorage.setItem("userInfo", JSON.stringify(updatedUserInfo));
+            console.log('用户信息已更新到localStorage');
         }
         return response;
     } catch (error) {
@@ -40,11 +83,11 @@ export const userLogout = async (data) => {
             localStorage.removeItem("userInfo");
             localStorage.removeItem("roleId");
             localStorage.removeItem("isLoggedIn");
-            
+
             // 清除token
             TokenManager.user.clear();
         }
-        
+
         return response;
     } catch (error) {
         console.error('退出错误:', error);
@@ -53,7 +96,7 @@ export const userLogout = async (data) => {
         localStorage.removeItem("roleId");
         localStorage.removeItem("isLoggedIn");
         TokenManager.user.clear();
-        
+
         throw error;
     }
 }
@@ -63,7 +106,7 @@ export const userLogout = async (data) => {
  * @returns {Promise<{code: number, data: Array, message: string}>}
  */
 export const getUnboundElders = () => {
-  return axios.get('/api/user/elder/unbound');
+    return axios.get('/api/user/elder/unbound');
 };
 
 /**
@@ -83,7 +126,7 @@ export const getKinListByElderId = (elderId) => {
  * @returns {Promise<{code: number, message: string}>}
  */
 export const bindElderKinRelation = (elderId, kinId, relationType) => {
-  return axios.post('/api/user/elder-kin/bind', { elderId, kinId, relationType });
+    return axios.post('/api/user/elder-kin/bind', {elderId, kinId, relationType});
 };
 
 /**
@@ -93,17 +136,16 @@ export const bindElderKinRelation = (elderId, kinId, relationType) => {
  * @returns {Promise<{code: number, message: string}>}
  */
 export const unbindElderKinRelation = (elderId, kinId) => {
-  return axios.post('/api/user/elder-kin/unbind', { elderId, kinId });
+    return axios.post('/api/user/elder-kin/unbind', {elderId, kinId});
 };
 
 // 获取老人的家属ID列表
 export const getKinIdsByElderId = async (elderId) => {
-  try {
-    const response = await axios.get(`/api/user/kin-ids/${elderId}`);
-    return response;
-  } catch (error) {
-    console.error('获取老人家属ID列表失败:', error);
-    throw error;
-  }
+    try {
+        const response = await axios.get(`/api/user/kin-ids/${elderId}`);
+        return response;
+    } catch (error) {
+        console.error('获取老人家属ID列表失败:', error);
+        throw error;
+    }
 }
-

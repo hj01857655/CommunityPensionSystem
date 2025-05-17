@@ -24,3 +24,13 @@ export const updateMenu = (data) => {
 export const delMenu = (menuId) => {
     return axios.delete('/api/system/menu/' + menuId);
 };
+
+// 查询菜单树结构
+export const treeselect = () => {
+    return axios.get('/api/system/menu/treeselect');
+};
+
+// 根据角色ID查询菜单树结构
+export const roleMenuTreeselect = (roleId) => {
+    return axios.get('/api/system/menu/roleMenuTreeselect/' + roleId);
+};

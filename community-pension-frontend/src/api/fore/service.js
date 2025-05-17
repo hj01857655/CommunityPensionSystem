@@ -50,10 +50,10 @@ export const getServiceCategories = async() => {
 /**
  * 创建服务预约
  * @param {Object} data - 预约信息
- * @param {number} data.serviceId - 服务项目ID
+ * @param {number} data.serviceItemId - 服务项目ID
  * @param {number} data.userId - 预约用户ID
- * @param {string} data.appointmentTime - 预约时间
- * @param {string} data.remark - 备注信息
+ * @param {string} data.scheduleTime - 预约时间（格式：yyyy-MM-ddTHH:mm:ss）
+ * @param {string} data.applyReason - 申请原因（长度5-500字符）
  * @returns {Promise<{code: number, msg: string}>}
  */
 export const createAppointment = async (data) => {

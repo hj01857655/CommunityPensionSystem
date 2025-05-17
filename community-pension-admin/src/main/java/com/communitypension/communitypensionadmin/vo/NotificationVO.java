@@ -80,7 +80,7 @@ public class NotificationVO {
      */
     public String getTypeName() {
         if (type != null) {
-            return DictUtils.getDictLabel(DictTypeConstants.NOTIFICATION_TYPE, String.valueOf(type));
+            return DictUtils.getDictLabel(DictTypeConstants.NOTICE_TYPE, String.valueOf(type));
         }
         return null;
     }

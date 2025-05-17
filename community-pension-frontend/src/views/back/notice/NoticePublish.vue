@@ -32,11 +32,12 @@
         <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item label="通知类型" prop="type">
-              <el-select v-model="noticeForm.type" placeholder="请选择通知类型" style="width: 100%">
-                <el-option label="健康通知" value="健康通知" />
-                <el-option label="活动通知" value="活动通知" />
-                <el-option label="工作通知" value="工作通知" />
-                <el-option label="紧急通知" value="紧急通知" />
+              <el-select v-model="noticeForm.type" placeholder="请选择通知类型" style="width: 100%" required>
+                <el-option 
+                  v-for="dict in typeOptions" 
+                  :key="dict.dictValue" 
+                  :label="dict.dictLabel" 
+                  :value="dict.dictValue" />
               </el-select>
             </el-form-item>
           </el-col>
@@ -49,6 +50,28 @@
                 style="width: 100%"
                 value-format="YYYY-MM-DD HH:mm:ss"
                 :disabled-date="disabledDate" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="通知状态" prop="status">
+              <el-select v-model="noticeForm.status" placeholder="请选择通知状态" style="width: 100%" required>
+                <el-option 
+                  v-for="dict in statusOptions" 
+                  :key="dict.dictValue" 
+                  :label="dict.dictLabel" 
+                  :value="dict.dictValue" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="是否置顶" prop="isTop">
+              <el-switch
+                v-model="noticeForm.isTop"
+                active-text="是"
+                inactive-text="否" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -93,10 +116,6 @@
             <el-checkbox value="staff">工作人员</el-checkbox>
             <el-checkbox value="family">家属</el-checkbox>
           </el-checkbox-group>
-        </el-form-item>
-        
-        <el-form-item label="是否置顶" prop="isTop">
-          <el-switch v-model="noticeForm.isTop" />
         </el-form-item>
         
         <el-form-item>
@@ -155,10 +174,11 @@ import { Back, Upload, Document } from '@element-plus/icons-vue';
 import { useRouter } from 'vue-router';
 import { useRoute } from 'vue-router';
 import { useNoticeStore } from '@/stores/back/noticeStore';
+import { getDictDataByType } from '@/api/back/system/dict/data';
 
 const router = useRouter();
 const route = useRoute();
-const noticeStore = useNoticeStore(); // 初始化noticeStore
+const noticeStore = useNoticeStore();
 
 // 判断是否为编辑模式
 const isEdit = computed(() => {
@@ -175,6 +195,7 @@ const noticeForm = reactive({
   type: '',
   content: '',
   publishTime: '',
+  status: '0', // 默认为草稿状态
   receivers: ['all'],
   isTop: false
 });
@@ -204,12 +225,51 @@ const savingDraft = ref(false);
 const publishing = ref(false);
 const previewVisible = ref(false);
 
+// 通知类型选项
+const typeOptions = ref([]);
+// 通知状态选项
+const statusOptions = ref([]);
+
+// 获取字典数据
+const getDictData = async () => {
+  try {
+    // 获取通知类型
+    const typeRes = await getDictDataByType('notice_type');
+    if (typeRes.code === 200) {
+      typeOptions.value = typeRes.data;
+    }
+    
+    // 获取通知状态
+    const statusRes = await getDictDataByType('notice_status');
+    if (statusRes.code === 200) {
+      statusOptions.value = statusRes.data;
+    }
+  } catch (error) {
+    console.error('获取字典数据失败', error);
+    // 设置默认选项，以防字典数据获取失败
+    typeOptions.value = [
+      { dictLabel: '系统通知', dictValue: 'system' },
+      { dictLabel: '活动通知', dictValue: 'activity' },
+      { dictLabel: '服务通知', dictValue: 'service' },
+      { dictLabel: '公告', dictValue: 'announcement' },
+      { dictLabel: '紧急通知', dictValue: 'urgent' }
+    ];
+    
+    statusOptions.value = [
+      { dictLabel: '草稿', dictValue: '0' },
+      { dictLabel: '已发布', dictValue: '1' },
+      { dictLabel: '已关闭', dictValue: '2' }
+    ];
+  }
+};
+
 // 获取通知类型标签样式
 const getTypeTagType = (type) => {
   const typeMap = {
-    '健康通知': 'success',
+    '系统通知': 'success',
     '活动通知': 'primary',
-    '工作通知': 'warning',
+    '服务通知': 'warning',
+    '公告': 'info',
     '紧急通知': 'danger'
   };
   return typeMap[type] || 'info';
@@ -238,7 +298,7 @@ const handleBack = () => {
     cancelButtonText: '取消',
     type: 'warning'
   }).then(() => {
-    router.push('/admin/notice/');
+    router.push('/admin/notices/');
   }).catch(() => {
     // 取消离开
   });
@@ -262,18 +322,31 @@ const handleSaveDraft = () => {
 };
 
 // 发布通知
-const handlePublish = () => {
-  noticeFormRef.value.validate((valid) => {
+const handlePublish = async () => {
+  noticeFormRef.value.validate(async (valid) => {
     if (valid) {
       publishing.value = true;
       
-      // 模拟API调用
-      setTimeout(() => {
+      try {
+        if (isEdit.value) {
+          // 更新通知
+          await noticeStore.modifyNotice(noticeForm);
+          // 如果需要直接发布，可以添加以下代码
+          // await noticeStore.releaseNotice(noticeForm.id);
+        } else {
+          // 新增通知
+          await noticeStore.createNotice(noticeForm);
+        }
+        
         ElMessage.success(isEdit.value ? '通知更新成功' : '通知发布成功');
         publishing.value = false;
         previewVisible.value = false;
-        router.push('/admin/notice/');
-      }, 800);
+        router.push('/admin/notices/');
+      } catch (error) {
+        console.error('保存通知失败:', error);
+        ElMessage.error('操作失败，请重试');
+        publishing.value = false;
+      }
     } else {
       return false;
     }
@@ -305,6 +378,11 @@ const getNoticeDetail = async (id) => {
       }
     });
     
+    // 确保类型字段有值
+    if (!noticeForm.type) {
+      noticeForm.type = '普通通知';
+    }
+    
     // 处理附件
     if (noticeDetail.attachments) {
       fileList.value = noticeDetail.attachments.map(att => ({
@@ -319,6 +397,9 @@ const getNoticeDetail = async (id) => {
 };
 
 onMounted(() => {
+  // 获取字典数据
+  getDictData();
+  
   if (isEdit.value) {
     getNoticeDetail(route.query.id);
   }

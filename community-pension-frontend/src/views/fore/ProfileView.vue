@@ -4,7 +4,7 @@
       <h3>个人信息</h3>
       <el-form :model="profileForm" label-width="120px">
         <el-form-item label="ID" style="display: none;">
-          <el-input v-model="profileForm.id" />
+          <el-input v-model="profileForm.id"/>
         </el-form-item>
 
         <!-- 使用标签页分类显示信息 -->
@@ -14,14 +14,14 @@
             <el-row :gutter="20">
               <el-col :span="12">
                 <el-form-item label="姓名">
-                  <el-input v-model="profileForm.name" :disabled="!isEditMode" />
+                  <el-input v-model="profileForm.name" :disabled="!isEditMode"/>
                 </el-form-item>
               </el-col>
               <el-col :span="12">
                 <el-form-item label="性别">
                   <el-select v-model="profileForm.gender" :disabled="!isEditMode" style="width: 100%">
-                    <el-option label="男" value="男" />
-                    <el-option label="女" value="女" />
+                    <el-option label="男" value="男"/>
+                    <el-option label="女" value="女"/>
                   </el-select>
                 </el-form-item>
               </el-col>
@@ -29,13 +29,13 @@
             <el-row :gutter="20">
               <el-col :span="12">
                 <el-form-item label="出生日期">
-                  <el-date-picker v-model="profileForm.birthday" :disabled="!isEditMode" type="date"
-                    value-format="YYYY-MM-DD" style="width: 100%" />
+                  <el-date-picker v-model="profileForm.birthday" :disabled="!isEditMode" style="width: 100%"
+                                  type="date" value-format="YYYY-MM-DD"/>
                 </el-form-item>
               </el-col>
               <el-col :span="12">
                 <el-form-item label="身份证号">
-                  <el-input v-model="profileForm.idCard" :disabled="!isEditMode" />
+                  <el-input v-model="profileForm.idCard" :disabled="!isEditMode"/>
                 </el-form-item>
               </el-col>
             </el-row>
@@ -46,46 +46,27 @@
             <el-row :gutter="20">
               <el-col :span="12">
                 <el-form-item label="联系电话">
-                  <el-input v-model="profileForm.phone" :disabled="!isEditMode" />
+                  <el-input v-model="profileForm.phone" :disabled="!isEditMode"/>
                 </el-form-item>
               </el-col>
               <el-col :span="12">
                 <el-form-item label="地址">
-                  <el-input v-model="profileForm.address" :disabled="!isEditMode" />
+                  <el-input v-model="profileForm.address" :disabled="!isEditMode"/>
                 </el-form-item>
               </el-col>
             </el-row>
             <el-row :gutter="20">
               <el-col :span="12">
                 <el-form-item label="紧急联系人">
-                  <el-input v-model="profileForm.emergencyContactName" :disabled="!isEditMode" />
+                  <el-input v-model="profileForm.emergencyContactName" :disabled="!isEditMode"/>
                 </el-form-item>
               </el-col>
               <el-col :span="12">
                 <el-form-item label="紧急联系人电话">
-                  <el-input v-model="profileForm.emergencyContactPhone" :disabled="!isEditMode" />
+                  <el-input v-model="profileForm.emergencyContactPhone" :disabled="!isEditMode"/>
                 </el-form-item>
               </el-col>
             </el-row>
-          </el-tab-pane>
-
-          <!-- 健康信息标签页（仅老人可见） -->
-          <el-tab-pane v-if="isElder" label="健康信息" name="health">
-            <el-row :gutter="20">
-              <el-col :span="12">
-                <el-form-item label="健康状况">
-                  <el-input v-model="profileForm.healthCondition" :disabled="!isEditMode" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="过敏史">
-                  <el-input v-model="profileForm.allergy" :disabled="!isEditMode" />
-                </el-form-item>
-              </el-col>
-            </el-row>
-            <el-form-item label="既往病史">
-              <el-input v-model="profileForm.medicalHistory" :disabled="!isEditMode" type="textarea" :rows="2" />
-            </el-form-item>
           </el-tab-pane>
 
           <!-- 其他信息标签页 -->
@@ -94,27 +75,29 @@
               <el-col :span="12">
                 <el-form-item label="头像">
                   <el-upload
-                    class="avatar-uploader"
-                    action="/api/user/avatar"
-                    :show-file-list="false"
-                    :on-success="handleAvatarSuccess"
-                    :before-upload="beforeAvatarUpload"
-                    :headers="uploadHeaders"
-                    :disabled="!isEditMode"
+                      :before-upload="beforeAvatarUpload"
+                      :disabled="!isEditMode"
+                      :headers="uploadHeaders"
+                      :on-success="handleAvatarSuccess"
+                      :show-file-list="false"
+                      action="/api/user/avatar"
+                      class="avatar-uploader"
                   >
-                    <img v-if="profileForm.avatar" :src="processedAvatarUrl" class="avatar" />
-                    <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
+                    <img v-if="profileForm.avatar" :src="processedAvatarUrl" class="avatar"/>
+                    <el-icon v-else class="avatar-uploader-icon">
+                      <Plus/>
+                    </el-icon>
                   </el-upload>
                 </el-form-item>
               </el-col>
               <el-col :span="12">
                 <el-form-item label="个人简介">
                   <el-input
-                    v-model="profileForm.remark"
-                    type="textarea"
-                    :rows="3"
-                    placeholder="请输入个人简介"
-                    :disabled="!isEditMode"
+                      v-model="profileForm.remark"
+                      :disabled="!isEditMode"
+                      :rows="3"
+                      placeholder="请输入个人简介"
+                      type="textarea"
                   />
                 </el-form-item>
               </el-col>
@@ -181,9 +164,9 @@
         </el-tabs>
 
         <el-form-item>
-          <el-button type="primary" @click="toggleEditMode" v-if="!isEditMode">编辑</el-button>
-          <el-button type="success" @click="saveProfile" v-if="isEditMode">保存</el-button>
-          <el-button @click="toggleEditMode" v-if="isEditMode">取消</el-button>
+          <el-button v-if="!isEditMode" type="primary" @click="toggleEditMode">编辑</el-button>
+          <el-button v-if="isEditMode" type="success" @click="saveProfile">保存</el-button>
+          <el-button v-if="isEditMode" @click="toggleEditMode">取消</el-button>
         </el-form-item>
       </el-form>
     </el-card>
@@ -191,12 +174,13 @@
 </template>
 
 <script setup>
-import { useUserStore } from '@/stores/fore/userStore';
-import { getAvatarUrl } from '@/utils/avatarUtils';
-import { TokenManager } from '@/utils/axios';
-import { Plus } from '@element-plus/icons-vue';
-import { ElMessage, ElMessageBox } from 'element-plus';
-import { computed, onMounted, ref } from 'vue';
+import {useUserStore} from '@/stores/fore/userStore';
+import {getAvatarUrl} from '@/utils/avatarUtils';
+import {TokenManager} from '@/utils/axios';
+import {Plus} from '@element-plus/icons-vue';
+import {ElMessage, ElMessageBox} from 'element-plus';
+import {computed, onMounted, ref} from 'vue';
+import {getDictDataByType} from '@/api/back/system/dict/data';
 
 const userStore = useUserStore();
 
@@ -234,7 +218,7 @@ const handleBindFamily = async () => {
     const success = await userStore.bindElderKin(
         bindForm.value.elderId,
         userStore.userInfo.id,
-      bindForm.value.relationType
+        bindForm.value.relationType
     );
     if (success) {
       ElMessage.success('绑定成功');
@@ -436,6 +420,8 @@ const profileForm = ref({
   emergencyContactName: '',//紧急联系人
   emergencyContactPhone: '',//紧急联系人电话
   healthCondition: '',//健康状况
+  allergy: '',//过敏史
+  medicalHistory: '',//既往病史
   avatar: '',//头像
   remark: '',//备注
   age: 0,//年龄
@@ -471,101 +457,61 @@ const handleAvatarSuccess = (response) => {
 
 // 切换编辑模式
 const toggleEditMode = () => {
-  isEditMode.value = !isEditMode.value
-  if (!isEditMode.value) {
-    profileForm.value = { ...originalData.value }
+  if (isEditMode.value) {
+    // 取消编辑，恢复原始数据
+    profileForm.value = { ...originalData.value };
   }
-}
-
-// 获取健康档案
-const getHealthRecord = async () => {
-  try {
-    const response = await userStore.getHealthRecordByElderId(profileForm.value.id)
-    console.log('获取到的健康档案:', response)
-
-    if (response.code === 200 && response.data) {
-      const healthRecord = response.data
-      profileForm.value.allergy = healthRecord.allergy || ''
-      profileForm.value.medicalHistory = healthRecord.medicalHistory || ''
-    }
-  } catch (error) {
-    console.error('获取健康档案失败:', error)
-  }
-}
+  isEditMode.value = !isEditMode.value;
+};
 
 // 初始化表单数据
 const initFormData = async () => {
   try {
-    console.log('开始初始化个人信息表单...');
-    
-    // 获取用户信息
-    const userInfoResponse = await userStore.getUserInfo();
-    console.log('获取到的用户信息响应:', userInfoResponse);
-    
-    // 检查获取的用户信息是否有效
-    if (!userInfoResponse || userInfoResponse.code !== 200 || !userInfoResponse.data) {
-      console.error('获取用户信息失败或无效:', userInfoResponse);
-      ElMessage.error('获取用户信息失败');
+    // 从localStorage获取用户信息（前台系统使用localStorage存储数据）
+    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+    console.log('从localStorage获取的用户信息:', userInfo);
+
+    if (!userInfo || !userInfo.userId) {
+      ElMessage.error('获取用户信息失败，请重新登录');
+      router.push('/login');
       return;
     }
-    
-    const userData = userInfoResponse.data;
-    
-    // 输出角色相关信息进行调试
-    console.log('用户数据中的角色信息:', {
-      roleId: userData.roleId,
-      roles: userData.roles,
-      userStoreRoleId: userStore.roleId,
-      userStoreRole: userStore.userRole,
-      isElder: isElder.value,
-      isKin: isKin.value
-    });
 
-    // 保存原始表单数据
-    const originalFormData = {...profileForm.value};
-
-    // 更新表单数据，保留原有值作为后备
+    // 填充表单数据
     profileForm.value = {
-      id: userData.userId || originalFormData.id,
-      name: userData.name || originalFormData.name,
-      gender: userData.gender || originalFormData.gender,
-      phone: userData.phone || originalFormData.phone,
-      email: userData.email || originalFormData.email,
-      avatar: userData.avatar || originalFormData.avatar,
-      roles: userData.roles || originalFormData.roles,
-      isActive: userData.isActive || originalFormData.isActive,
-      // 老人特有字段
-      idCard: userData.idCard || originalFormData.idCard,
-      birthday: userData.birthday || originalFormData.birthday,
-      age: userData.age || originalFormData.age,
-      healthCondition: userData.healthCondition || originalFormData.healthCondition,
-      emergencyContactName: userData.emergencyContactName || originalFormData.emergencyContactName,
-      emergencyContactPhone: userData.emergencyContactPhone || originalFormData.emergencyContactPhone,
-      // 家属特有字段
-      elderId: userData.elderId || originalFormData.elderId,
-      elderName: userData.elderName || originalFormData.elderName,
-      relationType: userData.relationType || originalFormData.relationType,
-      // 绑定关系
-      bindKinIds: userData.kinIds || userData.bindKinIds || originalFormData.bindKinIds,
-      bindElderIds: userData.elderIds || userData.bindElderIds || originalFormData.bindElderIds
+      id: userInfo.userId,
+      userId: userInfo.userId,
+      name: userInfo.name || '',
+      gender: userInfo.gender || '',
+      birthday: userInfo.birthday || '',
+      idCard: userInfo.idCard || '',
+      phone: userInfo.phone || '',
+      address: userInfo.address || '',
+      email: userInfo.email || '',
+      avatar: userInfo.avatar || '',
+      emergencyContactName: userInfo.emergencyContactName || '',
+      emergencyContactPhone: userInfo.emergencyContactPhone || '',
+      username: userInfo.username || '',
+      roleIds: userInfo.roleIds || [],
+      bindElderIds: userInfo.bindElderIds || [],
+      bindKinIds: userInfo.bindKinIds || [],
+      relationType: userInfo.relationType || '',
+      remark: userInfo.remark || ''
     };
-    
-    console.log('已更新表单数据:', profileForm.value);
-    console.log('重新检查角色状态 - isElder:', isElder.value, 'isKin:', isKin.value);
 
-    // 根据角色加载相关列表
-    if (isElder.value) {
-      console.log('用户是老人角色，加载家属列表...');
-      await getKinList();
-    } else if (isKin.value) {
-      console.log('用户是家属角色，加载老人列表...');
+    // 保存原始数据，用于取消编辑时恢复
+    originalData.value = { ...profileForm.value };
+    console.log('初始化的表单数据:', profileForm.value);
+
+    // 获取角色相关信息
+    if (isKin.value) {
       await getElderList();
-    } else {
-      console.warn('用户角色无法识别，不加载关联列表');
+    } else if (isElder.value) {
+      await getKinList();
     }
   } catch (error) {
     console.error('初始化表单数据失败:', error);
-    ElMessage.error('初始化表单数据失败');
+    ElMessage.error('获取用户信息失败');
   }
 };
 
@@ -577,12 +523,37 @@ const saveProfile = async () => {
       cancelButtonText: '取消',
       type: 'warning'
     })
-    const success = await userStore.handleUpdateUserInfo(profileForm.value);
+
+    // 创建一个只包含必要字段的数据对象
+    const formData = {
+      userId: profileForm.value.id || profileForm.value.userId,
+      name: profileForm.value.name,
+      gender: profileForm.value.gender,
+      birthday: profileForm.value.birthday,
+      idCard: profileForm.value.idCard,
+      phone: profileForm.value.phone,
+      address: profileForm.value.address,
+      email: profileForm.value.email,
+      emergencyContactName: profileForm.value.emergencyContactName,
+      emergencyContactPhone: profileForm.value.emergencyContactPhone,
+      avatar: profileForm.value.avatar
+    };
+
+    // 确保userId存在
+    if (!formData.userId) {
+      ElMessage.error('用户ID不存在，无法保存信息');
+      return;
+    }
+
+    console.log('准备提交的表单数据:', formData);
+
+    const success = await userStore.handleUpdateUserInfo(formData);
     console.log(success);
     if (success) {
       ElMessage.success('保存成功');
       isEditMode.value = false;
-      originalData.value = { ...profileForm.value };
+      // 更新原始数据，以便下次取消编辑时能恢复到最新保存的状态
+      originalData.value = {...profileForm.value};
 
       // 重新获取用户信息，确保数据同步
       await initFormData();
@@ -593,6 +564,7 @@ const saveProfile = async () => {
     if (error === 'cancel') {
       return
     }
+    console.error('保存失败:', error);
     ElMessage.error('保存失败')
   }
 }

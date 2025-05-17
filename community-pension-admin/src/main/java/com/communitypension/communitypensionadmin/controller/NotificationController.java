@@ -50,6 +50,15 @@ public class NotificationController {
     }
     
     /**
+     * 修改通知公告（POST方法）
+     */
+    @PostMapping("/update")
+    public Result<Void> editByPost(@RequestBody Notification notification) {
+        notificationService.updateNotification(notification);
+        return Result.success("修改成功");
+    }
+    
+    /**
      * 删除通知公告
      */
     @DeleteMapping("/{id}")

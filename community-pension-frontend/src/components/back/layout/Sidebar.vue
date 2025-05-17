@@ -28,7 +28,7 @@
           <el-icon>
             <Setting />
           </el-icon>
-          <span>系统设置</span>
+          <span>系统管理中心</span>
         </template>
         <el-menu-item index="/admin/system/user">
           <template #title>
@@ -70,6 +70,14 @@
             <span>系统设置</span>
           </template>
         </el-menu-item>
+        <el-menu-item index="/admin/system/example">
+          <template #title>
+            <el-icon>
+              <Document />
+            </el-icon>
+            <span>组件示例</span>
+          </template>
+        </el-menu-item>
       </el-sub-menu>
       <!-- 数据分析看板 -->
 
@@ -80,7 +88,7 @@
           <el-icon>
             <Service />
           </el-icon>
-          <span>服务预约管理</span>
+          <span>服务管理中心</span>
         </template>
         <el-menu-item index="/admin/services/service">
           <template #title>
@@ -148,7 +156,7 @@
           <el-icon>
             <Calendar />
           </el-icon>
-          <span>社区活动管理</span>
+          <span>社区活动中心</span>
         </template>
         <el-menu-item index="/admin/activity/list">
           <template #title>
@@ -177,14 +185,22 @@
       </el-sub-menu>
 
       <!-- 通知公告管理 -->
-      <el-menu-item index="/admin/notice/">
+      <el-sub-menu index="/admin/notices">
         <template #title>
           <el-icon>
             <Bell />
           </el-icon>
           <span>通知公告管理</span>
         </template>
-      </el-menu-item>
+        <el-menu-item index="/admin/notices/">
+          <template #title>
+            <el-icon>
+              <Bell />
+            </el-icon>
+            <span>通知列表</span>
+          </template>
+        </el-menu-item>
+      </el-sub-menu>
     </el-menu>
   </el-aside>
 </template>
@@ -195,6 +211,7 @@ import {
   Bell,
   Calendar,
   Collection,
+  Document,
   FirstAidKit,
   HomeFilled,
   Menu,

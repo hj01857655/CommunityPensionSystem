@@ -58,7 +58,31 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
 
     @Override
     public void updateNotification(Notification notification) {
-        notificationMapper.updateById(notification);
+        // 先获取原通知信息
+        Notification originalNotification = notificationMapper.selectNotificationById(notification.getId());
+        if (originalNotification == null) {
+            throw new RuntimeException("通知不存在");
+        }
+        
+        // 确保更新时间字段被设置
+        notification.setUpdateTime(LocalDateTime.now());
+        
+        // 记录日志
+        log.info("更新通知，ID: {}, 标题: {}, 类型: {}", notification.getId(), notification.getTitle(), notification.getType());
+        
+        // 使用UpdateWrapper明确指定要更新的字段，确保type字段被更新
+        LambdaQueryWrapper<Notification> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Notification::getId, notification.getId());
+        
+        // 执行更新，确保所有字段都被更新
+        int result = notificationMapper.update(notification, queryWrapper);
+        
+        if (result <= 0) {
+            log.error("更新通知失败，ID: {}", notification.getId());
+            throw new RuntimeException("更新通知失败");
+        }
+        
+        log.info("更新通知成功，影响行数: {}", result);
     }
 
     @Override
@@ -100,11 +124,11 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
     public void sendSystemMessage(Long userId, String title, String content, String type) {
         // 类型默认为系统通知
         if (type == null || type.isEmpty()) {
-            type = DictTypeConstants.NOTIFICATION_TYPE_SYSTEM;
+            type = DictTypeConstants.NOTICE_TYPE_SYSTEM;
         }
         
         // 获取通知类型标签
-        String typeLabel = DictUtils.getDictLabel(DictTypeConstants.NOTIFICATION_TYPE, type);
+        String typeLabel = DictUtils.getDictLabel(DictTypeConstants.NOTICE_TYPE, type);
         
         // 构建通知实体
         Notification notification = Notification.builder()
@@ -132,7 +156,7 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
         String content = buildOrderNotificationContent(order, user, message);
 
         // 使用self调用事务方法，确保事务生效
-        self.sendSystemMessage(user.getUserId(), title, content, DictTypeConstants.NOTIFICATION_TYPE_SYSTEM);
+        self.sendSystemMessage(user.getUserId(), title, content, DictTypeConstants.NOTICE_TYPE_SYSTEM);
     }
 
     /**
@@ -199,7 +223,7 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
             // 使用字典工具类获取通知类型的显示文本
             String typeText = "通知"; // 默认值
             if (n.getType() != null && !n.getType().isEmpty()) {
-                String dictLabel = DictUtils.getDictLabel(DictTypeConstants.NOTIFICATION_TYPE, n.getType());
+                String dictLabel = DictUtils.getDictLabel(DictTypeConstants.NOTICE_TYPE, n.getType());
                 if (dictLabel != null && !dictLabel.isEmpty()) {
                     typeText = dictLabel;
                 }

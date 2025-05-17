@@ -151,15 +151,19 @@ export const useNoticeStore = defineStore('notice', {
     
     /**
      * 根据状态值获取状态名称
-     * @param {number} status - 状态值 (0:草稿, 1:已发布, 2:已撤回)
+     * @param {string|number} status - 状态值 (0:草稿, 1:已发布, 2:已关闭, 3:已过期, 4:已归档)
      * @returns {string} - 状态名称
      */
     getStatusName(status) {
-      switch (status) {
-        case 0: return '草稿'
-        case 1: return '已发布'
-        case 2: return '已撤回'
-        default: return '未知'
+      // 确保状态值为字符串类型进行比较
+      const statusStr = String(status);
+      switch (statusStr) {
+        case '0': return '草稿';
+        case '1': return '已发布';
+        case '2': return '已关闭';
+        case '3': return '已过期';
+        case '4': return '已归档';
+        default: return '未知';
       }
     }
   }

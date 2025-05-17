@@ -152,7 +152,7 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Refresh, Plus, Edit, Check, Download } from '@element-plus/icons-vue'
 import RightToolbar from '@/components/common/base/RightToolbar/index.vue'
-import Pagination from '@/components/common/Pagination.vue'
+import Pagination from '@/components/common/table/Pagination.vue'
 
 // 查询参数
 const queryParams = reactive({

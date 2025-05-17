@@ -5,78 +5,82 @@
       <el-tabs v-model="activeTab">
         <el-tab-pane label="服务列表" name="list">
           <div class="filter-container">
-            <el-input v-model="searchQuery" placeholder="搜索服务名称" class="search-input" clearable @clear="handleSearch">
+            <el-input v-model="searchQuery" class="search-input" clearable placeholder="搜索服务名称"
+                      @input="handleSearch">
               <template #prefix>
                 <el-icon>
-                  <Search />
+                  <Search/>
                 </el-icon>
               </template>
             </el-input>
-            <el-select v-model="categoryFilter" placeholder="服务类别" clearable @change="handleSearch">
-              <el-option v-for="item in categoryOptions" :key="item" :label="item" :value="item" />
+            <el-select v-model="categoryFilter" class="category-select" clearable placeholder="服务类别" @change="handleSearch">
+              <el-option v-for="item in categoryOptions" :key="item" :label="item" :value="item"/>
             </el-select>
             <el-button type="primary" @click="handleSearch">搜索</el-button>
           </div>
 
-          <el-table :data="filteredServices" style="width: 100%" v-loading="loading">
-            <el-table-column prop="serviceName" label="服务名称" min-width="140">
+          <el-table v-loading="loading" :data="filteredServices" style="width: 100%">
+            <el-table-column label="服务名称" min-width="140" prop="serviceName">
               <template #default="{ row }">
-                <div class="service-name">{{ row.serviceName }}</div>
+                <div class="service-name">
+                  <el-icon><Service /></el-icon>
+                  <span>{{ row.serviceName }}</span>
+                </div>
               </template>
             </el-table-column>
-            <el-table-column prop="serviceTypeName" label="服务类别" min-width="120">
+            <el-table-column label="服务类别" min-width="120" prop="serviceTypeName">
               <template #default="{ row }">
-                <el-tag size="small" type="info">{{ row.serviceTypeName }}</el-tag>
+                <el-tag size="small" :type="getServiceTypeTagType(row.serviceType)">{{ row.serviceTypeName }}</el-tag>
               </template>
             </el-table-column>
-            <el-table-column prop="price" label="价格" min-width="100">
+            <el-table-column label="服务信息" min-width="150">
               <template #default="{ row }">
-                <span class="price-tag">{{ row.price }} 元</span>
+                <div class="service-info">
+                  <div><span class="price-tag"><el-icon><Money /></el-icon> {{ row.price }} 元</span></div>
+                  <div><span class="duration-tag"><el-icon><Timer /></el-icon> {{ row.duration }} 分钟</span></div>
+                </div>
               </template>
             </el-table-column>
-            <el-table-column prop="duration" label="时长" min-width="100">
-              <template #default="{ row }">
-                <span class="duration-tag">{{ row.duration }} 分钟</span>
-              </template>
-            </el-table-column>
-            <el-table-column label="操作" min-width="150" fixed="right">
+            <el-table-column fixed="right" label="操作" min-width="150">
               <template #default="{ row }">
                 <div class="action-buttons">
-                  <el-button type="primary" size="small" @click="openBookingDialog(row)">
-                    预约
+                  <el-button size="small" type="primary" @click="openBookingDialog(row)">
+                    <el-icon><Calendar /></el-icon> 预约
                   </el-button>
-                  <el-button type="info" size="small" @click="viewServiceDetail(row)">
-                    详情
+                  <el-button size="small" type="info" @click="viewServiceDetail(row)">
+                    <el-icon><InfoFilled /></el-icon> 详情
                   </el-button>
                 </div>
               </template>
             </el-table-column>
           </el-table>
 
-          <el-pagination v-if="totalServices > 0" class="pagination" :current-page="currentPage" :page-size="pageSize"
-            :total="totalServices" layout="total, prev, pager, next" @current-change="handlePageChange" />
+          <el-pagination v-if="totalServices > 0" :current-page="currentPage" :page-size="pageSize" :total="totalServices"
+                         class="pagination" layout="total, prev, pager, next" @current-change="handlePageChange"/>
         </el-tab-pane>
 
         <el-tab-pane label="我的预约" name="my">
           <div class="filter-container">
-            <el-select v-model="statusFilter" placeholder="预约状态" clearable @change="fetchMyAppointments" class="status-filter">
-              <el-option v-for="item in statusOptions" :key="item.value" :label="item.label" :value="item.value" />
+            <el-select v-model="statusFilter" class="status-filter" clearable placeholder="预约状态"
+                       @change="fetchMyAppointments">
+              <el-option v-for="item in statusOptions" :key="item.value" :label="item.label" :value="item.value"/>
             </el-select>
-            <el-date-picker v-model="dateRange" type="daterange" range-separator="至" start-placeholder="开始日期"
-              end-placeholder="结束日期" class="date-range" @change="fetchMyAppointments" />
-            <el-button type="primary" icon="Refresh" circle @click="fetchMyAppointments" class="refresh-button" title="刷新预约列表"></el-button>
+            <el-date-picker v-model="dateRange" class="date-range" end-placeholder="结束日期" range-separator="至"
+                            start-placeholder="开始日期" type="daterange" @change="fetchMyAppointments"/>
+            <el-button circle class="refresh-button" icon="Refresh" title="刷新预约列表" type="primary"
+                       @click="fetchMyAppointments"></el-button>
           </div>
 
-          <el-table :data="myAppointments" style="width: 100%" v-loading="loadingAppointments">
+          <el-table v-loading="loadingAppointments" :data="myAppointments" style="width: 100%">
             <template #empty>
-              <el-empty description="暂无预约数据" />
+              <el-empty description="暂无预约数据"/>
             </template>
-            <el-table-column prop="serviceName" label="服务名称" min-width="120">
+            <el-table-column label="服务名称" min-width="120" prop="serviceName">
               <template #default="{ row }">
                 <div class="service-name">{{ row.serviceName }}</div>
               </template>
             </el-table-column>
-            <el-table-column prop="serviceTypeName" label="服务类别" min-width="100">
+            <el-table-column label="服务类别" min-width="100" prop="serviceTypeName">
               <template #default="{ row }">
                 <el-tag size="small" type="info">{{ row.serviceTypeName || '未分类' }}</el-tag>
               </template>
@@ -89,26 +93,33 @@
                 </div>
               </template>
             </el-table-column>
-            <el-table-column prop="scheduleTime" label="预约时间" min-width="160">
+            <el-table-column label="预约时间" min-width="160" prop="scheduleTime">
               <template #default="{ row }">
                 <div class="time-info">
-                  <el-icon><Calendar /></el-icon>
+                  <el-icon>
+                    <Calendar/>
+                  </el-icon>
                   <span>{{ formatDateTime(row.scheduleTime || row.appointmentTime) }}</span>
                 </div>
               </template>
             </el-table-column>
-            <el-table-column prop="applyReason" label="预约备注" min-width="150" show-overflow-tooltip>
+            <el-table-column label="预约备注" min-width="150" prop="applyReason" show-overflow-tooltip>
               <template #default="{ row }">
                 <span class="remark">{{ row.applyReason || '无' }}</span>
               </template>
             </el-table-column>
-            <el-table-column label="服务人员" min-width="120">
+            <el-table-column label="服务进度" min-width="120">
               <template #default="{ row }">
-                <span v-if="row.status >= 1" class="staff-name">
-                  <el-icon><User /></el-icon>
-                  {{ row.staffName || '未分配' }}
+                <span class="service-progress">
+                  <el-icon><Timer/></el-icon>
+                  <template v-if="row.status === 0">等待审核</template>
+                  <template v-else-if="row.status === 1">等待服务开始</template>
+                  <template v-else-if="row.status === 2">服务进行中</template>
+                  <template v-else-if="row.status === 3">服务已结束</template>
+                  <template v-else-if="row.status === 4">已取消</template>
+                  <template v-else-if="row.status === 5">已拒绝</template>
+                  <template v-else>{{ row.statusName || '未知状态' }}</template>
                 </span>
-                <span v-else class="text-muted">-</span>
               </template>
             </el-table-column>
             <el-table-column label="状态" min-width="120">
@@ -121,18 +132,18 @@
                 </div>
               </template>
             </el-table-column>
-            <el-table-column label="操作" min-width="150" fixed="right">
+            <el-table-column fixed="right" label="操作" min-width="150">
               <template #default="{ row }">
                 <div class="action-buttons">
-                  <el-button type="primary" size="small" @click="viewAppointmentDetail(row)">
+                  <el-button size="small" type="primary" @click="viewAppointmentDetail(row)">
                     详情
                   </el-button>
-                  <el-button v-if="row.status === 0 || row.status === 1" type="danger" size="small"
-                    @click="handleCancel(row)">
+                  <el-button v-if="row.status === 0 || row.status === 1" size="small" type="danger"
+                             @click="handleCancel(row)">
                     取消
                   </el-button>
-                  <el-button v-if="row.status === 2 && !row.evaluated" type="success" size="small"
-                    @click="openEvaluationDialog(row)">
+                  <el-button v-if="row.status === 3 && !row.evaluated" size="small" type="success"
+                             @click="openEvaluationDialog(row)">
                     评价
                   </el-button>
                 </div>
@@ -140,22 +151,22 @@
             </el-table-column>
           </el-table>
 
-          <el-pagination v-if="totalAppointments > 0" class="pagination" :current-page="appointmentPage"
-            :page-size="appointmentPageSize" :total="totalAppointments" layout="total, prev, pager, next"
-            @current-change="handleAppointmentPageChange" />
+          <el-pagination v-if="totalAppointments > 0" :current-page="appointmentPage" :page-size="appointmentPageSize"
+                         :total="totalAppointments" class="pagination" layout="total, prev, pager, next"
+                         @current-change="handleAppointmentPageChange"/>
         </el-tab-pane>
       </el-tabs>
     </el-card>
 
     <!-- 服务预约对话框 -->
     <el-dialog v-model="bookingDialogVisible" title="服务预约" width="500px">
-      <el-form :model="bookingForm" :rules="bookingRules" ref="bookingFormRef" label-width="100px">
+      <el-form ref="bookingFormRef" :model="bookingForm" :rules="bookingRules" label-width="100px">
         <el-form-item label="服务名称">
           <span>{{ currentService.serviceName }}</span>
         </el-form-item>
         <el-form-item label="服务类别">
           <span>{{ currentService.serviceTypeName }}</span>
-          <input type="hidden" v-model="bookingForm.serviceTypeId" />
+          <input v-model="bookingForm.serviceTypeId" type="hidden"/>
         </el-form-item>
         <el-form-item label="价格">
           <span>{{ currentService.price }} 元</span>
@@ -166,28 +177,28 @@
         <el-form-item label="预约日期" prop="appointmentDate">
           <el-date-picker
               v-model="bookingForm.appointmentDate"
+              :disabled-date="disabledDate"
+              :formatter="formatDateWithTip"
+              format="YYYY-MM-DD"
+              placeholder="选择日期"
               type="date"
-            placeholder="选择日期"
-            :disabled-date="disabledDate"
-            format="YYYY-MM-DD"
-            value-format="YYYY-MM-DD"
-            :formatter="formatDateWithTip"
+              value-format="YYYY-MM-DD"
           />
         </el-form-item>
         <el-form-item label="预约时间" prop="appointmentTime">
-          <el-time-picker v-model="bookingForm.appointmentTime" format="HH:mm" placeholder="选择时间"
-            :disabled="!bookingForm.appointmentDate"
-            :disabled-hours="() => disabledTime(bookingForm.appointmentDate).hours"
-            :disabled-minutes="() => disabledTime(bookingForm.appointmentDate).minutes" />
+          <el-time-picker v-model="bookingForm.appointmentTime" :disabled="!bookingForm.appointmentDate" :disabled-hours="() => disabledTime(bookingForm.appointmentDate).hours"
+                          :disabled-minutes="() => disabledTime(bookingForm.appointmentDate).minutes"
+                          format="HH:mm"
+                          placeholder="选择时间"/>
         </el-form-item>
         <el-form-item label="备注" prop="remark">
-          <el-input v-model="bookingForm.remark" type="textarea" :rows="3" placeholder="请输入备注信息" />
+          <el-input v-model="bookingForm.remark" :rows="3" placeholder="请输入申请原因" type="textarea"/>
         </el-form-item>
       </el-form>
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="bookingDialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="submitBooking" :loading="submitting">确认预约</el-button>
+          <el-button :loading="submitting" type="primary" @click="submitBooking">确认预约</el-button>
         </span>
       </template>
     </el-dialog>
@@ -205,22 +216,22 @@
 
     <!-- 服务评价对话框 -->
     <el-dialog v-model="evaluationDialogVisible" title="服务评价" width="500px">
-      <el-form :model="evaluationForm" :rules="evaluationRules" ref="evaluationFormRef" label-width="100px">
+      <el-form ref="evaluationFormRef" :model="evaluationForm" :rules="evaluationRules" label-width="100px">
         <el-form-item label="服务名称">
           <span>{{ currentAppointment.serviceName }}</span>
         </el-form-item>
         <el-form-item label="评分" prop="rating">
           <el-rate v-model="evaluationForm.rating" :colors="['#99A9BF', '#F7BA2A', '#FF9900']"
-            :texts="['很差', '较差', '一般', '较好', '很好']" show-text />
+                   :texts="['很差', '较差', '一般', '较好', '很好']" show-text/>
         </el-form-item>
         <el-form-item label="评价内容" prop="content">
-          <el-input v-model="evaluationForm.content" type="textarea" :rows="4" placeholder="请输入您的评价内容" />
+          <el-input v-model="evaluationForm.content" :rows="4" placeholder="请输入您的评价内容" type="textarea"/>
         </el-form-item>
       </el-form>
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="evaluationDialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="submitEvaluation" :loading="submittingEvaluation">提交评价</el-button>
+          <el-button :loading="submittingEvaluation" type="primary" @click="submitEvaluation">提交评价</el-button>
         </span>
       </template>
     </el-dialog>
@@ -245,25 +256,31 @@
           <template v-if="currentAppointment.duration !== null && currentAppointment.duration !== undefined">
             {{ currentAppointment.duration }} 分钟
           </template>
-          <template v-else-if="currentAppointment.actualDuration !== null && currentAppointment.actualDuration !== undefined">
+          <template
+              v-else-if="currentAppointment.actualDuration !== null && currentAppointment.actualDuration !== undefined">
             {{ currentAppointment.actualDuration }} 分钟
           </template>
           <template v-else>
             <span class="text-muted">待定</span>
           </template>
         </el-descriptions-item>
-        <el-descriptions-item label="预约时间">{{ formatDateTime(currentAppointment.scheduleTime || currentAppointment.appointmentTime) }}</el-descriptions-item>
+        <el-descriptions-item label="预约时间">
+          {{ formatDateTime(currentAppointment.scheduleTime || currentAppointment.appointmentTime) }}
+        </el-descriptions-item>
         <el-descriptions-item label="预约状态">
           <el-tag :type="getStatusType(currentAppointment.status)">
             {{ getStatusText(currentAppointment.status) }}
           </el-tag>
         </el-descriptions-item>
-        <el-descriptions-item label="预约备注" :span="2">{{ currentAppointment.applyReason || '无' }}</el-descriptions-item>
-        <el-descriptions-item label="服务人员" v-if="currentAppointment.status >= 1">
+        <el-descriptions-item :span="2" label="预约备注">{{
+            currentAppointment.applyReason || '无'
+          }}
+        </el-descriptions-item>
+        <el-descriptions-item v-if="currentAppointment.status >= 1" label="服务人员">
           <span v-if="currentAppointment.staffName">{{ currentAppointment.staffName }}</span>
           <span v-else class="text-muted">暂未指派</span>
         </el-descriptions-item>
-        <el-descriptions-item label="状态更新时间" v-if="currentAppointment.statusUpdateTime">
+        <el-descriptions-item v-if="currentAppointment.statusUpdateTime" label="状态更新时间">
           {{ formatDateTime(currentAppointment.statusUpdateTime) }}
         </el-descriptions-item>
       </el-descriptions>
@@ -275,7 +292,7 @@
 import {computed, onBeforeUnmount, onMounted, reactive, ref, watch} from 'vue'
 import {ElMessage, ElMessageBox} from 'element-plus'
 import {formatDateTime} from '@/utils/date'
-import {Search, Calendar, User, Refresh} from '@element-plus/icons-vue'
+import {Calendar, Search, User} from '@element-plus/icons-vue'
 import useServiceStore from '@/stores/fore/serviceStore'
 import useUserStore from '@/stores/fore/userStore'
 import {checkHoliday} from '@/api/fore/holiday'
@@ -290,7 +307,7 @@ const route = useRoute()
 const initActiveTab = () => {
   const tabParam = route.query.tab;
   const savedTab = localStorage.getItem('serviceActiveTab');
-  
+
   if (tabParam === 'my' || tabParam === 'list') {
     return tabParam;
   } else if (savedTab === 'my' || savedTab === 'list') {
@@ -300,7 +317,7 @@ const initActiveTab = () => {
 };
 
 const activeTab = ref(initActiveTab())
-const debugMode = ref(false)  // 关闭调试模式
+const debugMode = ref(true)  // 开启调试模式
 
 // 本地状态存储预约列表数据，不再使用计算属性
 const localAppointments = ref([]);
@@ -318,7 +335,24 @@ const totalServices = computed(() => serviceStore.total)
 
 // 过滤后的服务列表
 const filteredServices = computed(() => {
-  return services.value
+  let result = services.value;
+  
+  // 根据搜索关键词筛选
+  if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase();
+    result = result.filter(service => 
+      service.serviceName && service.serviceName.toLowerCase().includes(query)
+    );
+  }
+  
+  // 根据服务类别筛选（前端筛选，不依赖后端）
+  if (categoryFilter.value) {
+    result = result.filter(service => 
+      service.serviceTypeName === categoryFilter.value
+    );
+  }
+  
+  return result;
 })
 
 // 我的预约相关
@@ -381,12 +415,12 @@ const getStatusText = (status) => {
 
 // 状态选项
 const statusOptions = [
-  { value: 0, label: '待审核' },
-  { value: 1, label: '已派单' },
-  { value: 2, label: '服务中' },
-  { value: 3, label: '已完成' },
-  { value: 4, label: '已取消' },
-  { value: 5, label: '已拒绝' }
+  {value: 0, label: '待审核'},
+  {value: 1, label: '已派单'},
+  {value: 2, label: '服务中'},
+  {value: 3, label: '已完成'},
+  {value: 4, label: '已取消'},
+  {value: 5, label: '已拒绝'}
 ]
 
 // 服务预约对话框相关
@@ -399,7 +433,8 @@ const bookingForm = reactive({
   appointmentDate: null,
   appointmentTime: null,
   remark: '',
-  serviceTypeId: null
+  serviceTypeId: null,
+  serviceItemId: null  // 添加serviceItemId字段，确保在表单中保存服务项目ID
 })
 
 // 在 script setup 部分添加
@@ -448,7 +483,7 @@ watch(() => bookingForm.appointmentDate, async (newDate) => {
 
 // 修改禁用时间函数
 const disabledTime = (date) => {
-  if (!date) return { hours: [], minutes: [] }
+  if (!date) return {hours: [], minutes: []}
 
   const dateObj = typeof date === 'string' ? new Date(date) : date
   const hours = []
@@ -486,17 +521,45 @@ const disabledTime = (date) => {
 // 获取服务列表
 const fetchServices = async () => {
   try {
+    // 显示加载状态
+    const loadingMessage = ElMessage({
+      message: '正在加载服务数据...',
+      type: 'info',
+      duration: 0
+    });
+
     const params = {
-      current: currentPage.value,
-      size: pageSize.value,
-      serviceName: searchQuery.value
+      pageNum: currentPage.value,
+      pageSize: pageSize.value,
+      serviceName: searchQuery.value || undefined
+      // 移除serviceType参数，改用前端筛选
+    };
+
+    if (debugMode.value) {
+      console.log('请求参数:', params);
     }
-    await serviceStore.fetchServiceList(params)
+
+    await serviceStore.fetchServiceList(params);
+    // 提取服务类别选项
+    const categories = new Set();
+    serviceStore.serviceList.forEach(service => {
+      if (service.serviceTypeName) {
+        categories.add(service.serviceTypeName);
+      }
+    });
+    categoryOptions.value = Array.from(categories);
+    
+    if (debugMode.value) {
+      console.log('服务列表:', services.value);
+    }
+
+    // 关闭加载消息
+    loadingMessage.close();
   } catch (error) {
-    console.error('获取服务列表失败:', error)
-    ElMessage.error('获取服务列表失败')
+    ElMessage.error(error.message || '获取服务列表失败');
+    console.error('获取服务列表失败:', error);
   }
-}
+};
 
 // 获取用户信息
 const getUserInfo = () => {
@@ -595,13 +658,14 @@ const handleAppointmentPageChange = (val) => {
 
 const bookingRules = {
   appointmentDate: [
-    { required: true, message: '请选择预约日期', trigger: 'change' }
+    {required: true, message: '请选择预约日期', trigger: 'change'}
   ],
   appointmentTime: [
-    { required: true, message: '请选择预约时间', trigger: 'change' }
+    {required: true, message: '请选择预约时间', trigger: 'change'}
   ],
   remark: [
-    { max: 200, message: '备注不能超过200个字符', trigger: 'blur' }
+    {required: true, message: '请输入申请原因', trigger: 'blur'},
+    {min: 5, max: 500, message: '申请原因长度必须在5-500个字符之间', trigger: 'blur'}
   ]
 }
 
@@ -613,7 +677,40 @@ const openBookingDialog = async (service) => {
   const isLoggedIn = await checkLoginStatus();
   if (!isLoggedIn) return;
 
+  // 确保service对象有效
+  if (!service) {
+    ElMessage.error('服务项目信息不完整，请刷新页面后重试');
+    return;
+  }
+
+  // 获取服务项目ID，使用正确的字段名serviceId
+  const serviceId = service.serviceId;
+  
+  if (!serviceId) {
+    ElMessage.error('服务项目ID不存在，请刷新页面后重试');
+    if (debugMode.value) {
+      console.error('服务项目信息不完整:', service);
+    }
+    return;
+  }
+
   currentService.value = service;
+  
+  // 重置表单数据
+  Object.assign(bookingForm, {
+    appointmentDate: null,
+    appointmentTime: null,
+    remark: '',
+    serviceTypeId: service.serviceType || null,
+    serviceItemId: serviceId  // 将服务项目ID保存到表单中
+  });
+  
+  if (debugMode.value) {
+    console.log('打开预约对话框，当前服务:', service);
+    console.log('服务项目ID:', serviceId);
+    console.log('表单数据:', bookingForm);
+  }
+  
   bookingDialogVisible.value = true;
 };
 
@@ -633,13 +730,56 @@ const submitBooking = async () => {
   await bookingFormRef.value.validate(async (valid) => {
     if (valid) {
       try {
+        submitting.value = true;
+        
+        // 优先使用表单中的serviceItemId，如果不存在则尝试从currentService获取
+        const serviceItemId = bookingForm.serviceItemId || (currentService.value ? currentService.value.serviceId : null);
+        
+        // 检查服务项目是否存在
+        if (!serviceItemId) {
+          ElMessage.error('服务项目信息不完整，请重新选择服务');
+          return;
+        }
+        
+        // 安全地获取日期和时间值
+        const dateStr = bookingForm.appointmentDate;
+        const timeObj = bookingForm.appointmentTime;
+        
+        if (!dateStr || !timeObj) {
+          ElMessage.error('请选择预约日期和时间');
+          return;
+        }
+        
+        const timeStr = formatTime(timeObj);
+        const scheduleTime = `${dateStr}T${timeStr}`;
+        
+        // 检查是否是未来时间
+        const scheduleDateTime = new Date(scheduleTime);
+        if (scheduleDateTime <= new Date()) {
+          ElMessage.error('预约时间必须大于当前时间');
+          return;
+        }
+        
+        // 确保申请原因符合要求
+        if (!bookingForm.remark || bookingForm.remark.length < 5) {
+          ElMessage.error('申请原因长度必须在5-500个字符之间');
+          return;
+        }
+        
         const params = {
-          ...bookingForm.value,
-          serviceId: currentService.value.id,
-          elderId: userStore.userInfo.userId
+          serviceItemId: serviceItemId,
+          userId: userStore.userInfo.userId,
+          scheduleTime: scheduleTime,
+          applyReason: bookingForm.remark
         };
         
-        await serviceStore.submitAppointment(params);
+        if (debugMode.value) {
+          console.log('提交预约参数:', params);
+          console.log('当前服务信息:', currentService.value);
+          console.log('表单数据:', bookingForm);
+        }
+        
+        await serviceStore.createServiceAppointment(params);
         ElMessage.success('预约提交成功');
         bookingDialogVisible.value = false;
         // 重新获取预约列表
@@ -649,9 +789,21 @@ const submitBooking = async () => {
       } catch (error) {
         console.error('预约提交失败:', error);
         ElMessage.error(error.message || '预约提交失败');
+      } finally {
+        submitting.value = false;
       }
     }
   });
+};
+
+// 格式化时间为HH:MM:SS格式
+const formatTime = (time) => {
+  if (!time) return '00:00:00';
+  if (typeof time === 'string') return time;
+  
+  const hours = time.getHours().toString().padStart(2, '0');
+  const minutes = time.getMinutes().toString().padStart(2, '0');
+  return `${hours}:${minutes}:00`;
 };
 
 // 取消预约
@@ -665,7 +817,7 @@ const handleCancel = async (appointment) => {
       cancelButtonText: '取消',
       type: 'warning'
     });
-    
+
     await serviceStore.cancelAppointment(appointment.id);
     ElMessage.success('预约取消成功');
     fetchMyAppointments();
@@ -690,11 +842,11 @@ const evaluationForm = reactive({
 
 const evaluationRules = {
   rating: [
-    { required: true, message: '请选择评分', trigger: 'change' }
+    {required: true, message: '请选择评分', trigger: 'change'}
   ],
   content: [
-    { required: true, message: '请输入评价内容', trigger: 'blur' },
-    { min: 5, max: 500, message: '评价内容长度在 5 到 500 个字符', trigger: 'blur' }
+    {required: true, message: '请输入评价内容', trigger: 'blur'},
+    {min: 5, max: 500, message: '评价内容长度在 5 到 500 个字符', trigger: 'blur'}
   ]
 }
 
@@ -713,7 +865,7 @@ const submitEvaluation = async () => {
   if (!isLoggedIn) return;
 
   if (!evaluationFormRef.value) return;
-  
+
   await evaluationFormRef.value.validate(async (valid) => {
     if (valid) {
       try {
@@ -721,7 +873,7 @@ const submitEvaluation = async () => {
           ...evaluationForm.value,
           appointmentId: currentAppointment.value.id
         };
-        
+
         await serviceStore.submitEvaluation(params);
         ElMessage.success('评价提交成功');
         evaluationDialogVisible.value = false;
@@ -738,7 +890,7 @@ const submitEvaluation = async () => {
 // 监听预约列表数据变化
 watch(() => serviceStore.myAppointments, (newVal) => {
   // 监听预约列表数据变化
-}, { deep: true })
+}, {deep: true})
 
 // 监听总数变化
 watch(() => serviceStore.appointmentTotal, (newVal) => {
@@ -749,11 +901,11 @@ watch(() => serviceStore.appointmentTotal, (newVal) => {
 watch(() => activeTab.value, (newTab) => {
   // 保存当前活动标签到localStorage
   localStorage.setItem('serviceActiveTab', newTab);
-  
+
   // 更新URL参数，但不触发路由跳转
   const query = {...route.query, tab: newTab};
   router.replace({query});
-  
+
   if (newTab === 'my') {
     fetchMyAppointments();
   } else if (newTab === 'list') {
@@ -784,7 +936,7 @@ const viewAppointmentDetail = (appointment) => {
     ...appointment,
     // 不需要设置默认值，让模板中的条件判断来处理
   };
-  
+
   appointmentDetailVisible.value = true;
 }
 
@@ -843,14 +995,24 @@ onMounted(async () => {
   const savedTab = localStorage.getItem('serviceActiveTab');
   if (savedTab) {
     activeTab.value = savedTab;
-    // 如果是我的预约标签，立即加载数据
-    if (activeTab.value === 'my') {
-      fetchMyAppointments();
-    }
+  }
+
+  // 根据当前标签页加载相应的数据
+  if (activeTab.value === 'my') {
+    fetchMyAppointments();
   } else {
     await fetchServices();
+    
+    // 从服务列表中提取唯一的服务类别
+    const categories = new Set();
+    services.value.forEach(service => {
+      if (service.serviceTypeName) {
+        categories.add(service.serviceTypeName);
+      }
+    });
+    categoryOptions.value = Array.from(categories);
   }
-  
+
   // 添加事件监听，防止外部刷新影响标签页状态
   window.addEventListener('refresh-dashboard-data', handleRefreshEvent);
 });
@@ -859,7 +1021,7 @@ onMounted(async () => {
 onBeforeUnmount(() => {
   // 保存当前活动标签到localStorage
   localStorage.setItem('serviceActiveTab', activeTab.value);
-  
+
   // 移除事件监听器
   window.removeEventListener('refresh-dashboard-data', handleRefreshEvent);
 });
@@ -872,11 +1034,25 @@ const handleRefreshEvent = (event) => {
     setTimeout(() => {
       fetchMyAppointments();
     }, 500);
-    
+
     // 阻止事件进一步传播，避免影响其他组件
     event.stopPropagation();
   }
 };
+
+// 获取服务类型标签颜色
+const getServiceTypeTagType = (serviceType) => {
+  switch (serviceType) {
+    case 1:
+      return 'success';
+    case 2:
+      return 'warning';
+    case 3:
+      return 'danger';
+    default:
+      return 'info';
+  }
+}
 </script>
 
 <style scoped>
@@ -907,6 +1083,10 @@ const handleRefreshEvent = (event) => {
 
 .search-input {
   width: 200px;
+}
+
+.category-select {
+  width: 150px;
 }
 
 .pagination {
@@ -982,11 +1162,11 @@ const handleRefreshEvent = (event) => {
     flex-direction: column;
     align-items: stretch;
   }
-  
+
   .search-input {
     width: 100%;
   }
-  
+
   .action-buttons {
     flex-direction: column;
   }

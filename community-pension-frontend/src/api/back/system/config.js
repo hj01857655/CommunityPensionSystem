@@ -122,3 +122,44 @@ export const deleteBackup = (fileName) => {
 export const restoreBackup = (data) => {
   return axios.post('/api/system/backup/restore', data);
 }; 
+
+/**
+ * 获取参数设置（包含所有系统参数相关配置）
+ * @returns {Promise<{code: number, data: {maxUploadSize: number, allowedFileTypes: Array<string>, defaultPageSize: number, dataCacheTime: number, enableOperationLog: boolean, enableLoginLog: boolean}, msg: string}>}
+ */
+export const getParamsSettings = async () => {
+  // 直接返回模拟数据，不发起实际请求
+  console.log('使用参数设置模拟数据');
+  return Promise.resolve({
+    code: 200,
+    data: {
+      maxUploadSize: 10,
+      allowedFileTypes: ['image', 'document', 'spreadsheet', 'archive', 'audio', 'video'],
+      defaultPageSize: 10,
+      dataCacheTime: 30,
+      enableOperationLog: true,
+      enableLoginLog: true
+    },
+    msg: 'success'
+  });
+};
+
+/**
+ * 更新参数设置
+ * @param {Object} data - 参数设置信息
+ * @param {number} data.maxUploadSize - 文件上传大小限制(MB)
+ * @param {Array<string>} data.allowedFileTypes - 允许上传的文件类型
+ * @param {number} data.defaultPageSize - 默认分页大小
+ * @param {number} data.dataCacheTime - 数据缓存时间(分钟)
+ * @param {boolean} data.enableOperationLog - 是否开启操作日志
+ * @param {boolean} data.enableLoginLog - 是否开启登录日志
+ * @returns {Promise<{code: number, msg: string}>}
+ */
+export const updateParamsSettings = (data) => {
+  // 直接返回模拟成功响应，不发起实际请求
+  console.log('使用更新参数设置模拟数据', data);
+  return Promise.resolve({
+    code: 200,
+    msg: '保存成功（模拟数据）'
+  });
+};

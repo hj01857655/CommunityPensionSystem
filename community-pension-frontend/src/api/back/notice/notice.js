@@ -6,7 +6,15 @@ import axios from '@/utils/axios';
  * @returns {Promise<Object>}
  */
 export const getNoticeList = (params) => {
-  return axios.get('/api/notice/list', { params })
+  // 确保参数正确传递，将params对象转换为URL查询参数
+  return axios.get('/api/notice/list', { 
+    params: {
+      pageNum: params.page || 1,
+      pageSize: params.pageSize || 10,
+      status: params.status || '',
+      title: params.search || ''
+    } 
+  })
     .catch(error => {
       console.error('获取通知公告列表失败:', error);
       return Promise.reject(error);
@@ -32,7 +40,7 @@ export const getNoticeDetail = (id) => {
  * @returns {Promise<Object>}
  */
 export const addNotice = (data) => {
-  return axios.post('/api/notices', data)
+  return axios.post('/api/notice', data)
     .catch(error => {
       console.error('新增通知公告失败:', error);
       return Promise.reject(error);
@@ -45,7 +53,18 @@ export const addNotice = (data) => {
  * @returns {Promise<Object>}
  */
 export const updateNotice = (data) => {
-  return axios.put(`/api/notice/${data.id}`, data)
+  // 确保数据格式正确
+  const noticeData = {
+    id: data.id,
+    title: data.title,
+    content: data.content,
+    type: data.type || '普通通知',
+    status: data.status,
+    publishTime: data.publishTime
+  };
+  
+  // 使用新的POST端点更新通知
+  return axios.post('/api/notice/update', noticeData)
     .catch(error => {
       console.error('更新通知公告失败:', error);
       return Promise.reject(error);
@@ -84,7 +103,7 @@ export const publishNotice = (id) => {
  * @returns {Promise<Object>}
  */
 export const withdrawNotice = (id) => {
-  return axios.put(`/api/notice/withdraw/${id}`)
+  return axios.put(`/api/notice/revoke/${id}`)
     .catch(error => {
       console.error('撤回通知公告失败:', error);
       return Promise.reject(error);
@@ -100,7 +119,7 @@ export const withdrawNotice = (id) => {
 export const toggleNoticeTop = (id, isTop) => {
   return axios.put(`/api/notice/top/${id}`, { isTop })
     .catch(error => {
-      console.error('更新通知公告置顶状态失败:', error);
+      console.error('置顶/取消置顶通知公告失败:', error);
       return Promise.reject(error);
     });
-}; 
+};

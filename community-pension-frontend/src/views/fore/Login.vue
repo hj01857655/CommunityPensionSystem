@@ -94,6 +94,7 @@ const submitForm = async () => {
         if (success) {
           // 确认登录状态已设置
           localStorage.setItem('isLoggedIn', 'true');
+          userStore.isLoggedIn = true;
           
           // 如果选择记住密码，可以在这里处理本地存储
           if (rememberMe.value) {

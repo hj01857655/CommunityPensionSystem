@@ -1,0 +1,205 @@
+/* 自定义暗黑模式样式 */
+html.dark {
+  // 全局背景和文本颜色
+  --el-bg-color: #1a1a1a;
+  --el-bg-color-overlay: #232323;
+  --el-text-color-primary: #e0e0e0;
+  --el-text-color-regular: #c0c0c0;
+  --el-text-color-secondary: #a0a0a0;
+  
+  // 边框颜色
+  --el-border-color: #333333;
+  --el-border-color-light: #3a3a3a;
+  --el-border-color-lighter: #444444;
+  
+  // 填充色
+  --el-fill-color: #232323;
+  --el-fill-color-light: #2a2a2a;
+  --el-fill-color-lighter: #303030;
+  --el-fill-color-blank: #1a1a1a;
+  
+  // 主色调
+  --el-color-primary: #409EFF;
+  --el-color-primary-light-3: #3375b9;
+  --el-color-primary-light-5: #2a5e94;
+  --el-color-primary-light-7: #1c3f64;
+  --el-color-primary-light-8: #15304d;
+  --el-color-primary-light-9: #0e2035;
+  --el-color-primary-dark-2: #66b1ff;
+  
+  // 成功色
+  --el-color-success: #67c23a;
+  --el-color-success-light-3: #4e9a2a;
+  --el-color-success-light-5: #3c7920;
+  --el-color-success-light-7: #295215;
+  --el-color-success-light-8: #1e3e0e;
+  --el-color-success-light-9: #142b09;
+  --el-color-success-dark-2: #85ce61;
+  
+  // 警告色
+  --el-color-warning: #e6a23c;
+  --el-color-warning-light-3: #b37d2d;
+  --el-color-warning-light-5: #8c6022;
+  --el-color-warning-light-7: #5e4017;
+  --el-color-warning-light-8: #47300f;
+  --el-color-warning-light-9: #2f2108;
+  --el-color-warning-dark-2: #ebb563;
+  
+  // 危险色
+  --el-color-danger: #f56c6c;
+  --el-color-danger-light-3: #be5151;
+  --el-color-danger-light-5: #933e3e;
+  --el-color-danger-light-7: #632929;
+  --el-color-danger-light-8: #4b1f1f;
+  --el-color-danger-light-9: #321414;
+  --el-color-danger-dark-2: #f78989;
+  
+  // 信息色
+  --el-color-info: #909399;
+  --el-color-info-light-3: #6b6e73;
+  --el-color-info-light-5: #525459;
+  --el-color-info-light-7: #37393c;
+  --el-color-info-light-8: #2a2b2e;
+  --el-color-info-light-9: #1c1d1f;
+  --el-color-info-dark-2: #a6a9ad;
+  
+  // 禁用状态
+  --el-disabled-bg-color: #2d2d2d;
+  --el-disabled-text-color: #777777;
+  --el-disabled-border-color: #444444;
+  
+  // 遮罩层
+  --el-overlay-color: rgba(0, 0, 0, 0.8);
+  --el-overlay-color-light: rgba(0, 0, 0, 0.7);
+  
+  // 阴影
+  --el-box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.6);
+  --el-box-shadow-light: 0 2px 8px 0 rgba(0, 0, 0, 0.5);
+  --el-box-shadow-lighter: 0 2px 4px 0 rgba(0, 0, 0, 0.4);
+  
+  // 弹出菜单
+  --el-dropdown-menuItem-hover-fill: #333333;
+  --el-dropdown-menuItem-hover-color: var(--el-color-primary);
+  
+  // 自定义组件样式
+  .header {
+    background-color: #232323;
+    border-bottom: 1px solid #333333;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  }
+  
+  .sidebar {
+    background-color: #1a1a1a;
+    border-right: 1px solid #333333;
+  }
+  
+  .el-menu {
+    background-color: #1a1a1a;
+    border-right: none;
+  }
+  
+  .el-menu-item {
+    &:hover {
+      background-color: #2a2a2a;
+    }
+    
+    &.is-active {
+      background-color: #2c3e50;
+    }
+  }
+  
+  .el-submenu__title {
+    &:hover {
+      background-color: #2a2a2a;
+    }
+  }
+  
+  .el-card {
+    background-color: #232323;
+    border: 1px solid #333333;
+    color: var(--el-text-color-primary);
+  }
+  
+  .el-table {
+    background-color: #232323;
+    
+    th {
+      background-color: #2a2a2a;
+    }
+    
+    tr {
+      background-color: #232323;
+      
+      &:hover > td {
+        background-color: #2c2c2c;
+      }
+    }
+    
+    td {
+      border-bottom: 1px solid #333333;
+    }
+  }
+  
+  .el-pagination {
+    button {
+      background-color: #2a2a2a;
+      
+      &:disabled {
+        background-color: #1a1a1a;
+      }
+    }
+    
+    .el-pager li {
+      background-color: #2a2a2a;
+      
+      &.active {
+        background-color: var(--el-color-primary);
+      }
+    }
+  }
+  
+  // 通知和消息下拉菜单
+  .notification-dropdown, .message-dropdown {
+    background-color: #232323;
+    border: 1px solid #333333;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+  }
+  
+  .notification-item, .message-item {
+    border-bottom: 1px solid #333333;
+    
+    &:hover {
+      background-color: #2a2a2a;
+    }
+  }
+  
+  .notification-title, .message-sender {
+    color: var(--el-text-color-primary);
+  }
+  
+  .notification-content, .message-content {
+    color: var(--el-text-color-secondary);
+  }
+  
+  .notification-time, .message-time {
+    color: var(--el-text-color-secondary);
+  }
+  
+  .dropdown-header {
+    border-bottom: 1px solid #333333;
+    
+    h3 {
+      color: var(--el-text-color-primary);
+    }
+  }
+  
+  .view-all {
+    border-top: 1px solid #333333;
+    color: var(--el-color-primary);
+  }
+  
+  // 系统时间
+  .system-time {
+    color: var(--el-text-color-primary);
+  }
+}

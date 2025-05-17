@@ -18,7 +18,7 @@ const getHolidayInfo = async (date) => {
       return holidayCache.get(dateStr)
     }
     
-    // 调用节假日API
+    // 调用节假日API，增加超时设置和错误处理
     const response = await axios.get(`/holiday/v1/is_holiday`, {
       params: {
         date: dateStr
@@ -26,7 +26,8 @@ const getHolidayInfo = async (date) => {
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json'
-      }
+      },
+      timeout: 3000 // 减少超时时间，避免长时间等待
     })
     
     // 缓存结果
@@ -34,7 +35,21 @@ const getHolidayInfo = async (date) => {
     return response.data
   } catch (error) {
     console.error('获取节假日信息失败:', error)
-    return null
+    // 错误发生时，使用本地判断周末的逻辑作为备用方案
+    const day = date.getDay()
+    const isWeekend = day === 0 || day === 6 // 0是周日，6是周六
+    
+    // 创建一个简单的备用响应对象
+    const fallbackResponse = {
+      holiday: isWeekend,
+      name: isWeekend ? (day === 0 ? '周日' : '周六') : null,
+      type: isWeekend ? 1 : 0, // 1表示休息日，0表示工作日
+      isOffDay: isWeekend
+    }
+    
+    // 缓存备用结果
+    holidayCache.set(dateStr, fallbackResponse)
+    return fallbackResponse
   }
 }
 

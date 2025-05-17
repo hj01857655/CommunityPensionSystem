@@ -124,7 +124,7 @@
 
 <script setup>
 import RightToolbar from '@/components/back/system/menu/RightToolbar.vue';
-import Pagination from '@/components/common/Pagination.vue';
+import Pagination from '@/components/common/table/Pagination.vue';
 import { useNoticeStore } from '@/stores/back/noticeStore';
 import { formatDate, formatDateDetail } from '@/utils/date';
 import {

@@ -55,7 +55,7 @@ public class ActivityRegisterConverter {
 
         // 设置老人信息
         if (elder != null) {
-            vo.setElderName(elder.getUsername());
+            vo.setElderName(elder.getName());
         }
 
         // 设置报名类型名称
@@ -114,13 +114,13 @@ public class ActivityRegisterConverter {
 
         // 设置老人信息
         if (elder != null) {
-            vo.setElderName(elder.getUsername());
+            vo.setElderName(elder.getName());
             vo.setElderPhone(elder.getPhone());
         }
 
         // 设置报名人信息
         if (registerUser != null) {
-            vo.setRegisterUserName(registerUser.getUsername());
+            vo.setRegisterUserName(registerUser.getName());
         }
 
         // 设置报名类型名称

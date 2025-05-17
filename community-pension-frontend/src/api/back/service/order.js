@@ -59,7 +59,7 @@ export const reviewServiceOrder = (orderId, data) => {
  * @returns {Promise<{code: number, msg: string}>}
  */
 export const assignServiceOrder = (id) => {
-  return axios.put(`/api/service/order/${id}/assign`);
+  return axios.post(`/api/service/order/${id}/assign`);
 };
 
 /**
@@ -68,7 +68,7 @@ export const assignServiceOrder = (id) => {
  * @returns {Promise<{code: number, msg: string}>}
  */
 export const startServiceOrder = (id) => {
-  return axios.put(`/api/service/order/${id}/start`);
+  return axios.post(`/api/service/order/${id}/start`);
 };
 
 /**
@@ -80,7 +80,7 @@ export const startServiceOrder = (id) => {
  */
 export const completeServiceOrder = (data) => {
   const { id, actualDuration } = data;
-  return axios.put(`/api/service/order/${id}/complete`, {
+  return axios.post(`/api/service/order/${id}/complete`, {
     actualDuration
   });
 };

@@ -409,7 +409,7 @@
   <script setup>
   import { getDictDataByType } from '@/api/back/system/dict/data';
 import RightToolbar from '@/components/common/base/RightToolbar/index.vue';
-import Pagination from '@/components/common/Pagination.vue';
+import Pagination from '@/components/common/table/Pagination.vue';
 import { useUserStore } from '@/stores/back/userStore';
 import { formatDate } from '@/utils/date';
 import { ArrowDown, Delete, Edit, Plus, Refresh, Search } from '@element-plus/icons-vue';
@@ -866,11 +866,24 @@ import { onMounted, reactive, ref, watch } from 'vue';
               const existingElders = await userStore.fetchEldersByKinId(form.value.userId);
               
               // 检查是否已经绑定了相同的老人
-              const alreadyBound = existingElders && existingElders.some(elder => elder.userId === form.value.elderId);
+              const alreadyBound = existingElders && existingElders.some(
+                elder => elder.userId === form.value.elderId
+              );
               
               // 如果没有绑定过，则在用户更新成功后进行绑定
               if (!alreadyBound && form.value.elderId) {
                 // 在提交后会单独调用绑定接口
+                try {
+                  await userStore.handleBindElderKinRelation(
+                    form.value.elderId,  // 老人ID
+                    form.value.userId,   // 家属ID
+                    form.value.relationship
+                  );
+                  ElMessage.success(dialogType.value === 'add' ? '新增用户并绑定老人成功' : '更新用户信息并绑定老人成功');
+                } catch (bindError) {
+                  console.error('绑定老人失败:', bindError);
+                  ElMessage.warning(dialogType.value === 'add' ? '用户新增成功，但绑定老人失败' : '用户信息更新成功，但绑定老人失败');
+                }
               }
             }
           }
@@ -941,7 +954,7 @@ import { onMounted, reactive, ref, watch } from 'vue';
             
             // 如果新增成功，获取返回的userId
             if (success && res.data) {
-              formToSubmit.userId = res.data;
+              form.value.userId = res.data;
             }
           } else {
             // 更新用户需要userId
@@ -949,31 +962,7 @@ import { onMounted, reactive, ref, watch } from 'vue';
           }
   
           if (success) {
-            // 如果是家属角色，并且设置了新的elderId和relationship，并且更新成功
-            if (form.value.roleIds.includes(2) && form.value.elderId && form.value.relationship) {
-              // 获取当前用户绑定的老人列表
-              const existingElders = await userStore.fetchEldersByKinId(formToSubmit.userId);
-              
-              // 检查是否已经绑定了相同的老人
-              const alreadyBound = existingElders && existingElders.some(elder => elder.userId === form.value.elderId);
-              
-              if (!alreadyBound) {
-                // 单独调用绑定接口
-                try {
-                  await userStore.handleBindElderKinRelation(
-                    form.value.elderId,  // 老人ID
-                    formToSubmit.userId,   // 家属ID
-                    form.value.relationship
-                  );
-                  ElMessage.success(dialogType.value === 'add' ? '新增用户并绑定老人成功' : '更新用户信息并绑定老人成功');
-                } catch (bindError) {
-                  console.error('绑定老人失败:', bindError);
-                  ElMessage.warning(dialogType.value === 'add' ? '用户新增成功，但绑定老人失败' : '用户信息更新成功，但绑定老人失败');
-                }
-              }
-            } else {
-              ElMessage.success(dialogType.value === 'add' ? '新增用户成功' : '更新用户信息成功');
-            }
+            ElMessage.success(dialogType.value === 'add' ? '新增用户成功' : '更新用户信息成功');
             
             dialogVisible.value = false;
             await getList();

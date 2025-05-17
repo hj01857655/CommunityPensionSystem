@@ -66,7 +66,7 @@ public class HealthMonitorConverter {
 
         // 设置老人信息
         if (elder != null) {
-            vo.setElderName(elder.getUsername());
+            vo.setElderName(elder.getName());
             vo.setElderGender(elder.getGender());
 
             // 计算年龄
@@ -79,7 +79,7 @@ public class HealthMonitorConverter {
 
         // 设置处理人信息
         if (processor != null) {
-            vo.setProcessedByName(processor.getUsername());
+            vo.setProcessedByName(processor.getName());
         }
 
         return vo;

@@ -131,6 +131,72 @@
             </el-form>
           </el-card>
           
+          <!-- 参数设置 -->
+          <el-card shadow="hover" class="settings-card" v-loading="loading.params">
+            <template #header>
+              <div class="card-header">
+                <h3>参数设置</h3>
+              </div>
+            </template>
+            
+            <el-form 
+              ref="paramsFormRef"
+              :model="paramsForm"
+              :rules="paramsRules"
+              label-width="160px"
+              class="settings-form"
+            >
+              <el-form-item label="文件上传大小限制(MB)" prop="maxUploadSize">
+                <el-input-number v-model="paramsForm.maxUploadSize" :min="1" :max="100" />
+              </el-form-item>
+              
+              <el-form-item label="允许上传的文件类型" prop="allowedFileTypes">
+                <el-select 
+                  v-model="paramsForm.allowedFileTypes" 
+                  multiple 
+                  collapse-tags 
+                  collapse-tags-tooltip 
+                  placeholder="请选择允许上传的文件类型"
+                >
+                  <el-option label="图片文件(jpg,png,gif)" value="image" />
+                  <el-option label="文档文件(doc,docx,pdf)" value="document" />
+                  <el-option label="表格文件(xls,xlsx,csv)" value="spreadsheet" />
+                  <el-option label="压缩文件(zip,rar)" value="archive" />
+                  <el-option label="音频文件(mp3,wav)" value="audio" />
+                  <el-option label="视频文件(mp4,avi)" value="video" />
+                </el-select>
+              </el-form-item>
+              
+              <el-form-item label="默认分页大小" prop="defaultPageSize">
+                <el-select v-model="paramsForm.defaultPageSize" placeholder="请选择默认分页大小">
+                  <el-option label="10条/页" :value="10" />
+                  <el-option label="20条/页" :value="20" />
+                  <el-option label="30条/页" :value="30" />
+                  <el-option label="50条/页" :value="50" />
+                  <el-option label="100条/页" :value="100" />
+                </el-select>
+              </el-form-item>
+              
+              <el-form-item label="数据缓存时间(分钟)" prop="dataCacheTime">
+                <el-input-number v-model="paramsForm.dataCacheTime" :min="0" :max="1440" />
+                <div class="form-item-tip">设置为0表示不缓存</div>
+              </el-form-item>
+              
+              <el-form-item label="开启操作日志" prop="enableOperationLog">
+                <el-switch v-model="paramsForm.enableOperationLog" />
+              </el-form-item>
+              
+              <el-form-item label="开启登录日志" prop="enableLoginLog">
+                <el-switch v-model="paramsForm.enableLoginLog" />
+              </el-form-item>
+              
+              <el-form-item>
+                <el-button type="primary" @click="saveParamsSettings">保存设置</el-button>
+                <el-button @click="resetParamsForm">重置</el-button>
+              </el-form-item>
+            </el-form>
+          </el-card>
+          
           <!-- 数据备份 -->
           <el-card shadow="hover" class="settings-card" v-loading="loading.backup">
             <template #header>
@@ -209,9 +275,11 @@
   deleteBackup,
   downloadBackup,
   getBackupList,
+  getParamsSettings,
   getSecuritySettings,
   getSystemSettings,
   restoreBackup,
+  updateParamsSettings,
   updateSecuritySettings,
   updateSystemSettings
 } from '@/api/back/system/config'
@@ -244,6 +312,17 @@ import { onMounted, reactive, ref } from 'vue'
     allowedIps: ''
   })
   
+  // 参数设置表单
+  const paramsFormRef = ref(null)
+  const paramsForm = reactive({
+    maxUploadSize: 10,
+    allowedFileTypes: ['image', 'document', 'spreadsheet', 'archive', 'audio', 'video'],
+    defaultPageSize: 10,
+    dataCacheTime: 30,
+    enableOperationLog: true,
+    enableLoginLog: true
+  })
+  
   // 备份记录
   const backupRecords = ref([])
   
@@ -251,6 +330,7 @@ import { onMounted, reactive, ref } from 'vue'
   const loading = ref({
     system: false,
     security: false,
+    params: false,
     backup: false
   })
   
@@ -287,6 +367,21 @@ import { onMounted, reactive, ref } from 'vue'
     ],
     sessionTimeout: [
       { required: true, message: '请设置会话超时时间', trigger: 'blur' }
+    ]
+  }
+  
+  const paramsRules = {
+    maxUploadSize: [
+      { required: true, message: '请设置文件上传大小限制', trigger: 'blur' }
+    ],
+    allowedFileTypes: [
+      { required: true, message: '请选择允许上传的文件类型', trigger: 'change' }
+    ],
+    defaultPageSize: [
+      { required: true, message: '请选择默认分页大小', trigger: 'change' }
+    ],
+    dataCacheTime: [
+      { required: true, message: '请设置数据缓存时间', trigger: 'blur' }
     ]
   }
   
@@ -385,6 +480,59 @@ import { onMounted, reactive, ref } from 'vue'
     }
   };
   
+  // 加载参数设置
+  const loadParamsSettings = async () => {
+    loading.value.params = true;
+    try {
+      const res = await getParamsSettings();
+      if (res.code === 200) {
+        const data = res.data;
+        paramsForm.maxUploadSize = data.maxUploadSize || 10;
+        paramsForm.allowedFileTypes = data.allowedFileTypes || ['image', 'document', 'spreadsheet', 'archive', 'audio', 'video'];
+        paramsForm.defaultPageSize = data.defaultPageSize || 10;
+        paramsForm.dataCacheTime = data.dataCacheTime || 30;
+        paramsForm.enableOperationLog = data.enableOperationLog === 'true' || data.enableOperationLog === true;
+        paramsForm.enableLoginLog = data.enableLoginLog === 'true' || data.enableLoginLog === true;
+      } else {
+        ElMessage.error(res.msg || '获取参数设置失败');
+      }
+    } catch (error) {
+      console.error('获取参数设置出错:', error);
+      ElMessage.error('获取参数设置失败，请确保后端服务已启动');
+      // 使用默认值
+      paramsForm.maxUploadSize = 10;
+      paramsForm.allowedFileTypes = ['image', 'document', 'spreadsheet', 'archive', 'audio', 'video'];
+      paramsForm.defaultPageSize = 10;
+      paramsForm.dataCacheTime = 30;
+      paramsForm.enableOperationLog = true;
+      paramsForm.enableLoginLog = true;
+    } finally {
+      loading.value.params = false;
+    }
+  };
+
+  // 保存参数设置
+  const saveParamsSettings = async () => {
+    paramsFormRef.value.validate(async (valid) => {
+      if (valid) {
+        loading.value.params = true;
+        try {
+          const res = await updateParamsSettings(paramsForm);
+          if (res.code === 200) {
+            ElMessage.success(res.msg || '保存参数设置成功');
+          } else {
+            ElMessage.error(res.msg || '保存参数设置失败');
+          }
+        } catch (error) {
+          console.error('保存参数设置出错:', error);
+          ElMessage.error('保存参数设置失败，请确保后端服务已启动');
+        } finally {
+          loading.value.params = false;
+        }
+      }
+    });
+  };
+  
   // 加载备份记录
   const loadBackupList = async () => {
     loading.value.backup = true;
@@ -459,6 +607,12 @@ import { onMounted, reactive, ref } from 'vue'
   const resetSecurityForm = () => {
     securityFormRef.value.resetFields()
     loadSecuritySettings() // 重新加载安全设置
+  }
+  
+  // 重置参数设置表单
+  const resetParamsForm = () => {
+    paramsFormRef.value.resetFields()
+    loadParamsSettings() // 重新加载参数设置
   }
   
   // 立即备份
@@ -606,6 +760,7 @@ import { onMounted, reactive, ref } from 'vue'
   onMounted(() => {
     loadSystemSettings()
     loadSecuritySettings()
+    loadParamsSettings()
     loadBackupList()
   })
   </script>

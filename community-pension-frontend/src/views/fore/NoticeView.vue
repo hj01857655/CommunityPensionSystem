@@ -1,6 +1,6 @@
 <template>
   <div class="notice-view">
-    <!-- 搜索和筛选区域 -->
+    <!-- 搜索和筛选区 -->
     <div class="search-filter-container">
       <el-input
         v-model="searchQuery"
@@ -35,7 +35,7 @@
       </el-col>
     </el-row>
 
-    <!-- 分页器 -->
+    <!-- 分页 -->
     <div class="pagination-container">
       <Pagination
         v-model:page="currentPage"
@@ -64,7 +64,7 @@ import { useRouter } from 'vue-router'
 import { Search } from '@element-plus/icons-vue'
 import { useNoticeStore } from '@/stores/fore/noticeStore'
 import { storeToRefs } from 'pinia'
-import Pagination from '@/components/common/Pagination.vue'
+import Pagination from '@/components/common/table/Pagination.vue'
 
 const router = useRouter()
 const noticeStore = useNoticeStore()

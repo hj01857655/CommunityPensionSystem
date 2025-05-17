@@ -1,4 +1,6 @@
 import '@/assets/styles/index.scss'; // global css
+import '@/assets/styles/dark-theme.scss'; // 自定义暗黑模式样式
+import '@/styles/unified-components.scss'; // 统一组件样式
 import * as ElementPlusIconsVue from '@element-plus/icons-vue';
 import ElementPlus from 'element-plus';
 import 'element-plus/dist/index.css';
@@ -12,7 +14,7 @@ import router from './router';
 
 import RightToolbar from '@/components/back/system/menu/RightToolbar.vue';
 import DictTag from '@/components/common/base/DictTag';
-import Pagination from '@/components/common/base/Pagination';
+import Pagination from '@/components/common/table/Pagination.vue';
 import { useDict } from '@/utils/dict';
 
 // 1. 引入 ECharts 主模块和渲染器
@@ -29,7 +31,7 @@ echarts.use([
   TooltipComponent,
   LegendComponent,
   GridComponent
-])
+]);
 
 // 3. 全局注册 vue-echarts
 import VueECharts from 'vue-echarts';
@@ -56,15 +58,24 @@ const app = createApp(App);
 // 全局方法挂载
 app.config.globalProperties.useDict = useDict;
 
-
 // 全局组件注册
 app.component('DictTag', DictTag);//字典标签
 app.component('Pagination', Pagination);//分页组件
 app.component('RightToolbar', RightToolbar);//右侧工具栏
-app.component('VueECharts', VueECharts)
+app.component('VueECharts', VueECharts);
+
+// 注册统一组件
+import SearchForm from '@/components/common/table/SearchForm.vue';
+import TableToolbar from '@/components/common/table/TableToolbar.vue';
+import DataTable from '@/components/common/table/DataTable.vue';
+
+app.component('SearchForm', SearchForm); // 统一搜索表单
+app.component('TableToolbar', TableToolbar); // 统一表格工具栏
+app.component('DataTable', DataTable); // 统一数据表格
+
 // 使用插件
-app.use(router)
-app.use(store)
+app.use(router);
+app.use(store);
 app.use(ElementPlus);
 
 // 注册ElementPlus图标组件

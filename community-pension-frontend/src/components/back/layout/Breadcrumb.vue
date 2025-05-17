@@ -20,10 +20,15 @@ const levelList = ref(null);
 // 获取面包屑数据
 const getBreadcrumb = () => {
   let matched = route.matched.filter(item => item.meta && item.meta.title);
+  
+  // 移除"管理后台"这一级，因为它与"首页"重复
+  matched = matched.filter(item => item.path !== '/admin');
+  
   // 判断是否为首页
   if (!isDashboard(matched[0])) {
     matched = [{ path: "/admin/home", meta: { title: "首页" } }].concat(matched);
   }
+  
   levelList.value = matched;
 };
 

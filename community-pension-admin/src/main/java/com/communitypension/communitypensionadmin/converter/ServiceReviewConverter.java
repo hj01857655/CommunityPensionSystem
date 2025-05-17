@@ -55,12 +55,12 @@ public class ServiceReviewConverter {
         
         // 设置老人姓名
         if (elder != null) {
-            vo.setElderName(elder.getUsername());
+            vo.setElderName(elder.getName());
         }
         
         // 设置评价人姓名（如果是匿名评价，则不显示评价人姓名）
         if (entity.getIsAnonymous() == 0 && reviewUser != null) {
-            vo.setReviewUserName(reviewUser.getUsername());
+            vo.setReviewUserName(reviewUser.getName());
         } else {
             vo.setReviewUserName("匿名用户");
         }
@@ -70,7 +70,7 @@ public class ServiceReviewConverter {
         
         // 设置回复管理员姓名
         if (replyAdmin != null) {
-            vo.setReplyAdminName(replyAdmin.getUsername());
+            vo.setReplyAdminName(replyAdmin.getName());
         }
         
         // 设置状态名称
