@@ -11,7 +11,7 @@
  Target Server Version : 80400 (8.4.0)
  File Encoding         : 65001
 
- Date: 15/05/2025 17:58:23
+ Date: 17/05/2025 21:43:15
 */
 
 SET NAMES utf8mb4;
@@ -150,8 +150,8 @@ CREATE TABLE `activity_register`  (
 -- Records of activity_register
 -- ----------------------------
 INSERT INTO `activity_register` VALUES (14, 21, 2, 2, 0, '2025-05-14 13:24:30', 0, NULL, '2025-04-05 22:22:57', '2025-04-05 22:22:57', 0);
-INSERT INTO `activity_register` VALUES (15, 22, 2, 2, 0, '2025-05-12 12:41:23', 3, NULL, '2025-05-12 12:41:23', '2025-05-12 12:41:23', 0);
-INSERT INTO `activity_register` VALUES (16, 23, 2, 2, 0, '2025-05-12 19:23:01', 3, NULL, '2025-05-12 19:23:01', '2025-05-12 19:23:01', 0);
+INSERT INTO `activity_register` VALUES (15, 22, 2, 2, 0, '2025-05-17 16:53:56', 0, NULL, '2025-05-12 12:41:23', '2025-05-12 12:41:23', 0);
+INSERT INTO `activity_register` VALUES (16, 23, 2, 2, 0, '2025-05-17 16:54:11', 0, NULL, '2025-05-12 19:23:01', '2025-05-12 19:23:01', 0);
 
 -- ----------------------------
 -- Table structure for activity_review
@@ -237,7 +237,7 @@ CREATE TABLE `dict_data`  (
   `update_time` datetime NULL DEFAULT NULL COMMENT '更新时间',
   `remark` varchar(500) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '备注',
   PRIMARY KEY (`dict_code`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 158 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '字典数据表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 174 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '字典数据表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of dict_data
@@ -255,10 +255,6 @@ INSERT INTO `dict_data` VALUES (10, 1, '默认', 'DEFAULT', 'job_group', '', '',
 INSERT INTO `dict_data` VALUES (11, 2, '系统', 'SYSTEM', 'job_group', '', '', 'N', '0', 'admin', '2025-03-19 10:18:55', '', NULL, '系统分组');
 INSERT INTO `dict_data` VALUES (12, 1, '是', 'Y', 'yes_no', '', 'primary', 'Y', '0', 'admin', '2025-03-19 10:18:55', '', NULL, '系统默认是');
 INSERT INTO `dict_data` VALUES (13, 2, '否', 'N', 'yes_no', '', 'danger', 'N', '0', 'admin', '2025-03-19 10:18:55', '', NULL, '系统默认否');
-INSERT INTO `dict_data` VALUES (14, 1, '通知', '1', 'notice_type', '', 'warning', 'Y', '0', 'admin', '2025-03-19 10:18:55', '', NULL, '通知');
-INSERT INTO `dict_data` VALUES (15, 2, '公告', '2', 'notice_type', '', 'success', 'N', '0', 'admin', '2025-03-19 10:18:55', '', NULL, '公告');
-INSERT INTO `dict_data` VALUES (16, 1, '正常', '0', 'notice_status', '', 'primary', 'Y', '0', 'admin', '2025-03-19 10:18:55', '', NULL, '正常状态');
-INSERT INTO `dict_data` VALUES (17, 2, '关闭', '1', 'notice_status', '', 'danger', 'N', '0', 'admin', '2025-03-19 10:18:55', '', NULL, '关闭状态');
 INSERT INTO `dict_data` VALUES (18, 99, '其他', '0', 'oper_type', '', 'info', 'N', '0', 'admin', '2025-03-19 10:18:55', '', NULL, '其他操作');
 INSERT INTO `dict_data` VALUES (19, 1, '新增', '1', 'oper_type', '', 'info', 'N', '0', 'admin', '2025-03-19 10:18:55', '', NULL, '新增操作');
 INSERT INTO `dict_data` VALUES (20, 2, '修改', '2', 'oper_type', '', 'info', 'N', '0', 'admin', '2025-03-19 10:18:55', '', NULL, '修改操作');
@@ -336,6 +332,16 @@ INSERT INTO `dict_data` VALUES (154, 2, '血常规', '血常规', 'physical_exam
 INSERT INTO `dict_data` VALUES (155, 3, '肝功能', '肝功能', 'physical_exam_subcategory', NULL, NULL, 'N', '0', '', NULL, '', NULL, '肝功能检查项目');
 INSERT INTO `dict_data` VALUES (156, 4, '肾功能', '肾功能', 'physical_exam_subcategory', NULL, NULL, 'N', '0', '', NULL, '', NULL, '肾功能检查项目');
 INSERT INTO `dict_data` VALUES (157, 5, '尿常规', '尿常规', 'physical_exam_subcategory', NULL, NULL, 'N', '0', '', NULL, '', NULL, '尿液常规检查项目');
+INSERT INTO `dict_data` VALUES (158, 1, '系统通知', 'system', 'notice_type', '', 'primary', 'Y', '0', 'admin', '2025-05-15 21:40:18', 'admin', '2025-05-15 21:40:18', '系统自动发送的通知');
+INSERT INTO `dict_data` VALUES (159, 2, '活动通知', 'activity', 'notice_type', '', 'success', 'N', '0', 'admin', '2025-05-15 21:40:18', 'admin', '2025-05-15 21:40:18', '与活动相关的通知');
+INSERT INTO `dict_data` VALUES (160, 3, '服务通知', 'service', 'notice_type', '', 'info', 'N', '0', 'admin', '2025-05-15 21:40:18', 'admin', '2025-05-15 21:40:18', '与服务相关的通知');
+INSERT INTO `dict_data` VALUES (161, 4, '公告', 'announcement', 'notice_type', '', 'warning', 'N', '0', 'admin', '2025-05-15 21:40:18', 'admin', '2025-05-15 21:40:18', '系统公告');
+INSERT INTO `dict_data` VALUES (162, 5, '紧急通知', 'urgent', 'notice_type', '', 'danger', 'N', '0', 'admin', '2025-05-15 21:40:18', 'admin', '2025-05-15 21:40:18', '紧急事项通知');
+INSERT INTO `dict_data` VALUES (168, 1, '草稿', '0', 'notice_status', '', 'info', 'Y', '0', 'admin', '2025-05-15 21:53:25', '', NULL, '通知草稿，尚未发布');
+INSERT INTO `dict_data` VALUES (169, 2, '已发布', '1', 'notice_status', '', 'success', 'N', '0', 'admin', '2025-05-15 21:53:25', '', NULL, '通知已发布，正常显示');
+INSERT INTO `dict_data` VALUES (170, 3, '已关闭', '2', 'notice_status', '', 'danger', 'N', '0', 'admin', '2025-05-15 21:53:25', '', NULL, '通知已关闭，不再显示');
+INSERT INTO `dict_data` VALUES (171, 4, '已过期', '3', 'notice_status', '', 'warning', 'N', '0', 'admin', '2025-05-15 21:53:25', '', NULL, '通知已过期，自动不再显示');
+INSERT INTO `dict_data` VALUES (172, 5, '已归档', '4', 'notice_status', '', 'info', 'N', '0', 'admin', '2025-05-15 21:53:25', '', NULL, '通知已归档，仅可查看历史');
 
 -- ----------------------------
 -- Table structure for dict_type
@@ -395,6 +401,8 @@ CREATE TABLE `elder_kin_relation`  (
 -- ----------------------------
 INSERT INTO `elder_kin_relation` VALUES (2, 3, '父子');
 INSERT INTO `elder_kin_relation` VALUES (25, 26, '子女');
+INSERT INTO `elder_kin_relation` VALUES (1000, 1001, '父女');
+INSERT INTO `elder_kin_relation` VALUES (1002, 1003, '子女');
 
 -- ----------------------------
 -- Table structure for health_alert
@@ -428,7 +436,7 @@ CREATE TABLE `health_alert`  (
   CONSTRAINT `fk_health_alert_elder` FOREIGN KEY (`elder_id`) REFERENCES `user` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_health_alert_handler` FOREIGN KEY (`handler_id`) REFERENCES `user` (`user_id`) ON DELETE SET NULL ON UPDATE CASCADE,
   CONSTRAINT `fk_health_alert_monitor` FOREIGN KEY (`related_data_id`) REFERENCES `health_monitoring` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '健康预警表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '健康预警表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of health_alert
@@ -468,7 +476,7 @@ CREATE TABLE `health_monitoring`  (
 -- ----------------------------
 -- Records of health_monitoring
 -- ----------------------------
-INSERT INTO `health_monitoring` VALUES (1, 2, '1', '125/78', 'mmHg', '2025-05-07 09:00:00', 'DEV00001', 'normal', NULL, NULL, 0, NULL, NULL, NULL, 15, '2025-05-06 21:18:04', '2025-05-15 17:34:27');
+INSERT INTO `health_monitoring` VALUES (1, 2, '1', '125/78', 'mmHg', '2025-05-07 09:00:00', 'DEV00001', 'normal', NULL, NULL, 1, NULL, NULL, NULL, 15, '2025-05-06 21:18:04', '2025-05-17 13:41:12');
 INSERT INTO `health_monitoring` VALUES (2, 2, '3', '36.8', '°C', '2025-05-07 11:00:00', 'DEV00002', 'normal', NULL, NULL, 0, NULL, NULL, NULL, 15, '2025-05-06 21:18:04', '2025-05-15 17:34:27');
 INSERT INTO `health_monitoring` VALUES (3, 2, '2', '6.5', 'mmol/L', '2025-05-08 08:30:00', 'DeviceC', 'normal', NULL, NULL, 0, NULL, NULL, NULL, 15, '2025-05-06 23:52:22', '2025-05-15 17:34:27');
 INSERT INTO `health_monitoring` VALUES (4, 2, '4', '110', 'bpm', '2025-05-08 09:45:00', 'DEV00004', 'abnormal', 'medium', 'Heart rate consistently high during monitoring period.', 0, NULL, NULL, NULL, 15, '2025-05-06 23:52:22', '2025-05-15 17:34:27');
@@ -505,7 +513,7 @@ CREATE TABLE `health_records`  (
 -- ----------------------------
 -- Records of health_records
 -- ----------------------------
-INSERT INTO `health_records` VALUES (15, 2, '120/80', 75, 5.60, 36.5, 65.00, 170.00, 22.50, '高血压', '青霉素', '轻度感冒', '2025-05-14 13:34:45', '阿莫西林', '2025-05-14 13:34:45', 2, '初始记录', '2025-04-08 13:01:17', '2025-05-14 13:34:46');
+INSERT INTO `health_records` VALUES (15, 2, '120/81', 75, 5.60, 36.5, 65.00, 170.00, 22.50, '高血压1', '青霉素', '轻度感冒2', '2025-05-17 01:26:56', '阿莫西林', '2025-05-17 01:26:56', 2, '初始记录', '2025-04-08 13:01:17', '2025-05-17 13:30:24');
 
 -- ----------------------------
 -- Table structure for menu
@@ -513,67 +521,156 @@ INSERT INTO `health_records` VALUES (15, 2, '120/80', 75, 5.60, 36.5, 65.00, 170
 DROP TABLE IF EXISTS `menu`;
 CREATE TABLE `menu`  (
   `menu_id` bigint NOT NULL AUTO_INCREMENT COMMENT '菜单ID',
-  `menu_name` varchar(50) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL COMMENT '菜单名称',
+  `menu_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '菜单名称',
   `parent_id` bigint NULL DEFAULT 0 COMMENT '父菜单ID',
   `order_num` int NULL DEFAULT 0 COMMENT '显示顺序',
-  `path` varchar(200) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT '' COMMENT '路由地址',
-  `component` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '组件路径',
-  `query` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '路由参数',
-  `route_name` varchar(50) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT '' COMMENT '路由名称',
+  `path` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '' COMMENT '路由地址',
+  `component` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '组件路径',
+  `query` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '路由参数',
+  `route_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '' COMMENT '路由名称',
   `is_frame` int NULL DEFAULT 1 COMMENT '是否为外链（0是 1否）',
   `is_cache` int NULL DEFAULT 0 COMMENT '是否缓存（0缓存 1不缓存）',
-  `menu_type` char(1) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT '' COMMENT '菜单类型（M目录 C菜单 F按钮）',
-  `visible` char(1) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT '0' COMMENT '菜单状态（0显示 1隐藏）',
-  `status` char(1) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT '0' COMMENT '菜单状态（0正常 1停用）',
-  `perms` varchar(100) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '权限标识',
-  `icon` varchar(100) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT '#' COMMENT '菜单图标',
-  `create_by` varchar(64) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT '' COMMENT '创建者',
+  `menu_type` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '' COMMENT '菜单类型（M目录 C菜单 F按钮）',
+  `visible` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '0' COMMENT '菜单状态（0显示 1隐藏）',
+  `status` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '0' COMMENT '菜单状态（0正常 1停用）',
+  `perms` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '权限标识',
+  `icon` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '#' COMMENT '菜单图标',
+  `create_by` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '' COMMENT '创建者',
   `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '创建时间',
-  `update_by` varchar(64) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT '' COMMENT '更新者',
+  `update_by` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '' COMMENT '更新者',
   `update_time` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-  `remark` varchar(500) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT '' COMMENT '备注',
+  `remark` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '' COMMENT '备注',
   PRIMARY KEY (`menu_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 2000 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '菜单权限表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 3120 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '菜单权限表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of menu
 -- ----------------------------
-INSERT INTO `menu` VALUES (1, '系统管理', 0, 1, 'system', NULL, '', '', 1, 1, 'M', '1', '0', '', 'system', 'admin', '2025-03-20 03:44:24', 'admin', NULL, '系统管理');
-INSERT INTO `menu` VALUES (2, '数据分析看板', 0, 2, 'analysis', NULL, '', '', 1, 1, 'M', '1', '0', '', 'analysis', 'admin', '2025-03-20 03:44:24', 'admin', NULL, '数据分析看板');
-INSERT INTO `menu` VALUES (3, '服务预约', 0, 3, 'services', NULL, '', '', 1, 1, 'M', '1', '0', '', 'service', 'admin', '2025-03-20 03:44:24', 'admin', NULL, '服务预约管理');
-INSERT INTO `menu` VALUES (4, '健康监测', 0, 4, 'health', NULL, '', '', 1, 1, 'M', '1', '0', '', 'health', 'admin', '2025-03-20 03:44:24', 'admin', NULL, '健康监测管理');
-INSERT INTO `menu` VALUES (5, '社区活动', 0, 5, 'activity', NULL, NULL, '', 1, 1, 'M', '1', '0', NULL, '#', 'admin', '2025-03-20 03:44:24', 'admin', NULL, '');
-INSERT INTO `menu` VALUES (6, '通知公告', 0, 6, 'notice', NULL, NULL, '', 1, 1, 'C', '1', '0', NULL, '#', 'admin', '2025-03-20 03:44:24', 'admin', NULL, '');
-INSERT INTO `menu` VALUES (100, '用户管理', 1, 1, 'user', 'system/user/index', '', '', 1, 1, 'C', '1', '0', 'system:user:list', 'AddLocation', 'admin', '2025-03-20 03:44:24', 'admin', NULL, '用户管理菜单');
-INSERT INTO `menu` VALUES (101, '角色管理', 1, 2, 'role', 'system/role/index', '', '', 1, 1, 'C', '1', '0', 'system:role:list', 'peoples', 'admin', '2025-03-20 03:44:24', 'admin', NULL, '角色管理菜单');
-INSERT INTO `menu` VALUES (102, '菜单管理', 1, 3, 'menu', 'system/menu/index', '', '', 1, 1, 'C', '1', '0', 'system:menu:list', 'tree-table', 'admin', '2025-03-20 03:44:24', 'admin', NULL, '菜单管理菜单');
-INSERT INTO `menu` VALUES (103, '字典管理', 1, 6, 'dict', 'system/dict/index', '', '', 1, 1, 'C', '1', '0', 'system:dict:list', 'dict', 'admin', '2025-03-20 03:44:24', 'admin', NULL, '字典管理菜单');
-INSERT INTO `menu` VALUES (104, '系统设置', 1, 9, 'config', 'system/config/index', '', '', 1, 1, 'M', '1', '0', '', 'log', 'admin', '2025-03-20 03:44:24', 'admin', NULL, '日志管理菜单');
-INSERT INTO `menu` VALUES (107, '仪表盘', 2, 1, 'dashboard', 'analysis/dashboard/index', '', '', 1, 1, 'C', '1', '0', 'monitor:online:list', 'online', 'admin', '2025-03-20 03:44:24', 'admin', NULL, '仪表盘');
-INSERT INTO `menu` VALUES (108, '服务项目管理', 3, 0, 'service', 'services/service', NULL, '', 1, 1, 'C', '1', '0', 'services:service:list', 'service', 'admin', '2025-03-20 03:44:24', 'admin', NULL, '');
-INSERT INTO `menu` VALUES (109, '服务工单管理', 3, 1, 'order', 'services/order', NULL, '', 1, 1, 'C', '1', '0', NULL, 'service', 'admin', '2025-04-05 01:16:24', 'admin', '2025-04-05 01:16:24', '');
-INSERT INTO `menu` VALUES (110, '服务评价管理', 3, 2, 'evaluation', 'services/evaluation', NULL, '', 1, 1, 'C', '1', '0', NULL, 'service', 'admin', '2025-03-20 03:44:24', 'admin', NULL, '');
-INSERT INTO `menu` VALUES (1000, '用户查询', 100, 1, '', '', '', '', 1, 1, 'F', '1', '0', 'system:user:query', '#', 'admin', '2025-03-20 03:44:25', 'admin', NULL, '');
-INSERT INTO `menu` VALUES (1001, '用户新增', 100, 2, '', '', '', '', 1, 1, 'F', '1', '0', 'system:user:add', '#', 'admin', '2025-03-20 03:44:25', 'admin', NULL, '');
-INSERT INTO `menu` VALUES (1002, '用户修改', 100, 3, '', '', '', '', 1, 1, 'F', '1', '0', 'system:user:edit', '#', 'admin', '2025-03-20 03:44:25', 'admin', NULL, '');
-INSERT INTO `menu` VALUES (1003, '用户删除', 100, 4, '', '', '', '', 1, 1, 'F', '1', '0', 'system:user:remove', '#', 'admin', '2025-03-20 03:44:25', 'admin', NULL, '');
-INSERT INTO `menu` VALUES (1004, '用户导出', 100, 5, '', '', '', '', 1, 1, 'F', '1', '0', 'system:user:export', '#', 'admin', '2025-03-20 03:44:25', 'admin', NULL, '');
-INSERT INTO `menu` VALUES (1005, '用户导入', 100, 6, '', '', '', '', 1, 1, 'F', '1', '0', 'system:user:import', '#', 'admin', '2025-03-20 03:44:25', 'admin', NULL, '');
-INSERT INTO `menu` VALUES (1006, '重置密码', 100, 7, '', '', '', '', 1, 1, 'F', '1', '0', 'system:user:resetPwd', '#', 'admin', '2025-03-20 03:44:25', 'admin', NULL, '');
-INSERT INTO `menu` VALUES (1007, '角色查询', 101, 1, '', '', '', '', 1, 1, 'F', '1', '0', 'system:role:query', '#', 'admin', '2025-03-20 03:44:25', 'admin', NULL, '');
-INSERT INTO `menu` VALUES (1008, '角色新增', 101, 2, '', '', '', '', 1, 1, 'F', '1', '0', 'system:role:add', '#', 'admin', '2025-03-20 03:44:25', 'admin', NULL, '');
-INSERT INTO `menu` VALUES (1009, '角色修改', 101, 3, '', '', '', '', 1, 1, 'F', '1', '0', 'system:role:edit', '#', 'admin', '2025-03-20 03:44:25', 'admin', NULL, '');
-INSERT INTO `menu` VALUES (1010, '角色删除', 101, 4, '', '', '', '', 1, 1, 'F', '1', '0', 'system:role:remove', '#', 'admin', '2025-03-20 03:44:25', 'admin', NULL, '');
-INSERT INTO `menu` VALUES (1011, '角色导出', 101, 5, '', '', '', '', 1, 1, 'F', '1', '0', 'system:role:export', '#', 'admin', '2025-03-20 03:44:25', 'admin', NULL, '');
-INSERT INTO `menu` VALUES (1012, '菜单查询', 102, 1, '', '', '', '', 1, 1, 'F', '1', '0', 'system:menu:query', '#', 'admin', '2025-03-20 03:44:25', 'admin', NULL, '');
-INSERT INTO `menu` VALUES (1013, '菜单新增', 102, 2, '', '', '', '', 1, 1, 'F', '1', '0', 'system:menu:add', '#', 'admin', '2025-03-20 03:44:25', 'admin', NULL, '');
-INSERT INTO `menu` VALUES (1014, '菜单修改', 102, 3, '', '', '', '', 1, 1, 'F', '1', '0', 'system:menu:edit', '#', 'admin', '2025-03-20 03:44:25', 'admin', NULL, '');
-INSERT INTO `menu` VALUES (1015, '菜单删除', 102, 4, '', '', '', '', 1, 1, 'F', '1', '0', 'system:menu:remove', '#', 'admin', '2025-03-20 03:44:25', 'admin', NULL, '');
-INSERT INTO `menu` VALUES (1016, '字典查询', 103, 1, '', '', '', '', 1, 1, 'F', '1', '0', 'system:dept:query', '#', 'admin', '2025-03-20 03:44:25', 'admin', NULL, '');
-INSERT INTO `menu` VALUES (1017, '字典新增', 103, 2, '', '', '', '', 1, 1, 'F', '1', '0', 'system:dept:add', '#', 'admin', '2025-03-20 03:44:25', 'admin', NULL, '');
-INSERT INTO `menu` VALUES (1018, '字典修改', 103, 3, '', '', '', '', 1, 1, 'F', '1', '0', 'system:dept:edit', '#', 'admin', '2025-03-20 03:44:25', 'admin', NULL, '');
-INSERT INTO `menu` VALUES (1019, '字典删除', 103, 4, '', '', '', '', 1, 1, 'F', '1', '0', 'system:dept:remove', '#', 'admin', '2025-03-20 03:44:25', 'admin', NULL, '');
-INSERT INTO `menu` VALUES (1020, '字典导出', 103, 5, '', '', '', '', 1, 1, 'F', '1', '0', 'system:post:query', '#', 'admin', '2025-03-20 03:44:25', 'admin', NULL, '');
+INSERT INTO `menu` VALUES (1, '系统管理', 0, 1, 'system', NULL, '', '', 1, 0, 'M', '1', '0', '', 'system', 'admin', '2025-05-15 18:31:50', '', '2025-05-15 18:31:50', '');
+INSERT INTO `menu` VALUES (2, '数据分析', 0, 2, 'analysis', NULL, '', '', 1, 0, 'M', '1', '0', '', 'chart', 'admin', '2025-05-15 18:31:50', '', '2025-05-15 18:31:50', '');
+INSERT INTO `menu` VALUES (3, '服务管理', 0, 3, 'services', NULL, '', '', 1, 0, 'M', '1', '0', '', 'service', 'admin', '2025-05-15 18:31:50', '', '2025-05-15 18:31:50', '');
+INSERT INTO `menu` VALUES (4, '健康管理', 0, 4, 'health', NULL, '', '', 1, 0, 'M', '1', '0', '', 'heart', 'admin', '2025-05-15 18:31:50', '', '2025-05-15 18:31:50', '');
+INSERT INTO `menu` VALUES (5, '活动管理', 0, 5, 'activity', NULL, '', '', 1, 0, 'M', '1', '0', '', 'calendar', 'admin', '2025-05-15 18:31:50', '', '2025-05-15 18:31:50', '');
+INSERT INTO `menu` VALUES (6, '通知公告', 0, 6, 'notice', NULL, '', '', 1, 0, 'M', '1', '0', '', 'bell', 'admin', '2025-05-15 18:31:50', '', '2025-05-15 18:31:50', '');
+INSERT INTO `menu` VALUES (100, '用户管理', 1, 1, 'user', 'system/user/index', '', 'UserManagement', 1, 0, 'C', '1', '0', 'system:user:list', 'user', 'admin', '2025-05-15 18:32:23', '', '2025-05-15 18:32:23', '');
+INSERT INTO `menu` VALUES (101, '角色管理', 1, 2, 'role', 'system/role/index', '', 'RoleManagement', 1, 0, 'C', '1', '0', 'system:role:list', 'peoples', 'admin', '2025-05-15 18:32:23', '', '2025-05-15 18:32:23', '');
+INSERT INTO `menu` VALUES (102, '菜单管理', 1, 3, 'menu', 'system/menu/index', '', 'MenuManagement', 1, 0, 'C', '1', '0', 'system:menu:list', 'menu', 'admin', '2025-05-15 18:32:23', '', '2025-05-15 18:32:23', '');
+INSERT INTO `menu` VALUES (103, '字典管理', 1, 4, 'dict', 'system/dict/index', '', 'DictManagement', 1, 0, 'C', '1', '0', 'system:dict:list', 'dict', 'admin', '2025-05-15 18:32:23', '', '2025-05-15 18:32:23', '');
+INSERT INTO `menu` VALUES (104, '字典数据', 1, 5, 'dict/data/type/:dictType', 'system/dict/data', '', 'DictDataManagement', 1, 0, 'C', '0', '0', 'system:dict:data', 'dict', 'admin', '2025-05-15 18:32:23', '', '2025-05-15 18:32:23', '');
+INSERT INTO `menu` VALUES (105, '系统设置', 1, 6, 'setting', 'system/SystemSetting', '', 'SystemSetting', 1, 0, 'C', '1', '0', 'system:config:list', 'setting', 'admin', '2025-05-15 18:32:23', '', '2025-05-15 18:32:23', '');
+INSERT INTO `menu` VALUES (106, '个人中心', 1, 7, 'user/profile', 'system/user/profile/index', '', 'UserProfile', 1, 0, 'C', '0', '0', 'system:user:profile', 'user', 'admin', '2025-05-15 18:32:23', '', '2025-05-15 18:32:23', '');
+INSERT INTO `menu` VALUES (200, '老人基础数据', 2, 1, 'elderly', 'analysis/elderly/index', '', 'ElderlyData', 1, 0, 'C', '1', '0', 'analysis:elderly:list', 'peoples', 'admin', '2025-05-15 18:33:18', '', '2025-05-15 18:33:18', '');
+INSERT INTO `menu` VALUES (201, '服务数据统计', 2, 2, 'service-stats', 'analysis/serviceStats/index', '', 'ServiceStats', 1, 0, 'C', '1', '0', 'analysis:service:stats', 'chart', 'admin', '2025-05-15 18:33:18', '', '2025-05-15 18:33:18', '');
+INSERT INTO `menu` VALUES (202, '驾驶舱大屏', 2, 3, 'dashboard', 'analysis/dashboard/index', '', 'Dashboard', 1, 0, 'C', '1', '0', 'analysis:dashboard:view', 'dashboard', 'admin', '2025-05-15 18:33:18', '', '2025-05-15 18:33:18', '');
+INSERT INTO `menu` VALUES (300, '服务项目管理', 3, 1, 'service-items', 'services/items/index', '', 'ServiceItems', 1, 0, 'C', '1', '0', 'services:items:list', 'list', 'admin', '2025-05-15 18:33:18', '', '2025-05-15 18:33:18', '');
+INSERT INTO `menu` VALUES (301, '预约管理', 3, 2, 'appointments', 'services/appointments/index', '', 'Appointments', 1, 0, 'C', '1', '0', 'services:appointments:list', 'date', 'admin', '2025-05-15 18:33:18', '', '2025-05-15 18:33:18', '');
+INSERT INTO `menu` VALUES (302, '服务评价', 3, 3, 'reviews', 'services/reviews/index', '', 'ServiceReviews', 1, 0, 'C', '1', '0', 'services:reviews:list', 'star', 'admin', '2025-05-15 18:33:18', '', '2025-05-15 18:33:18', '');
+INSERT INTO `menu` VALUES (303, '服务人员管理', 3, 4, 'staff', 'services/staff/index', '', 'ServiceStaff', 1, 0, 'C', '1', '0', 'services:staff:list', 'user', 'admin', '2025-05-15 18:33:18', '', '2025-05-15 18:33:18', '');
+INSERT INTO `menu` VALUES (1001, '用户查询', 100, 1, '', '', '', '', 1, 0, 'F', '1', '0', 'system:user:query', '#', 'admin', '2025-05-15 18:47:08', '', '2025-05-15 18:47:08', '');
+INSERT INTO `menu` VALUES (1002, '用户新增', 100, 2, '', '', '', '', 1, 0, 'F', '1', '0', 'system:user:add', '#', 'admin', '2025-05-15 18:47:08', '', '2025-05-15 18:47:08', '');
+INSERT INTO `menu` VALUES (1003, '用户修改', 100, 3, '', '', '', '', 1, 0, 'F', '1', '0', 'system:user:edit', '#', 'admin', '2025-05-15 18:47:08', '', '2025-05-15 18:47:08', '');
+INSERT INTO `menu` VALUES (1004, '用户删除', 100, 4, '', '', '', '', 1, 0, 'F', '1', '0', 'system:user:remove', '#', 'admin', '2025-05-15 18:47:08', '', '2025-05-15 18:47:08', '');
+INSERT INTO `menu` VALUES (1005, '用户导出', 100, 5, '', '', '', '', 1, 0, 'F', '1', '0', 'system:user:export', '#', 'admin', '2025-05-15 18:47:08', '', '2025-05-15 18:47:08', '');
+INSERT INTO `menu` VALUES (1006, '用户导入', 100, 6, '', '', '', '', 1, 0, 'F', '1', '0', 'system:user:import', '#', 'admin', '2025-05-15 18:47:08', '', '2025-05-15 18:47:08', '');
+INSERT INTO `menu` VALUES (1007, '重置密码', 100, 7, '', '', '', '', 1, 0, 'F', '1', '0', 'system:user:resetPwd', '#', 'admin', '2025-05-15 18:47:08', '', '2025-05-15 18:47:08', '');
+INSERT INTO `menu` VALUES (1008, '角色查询', 101, 1, '', '', '', '', 1, 0, 'F', '1', '0', 'system:role:query', '#', 'admin', '2025-05-15 18:47:08', '', '2025-05-15 18:47:08', '');
+INSERT INTO `menu` VALUES (1009, '角色新增', 101, 2, '', '', '', '', 1, 0, 'F', '1', '0', 'system:role:add', '#', 'admin', '2025-05-15 18:47:08', '', '2025-05-15 18:47:08', '');
+INSERT INTO `menu` VALUES (1010, '角色修改', 101, 3, '', '', '', '', 1, 0, 'F', '1', '0', 'system:role:edit', '#', 'admin', '2025-05-15 18:47:08', '', '2025-05-15 18:47:08', '');
+INSERT INTO `menu` VALUES (1011, '角色删除', 101, 4, '', '', '', '', 1, 0, 'F', '1', '0', 'system:role:remove', '#', 'admin', '2025-05-15 18:47:08', '', '2025-05-15 18:47:08', '');
+INSERT INTO `menu` VALUES (1012, '角色导出', 101, 5, '', '', '', '', 1, 0, 'F', '1', '0', 'system:role:export', '#', 'admin', '2025-05-15 18:47:08', '', '2025-05-15 18:47:08', '');
+INSERT INTO `menu` VALUES (1013, '角色授权', 101, 6, '', '', '', '', 1, 0, 'F', '1', '0', 'system:role:authorize', '#', 'admin', '2025-05-15 18:47:08', '', '2025-05-15 18:47:08', '');
+INSERT INTO `menu` VALUES (1014, '菜单查询', 102, 1, '', '', '', '', 1, 0, 'F', '1', '0', 'system:menu:query', '#', 'admin', '2025-05-15 18:48:11', '', '2025-05-15 18:48:11', '');
+INSERT INTO `menu` VALUES (1015, '菜单新增', 102, 2, '', '', '', '', 1, 0, 'F', '1', '0', 'system:menu:add', '#', 'admin', '2025-05-15 18:48:11', '', '2025-05-15 18:48:11', '');
+INSERT INTO `menu` VALUES (1016, '菜单修改', 102, 3, '', '', '', '', 1, 0, 'F', '1', '0', 'system:menu:edit', '#', 'admin', '2025-05-15 18:48:11', '', '2025-05-15 18:48:11', '');
+INSERT INTO `menu` VALUES (1017, '菜单删除', 102, 4, '', '', '', '', 1, 0, 'F', '1', '0', 'system:menu:remove', '#', 'admin', '2025-05-15 18:48:11', '', '2025-05-15 18:48:11', '');
+INSERT INTO `menu` VALUES (1018, '字典查询', 103, 1, '', '', '', '', 1, 0, 'F', '1', '0', 'system:dict:query', '#', 'admin', '2025-05-15 18:48:11', '', '2025-05-15 18:48:11', '');
+INSERT INTO `menu` VALUES (1019, '字典新增', 103, 2, '', '', '', '', 1, 0, 'F', '1', '0', 'system:dict:add', '#', 'admin', '2025-05-15 18:48:11', '', '2025-05-15 18:48:11', '');
+INSERT INTO `menu` VALUES (1020, '字典修改', 103, 3, '', '', '', '', 1, 0, 'F', '1', '0', 'system:dict:edit', '#', 'admin', '2025-05-15 18:48:11', '', '2025-05-15 18:48:11', '');
+INSERT INTO `menu` VALUES (1021, '字典删除', 103, 4, '', '', '', '', 1, 0, 'F', '1', '0', 'system:dict:remove', '#', 'admin', '2025-05-15 18:48:11', '', '2025-05-15 18:48:11', '');
+INSERT INTO `menu` VALUES (1022, '字典导出', 103, 5, '', '', '', '', 1, 0, 'F', '1', '0', 'system:dict:export', '#', 'admin', '2025-05-15 18:48:11', '', '2025-05-15 18:48:11', '');
+INSERT INTO `menu` VALUES (1023, '字典数据查询', 104, 1, '', '', '', '', 1, 0, 'F', '1', '0', 'system:dict:data:query', '#', 'admin', '2025-05-15 18:48:11', '', '2025-05-15 18:48:11', '');
+INSERT INTO `menu` VALUES (1024, '字典数据新增', 104, 2, '', '', '', '', 1, 0, 'F', '1', '0', 'system:dict:data:add', '#', 'admin', '2025-05-15 18:48:11', '', '2025-05-15 18:48:11', '');
+INSERT INTO `menu` VALUES (1025, '字典数据修改', 104, 3, '', '', '', '', 1, 0, 'F', '1', '0', 'system:dict:data:edit', '#', 'admin', '2025-05-15 18:48:11', '', '2025-05-15 18:48:11', '');
+INSERT INTO `menu` VALUES (1026, '字典数据删除', 104, 4, '', '', '', '', 1, 0, 'F', '1', '0', 'system:dict:data:remove', '#', 'admin', '2025-05-15 18:48:11', '', '2025-05-15 18:48:11', '');
+INSERT INTO `menu` VALUES (1027, '字典数据导出', 104, 5, '', '', '', '', 1, 0, 'F', '1', '0', 'system:dict:data:export', '#', 'admin', '2025-05-15 18:48:11', '', '2025-05-15 18:48:11', '');
+INSERT INTO `menu` VALUES (1028, '参数查询', 105, 1, '', '', '', '', 1, 0, 'F', '1', '0', 'system:config:query', '#', 'admin', '2025-05-15 18:49:30', '', '2025-05-15 18:49:30', '');
+INSERT INTO `menu` VALUES (1029, '参数新增', 105, 2, '', '', '', '', 1, 0, 'F', '1', '0', 'system:config:add', '#', 'admin', '2025-05-15 18:49:30', '', '2025-05-15 18:49:30', '');
+INSERT INTO `menu` VALUES (1030, '参数修改', 105, 3, '', '', '', '', 1, 0, 'F', '1', '0', 'system:config:edit', '#', 'admin', '2025-05-15 18:49:30', '', '2025-05-15 18:49:30', '');
+INSERT INTO `menu` VALUES (1031, '参数删除', 105, 4, '', '', '', '', 1, 0, 'F', '1', '0', 'system:config:remove', '#', 'admin', '2025-05-15 18:49:30', '', '2025-05-15 18:49:30', '');
+INSERT INTO `menu` VALUES (1032, '参数导出', 105, 5, '', '', '', '', 1, 0, 'F', '1', '0', 'system:config:export', '#', 'admin', '2025-05-15 18:49:30', '', '2025-05-15 18:49:30', '');
+INSERT INTO `menu` VALUES (1033, '个人资料', 106, 1, '', '', '', '', 1, 0, 'F', '1', '0', 'system:user:profile:view', '#', 'admin', '2025-05-15 18:49:30', '', '2025-05-15 18:49:30', '');
+INSERT INTO `menu` VALUES (1034, '修改资料', 106, 2, '', '', '', '', 1, 0, 'F', '1', '0', 'system:user:profile:update', '#', 'admin', '2025-05-15 18:49:30', '', '2025-05-15 18:49:30', '');
+INSERT INTO `menu` VALUES (1035, '修改密码', 106, 3, '', '', '', '', 1, 0, 'F', '1', '0', 'system:user:profile:resetPwd', '#', 'admin', '2025-05-15 18:49:30', '', '2025-05-15 18:49:30', '');
+INSERT INTO `menu` VALUES (1036, '头像上传', 106, 4, '', '', '', '', 1, 0, 'F', '1', '0', 'system:user:profile:avatar', '#', 'admin', '2025-05-15 18:49:30', '', '2025-05-15 18:49:30', '');
+INSERT INTO `menu` VALUES (2001, '数据查询', 200, 1, '', '', '', '', 1, 0, 'F', '1', '0', 'analysis:elderly:query', '#', 'admin', '2025-05-15 18:49:35', '', '2025-05-15 18:49:35', '');
+INSERT INTO `menu` VALUES (2002, '数据新增', 200, 2, '', '', '', '', 1, 0, 'F', '1', '0', 'analysis:elderly:add', '#', 'admin', '2025-05-15 18:49:35', '', '2025-05-15 18:49:35', '');
+INSERT INTO `menu` VALUES (2003, '数据修改', 200, 3, '', '', '', '', 1, 0, 'F', '1', '0', 'analysis:elderly:edit', '#', 'admin', '2025-05-15 18:49:35', '', '2025-05-15 18:49:35', '');
+INSERT INTO `menu` VALUES (2004, '数据删除', 200, 4, '', '', '', '', 1, 0, 'F', '1', '0', 'analysis:elderly:remove', '#', 'admin', '2025-05-15 18:49:35', '', '2025-05-15 18:49:35', '');
+INSERT INTO `menu` VALUES (2005, '数据导出', 200, 5, '', '', '', '', 1, 0, 'F', '1', '0', 'analysis:elderly:export', '#', 'admin', '2025-05-15 18:49:35', '', '2025-05-15 18:49:35', '');
+INSERT INTO `menu` VALUES (2006, '数据导入', 200, 6, '', '', '', '', 1, 0, 'F', '1', '0', 'analysis:elderly:import', '#', 'admin', '2025-05-15 18:49:35', '', '2025-05-15 18:49:35', '');
+INSERT INTO `menu` VALUES (2007, '统计查询', 201, 1, '', '', '', '', 1, 0, 'F', '1', '0', 'analysis:service:stats:query', '#', 'admin', '2025-05-15 18:49:35', '', '2025-05-15 18:49:35', '');
+INSERT INTO `menu` VALUES (2008, '统计导出', 201, 2, '', '', '', '', 1, 0, 'F', '1', '0', 'analysis:service:stats:export', '#', 'admin', '2025-05-15 18:49:35', '', '2025-05-15 18:49:35', '');
+INSERT INTO `menu` VALUES (2009, '大屏查看', 202, 1, '', '', '', '', 1, 0, 'F', '1', '0', 'analysis:dashboard:view', '#', 'admin', '2025-05-15 18:49:35', '', '2025-05-15 18:49:35', '');
+INSERT INTO `menu` VALUES (2100, '数据查询', 200, 1, '', '', '', '', 1, 0, 'F', '1', '0', 'analysis:elderly:query', '#', 'admin', '2025-05-15 18:51:06', '', '2025-05-15 18:51:06', '');
+INSERT INTO `menu` VALUES (2101, '数据新增', 200, 2, '', '', '', '', 1, 0, 'F', '1', '0', 'analysis:elderly:add', '#', 'admin', '2025-05-15 18:51:06', '', '2025-05-15 18:51:06', '');
+INSERT INTO `menu` VALUES (2102, '数据修改', 200, 3, '', '', '', '', 1, 0, 'F', '1', '0', 'analysis:elderly:edit', '#', 'admin', '2025-05-15 18:51:06', '', '2025-05-15 18:51:06', '');
+INSERT INTO `menu` VALUES (2103, '数据删除', 200, 4, '', '', '', '', 1, 0, 'F', '1', '0', 'analysis:elderly:remove', '#', 'admin', '2025-05-15 18:51:06', '', '2025-05-15 18:51:06', '');
+INSERT INTO `menu` VALUES (2104, '数据导出', 200, 5, '', '', '', '', 1, 0, 'F', '1', '0', 'analysis:elderly:export', '#', 'admin', '2025-05-15 18:51:06', '', '2025-05-15 18:51:06', '');
+INSERT INTO `menu` VALUES (2105, '数据导入', 200, 6, '', '', '', '', 1, 0, 'F', '1', '0', 'analysis:elderly:import', '#', 'admin', '2025-05-15 18:51:06', '', '2025-05-15 18:51:06', '');
+INSERT INTO `menu` VALUES (2106, '统计查询', 201, 1, '', '', '', '', 1, 0, 'F', '1', '0', 'analysis:service:stats:query', '#', 'admin', '2025-05-15 18:51:06', '', '2025-05-15 18:51:06', '');
+INSERT INTO `menu` VALUES (2107, '统计导出', 201, 2, '', '', '', '', 1, 0, 'F', '1', '0', 'analysis:service:stats:export', '#', 'admin', '2025-05-15 18:51:06', '', '2025-05-15 18:51:06', '');
+INSERT INTO `menu` VALUES (2108, '大屏查看', 202, 1, '', '', '', '', 1, 0, 'F', '1', '0', 'analysis:dashboard:view', '#', 'admin', '2025-05-15 18:51:06', '', '2025-05-15 18:51:06', '');
+INSERT INTO `menu` VALUES (3100, '项目查询', 300, 1, '', '', '', '', 1, 0, 'F', '1', '0', 'services:items:query', '#', 'admin', '2025-05-15 18:50:30', '', '2025-05-15 18:50:30', '');
+INSERT INTO `menu` VALUES (3101, '项目新增', 300, 2, '', '', '', '', 1, 0, 'F', '1', '0', 'services:items:add', '#', 'admin', '2025-05-15 18:50:30', '', '2025-05-15 18:50:30', '');
+INSERT INTO `menu` VALUES (3102, '项目修改', 300, 3, '', '', '', '', 1, 0, 'F', '1', '0', 'services:items:edit', '#', 'admin', '2025-05-15 18:50:30', '', '2025-05-15 18:50:30', '');
+INSERT INTO `menu` VALUES (3103, '项目删除', 300, 4, '', '', '', '', 1, 0, 'F', '1', '0', 'services:items:remove', '#', 'admin', '2025-05-15 18:50:30', '', '2025-05-15 18:50:30', '');
+INSERT INTO `menu` VALUES (3104, '项目导出', 300, 5, '', '', '', '', 1, 0, 'F', '1', '0', 'services:items:export', '#', 'admin', '2025-05-15 18:50:30', '', '2025-05-15 18:50:30', '');
+INSERT INTO `menu` VALUES (3105, '预约查询', 301, 1, '', '', '', '', 1, 0, 'F', '1', '0', 'services:appointments:query', '#', 'admin', '2025-05-15 18:50:30', '', '2025-05-15 18:50:30', '');
+INSERT INTO `menu` VALUES (3106, '预约新增', 301, 2, '', '', '', '', 1, 0, 'F', '1', '0', 'services:appointments:add', '#', 'admin', '2025-05-15 18:50:30', '', '2025-05-15 18:50:30', '');
+INSERT INTO `menu` VALUES (3107, '预约修改', 301, 3, '', '', '', '', 1, 0, 'F', '1', '0', 'services:appointments:edit', '#', 'admin', '2025-05-15 18:50:30', '', '2025-05-15 18:50:30', '');
+INSERT INTO `menu` VALUES (3108, '预约删除', 301, 4, '', '', '', '', 1, 0, 'F', '1', '0', 'services:appointments:remove', '#', 'admin', '2025-05-15 18:50:30', '', '2025-05-15 18:50:30', '');
+INSERT INTO `menu` VALUES (3109, '预约导出', 301, 5, '', '', '', '', 1, 0, 'F', '1', '0', 'services:appointments:export', '#', 'admin', '2025-05-15 18:50:30', '', '2025-05-15 18:50:30', '');
+INSERT INTO `menu` VALUES (3110, '预约审核', 301, 6, '', '', '', '', 1, 0, 'F', '1', '0', 'services:appointments:approve', '#', 'admin', '2025-05-15 18:50:30', '', '2025-05-15 18:50:30', '');
+INSERT INTO `menu` VALUES (3111, '评价查询', 302, 1, '', '', '', '', 1, 0, 'F', '1', '0', 'services:reviews:query', '#', 'admin', '2025-05-15 18:50:30', '', '2025-05-15 18:50:30', '');
+INSERT INTO `menu` VALUES (3112, '评价删除', 302, 2, '', '', '', '', 1, 0, 'F', '1', '0', 'services:reviews:remove', '#', 'admin', '2025-05-15 18:50:30', '', '2025-05-15 18:50:30', '');
+INSERT INTO `menu` VALUES (3113, '评价导出', 302, 3, '', '', '', '', 1, 0, 'F', '1', '0', 'services:reviews:export', '#', 'admin', '2025-05-15 18:50:30', '', '2025-05-15 18:50:30', '');
+INSERT INTO `menu` VALUES (3114, '人员查询', 303, 1, '', '', '', '', 1, 0, 'F', '1', '0', 'services:staff:query', '#', 'admin', '2025-05-15 18:50:30', '', '2025-05-15 18:50:30', '');
+INSERT INTO `menu` VALUES (3115, '人员新增', 303, 2, '', '', '', '', 1, 0, 'F', '1', '0', 'services:staff:add', '#', 'admin', '2025-05-15 18:50:30', '', '2025-05-15 18:50:30', '');
+INSERT INTO `menu` VALUES (3116, '人员修改', 303, 3, '', '', '', '', 1, 0, 'F', '1', '0', 'services:staff:edit', '#', 'admin', '2025-05-15 18:50:30', '', '2025-05-15 18:50:30', '');
+INSERT INTO `menu` VALUES (3117, '人员删除', 303, 4, '', '', '', '', 1, 0, 'F', '1', '0', 'services:staff:remove', '#', 'admin', '2025-05-15 18:50:30', '', '2025-05-15 18:50:30', '');
+INSERT INTO `menu` VALUES (3118, '人员导出', 303, 5, '', '', '', '', 1, 0, 'F', '1', '0', 'services:staff:export', '#', 'admin', '2025-05-15 18:50:30', '', '2025-05-15 18:50:30', '');
+INSERT INTO `menu` VALUES (3119, '人员导入', 303, 6, '', '', '', '', 1, 0, 'F', '1', '0', 'services:staff:import', '#', 'admin', '2025-05-15 18:50:30', '', '2025-05-15 18:50:30', '');
+
+-- ----------------------------
+-- Table structure for menu_backup
+-- ----------------------------
+DROP TABLE IF EXISTS `menu_backup`;
+CREATE TABLE `menu_backup`  (
+  `menu_id` bigint NOT NULL DEFAULT 0 COMMENT '菜单ID',
+  `menu_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '菜单名称',
+  `parent_id` bigint NULL DEFAULT 0 COMMENT '父菜单ID',
+  `order_num` int NULL DEFAULT 0 COMMENT '显示顺序',
+  `path` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '' COMMENT '路由地址',
+  `component` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '组件路径',
+  `query` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '路由参数',
+  `route_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '' COMMENT '路由名称',
+  `is_frame` int NULL DEFAULT 1 COMMENT '是否为外链（0是 1否）',
+  `is_cache` int NULL DEFAULT 0 COMMENT '是否缓存（0缓存 1不缓存）',
+  `menu_type` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '' COMMENT '菜单类型（M目录 C菜单 F按钮）',
+  `visible` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '0' COMMENT '菜单状态（0显示 1隐藏）',
+  `status` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '0' COMMENT '菜单状态（0正常 1停用）',
+  `perms` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '权限标识',
+  `icon` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '#' COMMENT '菜单图标',
+  `create_by` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '' COMMENT '创建者',
+  `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_by` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '' COMMENT '更新者',
+  `update_time` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `remark` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '' COMMENT '备注'
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of menu_backup
+-- ----------------------------
 
 -- ----------------------------
 -- Table structure for notification
@@ -592,21 +689,23 @@ CREATE TABLE `notification`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_status`(`status` ASC) USING BTREE,
   INDEX `idx_publish_time`(`publish_time` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 16 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '通知公告表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 22 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '通知公告表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of notification
 -- ----------------------------
-INSERT INTO `notification` VALUES (1, 0, '社区健康讲座通知', '计划于下月举办老年人健康知识讲座，具体时间待定', 'system', 0, '2023-03-27 09:00:00', '2025-05-15 17:34:05', '2025-03-28 16:41:46');
-INSERT INTO `notification` VALUES (2, 0, '端午节活动筹备', '端午节包粽子活动正在筹备中，需要志愿者报名', 'system', 0, '2023-03-27 10:00:00', '2025-05-15 17:34:05', '2023-05-15 14:30:00');
-INSERT INTO `notification` VALUES (3, 0, '系统维护通知', '系统将于今晚23:00-24:00进行维护升级，期间暂停服务', 'system', 1, '2023-03-27 11:00:00', '2025-05-15 17:34:05', '2023-05-20 15:00:00');
-INSERT INTO `notification` VALUES (5, 0, '防诈骗知识讲座', '5月30日下午2点社区活动中心举办老年人防诈骗讲座', 'system', 1, '2023-03-27 10:00:00', '2025-05-15 17:34:05', '2023-05-28 10:30:00');
-INSERT INTO `notification` VALUES (6, 0, '错误通知示例', '此通知内容有误，已撤回', 'system', 2, '2023-03-27 10:00:00', '2025-05-15 17:34:05', '2023-05-18 08:00:00');
-INSERT INTO `notification` VALUES (7, 0, '活动取消通知', '原定于5月22日的书法班因故取消，时间另行通知', 'system', 2, '2023-03-27 10:00:00', '2025-05-15 17:34:05', '2023-05-21 13:00:00');
-INSERT INTO `notification` VALUES (8, 0, '重要：医保政策更新', '2023年最新医保报销政策已更新，请及时查看', 'system', 1, '2023-03-27 10:00:00', '2025-05-15 17:34:05', '2023-06-01 09:00:00');
-INSERT INTO `notification` VALUES (9, 2, '服务预约通知', '尊敬的刘大毛用户，您的服务预约（预约号：2）预约已创建，等待审核。预约时间：2025-04-29 08:33:00，服务项目：null。', 'system', 0, '2025-04-05 00:33:49', '2025-05-15 17:34:05', '2025-04-05 00:33:49');
-INSERT INTO `notification` VALUES (10, 2, '服务预约通知', '尊敬的刘大毛用户，您的服务预约（预约号：3）预约已创建，等待审核。预约时间：2025-04-29 10:40:00，服务项目：null。', 'system', 0, '2025-04-05 00:39:10', '2025-05-15 17:34:05', '2025-04-05 00:39:10');
-INSERT INTO `notification` VALUES (15, 2, '服务预约通知', '尊敬的刘大毛用户，\n\n您的服务预约（预约号：5）预约审核通过。\n\n预约详情：\n- 服务项目：null\n- 预约时间：2025-05-28 15:11:00\n\n您的预约已通过审核，服务人员将按预约时间上门服务，请保持电话畅通。\n\n如有疑问，请联系客服中心。', 'system', 0, '2025-05-15 15:03:14', '2025-05-15 15:03:14', '2025-05-15 15:03:14');
+INSERT INTO `notification` VALUES (1, 0, '社区健康讲座通知', '计划于下月举办老年人健康知识讲座，具体时间待定', '系统通知', 0, '2023-03-27 09:00:00', '2025-05-15 22:04:02', '2025-03-28 16:41:46');
+INSERT INTO `notification` VALUES (2, 0, '端午节活动筹备', '端午节包粽子活动正在筹备中，需要志愿者报名', '紧急通知', 0, '2023-03-27 10:00:00', '2025-05-15 21:26:31', '2023-05-15 14:30:00');
+INSERT INTO `notification` VALUES (3, 0, '系统维护通知', '系统将于今晚23:00-24:00进行维护升级，期间暂停服务', '紧急通知', 1, '2023-03-27 11:00:00', '2025-05-15 22:00:14', '2023-05-20 15:00:00');
+INSERT INTO `notification` VALUES (5, 0, '防诈骗知识讲座', '5月30日下午2点社区活动中心举办老年人防诈骗讲座', '系统通知', 1, '2023-03-27 10:00:00', '2025-05-15 22:04:09', '2023-05-28 10:30:00');
+INSERT INTO `notification` VALUES (7, 0, '活动取消通知', '原定于5月22日的书法班因故取消，时间另行通知', '系统通知', 2, '2023-03-27 10:00:00', '2025-05-15 22:04:10', '2023-05-21 13:00:00');
+INSERT INTO `notification` VALUES (8, 0, '重要：医保政策更新', '2023年最新医保报销政策已更新，请及时查看', '工作通知', 1, '2023-03-27 10:00:00', '2025-05-15 21:29:15', '2023-06-01 09:00:00');
+INSERT INTO `notification` VALUES (16, 2, '服务预约通知', '尊敬的刘大毛用户，\n\n您的服务预约（预约号：6）预约已创建，等待审核。\n\n预约详情：\n- 服务项目：null\n- 预约时间：2025-05-20 08:42:00\n\n您的预约正在审核中，请耐心等待。审核结果将以系统通知的形式告知您。\n\n如有疑问，请联系客服中心。', 'system', 0, '2025-05-17 01:42:28', '2025-05-17 01:42:28', '2025-05-17 01:42:28');
+INSERT INTO `notification` VALUES (17, 2, '服务预约通知', '尊敬的刘大毛用户，\n\n您的服务预约（预约号：6）预约审核通过。\n\n预约详情：\n- 服务项目：null\n- 预约时间：2025-05-20 08:42:00\n\n您的预约已通过审核，服务人员将按预约时间上门服务，请保持电话畅通。\n\n如有疑问，请联系客服中心。', 'system', 0, '2025-05-17 01:44:08', '2025-05-17 01:44:08', '2025-05-17 01:44:08');
+INSERT INTO `notification` VALUES (18, 2, '服务预约通知', '尊敬的刘大毛用户，\n\n您的服务预约（预约号：6）服务已开始。\n\n预约详情：\n- 服务项目：null\n- 预约时间：2025-05-20 08:42:00\n\n您的服务正在进行中，如有问题请联系客服。\n\n如有疑问，请联系客服中心。', 'system', 0, '2025-05-17 01:53:19', '2025-05-17 01:53:19', '2025-05-17 01:53:19');
+INSERT INTO `notification` VALUES (19, 2, '服务预约通知', '尊敬的刘大毛用户，\n\n您的服务预约（预约号：5）服务已开始。\n\n预约详情：\n- 服务项目：null\n- 预约时间：2025-05-28 15:11:00\n\n您的服务正在进行中，如有问题请联系客服。\n\n如有疑问，请联系客服中心。', 'system', 0, '2025-05-17 01:55:14', '2025-05-17 01:55:14', '2025-05-17 01:55:14');
+INSERT INTO `notification` VALUES (20, 2, '服务预约通知', '尊敬的刘大毛用户，\n\n您的服务预约（预约号：4）服务已开始。\n\n预约详情：\n- 服务项目：null\n- 预约时间：2025-04-29 08:54:00\n\n您的服务正在进行中，如有问题请联系客服。\n\n如有疑问，请联系客服中心。', 'system', 0, '2025-05-17 01:55:17', '2025-05-17 01:55:17', '2025-05-17 01:55:17');
+INSERT INTO `notification` VALUES (21, 2, '服务预约通知', '尊敬的刘大毛用户，\n\n您的服务预约（预约号：3）服务已开始。\n\n预约详情：\n- 服务项目：null\n- 预约时间：2025-04-29 10:40:00\n\n您的服务正在进行中，如有问题请联系客服。\n\n如有疑问，请联系客服中心。', 'system', 0, '2025-05-17 01:55:19', '2025-05-17 01:55:19', '2025-05-17 01:55:19');
 
 -- ----------------------------
 -- Table structure for physical_exam_report
@@ -636,7 +735,7 @@ CREATE TABLE `physical_exam_report`  (
 -- ----------------------------
 -- Records of physical_exam_report
 -- ----------------------------
-INSERT INTO `physical_exam_report` VALUES (1, 'PE20240001', 2, '张三', 75, '男', 2, '2024-05-01', '市人民医院', '血脂偏高，建议复查', '/upload/physical_exam/57088d81-7643-4cc0-bc25-6032fa57fcce.pdf', '2025-05-13 17:59:09', '2025-05-15 17:25:21');
+INSERT INTO `physical_exam_report` VALUES (1, 'PE20240001', 2, '张三', 75, '男', 2, '2024-05-02', '市人民医院', '血脂偏高，建议复查', '/upload/physical_exam/57088d81-7643-4cc0-bc25-6032fa57fcce.pdf', '2025-05-13 17:59:09', '2025-05-15 17:25:21');
 INSERT INTO `physical_exam_report` VALUES (2, 'PE20230002', 2, '李四', 77, '女', 2, '2023-11-15', '社区卫生服务中心', '各项指标正常', '/upload/physical_exam/d798d64c-8859-49fb-9477-f483c2163dfd.pdf', '2025-05-13 17:59:09', '2025-05-15 17:30:10');
 
 -- ----------------------------
@@ -656,19 +755,19 @@ CREATE TABLE `physical_exam_report_item`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_report_id`(`report_id` ASC) USING BTREE,
   CONSTRAINT `fk_report_item_report` FOREIGN KEY (`report_id`) REFERENCES `physical_exam_report` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE = InnoDB AUTO_INCREMENT = 17 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '体检报告指标表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 21 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '体检报告指标表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of physical_exam_report_item
 -- ----------------------------
-INSERT INTO `physical_exam_report_item` VALUES (9, 1, '总胆固醇', '6.2', 'mmol/L', 1, '血脂检查', '注意控制饮食', '3.1-5.7 mmol/L');
-INSERT INTO `physical_exam_report_item` VALUES (10, 1, '甘油三酯', '1.8', 'mmol/L', 0, '血脂检查', '维持良好生活习惯', '0.56-1.7 mmol/L');
-INSERT INTO `physical_exam_report_item` VALUES (11, 1, '高密度脂蛋白', '1.1', 'mmol/L', 0, '血脂检查', 'HDL-C俗称好胆固醇', '1.0-1.6 mmol/L');
-INSERT INTO `physical_exam_report_item` VALUES (12, 1, '低密度脂蛋白', '4.0', 'mmol/L', 1, '血脂检查', 'LDL-C俗称坏胆固醇，需控制在标准范围内', '2.07-3.1 mmol/L');
 INSERT INTO `physical_exam_report_item` VALUES (13, 2, '总胆固醇', '4.8', 'mmol/L', 0, '血脂检查', '注意控制饮食', '3.1-5.7 mmol/L');
 INSERT INTO `physical_exam_report_item` VALUES (14, 2, '甘油三酯', '1.2', 'mmol/L', 0, '血脂检查', '维持良好生活习惯', '0.56-1.7 mmol/L');
 INSERT INTO `physical_exam_report_item` VALUES (15, 2, '高密度脂蛋白', '1.3', 'mmol/L', 0, '血脂检查', 'HDL-C俗称好胆固醇', '1.0-1.6 mmol/L');
 INSERT INTO `physical_exam_report_item` VALUES (16, 2, '低密度脂蛋白', '2.5', 'mmol/L', 0, '血脂检查', 'LDL-C俗称坏胆固醇，需控制在标准范围内', '2.07-3.1 mmol/L');
+INSERT INTO `physical_exam_report_item` VALUES (17, 1, '总胆固醇', '6.2', 'mmol/L', 1, '血脂检查', '注意控制饮食', '3.1-5.7 mmol/L');
+INSERT INTO `physical_exam_report_item` VALUES (18, 1, '甘油三酯', '1.8', 'mmol/L', 0, '血脂检查', '维持良好生活习惯', '0.56-1.7 mmol/L');
+INSERT INTO `physical_exam_report_item` VALUES (19, 1, '高密度脂蛋白', '1.1', 'mmol/L', 0, '血脂检查', 'HDL-C俗称好胆固醇', '1.0-1.6 mmol/L');
+INSERT INTO `physical_exam_report_item` VALUES (20, 1, '低密度脂蛋白', '4.0', 'mmol/L', 1, '血脂检查', 'LDL-C俗称坏胆固醇，需控制在标准范围内', '2.07-3.1 mmol/L');
 
 -- ----------------------------
 -- Table structure for role
@@ -695,9 +794,9 @@ CREATE TABLE `role`  (
 -- ----------------------------
 -- Records of role
 -- ----------------------------
-INSERT INTO `role` VALUES (1, '老人', 'elder', 1, '2', 1, '1', '0', 'admin', '2025-03-19 15:57:06', '', NULL, '老人');
-INSERT INTO `role` VALUES (2, '家属', 'kin', 2, '2', 1, '1', '0', 'admin', '2025-03-19 15:57:22', '', NULL, '家属');
-INSERT INTO `role` VALUES (3, '社区工作人员', 'staff', 3, '2', 1, '1', '0', 'admin', '2025-03-19 15:57:22', '', NULL, '社区工作人员');
+INSERT INTO `role` VALUES (1, '老人', 'elder', 1, '2', 1, '0', '0', 'admin', '2025-03-19 15:57:06', 'admin', '2025-05-17 13:30:37', '老人');
+INSERT INTO `role` VALUES (2, '家属', 'kin', 2, '2', 1, '0', '0', 'admin', '2025-03-19 15:57:22', 'admin', '2025-05-17 13:30:37', '家属');
+INSERT INTO `role` VALUES (3, '社区工作人员', 'staff', 3, '2', 1, '0', '0', 'admin', '2025-03-19 15:57:22', 'admin', '2025-05-17 13:30:37', '社区工作人员');
 INSERT INTO `role` VALUES (4, '管理员', 'admin', 4, '1', 1, '1', '0', 'admin', '2025-03-19 15:57:50', '', NULL, '管理员');
 
 -- ----------------------------
@@ -713,6 +812,100 @@ CREATE TABLE `role_menu`  (
 -- ----------------------------
 -- Records of role_menu
 -- ----------------------------
+INSERT INTO `role_menu` VALUES (4, 1);
+INSERT INTO `role_menu` VALUES (4, 2);
+INSERT INTO `role_menu` VALUES (4, 3);
+INSERT INTO `role_menu` VALUES (4, 4);
+INSERT INTO `role_menu` VALUES (4, 5);
+INSERT INTO `role_menu` VALUES (4, 6);
+INSERT INTO `role_menu` VALUES (4, 100);
+INSERT INTO `role_menu` VALUES (4, 101);
+INSERT INTO `role_menu` VALUES (4, 102);
+INSERT INTO `role_menu` VALUES (4, 103);
+INSERT INTO `role_menu` VALUES (4, 104);
+INSERT INTO `role_menu` VALUES (4, 105);
+INSERT INTO `role_menu` VALUES (4, 106);
+INSERT INTO `role_menu` VALUES (4, 200);
+INSERT INTO `role_menu` VALUES (4, 201);
+INSERT INTO `role_menu` VALUES (4, 202);
+INSERT INTO `role_menu` VALUES (4, 300);
+INSERT INTO `role_menu` VALUES (4, 301);
+INSERT INTO `role_menu` VALUES (4, 302);
+INSERT INTO `role_menu` VALUES (4, 303);
+INSERT INTO `role_menu` VALUES (4, 1001);
+INSERT INTO `role_menu` VALUES (4, 1002);
+INSERT INTO `role_menu` VALUES (4, 1003);
+INSERT INTO `role_menu` VALUES (4, 1004);
+INSERT INTO `role_menu` VALUES (4, 1005);
+INSERT INTO `role_menu` VALUES (4, 1006);
+INSERT INTO `role_menu` VALUES (4, 1007);
+INSERT INTO `role_menu` VALUES (4, 1008);
+INSERT INTO `role_menu` VALUES (4, 1009);
+INSERT INTO `role_menu` VALUES (4, 1010);
+INSERT INTO `role_menu` VALUES (4, 1011);
+INSERT INTO `role_menu` VALUES (4, 1012);
+INSERT INTO `role_menu` VALUES (4, 1013);
+INSERT INTO `role_menu` VALUES (4, 1014);
+INSERT INTO `role_menu` VALUES (4, 1015);
+INSERT INTO `role_menu` VALUES (4, 1016);
+INSERT INTO `role_menu` VALUES (4, 1017);
+INSERT INTO `role_menu` VALUES (4, 1018);
+INSERT INTO `role_menu` VALUES (4, 1019);
+INSERT INTO `role_menu` VALUES (4, 1020);
+INSERT INTO `role_menu` VALUES (4, 1021);
+INSERT INTO `role_menu` VALUES (4, 1022);
+INSERT INTO `role_menu` VALUES (4, 1023);
+INSERT INTO `role_menu` VALUES (4, 1024);
+INSERT INTO `role_menu` VALUES (4, 1025);
+INSERT INTO `role_menu` VALUES (4, 1026);
+INSERT INTO `role_menu` VALUES (4, 1027);
+INSERT INTO `role_menu` VALUES (4, 1028);
+INSERT INTO `role_menu` VALUES (4, 1029);
+INSERT INTO `role_menu` VALUES (4, 1030);
+INSERT INTO `role_menu` VALUES (4, 1031);
+INSERT INTO `role_menu` VALUES (4, 1032);
+INSERT INTO `role_menu` VALUES (4, 1033);
+INSERT INTO `role_menu` VALUES (4, 1034);
+INSERT INTO `role_menu` VALUES (4, 1035);
+INSERT INTO `role_menu` VALUES (4, 1036);
+INSERT INTO `role_menu` VALUES (4, 2001);
+INSERT INTO `role_menu` VALUES (4, 2002);
+INSERT INTO `role_menu` VALUES (4, 2003);
+INSERT INTO `role_menu` VALUES (4, 2004);
+INSERT INTO `role_menu` VALUES (4, 2005);
+INSERT INTO `role_menu` VALUES (4, 2006);
+INSERT INTO `role_menu` VALUES (4, 2007);
+INSERT INTO `role_menu` VALUES (4, 2008);
+INSERT INTO `role_menu` VALUES (4, 2009);
+INSERT INTO `role_menu` VALUES (4, 2100);
+INSERT INTO `role_menu` VALUES (4, 2101);
+INSERT INTO `role_menu` VALUES (4, 2102);
+INSERT INTO `role_menu` VALUES (4, 2103);
+INSERT INTO `role_menu` VALUES (4, 2104);
+INSERT INTO `role_menu` VALUES (4, 2105);
+INSERT INTO `role_menu` VALUES (4, 2106);
+INSERT INTO `role_menu` VALUES (4, 2107);
+INSERT INTO `role_menu` VALUES (4, 2108);
+INSERT INTO `role_menu` VALUES (4, 3100);
+INSERT INTO `role_menu` VALUES (4, 3101);
+INSERT INTO `role_menu` VALUES (4, 3102);
+INSERT INTO `role_menu` VALUES (4, 3103);
+INSERT INTO `role_menu` VALUES (4, 3104);
+INSERT INTO `role_menu` VALUES (4, 3105);
+INSERT INTO `role_menu` VALUES (4, 3106);
+INSERT INTO `role_menu` VALUES (4, 3107);
+INSERT INTO `role_menu` VALUES (4, 3108);
+INSERT INTO `role_menu` VALUES (4, 3109);
+INSERT INTO `role_menu` VALUES (4, 3110);
+INSERT INTO `role_menu` VALUES (4, 3111);
+INSERT INTO `role_menu` VALUES (4, 3112);
+INSERT INTO `role_menu` VALUES (4, 3113);
+INSERT INTO `role_menu` VALUES (4, 3114);
+INSERT INTO `role_menu` VALUES (4, 3115);
+INSERT INTO `role_menu` VALUES (4, 3116);
+INSERT INTO `role_menu` VALUES (4, 3117);
+INSERT INTO `role_menu` VALUES (4, 3118);
+INSERT INTO `role_menu` VALUES (4, 3119);
 
 -- ----------------------------
 -- Table structure for service_item
@@ -737,16 +930,16 @@ CREATE TABLE `service_item`  (
 -- ----------------------------
 -- Records of service_item
 -- ----------------------------
-INSERT INTO `service_item` VALUES (1001, '上门体检', 'medical', '为行动不便老人提供上门基础体检服务', 150.00, 120, 1, '2025-03-28 17:00:57', 'admin', NULL, '2025-03-31 16:40:19', NULL);
-INSERT INTO `service_item` VALUES (1002, '药品代购', 'medical', '帮助老人代购处方药品并送药上门', 20.00, 30, 1, '2025-03-28 17:00:57', 'admin', NULL, '2025-03-31 16:40:21', NULL);
-INSERT INTO `service_item` VALUES (1003, '健康咨询', 'medical', '专业医生提供30分钟健康咨询服务', 80.00, 30, 1, '2025-03-28 17:00:57', 'admin', NULL, '2025-03-31 16:40:22', NULL);
-INSERT INTO `service_item` VALUES (2001, '全屋清洁', 'cleaning', '包含客厅、卧室、厨房、卫生间全面清洁', 200.00, 180, 1, '2025-03-28 17:00:57', 'admin', NULL, '2025-03-31 16:40:23', NULL);
-INSERT INTO `service_item` VALUES (2002, '厨房深度清洁', 'cleaning', '油烟机、灶台等厨房区域专项清洁', 120.00, 90, 1, '2025-03-28 17:00:57', 'admin', NULL, '2025-03-31 16:40:24', NULL);
-INSERT INTO `service_item` VALUES (2003, '玻璃清洁', 'cleaning', '室内外窗户玻璃专业清洁', 80.00, 60, 1, '2025-03-28 17:00:57', 'admin', NULL, '2025-03-31 16:40:25', NULL);
-INSERT INTO `service_item` VALUES (3001, '水管维修', 'repair', '解决漏水、堵塞等水管问题', 100.00, 60, 1, '2025-03-28 17:00:57', 'admin', NULL, '2025-03-31 16:40:27', NULL);
-INSERT INTO `service_item` VALUES (3002, '电路检修', 'repair', '家庭电路安全检查与维修', 150.00, 90, 1, '2025-03-28 17:00:57', 'admin', NULL, '2025-03-31 16:40:27', NULL);
-INSERT INTO `service_item` VALUES (3003, '家电维修', 'repair', '冰箱、洗衣机等家电故障维修', 180.00, 120, 1, '2025-03-28 17:00:57', 'admin', NULL, '2025-03-31 16:40:29', NULL);
-INSERT INTO `service_item` VALUES (4001, '老人关爱套餐', 'medical', '包含体检+健康咨询+药品代购的套餐服务', 200.00, 180, 1, '2025-03-28 17:00:57', 'admin', NULL, '2025-03-31 16:40:29', '限时特惠套餐');
+INSERT INTO `service_item` VALUES (1001, '上门体检', 'medical', '为行动不便老人提供上门基础体检服务', 150.00, 120, 0, '2025-03-28 17:00:57', 'admin', 'admin', '2025-03-31 16:40:19', NULL);
+INSERT INTO `service_item` VALUES (1002, '药品代购', 'medical', '帮助老人代购处方药品并送药上门', 20.00, 30, 0, '2025-03-28 17:00:57', 'admin', 'admin', '2025-03-31 16:40:21', NULL);
+INSERT INTO `service_item` VALUES (1003, '健康咨询', 'medical', '专业医生提供30分钟健康咨询服务', 80.00, 30, 0, '2025-03-28 17:00:57', 'admin', 'admin', '2025-03-31 16:40:22', NULL);
+INSERT INTO `service_item` VALUES (2001, '全屋清洁', 'cleaning', '包含客厅、卧室、厨房、卫生间全面清洁', 200.00, 180, 0, '2025-03-28 17:00:57', 'admin', 'admin', '2025-03-31 16:40:23', NULL);
+INSERT INTO `service_item` VALUES (2002, '厨房深度清洁', 'cleaning', '油烟机、灶台等厨房区域专项清洁', 120.00, 90, 0, '2025-03-28 17:00:57', 'admin', 'admin', '2025-03-31 16:40:24', NULL);
+INSERT INTO `service_item` VALUES (2003, '玻璃清洁', 'cleaning', '室内外窗户玻璃专业清洁', 80.00, 60, 0, '2025-03-28 17:00:57', 'admin', 'admin', '2025-03-31 16:40:25', NULL);
+INSERT INTO `service_item` VALUES (3001, '水管维修', 'repair', '解决漏水、堵塞等水管问题', 100.00, 60, 0, '2025-03-28 17:00:57', 'admin', 'admin', '2025-03-31 16:40:27', NULL);
+INSERT INTO `service_item` VALUES (3002, '电路检修', 'repair', '家庭电路安全检查与维修', 150.00, 90, 0, '2025-03-28 17:00:57', 'admin', 'admin', '2025-03-31 16:40:27', NULL);
+INSERT INTO `service_item` VALUES (3003, '家电维修', 'repair', '冰箱、洗衣机等家电故障维修', 180.00, 120, 0, '2025-03-28 17:00:57', 'admin', 'admin', '2025-03-31 16:40:29', NULL);
+INSERT INTO `service_item` VALUES (4001, '老人关爱套餐', 'medical', '包含体检+健康咨询+药品代购的套餐服务', 200.00, 180, 0, '2025-03-28 17:00:57', 'admin', 'admin', '2025-03-31 16:40:29', '限时特惠套餐');
 
 -- ----------------------------
 -- Table structure for service_order
@@ -770,14 +963,15 @@ CREATE TABLE `service_order`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_user_status`(`user_id` ASC, `status` ASC) USING BTREE,
   CONSTRAINT `service_order_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '服务工单表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 7 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '服务工单表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of service_order
 -- ----------------------------
-INSERT INTO `service_order` VALUES (3, 2, 1001, 1, '13433432', '1', '2025-04-29 10:40:00', NULL, NULL, NULL, '2025-04-05 00:39:10', NULL, '2025-04-05 00:39:10', NULL);
-INSERT INTO `service_order` VALUES (4, 2, 3002, 1, '要求认真仔细一点的阿姨', '1', '2025-04-29 08:54:00', NULL, NULL, NULL, '2025-04-05 00:54:48', NULL, '2025-04-05 00:54:48', NULL);
-INSERT INTO `service_order` VALUES (5, 2, 1001, 1, '1111111111111111111', '111', '2025-05-28 15:11:00', NULL, NULL, 'Ldamao', '2025-05-05 17:12:04', 'Ldamao', '2025-05-05 17:12:04', NULL);
+INSERT INTO `service_order` VALUES (3, 2, 1001, 2, '13433432', '1', '2025-04-29 10:40:00', NULL, NULL, NULL, '2025-04-05 00:39:10', 'admin', '2025-04-05 00:39:10', NULL);
+INSERT INTO `service_order` VALUES (4, 2, 3002, 2, '要求认真仔细一点的阿姨', '1', '2025-04-29 08:54:00', NULL, NULL, NULL, '2025-04-05 00:54:48', 'admin', '2025-04-05 00:54:48', NULL);
+INSERT INTO `service_order` VALUES (5, 2, 1001, 2, '1111111111111111111', '111', '2025-05-28 15:11:00', NULL, NULL, 'Ldamao', '2025-05-05 17:12:04', 'Ldamao', '2025-05-05 17:12:04', NULL);
+INSERT INTO `service_order` VALUES (6, 2, 1001, 2, 'fghfhjgjhhjkghghj', '1111111111111', '2025-05-20 08:42:00', NULL, NULL, 'Ldamao', '2025-05-17 01:42:28', 'Ldamao', '2025-05-17 01:42:28', NULL);
 
 -- ----------------------------
 -- Table structure for service_review
@@ -818,7 +1012,7 @@ CREATE TABLE `service_review`  (
 -- ----------------------------
 -- Records of service_review
 -- ----------------------------
-INSERT INTO `service_review` VALUES (1, 1001, 3, 2, 0, 0, 5, '服务非常好，医生很专业，态度也很好！强烈推荐！', '2025-05-06 16:30:25', 0, 0, NULL, NULL, NULL, 'Ldamao', 'Ldamao', '首次评价，非常满意', NULL, '2025-05-06 16:30:25', NULL, '2025-05-06 17:27:17', 0);
+INSERT INTO `service_review` VALUES (1, 1001, 3, 2, 0, 0, 5, '服务非常好，医生很专业，态度也很好！强烈推荐！', '2025-05-06 16:30:25', 0, 0, '11111', '2025-05-17 18:50:13', 2, 'Ldamao', 'Ldamao', '首次评价，非常满意', NULL, '2025-05-06 16:30:25', NULL, '2025-05-06 17:27:17', 0);
 INSERT INTO `service_review` VALUES (2, 3002, 4, 2, 0, 0, 3, '服务还可以，师傅上门比较准时，但是问题没有完全解决，希望改进。', '2025-05-05 16:30:25', 0, 0, '感谢您的反馈，我们已联系师傅跟进处理，给您带来不便非常抱歉。', '2025-05-06 16:30:25', NULL, 'Ldamao_kin', 'admin', '家属代评，管理员已回复', NULL, '2025-05-05 16:30:25', NULL, '2025-05-06 17:27:17', 0);
 
 -- ----------------------------
@@ -853,16 +1047,64 @@ CREATE TABLE `user`  (
   UNIQUE INDEX `username`(`username` ASC) USING BTREE,
   INDEX `idx_user_status`(`is_active` ASC) USING BTREE,
   INDEX `idx_user_id`(`user_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 27 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '用户表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 1005 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '用户表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of user
 -- ----------------------------
-INSERT INTO `user` VALUES (1, 'admin', '123456', '超级管理员', '女', '13800000002', 'bob.builder@hotmail.com', '深圳市南山区科技园中区', '/avatar/zhangdaye.jpg', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'admin', '2025-02-26 04:06:56', 'admin', '2025-05-15 17:44:24', '');
-INSERT INTO `user` VALUES (2, 'Ldamao', '123456', '刘大毛', '女', '13800000042', 'mao.builder@hotmail.com', '深圳市南山区科技园中区', '/avatar/zhangdaye.jpg', 1, '', '', '340881199005204216', '1990-05-20', 35, '张伟', '13812345678', '中等，需定期监测血压、血糖，并注意饮食控制。', 'staff', '2025-03-22 19:46:06', 'admin', '2025-05-15 17:15:49', '');
-INSERT INTO `user` VALUES (3, 'Lxiaomao', '123456', '刘小毛', '男', '13800000034', 'mao.builder@hotmail.com', '深圳市南山区科技园中区', '/avatar/zhangdaye.jpg', 1, '', '', '', NULL, NULL, '', '', '', 'staff', '2025-03-27 15:38:04', 'admin', '2025-05-15 17:15:55', '');
-INSERT INTO `user` VALUES (25, 'Lshumei', '123456', '刘淑梅', '未知', '15349545835', 'yopsu@mailto.plus', NULL, NULL, 1, '', '', '12345619900101123X', '1990-01-01', 35, '王小明', '13987654321  ', '慢性咳嗽', NULL, NULL, NULL, NULL, '');
-INSERT INTO `user` VALUES (26, 'Wdaniu', '123456', '王大牛', '未知', '13458684687', '23468746@qq.com', NULL, NULL, 1, '', '', '', NULL, NULL, '', '', '', 'admin', '2025-04-06 14:59:16', 'admin', '2025-04-06 14:59:16', '');
+INSERT INTO `user` VALUES (2, 'Ldamao', '123456', '刘大毛', '女', '13800000042', 'mao.builder@hotmail.com', '深圳市南山区科技园中区', '/avatar/ldamao.jpg', 1, NULL, NULL, '340881199005204216', '1990-05-20', 35, '张伟', '13812345678', 'serious', 'staff', '2025-03-22 19:46:06', 'admin', '2025-05-15 20:04:22', '');
+INSERT INTO `user` VALUES (3, 'Lxiaomao', '123456', '刘小毛', '男', '13800000033', 'mao.builder@hotmail.com', '深圳市南山区科技园中区', '/avatar/lxiaomao.jpg', 1, NULL, NULL, '340881199106155427', '1991-06-15', 34, '刘大毛', '13800000042', '健康状况良好', 'staff', '2025-03-27 15:38:04', 'admin', '2025-05-17 14:25:13', '');
+INSERT INTO `user` VALUES (25, 'Lshumei', '123456', '刘淑梅', '女', '15349545835', 'yopsu@mailto.plus', '深圳市福田区福强路100号', '/avatar/lshumei.jpg', 1, NULL, NULL, '12345619900101123X', '1990-01-01', 35, '王小明', '13987654321  ', 'disabled', 'staff', '2025-03-27 15:38:04', 'admin', '2025-05-15 20:04:26', '');
+INSERT INTO `user` VALUES (26, 'Wdaniu', '123456', '王大牛', '男', '13458684683', '23468746@qq.com', '深圳市龙岗区龙城大道50号', '/avatar/wdaniu.jpg', 1, NULL, NULL, '440301198508125671', '1985-08-12', 40, '王小花', '13923456789', '健康状况良好', 'admin', '2025-04-06 14:59:16', 'admin', '2025-05-17 16:46:24', '');
+INSERT INTO `user` VALUES (999, 'admin', '123456', '超级管理员', '女', '13800000002', 'bob.builder@hotmail.com', '深圳市南山区科技园中区', '/avatar/admin.jpg', 1, '系统管理部门', '系统管理员', NULL, NULL, NULL, NULL, NULL, NULL, 'admin', '2025-02-26 04:06:56', 'admin', '2025-05-16 17:42:31', '');
+INSERT INTO `user` VALUES (1000, 'Zdaye', '$2a$10$7JB720yubVSZvUI0rEqK/.VqGOSsz9zY9jUEKQNX.QRJabT7eKDjW', '张大爷', '男', '13800138001', 'zhangdaye@example.com', '北京市海淀区中关村南路1号社区', '/avatar/zhangdaye.jpg', 1, NULL, NULL, '110101195001011234', '1950-01-01', 75, '张小华', '13900139001', 'serious', NULL, '2025-05-15 19:27:07', 'admin', '2025-05-16 17:40:36', '');
+INSERT INTO `user` VALUES (1001, 'Zxiaohua', '$2a$10$7JB720yubVSZvUI0rEqK/.VqGOSsz9zY9jUEKQNX.QRJabT7eKDjW', '张小华', '女', '13900139002', 'zhangxiaohua@example.com', '北京市朝阳区建国路5号', '/avatar/zhangdaye.jpg', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-05-15 19:27:07', 'admin', '2025-05-17 14:25:21', '');
+INSERT INTO `user` VALUES (1002, 'Glakejieguo', '123456', '格拉克结果', '男', '14566776232', 'yopsu@mailto.plus', NULL, NULL, 1, NULL, NULL, '13092419680312201X', '1968-03-12', 57, '格拉木', '13800000043', 'subhealthy', 'admin', '2025-05-15 19:50:27', 'admin', '2025-05-16 17:40:13', '');
+INSERT INTO `user` VALUES (1003, 'Glamu', '123456', '格拉木', '男', '13800000043', 'yopsu@mailto.plus', NULL, NULL, 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'admin', '2025-05-15 20:03:38', 'admin', '2025-05-16 17:42:25', '');
+INSERT INTO `user` VALUES (1004, 'Gkanjianlejingliguo', '123456', '噶看见了经历过', '未知', '14887594373', 'yopsu@mailto.plus', NULL, NULL, 1, NULL, NULL, '120483196402041220', '1964-02-04', 61, '格拉木', '13800000043', 'serious', 'admin', '2025-05-17 12:45:57', 'admin', '2025-05-17 12:45:57', '');
+
+-- ----------------------------
+-- Table structure for user_bak
+-- ----------------------------
+DROP TABLE IF EXISTS `user_bak`;
+CREATE TABLE `user_bak`  (
+  `user_id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `username` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '用户名',
+  `password` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '123456' COMMENT '密码（加密存储）',
+  `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '姓名',
+  `gender` enum('男','女','未知') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '未知' COMMENT '性别',
+  `phone` char(11) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '13800000004' COMMENT '电话号码',
+  `email` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '' COMMENT '电子邮件',
+  `address` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '用户地址',
+  `avatar` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '头像',
+  `is_active` tinyint NOT NULL DEFAULT 1 COMMENT '用户状态：1-正常，0-禁用，2-锁定',
+  `department` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '社区工作人员所在部门',
+  `position` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '社区工作人员岗位',
+  `id_card` varchar(18) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '老人身份证号码，唯一',
+  `birthday` date NULL DEFAULT NULL COMMENT '老人出生日期',
+  `age` int NULL DEFAULT NULL COMMENT '老人年龄',
+  `emergency_contact_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '紧急联系人姓名',
+  `emergency_contact_phone` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '紧急联系人电话',
+  `health_condition` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '老人健康状况',
+  `create_by` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '创建者',
+  `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_by` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '更新者',
+  `update_time` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `remark` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '备注',
+  PRIMARY KEY (`user_id`) USING BTREE,
+  UNIQUE INDEX `username`(`username` ASC) USING BTREE,
+  INDEX `idx_user_status`(`is_active` ASC) USING BTREE,
+  INDEX `idx_user_id`(`user_id` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 27 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '用户表' ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
+-- Records of user_bak
+-- ----------------------------
+INSERT INTO `user_bak` VALUES (1, 'admin', '123456', '超级管理员', '女', '13800000002', 'bob.builder@hotmail.com', '深圳市南山区科技园中区', '/avatar/zhangdaye.jpg', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'admin', '2025-02-26 04:06:56', 'admin', '2025-05-15 17:44:24', '');
+INSERT INTO `user_bak` VALUES (2, 'Ldamao', '123456', '刘大毛', '女', '13800000042', 'mao.builder@hotmail.com', '深圳市南山区科技园中区', '/avatar/zhangdaye.jpg', 1, '', '', '340881199005204216', '1990-05-20', 35, '张伟', '13812345678', '中等，需定期监测血压、血糖，并注意饮食控制。', 'staff', '2025-03-22 19:46:06', 'admin', '2025-05-15 17:15:49', '');
+INSERT INTO `user_bak` VALUES (3, 'Lxiaomao', '123456', '刘小毛', '男', '13800000034', 'mao.builder@hotmail.com', '深圳市南山区科技园中区', '/avatar/zhangdaye.jpg', 1, '', '', '', NULL, NULL, '', '', '', 'staff', '2025-03-27 15:38:04', 'admin', '2025-05-15 17:15:55', '');
+INSERT INTO `user_bak` VALUES (25, 'Lshumei', '123456', '刘淑梅', '未知', '15349545835', 'yopsu@mailto.plus', NULL, NULL, 1, '', '', '12345619900101123X', '1990-01-01', 35, '王小明', '13987654321  ', '慢性咳嗽', NULL, NULL, NULL, NULL, '');
+INSERT INTO `user_bak` VALUES (26, 'Wdaniu', '123456', '王大牛', '未知', '13458684687', '23468746@qq.com', NULL, NULL, 1, '', '', '', NULL, NULL, '', '', '', 'admin', '2025-04-06 14:59:16', 'admin', '2025-04-06 14:59:16', '');
 
 -- ----------------------------
 -- Table structure for user_role
@@ -877,11 +1119,16 @@ CREATE TABLE `user_role`  (
 -- ----------------------------
 -- Records of user_role
 -- ----------------------------
-INSERT INTO `user_role` VALUES (1, 4);
 INSERT INTO `user_role` VALUES (2, 1);
 INSERT INTO `user_role` VALUES (3, 2);
 INSERT INTO `user_role` VALUES (25, 1);
 INSERT INTO `user_role` VALUES (26, 2);
+INSERT INTO `user_role` VALUES (999, 4);
+INSERT INTO `user_role` VALUES (1000, 1);
+INSERT INTO `user_role` VALUES (1001, 2);
+INSERT INTO `user_role` VALUES (1002, 1);
+INSERT INTO `user_role` VALUES (1003, 2);
+INSERT INTO `user_role` VALUES (1004, 1);
 
 -- ----------------------------
 -- Table structure for warning_record
