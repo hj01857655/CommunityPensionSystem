@@ -11,7 +11,7 @@
  Target Server Version : 80400 (8.4.0)
  File Encoding         : 65001
 
- Date: 17/05/2025 21:43:15
+ Date: 17/05/2025 22:45:29
 */
 
 SET NAMES utf8mb4;
@@ -689,7 +689,7 @@ CREATE TABLE `notification`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_status`(`status` ASC) USING BTREE,
   INDEX `idx_publish_time`(`publish_time` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 22 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '通知公告表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 25 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '通知公告表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of notification
@@ -706,6 +706,9 @@ INSERT INTO `notification` VALUES (18, 2, '服务预约通知', '尊敬的刘大
 INSERT INTO `notification` VALUES (19, 2, '服务预约通知', '尊敬的刘大毛用户，\n\n您的服务预约（预约号：5）服务已开始。\n\n预约详情：\n- 服务项目：null\n- 预约时间：2025-05-28 15:11:00\n\n您的服务正在进行中，如有问题请联系客服。\n\n如有疑问，请联系客服中心。', 'system', 0, '2025-05-17 01:55:14', '2025-05-17 01:55:14', '2025-05-17 01:55:14');
 INSERT INTO `notification` VALUES (20, 2, '服务预约通知', '尊敬的刘大毛用户，\n\n您的服务预约（预约号：4）服务已开始。\n\n预约详情：\n- 服务项目：null\n- 预约时间：2025-04-29 08:54:00\n\n您的服务正在进行中，如有问题请联系客服。\n\n如有疑问，请联系客服中心。', 'system', 0, '2025-05-17 01:55:17', '2025-05-17 01:55:17', '2025-05-17 01:55:17');
 INSERT INTO `notification` VALUES (21, 2, '服务预约通知', '尊敬的刘大毛用户，\n\n您的服务预约（预约号：3）服务已开始。\n\n预约详情：\n- 服务项目：null\n- 预约时间：2025-04-29 10:40:00\n\n您的服务正在进行中，如有问题请联系客服。\n\n如有疑问，请联系客服中心。', 'system', 0, '2025-05-17 01:55:19', '2025-05-17 01:55:19', '2025-05-17 01:55:19');
+INSERT INTO `notification` VALUES (22, 2, '服务预约通知', '尊敬的刘大毛用户，\n\n您的服务预约（预约号：6）服务已完成。\n\n预约详情：\n- 服务项目：null\n- 预约时间：2025-05-20 08:42:00\n\n您的服务已完成，感谢您的使用，欢迎对本次服务进行评价。\n- 实际服务时长：0分钟\n- 实际服务费用：0.0元\n\n如有疑问，请联系客服中心。', 'system', 0, '2025-05-17 22:38:21', '2025-05-17 22:38:21', '2025-05-17 22:38:21');
+INSERT INTO `notification` VALUES (23, 2, '服务预约通知', '尊敬的刘大毛用户，\n\n您的服务预约（预约号：5）服务已完成。\n\n预约详情：\n- 服务项目：null\n- 预约时间：2025-05-28 15:11:00\n\n您的服务已完成，感谢您的使用，欢迎对本次服务进行评价。\n- 实际服务时长：0分钟\n- 实际服务费用：0.0元\n\n如有疑问，请联系客服中心。', 'system', 0, '2025-05-17 22:38:48', '2025-05-17 22:38:48', '2025-05-17 22:38:48');
+INSERT INTO `notification` VALUES (24, 2, '服务预约通知', '尊敬的刘大毛用户，\n\n您的服务预约（预约号：4）服务已完成。\n\n预约详情：\n- 服务项目：null\n- 预约时间：2025-04-29 08:54:00\n\n您的服务已完成，感谢您的使用，欢迎对本次服务进行评价。\n- 实际服务时长：0分钟\n- 实际服务费用：0.0元\n\n如有疑问，请联系客服中心。', 'system', 0, '2025-05-17 22:40:52', '2025-05-17 22:40:52', '2025-05-17 22:40:52');
 
 -- ----------------------------
 -- Table structure for physical_exam_report
@@ -969,9 +972,9 @@ CREATE TABLE `service_order`  (
 -- Records of service_order
 -- ----------------------------
 INSERT INTO `service_order` VALUES (3, 2, 1001, 2, '13433432', '1', '2025-04-29 10:40:00', NULL, NULL, NULL, '2025-04-05 00:39:10', 'admin', '2025-04-05 00:39:10', NULL);
-INSERT INTO `service_order` VALUES (4, 2, 3002, 2, '要求认真仔细一点的阿姨', '1', '2025-04-29 08:54:00', NULL, NULL, NULL, '2025-04-05 00:54:48', 'admin', '2025-04-05 00:54:48', NULL);
-INSERT INTO `service_order` VALUES (5, 2, 1001, 2, '1111111111111111111', '111', '2025-05-28 15:11:00', NULL, NULL, 'Ldamao', '2025-05-05 17:12:04', 'Ldamao', '2025-05-05 17:12:04', NULL);
-INSERT INTO `service_order` VALUES (6, 2, 1001, 2, 'fghfhjgjhhjkghghj', '1111111111111', '2025-05-20 08:42:00', NULL, NULL, 'Ldamao', '2025-05-17 01:42:28', 'Ldamao', '2025-05-17 01:42:28', NULL);
+INSERT INTO `service_order` VALUES (4, 2, 3002, 3, '要求认真仔细一点的阿姨', '1', '2025-04-29 08:54:00', 0.00, 0, NULL, '2025-04-05 00:54:48', 'admin', '2025-04-05 00:54:48', NULL);
+INSERT INTO `service_order` VALUES (5, 2, 1001, 3, '1111111111111111111', '111', '2025-05-28 15:11:00', 0.00, 0, 'Ldamao', '2025-05-05 17:12:04', 'Ldamao', '2025-05-05 17:12:04', NULL);
+INSERT INTO `service_order` VALUES (6, 2, 1001, 3, 'fghfhjgjhhjkghghj', '1111111111111', '2025-05-20 08:42:00', 0.00, 0, 'Ldamao', '2025-05-17 01:42:28', 'Ldamao', '2025-05-17 01:42:28', NULL);
 
 -- ----------------------------
 -- Table structure for service_review
