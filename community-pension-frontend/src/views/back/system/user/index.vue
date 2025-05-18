@@ -28,10 +28,10 @@
           <el-button type="primary" plain :icon="Plus" @click="handleAdd">新增</el-button>
         </el-col>
         <el-col :span="1.5">
-          <el-button type="success" plain :icon="Edit" :disabled="single" @click="handleUpdate">修改</el-button>
+          <el-button type="success" plain :icon="Edit" :disabled="single" @click="handleTopUpdate">修改</el-button>
         </el-col>
         <el-col :span="1.5">
-          <el-button type="danger" plain :icon="Delete" :disabled="multiple" @click="handleDelete">删除</el-button>
+          <el-button type="danger" plain :icon="Delete" :disabled="multiple" @click="handleTopDelete">删除</el-button>
         </el-col>
         <right-toolbar v-model:showSearch="showSearch" @queryTable="getList"></right-toolbar>
       </el-row>
@@ -444,6 +444,8 @@ import { onMounted, reactive, ref, watch } from 'vue';
   const single = ref(true);
   // 非多个禁用
   const multiple = ref(true);
+  // 存储选中的用户
+  const selectedUsers = ref([]);
   
   // 列信息
   const columns = ref([
@@ -547,6 +549,7 @@ import { onMounted, reactive, ref, watch } from 'vue';
   
   // 多选框选中数据
   const handleSelectionChange = (selection) => {
+    selectedUsers.value = selection;
     single.value = selection.length !== 1;
     multiple.value = !selection.length;
   };
@@ -563,12 +566,6 @@ import { onMounted, reactive, ref, watch } from 'vue';
 
     const text = row.isActive === 1 ? '启用' : '停用';
     try {
-      await ElMessageBox.confirm(`确认要"${text}""${row.username}"用户吗？`, '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      });
-  
       // 使用handleUpdateStatus函数更新用户状态
       const res = await userStore.handleUpdateStatus(row.userId, row.isActive);
   
@@ -576,9 +573,12 @@ import { onMounted, reactive, ref, watch } from 'vue';
         // 如果更新失败，恢复原来的状态值
         row.isActive = row.isActive === 1 ? 0 : 1;
       }
-    } catch {
+    } catch (error) {
       // 如果用户取消操作，恢复原来的状态值
-      row.isActive = row.isActive === 1 ? 0 : 1;
+      if (error !== 'cancel') {
+        console.error('更新用户状态失败:', error);
+        row.isActive = row.isActive === 1 ? 0 : 1;
+      }
     }
   };
   
@@ -601,7 +601,9 @@ import { onMounted, reactive, ref, watch } from 'vue';
       });
       await userStore.handleResetPassword(row.userId);
     } catch (error) {
-      console.error('重置密码操作取消或失败:', error);
+      if (error !== 'cancel') {
+        console.error('重置密码操作失败:', error);
+      }
     }
   };
   
@@ -773,6 +775,24 @@ import { onMounted, reactive, ref, watch } from 'vue';
     dialogVisible.value = true;
   };
   
+  // 顶部工具栏修改按钮操作
+  const handleTopUpdate = () => {
+    if (selectedUsers.value && selectedUsers.value.length === 1) {
+      handleUpdate(selectedUsers.value[0]);
+    } else {
+      ElMessage.warning('请选择一个用户');
+    }
+  };
+
+  // 顶部工具栏删除按钮操作
+  const handleTopDelete = () => {
+    if (selectedUsers.value && selectedUsers.value.length >= 1) {
+      handleDelete(selectedUsers.value[0]);
+    } else {
+      ElMessage.warning('请选择要删除的用户');
+    }
+  };
+  
   // 修改按钮操作
   const handleUpdate = async (row) => {
     try {
@@ -816,8 +836,10 @@ import { onMounted, reactive, ref, watch } from 'vue';
   
       dialogVisible.value = true;
     } catch (error) {
-      console.error('获取用户信息失败:', error);
-      ElMessage.error('获取用户信息失败');
+      if (error !== 'cancel') {
+        console.error('获取用户信息失败:', error);
+        ElMessage.error('获取用户信息失败');
+      }
     }
   };
   
@@ -830,12 +852,14 @@ import { onMounted, reactive, ref, watch } from 'vue';
         type: 'warning'
       });
   
-      const success = await userStore.deleteUser(row.userId);
+      const success = await userStore.handleDeleteUser(row.userId);
       if (success) {
         await getList();
       }
     } catch (error) {
-      console.error('删除操作取消或失败:', error);
+      if (error !== 'cancel') {
+        console.error('删除操作失败:', error);
+      }
     }
   };
   
@@ -968,12 +992,14 @@ import { onMounted, reactive, ref, watch } from 'vue';
             await getList();
           }
         } catch (error) {
-          console.error('提交表单失败:', error);
-          // 检查是否是主键冲突的错误
-          if (error.message && error.message.includes('Duplicate entry') && error.message.includes('elder_kin_relation.PRIMARY')) {
-            ElMessage.error('系统自动绑定关系失败：该绑定关系已存在');
-          } else {
-            ElMessage.error('提交表单失败');
+          if (error !== 'cancel') {
+            console.error('提交表单失败:', error);
+            // 检查是否是主键冲突的错误
+            if (error.message && error.message.includes('Duplicate entry') && error.message.includes('elder_kin_relation.PRIMARY')) {
+              ElMessage.error('系统自动绑定关系失败：该绑定关系已存在');
+            } else {
+              ElMessage.error('提交表单失败');
+            }
           }
         }
       }
@@ -1026,8 +1052,10 @@ import { onMounted, reactive, ref, watch } from 'vue';
         }
       }
     } catch (error) {
-      console.error('获取老人列表失败:', error);
-      ElMessage.error('获取老人列表失败');
+      if (error !== 'cancel') {
+        console.error('获取老人列表失败:', error);
+        ElMessage.error('获取老人列表失败');
+      }
       elderList.value = [];
     }
   };
@@ -1062,7 +1090,9 @@ import { onMounted, reactive, ref, watch } from 'vue';
         ElMessage.error('解除绑定失败');
       }
     } catch (error) {
-      console.error('解除绑定操作取消或失败:', error);
+      if (error !== 'cancel') {
+        console.error('解除绑定操作失败:', error);
+      }
     }
   };
   
@@ -1090,8 +1120,10 @@ import { onMounted, reactive, ref, watch } from 'vue';
         // 处理未绑定老人的家属列表
       }
     } catch (error) {
-      console.error('获取未绑定老人的家属列表失败:', error);
-      ElMessage.error('获取未绑定老人的家属列表失败');
+      if (error !== 'cancel') {
+        console.error('获取未绑定老人的家属列表失败:', error);
+        ElMessage.error('获取未绑定老人的家属列表失败');
+      }
     }
   };
   
@@ -1105,8 +1137,10 @@ import { onMounted, reactive, ref, watch } from 'vue';
         await getList();
       }
     } catch (error) {
-      console.error('绑定关系失败:', error);
-      ElMessage.error('绑定关系失败');
+      if (error !== 'cancel') {
+        console.error('绑定关系失败:', error);
+        ElMessage.error('绑定关系失败');
+      }
     }
   };
   
@@ -1120,8 +1154,10 @@ import { onMounted, reactive, ref, watch } from 'vue';
         await getList();
       }
     } catch (error) {
-      console.error('解绑关系失败:', error);
-      ElMessage.error('解绑关系失败');
+      if (error !== 'cancel') {
+        console.error('解绑关系失败:', error);
+        ElMessage.error('解绑关系失败');
+      }
     }
   };
   
@@ -1189,7 +1225,9 @@ import { onMounted, reactive, ref, watch } from 'vue';
               userWithRelations.kins = kins || [];
             })
             .catch(error => {
-              console.error('获取绑定家属信息失败:', error);
+              if (error !== 'cancel') {
+                console.error('获取绑定家属信息失败:', error);
+              }
               userWithRelations.kins = [];
             })
         );
@@ -1203,7 +1241,9 @@ import { onMounted, reactive, ref, watch } from 'vue';
               userWithRelations.elders = elders || [];
             })
             .catch(error => {
-              console.error('获取绑定老人信息失败:', error);
+              if (error !== 'cancel') {
+                console.error('获取绑定老人信息失败:', error);
+              }
               userWithRelations.elders = [];
             })
         );
@@ -1216,8 +1256,10 @@ import { onMounted, reactive, ref, watch } from 'vue';
       detailForm.value = userWithRelations;
       
     } catch (error) {
-      console.error('获取用户详情失败:', error);
-      ElMessage.error('获取用户详情失败');
+      if (error !== 'cancel') {
+        console.error('获取用户详情失败:', error);
+        ElMessage.error('获取用户详情失败');
+      }
     } finally {
       detailLoading.value = false;
     }
@@ -1284,8 +1326,10 @@ import { onMounted, reactive, ref, watch } from 'vue';
         bindDialogVisible.value = true;
       }
     } catch (error) {
-      console.error('处理绑定关系失败:', error);
-      ElMessage.error('处理绑定关系失败');
+      if (error !== 'cancel') {
+        console.error('处理绑定关系失败:', error);
+        ElMessage.error('处理绑定关系失败');
+      }
       bindLoading.value = false;
     }
   };
@@ -1369,12 +1413,14 @@ import { onMounted, reactive, ref, watch } from 'vue';
         ElMessage.error('绑定关系失败');
       }
     } catch (error) {
-      console.error('提交绑定关系失败:', error);
-      // 检查是否是主键冲突的错误
-      if (error.message && error.message.includes('Duplicate entry') && error.message.includes('elder_kin_relation.PRIMARY')) {
-        ElMessage.error('已存在相同的绑定关系，无需重复绑定');
-      } else {
-        ElMessage.error('提交绑定关系失败');
+      if (error !== 'cancel') {
+        console.error('提交绑定关系失败:', error);
+        // 检查是否是主键冲突的错误
+        if (error.message && error.message.includes('Duplicate entry') && error.message.includes('elder_kin_relation.PRIMARY')) {
+          ElMessage.error('已存在相同的绑定关系，无需重复绑定');
+        } else {
+          ElMessage.error('提交绑定关系失败');
+        }
       }
     }
   };
@@ -1421,7 +1467,9 @@ import { onMounted, reactive, ref, watch } from 'vue';
         ElMessage.error('解除绑定失败');
       }
     } catch (error) {
-      console.error('解除绑定操作取消或失败:', error);
+      if (error !== 'cancel') {
+        console.error('解除绑定操作失败:', error);
+      }
     }
   };
   
@@ -1449,8 +1497,10 @@ import { onMounted, reactive, ref, watch } from 'vue';
         ElMessage.warning('暂无可绑定的家属');
       }
     } catch (error) {
-      console.error('获取家属列表失败:', error);
-      ElMessage.error('获取家属列表失败');
+      if (error !== 'cancel') {
+        console.error('获取家属列表失败:', error);
+        ElMessage.error('获取家属列表失败');
+      }
     }
   };
   
@@ -1498,12 +1548,14 @@ import { onMounted, reactive, ref, watch } from 'vue';
         ElMessage.error('绑定家属失败');
       }
     } catch (error) {
-      console.error('绑定家属失败:', error);
-      // 检查是否是主键冲突的错误
-      if (error.message && error.message.includes('Duplicate entry') && error.message.includes('elder_kin_relation.PRIMARY')) {
-        ElMessage.error('已存在相同的绑定关系，无需重复绑定');
-      } else {
-        ElMessage.error('绑定家属失败');
+      if (error !== 'cancel') {
+        console.error('绑定家属失败:', error);
+        // 检查是否是主键冲突的错误
+        if (error.message && error.message.includes('Duplicate entry') && error.message.includes('elder_kin_relation.PRIMARY')) {
+          ElMessage.error('已存在相同的绑定关系，无需重复绑定');
+        } else {
+          ElMessage.error('绑定家属失败');
+        }
       }
     }
   };
@@ -1533,8 +1585,10 @@ import { onMounted, reactive, ref, watch } from 'vue';
         availableElderList.value = [];
       }
     } catch (error) {
-      console.error('获取可用老人列表失败:', error);
-      ElMessage.error('获取可用老人列表失败');
+      if (error !== 'cancel') {
+        console.error('获取可用老人列表失败:', error);
+        ElMessage.error('获取可用老人列表失败');
+      }
     }
   };
   
@@ -1550,8 +1604,10 @@ import { onMounted, reactive, ref, watch } from 'vue';
         availableKinList.value = [];
       }
     } catch (error) {
-      console.error('获取可用家属列表失败:', error);
-      ElMessage.error('获取可用家属列表失败');
+      if (error !== 'cancel') {
+        console.error('获取可用家属列表失败:', error);
+        ElMessage.error('获取可用家属列表失败');
+      }
     }
   };
   
@@ -1566,7 +1622,9 @@ import { onMounted, reactive, ref, watch } from 'vue';
         healthLevelOptions.value = response.data;
       }
     } catch (error) {
-      console.error('获取健康状况字典数据失败:', error);
+      if (error !== 'cancel') {
+        console.error('获取健康状况字典数据失败:', error);
+      }
     }
   };
   

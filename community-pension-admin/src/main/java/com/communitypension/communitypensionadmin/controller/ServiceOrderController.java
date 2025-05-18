@@ -124,4 +124,10 @@ public class ServiceOrderController {
             @RequestParam LocalDateTime endTime) {
         return Result.success(serviceOrderService.getOrderStats(serviceItemId, startTime, endTime));
     }
+
+    @Operation(summary = "删除预约")
+    @DeleteMapping("/{orderIds}")
+    public Result<Boolean> deleteOrder(@PathVariable String orderIds) {
+        return Result.success(serviceOrderService.deleteOrder(orderIds));
+    }
 }

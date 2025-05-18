@@ -121,4 +121,12 @@ public interface ServiceOrderService extends IService<ServiceOrder> {
      * @return 统计信息
      */
     Map<String, Object> getOrderStats(Long serviceItemId, LocalDateTime startTime, LocalDateTime endTime);
-} 
+    
+    /**
+     * 删除预约
+     *
+     * @param orderIds 预约ID字符串，多个ID用逗号分隔
+     * @return 是否成功
+     */
+    boolean deleteOrder(String orderIds);
+}

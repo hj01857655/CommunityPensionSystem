@@ -1,6 +1,14 @@
 import axios from '@/utils/axios';
 
 /**
+ * 获取服务工单状态字典
+ * @returns {Promise<{code: number, data: Array, msg: string}>}
+ */
+export const getServiceOrderStatusDict = () => {
+  return axios.get('/api/service/order/status/dict');
+};
+
+/**
  * 获取工单列表
  * @param {Object} params - 查询参数
  * @param {string} [params.userId] - 用户ID
@@ -95,3 +103,19 @@ export const exportServiceOrder = (params) => {
     responseType: 'blob'
   });
 }; 
+
+/**
+ * 更新工单
+ * @param {Object} data - 工单数据
+ * @param {number} data.id - 工单ID
+ * @param {number} data.userId - 用户ID
+ * @param {number} data.serviceItemId - 服务项目ID
+ * @param {string} data.applyReason - 申请原因
+ * @param {string} data.scheduleTime - 预约时间
+ * @param {number} data.status - 状态
+ * @param {string} [data.reviewRemark] - 审核备注
+ * @returns {Promise<{code: number, msg: string}>}
+ */
+export const updateServiceOrder = (data) => {
+  return axios.put('/api/service/order', data);
+};

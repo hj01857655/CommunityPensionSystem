@@ -115,7 +115,7 @@
             <el-option
               v-for="item in userOptions"
               :key="item.userId"
-              :label="item.userName"
+              :label="item.name"
               :value="item.userId"
             />
           </el-select>
@@ -349,7 +349,8 @@ async function getUsers() {
   try {
     const response = await getUserList({ pageSize: 100 });
     if (response.code === 200) {
-      userOptions.value = response.data.records;
+      // 只筛选角色为老人(elder)的用户
+      userOptions.value = response.data.records.filter(item => item.roles && item.roles.includes('elder'));
     }
   } catch (error) {
     console.error("获取用户列表失败:", error);
@@ -496,7 +497,7 @@ function handleExport() {
 function onUserChange(userId) {
   const user = userOptions.value.find(u => u.userId === userId);
   if (user) {
-    form.value.elderName = user.userName;
+    form.value.elderName = user.name;
     form.value.gender = user.gender;
     form.value.age = user.age;
   }

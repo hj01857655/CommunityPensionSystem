@@ -9,4 +9,4 @@ export {
 }
 
 // 为了兼容直接导入的情况，默认导出服务项目store
-export { useServiceItemStore as useServiceStore } from './item' 
+export { useServiceItemStore as useServiceStore } from './item'

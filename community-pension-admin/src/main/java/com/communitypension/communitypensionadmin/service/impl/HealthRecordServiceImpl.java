@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import com.communitypension.communitypensionadmin.util.ExcelExporter;
+import com.communitypension.communitypensionadmin.util.SecurityUtils;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -56,6 +57,17 @@ public class HealthRecordServiceImpl extends ServiceImpl<HealthRecordMapper, Hea
         }
         if (!StringUtils.hasText(recordDTO.getRecordType())) {
             recordDTO.setRecordType("常规记录");
+        }
+        
+        // 设置记录人ID（如果未设置）
+        if (recordDTO.getRecorderId() == null) {
+            // 从当前登录用户中获取ID
+            Long currentUserId = SecurityUtils.getCurrentUserId();
+            if (currentUserId == null) {
+                // 如果无法获取当前用户，则使用默认值或抛出异常
+                throw new BusinessException("无法获取当前用户信息，请重新登录");
+            }
+            recordDTO.setRecorderId(currentUserId);
         }
 
         // 转换为实体并保存

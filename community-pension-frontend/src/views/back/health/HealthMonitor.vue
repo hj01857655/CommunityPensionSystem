@@ -1,34 +1,43 @@
 <template>
   <div class="app-container">
-    <el-form :model="queryParams" ref="queryFormRef" :inline="true" v-show="showSearch">
-      <el-form-item label="老人姓名" prop="elderName">
+    <el-form :model="queryParams" ref="queryFormRef" :inline="true" v-show="showSearch" label-width="100px">
+      <el-form-item label="用户姓名" prop="elderName">
         <el-input
           v-model="queryParams.elderName"
-          placeholder="请输入老人姓名"
+          placeholder="请输入用户姓名"
           clearable
-          style="width: 200px"
+          style="width: 240px; min-width: 240px;"
           @keyup.enter="handleQuery"
         />
       </el-form-item>
       <el-form-item label="监测类型" prop="monitoringType">
-        <el-select v-model="queryParams.monitoringType" placeholder="请选择监测类型" clearable style="width: 200px">
-          <el-option label="血压" value="1" />
-          <el-option label="血糖" value="2" />
-          <el-option label="心率" value="3" />
-          <el-option label="体温" value="4" />
-          <el-option label="体重" value="5" />
+        <el-select v-model="queryParams.monitoringType" placeholder="请选择监测类型" clearable style="width: 240px; min-width: 240px;">
+          <el-option
+            v-for="dict in monitorTypeOptions"
+            :key="dict.value"
+            :label="dict.label"
+            :value="dict.value"
+          />
         </el-select>
       </el-form-item>
       <el-form-item label="监测状态" prop="monitoringStatus">
-        <el-select v-model="queryParams.monitoringStatus" placeholder="请选择监测状态" clearable style="width: 200px">
-          <el-option label="正常" value="normal" />
-          <el-option label="异常" value="abnormal" />
+        <el-select v-model="queryParams.monitoringStatus" placeholder="请选择监测状态" clearable style="width: 240px; min-width: 240px;">
+          <el-option
+            v-for="dict in monitorStatusOptions"
+            :key="dict.value"
+            :label="dict.label"
+            :value="dict.value"
+          />
         </el-select>
       </el-form-item>
       <el-form-item label="处理状态" prop="isProcessed">
-        <el-select v-model="queryParams.isProcessed" placeholder="请选择处理状态" clearable style="width: 200px">
-          <el-option label="已处理" :value="true" />
-          <el-option label="未处理" :value="false" />
+        <el-select v-model="queryParams.isProcessed" placeholder="请选择处理状态" clearable style="width: 240px; min-width: 240px;">
+          <el-option
+            v-for="dict in processStatusOptions"
+            :key="dict.value"
+            :label="dict.label"
+            :value="dict.value === 'true'"
+          />
         </el-select>
       </el-form-item>
       <el-form-item label="监测时间" prop="dateRange">
@@ -39,7 +48,7 @@
           start-placeholder="开始日期"
           end-placeholder="结束日期"
           value-format="YYYY-MM-DD"
-          style="width: 240px"
+          style="width: 240px; min-width: 240px;"
         />
       </el-form-item>
       <el-form-item>
@@ -89,7 +98,7 @@
     <el-table v-loading="loading" :data="monitorList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column label="监测ID" align="center" prop="id" width="80" />
-      <el-table-column label="老人姓名" align="center" prop="elderName" :show-overflow-tooltip="true" />
+      <el-table-column label="用户姓名" align="center" prop="elderName" :show-overflow-tooltip="true" />
       <el-table-column label="监测类型" align="center" prop="monitoringType">
         <template #default="scope">
           <dict-tag :options="monitorTypeOptions" :value="scope.row.monitoringType" />
@@ -102,16 +111,12 @@
       </el-table-column>
       <el-table-column label="监测状态" align="center" prop="monitoringStatus">
         <template #default="scope">
-          <el-tag :type="scope.row.monitoringStatus === 'abnormal' ? 'danger' : 'success'">
-            {{ scope.row.monitoringStatus === 'abnormal' ? '异常' : '正常' }}
-          </el-tag>
+          <dict-tag :options="monitorStatusOptions" :value="scope.row.monitoringStatus" />
         </template>
       </el-table-column>
       <el-table-column label="异常级别" align="center" prop="abnormalLevel" width="100">
         <template #default="scope">
-          <el-tag v-if="scope.row.abnormalLevel" :type="getAbnormalLevelType(scope.row.abnormalLevel)">
-            {{ getAbnormalLevelText(scope.row.abnormalLevel) }}
-          </el-tag>
+          <dict-tag v-if="scope.row.abnormalLevel" :options="abnormalLevelOptions" :value="scope.row.abnormalLevel" />
           <span v-else>-</span>
         </template>
       </el-table-column>
@@ -122,9 +127,7 @@
       </el-table-column>
       <el-table-column label="处理状态" align="center" prop="isProcessed" width="100">
         <template #default="scope">
-          <el-tag :type="scope.row.isProcessed ? 'success' : 'info'">
-            {{ scope.row.isProcessed ? '已处理' : '未处理' }}
-          </el-tag>
+          <dict-tag :options="processStatusOptions" :value="scope.row.isProcessed ? 'true' : 'false'" />
         </template>
       </el-table-column>
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
@@ -159,18 +162,19 @@
     <!-- 添加或修改健康监测对话框 -->
     <el-dialog :title="title" v-model="open" width="500px" append-to-body>
       <el-form ref="monitorFormRef" :model="form" :rules="rules" label-width="100px">
-        <el-form-item label="老人" prop="elderId">
-          <el-select v-model="form.elderId" placeholder="请选择老人" style="width: 100%">
-            <el-option v-for="elder in elderOptions" :key="elder.value" :label="elder.label" :value="elder.value" />
+        <el-form-item label="用户" prop="elderId">
+          <el-select v-model="form.elderId" placeholder="请选择用户" style="width: 100%" @change="handleUserChange">
+            <el-option v-for="user in userOptions" :key="user.value" :label="user.label" :value="user.value" />
           </el-select>
         </el-form-item>
         <el-form-item label="监测类型" prop="monitoringType">
           <el-select v-model="form.monitoringType" placeholder="请选择监测类型" @change="handleMonitorTypeChange">
-            <el-option label="血压" value="1" />
-            <el-option label="血糖" value="2" />
-            <el-option label="心率" value="3" />
-            <el-option label="体温" value="4" />
-            <el-option label="体重" value="5" />
+            <el-option
+              v-for="dict in monitorTypeOptions"
+              :key="dict.value"
+              :label="dict.label"
+              :value="dict.value"
+            />
           </el-select>
         </el-form-item>
         <el-form-item label="监测值" prop="monitoringValue">
@@ -209,13 +213,23 @@
         </el-form-item>
         <el-form-item label="异常级别" prop="abnormalLevel" v-if="form.monitoringStatus === 'abnormal'">
           <el-select v-model="form.abnormalLevel" placeholder="请选择异常级别">
-            <el-option label="轻度" value="low" />
-            <el-option label="中度" value="medium" />
-            <el-option label="重度" value="high" />
+            <el-option
+              v-for="dict in abnormalLevelOptions"
+              :key="dict.value"
+              :label="dict.label"
+              :value="dict.value"
+            />
           </el-select>
         </el-form-item>
         <el-form-item label="处理状态" prop="isProcessed">
-          <el-switch v-model="form.isProcessed" />
+          <el-select v-model="form.isProcessed" placeholder="请选择处理状态" style="width: 100%">
+            <el-option
+              v-for="dict in processStatusOptions"
+              :key="dict.value"
+              :label="dict.label"
+              :value="dict.value === 'true'"
+            />
+          </el-select>
         </el-form-item>
         <el-form-item label="备注" prop="remark">
           <el-input
@@ -239,9 +253,9 @@
     <el-dialog title="健康监测详情" v-model="viewOpen" width="700px" append-to-body>
       <el-descriptions :column="2" border>
         <el-descriptions-item label="监测ID">{{ form.id }}</el-descriptions-item>
-        <el-descriptions-item label="老人名称">{{ form.elderName }}</el-descriptions-item>
-        <el-descriptions-item label="老人年龄">{{ form.elderAge }}</el-descriptions-item>
-        <el-descriptions-item label="老人性别">{{ form.elderGender }}</el-descriptions-item>
+        <el-descriptions-item label="用户名称">{{ form.elderName }}</el-descriptions-item>
+        <el-descriptions-item label="用户年龄">{{ form.elderAge }}</el-descriptions-item>
+        <el-descriptions-item label="用户性别">{{ form.elderGender }}</el-descriptions-item>
         <el-descriptions-item label="监测类型">
           <dict-tag :options="monitorTypeOptions" :value="form.monitoringType" />
         </el-descriptions-item>
@@ -249,21 +263,15 @@
           {{ form.monitoringValue }} {{ form.monitoringUnit }}
         </el-descriptions-item>
         <el-descriptions-item label="监测状态">
-          <el-tag :type="form.monitoringStatus === 'abnormal' ? 'danger' : 'success'">
-            {{ form.monitoringStatus === 'abnormal' ? '异常' : '正常' }}
-          </el-tag>
+          <dict-tag :options="monitorStatusOptions" :value="form.monitoringStatus" />
         </el-descriptions-item>
         <el-descriptions-item label="监测时间">{{ formatDate(form.monitoringTime) }}</el-descriptions-item>
         <el-descriptions-item label="设备ID">{{ form.deviceId }}</el-descriptions-item>
         <el-descriptions-item label="处理状态">
-          <el-tag :type="form.isProcessed ? 'success' : 'info'">
-            {{ form.isProcessed ? '已处理' : '未处理' }}
-          </el-tag>
+          <dict-tag :options="processStatusOptions" :value="form.isProcessed ? 'true' : 'false'" />
         </el-descriptions-item>
         <el-descriptions-item v-if="form.monitoringStatus !== 'normal'" label="异常级别">
-          <el-tag v-if="form.abnormalLevel" :type="getAbnormalLevelType(form.abnormalLevel)">
-            {{ getAbnormalLevelText(form.abnormalLevel) }}
-          </el-tag>
+          <dict-tag v-if="form.abnormalLevel" :options="abnormalLevelOptions" :value="form.abnormalLevel" />
           <span v-else>-</span>
         </el-descriptions-item>
         <el-descriptions-item v-if="form.monitoringStatus !== 'normal'" label="异常描述" :span="2">
@@ -293,10 +301,14 @@
 <script setup>
 import { getUserList } from '@/api/back/system/user';
 import { useHealthMonitorStore } from '@/stores/back/health/healthMonitorStore';
+import { useDict } from '@/utils/dict';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 
 const healthMonitorStore = useHealthMonitorStore();
+
+// 使用字典
+const { process_status, monitor_type, monitor_status, abnormal_level } = useDict('process_status', 'monitor_type', 'monitor_status', 'abnormal_level');
 
 // 遮罩层
 const loading = ref(false);
@@ -320,23 +332,36 @@ const open = ref(false);
 const viewOpen = ref(false);
 // 日期范围
 const dateRange = ref([]);
-// 老人选项
-const elderOptions = ref([]);
+// 用户选项
+const userOptions = ref([]);
 
 // 监测类型数据字典
-const monitorTypeOptions = [
+const monitorTypeOptions = computed(() => monitor_type.value || [
   { value: "1", label: "血压" },
   { value: "2", label: "血糖" },
   { value: "3", label: "心率" },
   { value: "4", label: "体温" },
   { value: "5", label: "体重" }
-];
+]);
 
-// 状态数据字典
-const statusOptions = [
-  { value: "正常", label: "正常", type: "success" },
-  { value: "异常", label: "异常", type: "danger" }
-];
+// 监测状态数据字典
+const monitorStatusOptions = computed(() => monitor_status.value || [
+  { value: "normal", label: "正常", type: "success" },
+  { value: "abnormal", label: "异常", type: "danger" }
+]);
+
+// 处理状态数据字典
+const processStatusOptions = computed(() => process_status.value || [
+  { value: "true", label: "已处理", type: "success" },
+  { value: "false", label: "未处理", type: "info" }
+]);
+
+// 异常级别数据字典
+const abnormalLevelOptions = computed(() => abnormal_level.value || [
+  { value: "low", label: "轻度", type: "info" },
+  { value: "medium", label: "中度", type: "warning" },
+  { value: "high", label: "重度", type: "danger" }
+]);
 
 // 查询参数
 const queryParams = ref({
@@ -377,7 +402,7 @@ const form = ref({
 // 表单校验
 const rules = {
   elderId: [
-    { required: true, message: "老人不能为空", trigger: "blur" }
+    { required: true, message: "用户不能为空", trigger: "blur" }
   ],
   monitoringType: [
     { required: true, message: "监测类型不能为空", trigger: "change" }
@@ -470,26 +495,6 @@ function checkAbnormalValue(type, value) {
       
     default:
       return false;
-  }
-}
-
-// 获取异常级别类型
-function getAbnormalLevelType(level) {
-  switch (level) {
-    case 'low': return 'info';
-    case 'medium': return 'warning';
-    case 'high': return 'danger';
-    default: return 'info';
-  }
-}
-
-// 获取异常级别文本
-function getAbnormalLevelText(level) {
-  switch (level) {
-    case 'low': return '轻度';
-    case 'medium': return '中度';
-    case 'high': return '重度';
-    default: return '未知';
   }
 }
 
@@ -591,18 +596,23 @@ async function getList() {
   }
 }
 
-/** 查询老人列表 */
-async function getElders() {
+/** 查询用户列表 */
+async function getUsers() {
   try {
     const response = await getUserList({ pageSize: 100 });
     if (response.code === 200) {
-      elderOptions.value = response.data.records.map(item => ({
-        value: item.userId,
-        label: item.userName
-      }));
+      // 只筛选角色为老人(elder)的用户
+      userOptions.value = response.data.records
+        .filter(item => item.roles && item.roles.includes('elder'))
+        .map(item => ({
+          value: item.userId,
+          label: item.name,  // 使用name字段作为显示标签
+          age: item.age,
+          gender: item.gender
+        }));
     }
   } catch (error) {
-    console.error("获取老人列表失败:", error);
+    console.error("获取用户列表失败:", error);
   }
 }
 
@@ -676,6 +686,7 @@ function handleSelectionChange(selection) {
 /** 新增按钮操作 */
 function handleAdd() {
   reset();
+  getUsers(); // 确保加载最新的用户列表
   open.value = true;
   title.value = "添加健康监测";
 }
@@ -683,6 +694,7 @@ function handleAdd() {
 /** 修改按钮操作 */
 async function handleUpdate(row) {
   reset();
+  await getUsers(); // 确保加载最新的用户列表
   const id = row.id || ids.value[0];
   try {
     const response = await healthMonitorStore.getMonitorDetail(id);
@@ -795,9 +807,30 @@ async function handleExport() {
   }
 }
 
+// 用户选择事件处理
+function handleUserChange(value) {
+  // 根据选择的userId查找对应的用户信息
+  const selectedUser = userOptions.value.find(user => user.value === value);
+  if (selectedUser) {
+    // 设置用户姓名、年龄和性别
+    form.value.elderName = selectedUser.label;
+    form.value.elderAge = selectedUser.age;
+    form.value.elderGender = selectedUser.gender;
+  } else {
+    form.value.elderName = '';
+    form.value.elderAge = undefined;
+    form.value.elderGender = undefined;
+  }
+  
+  // 如果表单已经创建，重置用户姓名的验证
+  if (monitorFormRef.value) {
+    monitorFormRef.value.clearValidate('elderName');
+  }
+}
+
 onMounted(() => {
   getList();
-  getElders();
+  getUsers();
 });
 </script>
 

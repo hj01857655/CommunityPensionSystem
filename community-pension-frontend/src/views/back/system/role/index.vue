@@ -279,15 +279,11 @@ async function getList() {
   loading.value = true;
   try {
     const response = await roleStore.fetchRoleList(queryParams.value, dateRange.value);
-    console.log("后端返回的角色数据:", response.data.records);
     
     // 将后端返回的status字符串转换为前端需要的isActive数值
     roleList.value = response.data.records.map(role => {
-      console.log(`角色ID: ${role.roleId}, 名称: ${role.roleName}, 状态: ${role.status}`);
-      
       // 后端status: "0"表示正常(对应前端isActive=1), "1"表示停用(对应前端isActive=0)
       role.isActive = role.status === "0" ? 1 : 0;
-      console.log(`转换后的isActive: ${role.isActive}`);
       return role;
     });
     total.value = response.data.total;
@@ -313,14 +309,26 @@ async function getMenuTreeselect() {
 /** 根据角色ID查询菜单树结构 */
 async function getRoleMenuTreeselect(roleId) {
   try {
+    // 尝试获取角色菜单树
     const response = await roleMenuTreeselect(roleId);
     menuOptions.value = response.menus;
     if (menuRef.value) {
       menuRef.value.setCheckedKeys(response.checkedKeys);
     }
   } catch (error) {
+    // 如果获取角色菜单树失败，则获取普通菜单树
     console.error("获取角色菜单树失败:", error);
-    ElMessage.error("获取角色菜单树失败");
+    ElMessage.warning("获取角色菜单树失败，使用普通菜单树");
+    
+    try {
+      // 获取普通菜单树作为备选
+      const response = await menuTreeselect();
+      menuOptions.value = response.data;
+      // 不设置选中项
+    } catch (innerError) {
+      console.error("获取菜单树失败:", innerError);
+      ElMessage.error("获取菜单树失败");
+    }
   }
 }
 
@@ -391,11 +399,9 @@ async function handleUpdate(row) {
   try {
     const response = await roleStore.fetchRoleInfo(roleId);
     form.value = response.data;
-    console.log("获取到的角色详情:", form.value);
     
     // 将后端返回的status字符串转换为前端表单需要的isActive数值
     form.value.isActive = form.value.status === "0" ? 1 : 0;
-    console.log("转换后的表单isActive:", form.value.isActive);
     
     await getRoleMenuTreeselect(roleId);
     open.value = true;
@@ -464,7 +470,6 @@ async function submitForm() {
       // 将前端表单的isActive数值转换为后端需要的status字符串
       const roleData = { ...form.value };
       roleData.status = roleData.isActive === 1 ? "0" : "1";
-      console.log("转换后的status:", roleData.status);
       
       if (form.value.roleId != undefined) {
         roleData.menuIds = getMenuAllCheckedKeys();

@@ -1,36 +1,43 @@
 <template>
   <div class="app-container">
-    <el-form :model="queryParams" ref="queryFormRef" :inline="true" label-width="80px" class="search-form">
+    <el-form ref="queryFormRef" :inline="true" :model="queryParams" class="search-form" label-width="80px">
       <el-form-item label="老人姓名">
         <el-input
-          v-model="queryParams.elderName"
-          placeholder="请输入老人姓名"
-          clearable
-          style="width: 200px"
-          @keyup.enter="handleQuery"
+            v-model="queryParams.elderName"
+            clearable
+            placeholder="请输入老人姓名"
+            style="width: 200px"
+            @keyup.enter="handleQuery"
         />
       </el-form-item>
       <el-form-item label="记录类型">
-        <el-select v-model="queryParams.recordType" placeholder="请选择记录类型" clearable style="width: 200px">
-          <el-option label="初始记录" value="初始记录" />
-          <el-option label="定期检查" value="定期检查" />
-          <el-option label="随访记录" value="随访记录" />
-          <el-option label="紧急记录" value="紧急记录" />
+        <el-select v-model="queryParams.recordType" clearable placeholder="请选择记录类型" style="width: 200px">
+          <el-option 
+            v-for="dict in health_record_type" 
+            :key="dict.value" 
+            :label="dict.label" 
+            :value="dict.value"
+          />
+          <!-- 如果字典为空，显示默认选项 -->
+          <el-option v-if="!health_record_type || health_record_type.length === 0" label="初始记录" value="初始记录"/>
+          <el-option v-if="!health_record_type || health_record_type.length === 0" label="定期检查" value="定期检查"/>
+          <el-option v-if="!health_record_type || health_record_type.length === 0" label="随访记录" value="随访记录"/>
+          <el-option v-if="!health_record_type || health_record_type.length === 0" label="紧急记录" value="紧急记录"/>
         </el-select>
       </el-form-item>
       <el-form-item label="记录时间">
         <el-date-picker
-          v-model="dateRange"
-          style="width: 240px"
-          value-format="YYYY-MM-DD"
-          type="daterange"
-          range-separator="-"
-          start-placeholder="开始日期"
-          end-placeholder="结束日期"
+            v-model="dateRange"
+            end-placeholder="结束日期"
+            range-separator="-"
+            start-placeholder="开始日期"
+            style="width: 240px"
+            type="daterange"
+            value-format="YYYY-MM-DD"
         ></el-date-picker>
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
+        <el-button icon="Search" type="primary" @click="handleQuery">搜索</el-button>
         <el-button icon="Refresh" @click="resetQuery">重置</el-button>
       </el-form-item>
     </el-form>
@@ -38,101 +45,109 @@
     <el-row :gutter="10" class="mb8">
       <el-col :span="1.5">
         <el-button
-          type="primary"
-          plain
-          icon="Plus"
-          @click="handleAdd"
-        >新增</el-button>
+            icon="Plus"
+            plain
+            type="primary"
+            @click="handleAdd"
+        >新增
+        </el-button>
       </el-col>
       <el-col :span="1.5">
         <el-button
-          type="success"
-          plain
-          icon="Edit"
-          :disabled="single"
-          @click="handleUpdate"
-        >修改</el-button>
+            :disabled="single"
+            icon="Edit"
+            plain
+            type="success"
+            @click="handleUpdate"
+        >修改
+        </el-button>
       </el-col>
       <el-col :span="1.5">
         <el-button
-          type="danger"
-          plain
-          icon="Delete"
-          :disabled="multiple"
-          @click="handleDelete"
-        >删除</el-button>
+            :disabled="multiple"
+            icon="Delete"
+            plain
+            type="danger"
+            @click="handleDelete"
+        >删除
+        </el-button>
       </el-col>
       <el-col :span="1.5">
         <el-button
-          type="warning"
-          plain
-          icon="Download"
-          @click="handleExport"
-        >导出</el-button>
+            icon="Download"
+            plain
+            type="warning"
+            @click="handleExport"
+        >导出
+        </el-button>
       </el-col>
       <right-toolbar v-model:showSearch="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
 
     <el-table v-loading="loading" :data="recordList" @selection-change="handleSelectionChange">
-      <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="记录ID" align="center" prop="id" width="80" />
-      <el-table-column label="老人姓名" align="center" prop="elderName" width="100" :show-overflow-tooltip="true" />
-      <el-table-column label="年龄" align="center" prop="elderAge" width="60" />
-      <el-table-column label="性别" align="center" prop="elderGender" width="60" />
-      <el-table-column label="血压" align="center" prop="bloodPressure" width="80" />
-      <el-table-column label="心率" align="center" prop="heartRate" width="60" />
-      <el-table-column label="血糖" align="center" prop="bloodSugar" width="60" />
-      <el-table-column label="体温" align="center" prop="temperature" width="60" />
-      <el-table-column label="记录类型" align="center" prop="recordType" width="100" />
-      <el-table-column label="症状" align="center" prop="symptoms" :show-overflow-tooltip="true" />
-      <el-table-column label="记录时间" align="center" prop="recordTime" width="160">
+      <el-table-column align="center" type="selection" width="55"/>
+      <el-table-column align="center" label="记录ID" prop="id" width="80"/>
+      <el-table-column :show-overflow-tooltip="true" align="center" label="老人姓名" prop="elderName" width="100"/>
+      <el-table-column align="center" label="年龄" prop="elderAge" width="60"/>
+      <el-table-column align="center" label="性别" prop="elderGender" width="60"/>
+      <el-table-column align="center" label="血压" prop="bloodPressure" width="80"/>
+      <el-table-column align="center" label="心率" prop="heartRate" width="60"/>
+      <el-table-column align="center" label="血糖" prop="bloodSugar" width="60"/>
+      <el-table-column align="center" label="体温" prop="temperature" width="60"/>
+      <el-table-column align="center" label="记录类型" prop="recordType" width="100"/>
+      <el-table-column :show-overflow-tooltip="true" align="center" label="症状" prop="symptoms"/>
+      <el-table-column align="center" label="记录时间" prop="recordTime" width="160">
         <template #default="scope">
           <span>{{ formatDate(scope.row.recordTime) }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="操作" align="center" class-name="small-padding fixed-width" width="150">
+      <el-table-column align="center" class-name="small-padding fixed-width" label="操作" width="150">
         <template #default="scope">
           <el-button
-            link
-            icon="View"
-            @click="handleView(scope.row)"
-          >查看</el-button>
+              icon="View"
+              link
+              @click="handleView(scope.row)"
+          >查看
+          </el-button>
           <el-button
-            link
-            icon="Edit"
-            @click="handleUpdate(scope.row)"
-          >修改</el-button>
+              icon="Edit"
+              link
+              @click="handleUpdate(scope.row)"
+          >修改
+          </el-button>
           <el-button
-            link
-            icon="Delete"
-            @click="handleDelete(scope.row)"
-          >删除</el-button>
+              icon="Delete"
+              link
+              @click="handleDelete(scope.row)"
+          >删除
+          </el-button>
         </template>
       </el-table-column>
     </el-table>
-    
+
     <pagination
-      v-show="total > 0"
-      :total="total"
-      v-model:page="queryParams.pageNum"
-      v-model:limit="queryParams.pageSize"
-      @pagination="getList"
+        v-show="total > 0"
+        v-model:limit="queryParams.pageSize"
+        v-model:page="queryParams.pageNum"
+        :total="total"
+        @pagination="getList"
     />
 
     <!-- 添加或修改健康记录对话框 -->
-    <el-dialog :title="title" v-model="open" width="800px" append-to-body>
+    <el-dialog v-model="open" :title="title" append-to-body width="800px">
       <el-form ref="recordFormRef" :model="form" :rules="rules" label-width="100px">
         <el-tabs v-model="activeTab">
           <el-tab-pane label="基本信息" name="basic">
             <el-row>
               <el-col :span="12">
                 <el-form-item label="老人" prop="elderId">
-                  <el-select v-model="form.elderId" placeholder="请选择老人" filterable @change="handleElderChange" style="width: 100%">
+                  <el-select v-model="form.elderId" filterable placeholder="请选择老人" style="width: 100%"
+                             @change="handleElderChange">
                     <el-option
-                      v-for="item in elderOptions"
-                      :key="item.userId || ''"
-                      :label="item.name || ''"
-                      :value="item.userId || ''"
+                        v-for="item in elderOptions"
+                        :key="item.userId || ''"
+                        :label="item.name || ''"
+                        :value="item.userId || ''"
                     />
                   </el-select>
                 </el-form-item>
@@ -140,10 +155,17 @@
               <el-col :span="12">
                 <el-form-item label="记录类型" prop="recordType">
                   <el-select v-model="form.recordType" placeholder="请选择记录类型" style="width: 100%">
-                    <el-option label="初始记录" value="初始记录" />
-                    <el-option label="定期检查" value="定期检查" />
-                    <el-option label="随访记录" value="随访记录" />
-                    <el-option label="紧急记录" value="紧急记录" />
+                    <el-option 
+                      v-for="dict in health_record_type" 
+                      :key="dict.value" 
+                      :label="dict.label" 
+                      :value="dict.value"
+                    />
+                    <!-- 如果字典为空，显示默认选项 -->
+                    <el-option v-if="!health_record_type || health_record_type.length === 0" label="初始记录" value="初始记录"/>
+                    <el-option v-if="!health_record_type || health_record_type.length === 0" label="定期检查" value="定期检查"/>
+                    <el-option v-if="!health_record_type || health_record_type.length === 0" label="随访记录" value="随访记录"/>
+                    <el-option v-if="!health_record_type || health_record_type.length === 0" label="紧急记录" value="紧急记录"/>
                   </el-select>
                 </el-form-item>
               </el-col>
@@ -151,17 +173,17 @@
             <el-row>
               <el-col :span="8">
                 <el-form-item label="老人姓名" prop="elderName">
-                  <el-input v-model="form.elderName" placeholder="老人姓名" disabled />
+                  <el-input v-model="form.elderName" disabled placeholder="老人姓名"/>
                 </el-form-item>
               </el-col>
               <el-col :span="8">
                 <el-form-item label="年龄" prop="elderAge">
-                  <el-input v-model="form.elderAge" placeholder="年龄" disabled />
+                  <el-input v-model="form.elderAge" disabled placeholder="年龄"/>
                 </el-form-item>
               </el-col>
               <el-col :span="8">
                 <el-form-item label="性别" prop="elderGender">
-                  <el-input v-model="form.elderGender" placeholder="性别" disabled />
+                  <el-input v-model="form.elderGender" disabled placeholder="性别"/>
                 </el-form-item>
               </el-col>
             </el-row>
@@ -169,17 +191,18 @@
               <el-col :span="12">
                 <el-form-item label="记录时间" prop="recordTime">
                   <el-date-picker
-                    v-model="form.recordTime"
-                    type="datetime"
-                    placeholder="选择记录时间"
-                    value-format="YYYY-MM-DD HH:mm:ss"
-                    style="width: 100%"
+                      v-model="form.recordTime"
+                      placeholder="系统自动获取当前时间"
+                      style="width: 100%"
+                      type="datetime"
+                      value-format="YYYY-MM-DD HH:mm:ss"
+                      disabled
                   />
                 </el-form-item>
               </el-col>
               <el-col :span="12">
                 <el-form-item label="记录人" prop="recorderName">
-                  <el-input v-model="form.recorderName" placeholder="记录人姓名" />
+                  <el-input v-model="form.recorderName" disabled placeholder="系统自动获取当前登录用户"/>
                 </el-form-item>
               </el-col>
             </el-row>
@@ -195,7 +218,8 @@
               </el-col>
               <el-col :span="12">
                 <el-form-item label="心率" prop="heartRate">
-                  <el-input-number v-model="form.heartRate" :min="0" :max="200" placeholder="请输入心率" style="width: 100%">
+                  <el-input-number v-model="form.heartRate" :max="200" :min="0" placeholder="请输入心率"
+                                   style="width: 100%">
                     <template #append>次/分</template>
                   </el-input-number>
                 </el-form-item>
@@ -204,14 +228,16 @@
             <el-row>
               <el-col :span="12">
                 <el-form-item label="血糖" prop="bloodSugar">
-                  <el-input-number v-model="form.bloodSugar" :min="0" :max="30" :precision="1" :step="0.1" placeholder="请输入血糖" style="width: 100%">
+                  <el-input-number v-model="form.bloodSugar" :max="30" :min="0" :precision="1" :step="0.1"
+                                   placeholder="请输入血糖" style="width: 100%">
                     <template #append>mmol/L</template>
                   </el-input-number>
                 </el-form-item>
               </el-col>
               <el-col :span="12">
                 <el-form-item label="体温" prop="temperature">
-                  <el-input-number v-model="form.temperature" :min="30" :max="45" :precision="1" :step="0.1" placeholder="请输入体温" style="width: 100%">
+                  <el-input-number v-model="form.temperature" :max="45" :min="30" :precision="1" :step="0.1"
+                                   placeholder="请输入体温" style="width: 100%">
                     <template #append>°C</template>
                   </el-input-number>
                 </el-form-item>
@@ -220,14 +246,16 @@
             <el-row>
               <el-col :span="12">
                 <el-form-item label="体重" prop="weight">
-                  <el-input-number v-model="form.weight" :min="0" :max="200" :precision="1" :step="0.1" placeholder="请输入体重" @change="calculateBMI" style="width: 100%">
+                  <el-input-number v-model="form.weight" :max="200" :min="0" :precision="1" :step="0.1"
+                                   placeholder="请输入体重" style="width: 100%" @change="calculateBMI">
                     <template #append>kg</template>
                   </el-input-number>
                 </el-form-item>
               </el-col>
               <el-col :span="12">
                 <el-form-item label="身高" prop="height">
-                  <el-input-number v-model="form.height" :min="0" :max="250" :precision="1" :step="0.1" placeholder="请输入身高" @change="calculateBMI" style="width: 100%">
+                  <el-input-number v-model="form.height" :max="250" :min="0" :precision="1" :step="0.1"
+                                   placeholder="请输入身高" style="width: 100%" @change="calculateBMI">
                     <template #append>cm</template>
                   </el-input-number>
                 </el-form-item>
@@ -247,19 +275,19 @@
           </el-tab-pane>
           <el-tab-pane label="病史与症状" name="symptoms">
             <el-form-item label="既往病史" prop="medicalHistory">
-              <el-input v-model="form.medicalHistory" type="textarea" :rows="2" placeholder="请输入既往病史" />
+              <el-input v-model="form.medicalHistory" :rows="2" placeholder="请输入既往病史" type="textarea"/>
             </el-form-item>
             <el-form-item label="过敏史" prop="allergy">
-              <el-input v-model="form.allergy" type="textarea" :rows="2" placeholder="请输入过敏史" />
+              <el-input v-model="form.allergy" :rows="2" placeholder="请输入过敏史" type="textarea"/>
             </el-form-item>
             <el-form-item label="当前症状" prop="symptoms">
-              <el-input v-model="form.symptoms" type="textarea" :rows="3" placeholder="请输入当前症状" />
+              <el-input v-model="form.symptoms" :rows="3" placeholder="请输入当前症状" type="textarea"/>
             </el-form-item>
             <el-form-item label="用药情况" prop="medication">
-              <el-input v-model="form.medication" type="textarea" :rows="3" placeholder="请输入用药情况" />
+              <el-input v-model="form.medication" :rows="3" placeholder="请输入用药情况" type="textarea"/>
             </el-form-item>
             <el-form-item label="备注" prop="remarks">
-              <el-input v-model="form.remarks" type="textarea" :rows="2" placeholder="请输入备注" />
+              <el-input v-model="form.remarks" :rows="2" placeholder="请输入备注" type="textarea"/>
             </el-form-item>
           </el-tab-pane>
         </el-tabs>
@@ -273,7 +301,7 @@
     </el-dialog>
 
     <!-- 查看健康记录详情对话框 -->
-    <el-dialog title="健康记录详情" v-model="viewOpen" width="800px" append-to-body>
+    <el-dialog v-model="viewOpen" append-to-body title="健康记录详情" width="800px">
       <el-tabs v-model="viewActiveTab">
         <el-tab-pane label="基本信息" name="viewBasic">
           <el-descriptions :column="2" border>
@@ -294,7 +322,7 @@
             <el-descriptions-item label="体温">{{ form.temperature }} °C</el-descriptions-item>
             <el-descriptions-item label="体重">{{ form.weight }} kg</el-descriptions-item>
             <el-descriptions-item label="身高">{{ form.height }} cm</el-descriptions-item>
-            <el-descriptions-item label="BMI" v-if="form.bmi">
+            <el-descriptions-item v-if="form.bmi" label="BMI">
               {{ form.bmi }} <span :class="getBMIClass">{{ getBMIStatus }}</span>
             </el-descriptions-item>
           </el-descriptions>
@@ -319,11 +347,16 @@
 </template>
 
 <script setup>
-import { getUserList } from '@/api/back/system/user';
-import { useHealthRecordStore } from '@/stores/back/health/healthRecordStore';
-import { formatDate } from '@/utils/date';
-import { ElMessage, ElMessageBox } from 'element-plus';
-import { computed, onMounted, ref } from 'vue';
+import {getUserList} from '@/api/back/system/user';
+import {useHealthRecordStore} from '@/stores/back/health/healthRecordStore';
+import {formatDate, formatDateTime} from '@/utils/date';
+import {exportHealthRecords} from '@/api/back/health/records';
+import {ElMessage, ElMessageBox} from 'element-plus';
+import {computed, onMounted, ref} from 'vue';
+import {useDict} from '@/utils/dict';
+
+// 从字典中获取记录类型和BMI状态
+const { health_record_type, bmi_status } = useDict('health_record_type', 'bmi_status');
 
 const healthRecordStore = useHealthRecordStore();
 
@@ -374,12 +407,12 @@ const form = ref({
   elderAge: '',
   elderGender: '',
   bloodPressure: '',
-  heartRate: '',
-  bloodSugar: '',
-  temperature: '',
-  weight: '',
-  height: '',
-  bmi: '',
+  heartRate: 0,
+  bloodSugar: 0,
+  temperature: 36.5,
+  weight: 0,
+  height: 0,
+  bmi: 0,
   medicalHistory: '',
   allergy: '',
   symptoms: '',
@@ -393,32 +426,32 @@ const form = ref({
 
 // 表单校验规则
 const rules = ref({
-  elderId: [{ required: true, message: "老人不能为空", trigger: "change" }],
-  recordType: [{ required: true, message: "记录类型不能为空", trigger: "change" }],
+  elderId: [{required: true, message: "老人不能为空", trigger: "change"}],
+  recordType: [{required: true, message: "记录类型不能为空", trigger: "change"}],
   bloodPressure: [
-    { required: true, message: "血压不能为空", trigger: "blur" },
-    { pattern: /^\d{2,3}\/\d{2,3}$/, message: "血压格式应为收缩压/舒张压，如120/80", trigger: "blur" }
+    {required: true, message: "血压不能为空", trigger: "blur"},
+    {pattern: /^\d{2,3}\/\d{2,3}$/, message: "血压格式应为收缩压/舒张压，如120/80", trigger: "blur"}
   ],
   heartRate: [
-    { required: true, message: "心率不能为空", trigger: "blur" },
-    { type: 'number', min: 40, max: 180, message: "心率应在40-180次/分之间", trigger: "blur" }
+    {required: true, message: "心率不能为空", trigger: "blur"},
+    {type: 'number', min: 40, max: 180, message: "心率应在40-180次/分之间", trigger: "blur"}
   ],
   bloodSugar: [
-    { required: true, message: "血糖不能为空", trigger: "blur" },
-    { type: 'number', min: 2, max: 20, message: "血糖应在2-20mmol/L之间", trigger: "blur" }
+    {required: true, message: "血糖不能为空", trigger: "blur"},
+    {type: 'number', min: 2, max: 20, message: "血糖应在2-20mmol/L之间", trigger: "blur"}
   ],
   temperature: [
-    { required: true, message: "体温不能为空", trigger: "blur" },
-    { type: 'number', min: 35, max: 42, message: "体温应在35-42°C之间", trigger: "blur" }
+    {required: true, message: "体温不能为空", trigger: "blur"},
+    {type: 'number', min: 35, max: 42, message: "体温应在35-42°C之间", trigger: "blur"}
   ],
   weight: [
-    { type: 'number', min: 30, max: 150, message: "体重应在30-150kg之间", trigger: "blur" }
+    {type: 'number', min: 30, max: 150, message: "体重应在30-150kg之间", trigger: "blur"}
   ],
   height: [
-    { type: 'number', min: 100, max: 220, message: "身高应在100-220cm之间", trigger: "blur" }
+    {type: 'number', min: 100, max: 220, message: "身高应在100-220cm之间", trigger: "blur"}
   ],
-  recordTime: [{ required: true, message: "记录时间不能为空", trigger: "blur" }],
-  recorderName: [{ required: true, message: "记录人不能为空", trigger: "blur" }]
+  recordTime: [{required: true, message: "记录时间不能为空", trigger: "blur"}],
+  recorderName: [{required: true, message: "记录人不能为空", trigger: "blur"}]
 });
 
 // 表单引用
@@ -437,6 +470,24 @@ const calculateBMI = () => {
 const getBMIStatus = computed(() => {
   const bmi = parseFloat(form.value.bmi);
   if (!bmi) return '';
+  
+  // 使用字典中的数据
+  if (bmi_status.value && bmi_status.value.length > 0) {
+    // 按照阈值从小到大排序
+    const sortedStatus = [...bmi_status.value].sort((a, b) => parseFloat(a.value) - parseFloat(b.value));
+    
+    // 找到第一个阈值大于当前BMI的状态
+    for (const status of sortedStatus) {
+      if (bmi < parseFloat(status.value)) {
+        return status.label;
+      }
+    }
+    
+    // 如果所有阈值都小于当前BMI，返回最后一个状态
+    return sortedStatus[sortedStatus.length - 1].label;
+  }
+  
+  // 如果字典为空，使用默认值
   if (bmi < 18.5) return '偏瘦';
   if (bmi < 24) return '正常';
   if (bmi < 28) return '超重';
@@ -447,6 +498,24 @@ const getBMIStatus = computed(() => {
 const getBMIClass = computed(() => {
   const bmi = parseFloat(form.value.bmi);
   if (!bmi) return '';
+  
+  // 使用字典中的数据
+  if (bmi_status.value && bmi_status.value.length > 0) {
+    // 按照阈值从小到大排序
+    const sortedStatus = [...bmi_status.value].sort((a, b) => parseFloat(a.value) - parseFloat(b.value));
+    
+    // 找到第一个阈值大于当前BMI的状态
+    for (const status of sortedStatus) {
+      if (bmi < parseFloat(status.value)) {
+        return status.elTagClass || ''; // 使用字典中的CSS类
+      }
+    }
+    
+    // 如果所有阈值都小于当前BMI，返回最后一个状态的CSS类
+    return sortedStatus[sortedStatus.length - 1].elTagClass || '';
+  }
+  
+  // 如果字典为空，使用默认值
   if (bmi < 18.5) return 'text-warning';
   if (bmi < 24) return 'text-success';
   if (bmi < 28) return 'text-warning';
@@ -465,7 +534,7 @@ const getList = async () => {
       queryParams.value.beginTime = undefined;
       queryParams.value.endTime = undefined;
     }
-    
+
     // 使用store获取数据
     const res = await healthRecordStore.getRecordList({
       page: queryParams.value.pageNum,
@@ -475,7 +544,7 @@ const getList = async () => {
       beginTime: queryParams.value.beginTime,
       endTime: queryParams.value.endTime
     });
-    
+
     recordList.value = res.records || [];
     total.value = res.total || 0;
   } catch (error) {
@@ -501,12 +570,12 @@ const resetForm = () => {
     elderAge: '',
     elderGender: '',
     bloodPressure: '',
-    heartRate: '',
-    bloodSugar: '',
-    temperature: '',
-    weight: '',
-    height: '',
-    bmi: '',
+    heartRate: 0,
+    bloodSugar: 0,
+    temperature: 36.5,
+    weight: 0,
+    height: 0,
+    bmi: 0,
     medicalHistory: '',
     allergy: '',
     symptoms: '',
@@ -517,12 +586,12 @@ const resetForm = () => {
     recordType: '',
     remarks: ''
   };
-  
+
   // 如果表单引用存在，重置验证状态
   if (recordFormRef.value) {
     recordFormRef.value.resetFields();
   }
-  
+
   // 重置表单标签页
   activeTab.value = 'basic';
   viewActiveTab.value = 'viewBasic';
@@ -561,9 +630,22 @@ const handleAdd = () => {
   open.value = true;
   title.value = "添加健康记录";
   // 获取当前时间
-  form.value.recordTime = formatDate(new Date(), 'YYYY-MM-DD HH:mm:ss');
-  // 设置默认记录人（这里可以从用户登录信息中获取）
-  form.value.recorderName = localStorage.getItem('userName') || '';
+  form.value.recordTime = formatDateTime(new Date());
+  
+  // 从sessionStorage获取当前登录用户信息
+  const userInfoStr = sessionStorage.getItem('userInfo');
+  if (userInfoStr) {
+    try {
+      const userInfo = JSON.parse(userInfoStr);
+      form.value.recorderName = userInfo.name || userInfo.username || '';
+      form.value.recorderId = userInfo.userId || '';
+    } catch (e) {
+      console.error('解析用户信息失败', e);
+    }
+  }
+  
+  // 提示用户选择老人
+  ElMessage.info('请先选择一位老人，再填写健康记录');
 };
 
 /** 修改按钮操作 */
@@ -593,12 +675,12 @@ const submitForm = () => {
     ElMessage.warning("表单引用不存在，请刷新页面重试");
     return;
   }
-  
+
   recordFormRef.value.validate(valid => {
     if (valid) {
       // 计算BMI
       calculateBMI();
-      
+
       if (form.value.id) {
         healthRecordStore.updateRecord(form.value).then(res => {
           ElMessage.success("修改成功");
@@ -632,13 +714,42 @@ const handleDelete = (row) => {
   }).then(() => {
     getList();
     ElMessage.success("删除成功");
-  }).catch(() => {});
+  }).catch(() => {
+  });
 };
 
 /** 导出按钮操作 */
-const handleExport = () => {
-  // 实现导出功能
-  ElMessage.success("导出功能待实现");
+const handleExport = async () => {
+  try {
+    ElMessage.info('正在准备导出数据，请稍候...');
+    
+    // 获取筛选条件
+    const params = {
+      elderName: queryParams.value.elderName || undefined,
+      recordType: queryParams.value.recordType || undefined,
+      startTime: queryParams.value.timeRange && queryParams.value.timeRange[0] ? formatDate(queryParams.value.timeRange[0]) : undefined,
+      endTime: queryParams.value.timeRange && queryParams.value.timeRange[1] ? formatDate(queryParams.value.timeRange[1]) : undefined
+    };
+    
+    // 调用API获取数据
+    const res = await exportHealthRecords(params);
+    
+    // 创建Blob对象
+    const blob = new Blob([res.data], { type: 'application/vnd.ms-excel' });
+    
+    // 创建下载链接
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `健康记录导出_${formatDate(new Date())}.xlsx`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    ElMessage.success('导出成功');
+  } catch (error) {
+    console.error('导出失败:', error);
+    ElMessage.error('导出失败: ' + (error.message || '未知错误'));
+  }
 };
 
 /** 老人选择变更事件 */
@@ -660,12 +771,12 @@ const getElderList = async () => {
       size: 100, // 获取足够多的记录以确保所有老人都被加载
       // 可以添加其他过滤条件，如果有特定字段标识老人角色
     });
-    
+
     // 确保返回的数据格式正确
     if (res.data && res.data.records) {
       elderOptions.value = res.data.records.map(user => ({
         userId: user.userId || '',
-        name: user.nickName || user.username || '',
+        name: user.name || '', // 优先使用name字段，而不是username
         age: user.age || '',
         gender: user.gender || ''
       }));
@@ -690,15 +801,19 @@ onMounted(() => {
 .search-form {
   margin-bottom: 20px;
 }
+
 .mb8 {
   margin-bottom: 8px;
 }
+
 .text-success {
   color: #67c23a;
 }
+
 .text-warning {
   color: #e6a23c;
 }
+
 .text-danger {
   color: #f56c6c;
 }

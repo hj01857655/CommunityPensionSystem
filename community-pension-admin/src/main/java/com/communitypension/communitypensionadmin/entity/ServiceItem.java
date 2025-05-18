@@ -16,7 +16,7 @@ public class ServiceItem {
     /**
      * 服务项目ID
      */
-    @TableId(type = IdType.ASSIGN_ID)
+    @TableId(type = IdType.AUTO)
     private Long serviceId;
     
     /**

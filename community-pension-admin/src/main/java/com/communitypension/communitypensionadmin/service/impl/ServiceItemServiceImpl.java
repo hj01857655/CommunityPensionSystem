@@ -3,11 +3,13 @@ package com.communitypension.communitypensionadmin.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.communitypension.communitypensionadmin.constant.DictTypeConstants;
 import com.communitypension.communitypensionadmin.dto.ServiceItemDTO;
 import com.communitypension.communitypensionadmin.entity.ServiceItem;
 import com.communitypension.communitypensionadmin.exception.BusinessException;
 import com.communitypension.communitypensionadmin.mapper.ServiceItemMapper;
 import com.communitypension.communitypensionadmin.service.ServiceItemService;
+import com.communitypension.communitypensionadmin.utils.DictUtils;
 import com.communitypension.communitypensionadmin.vo.ServiceItemVO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
@@ -25,7 +27,7 @@ import java.util.Set;
 @Service
 public class ServiceItemServiceImpl extends ServiceImpl<ServiceItemMapper, ServiceItem> implements ServiceItemService {
     /**
-     * @param page 分页参数
+     * @param page        分页参数
      * @param serviceItem 查询条件
      * @return 分页查询结果
      */
@@ -98,7 +100,7 @@ public class ServiceItemServiceImpl extends ServiceImpl<ServiceItemMapper, Servi
      * 更新服务项目状态
      *
      * @param serviceId 服务项目ID
-     *  @param status 状态
+     * @param status    状态
      * @return 是否成功
      */
     @Override
@@ -124,23 +126,15 @@ public class ServiceItemServiceImpl extends ServiceImpl<ServiceItemMapper, Servi
         BeanUtils.copyProperties(serviceItem, vo);
         // 设置状态名称
         vo.setStatusName("0".equals(serviceItem.getStatus()) ? "停用" : "正常");
-        // 设置服务类型名称
-        if(StringUtils.hasText(serviceItem.getServiceType())){
-            switch (serviceItem.getServiceType()) {
-                case "medical":
-                    vo.setServiceTypeName("医疗服务");
-                    break;
-                case "cleaning":
-                    vo.setServiceTypeName("保洁服务");
-                    break;
-                case "repair":
-                    vo.setServiceTypeName("维修服务");
-                    break;
-                default:
-                    vo.setServiceTypeName("其他服务");
-
-            }
-        }else{
+        // 设置服务类型名称（用字典工具类）
+        if (org.springframework.util.StringUtils.hasText(serviceItem.getServiceType())) {
+            vo.setServiceTypeName(
+                    DictUtils.getDictLabel(
+                            DictTypeConstants.SERVICE_TYPE,
+                            serviceItem.getServiceType()
+                    )
+            );
+        } else {
             vo.setServiceTypeName("未知服务类型");
         }
         return vo;

@@ -1,17 +1,17 @@
 <template>
   <div class="app-container">
-    <el-form :model="queryParams" ref="queryForm" :inline="true" v-show="showSearch" label-width="68px">
+    <el-form :model="queryParams" ref="queryForm" :inline="true" v-show="showSearch" label-width="100px">
       <el-form-item label="服务名称" prop="serviceName">
         <el-input
           v-model="queryParams.serviceName"
           placeholder="请输入服务名称"
           clearable
-          style="width: 240px"
+          style="width: 240px; min-width: 240px;"
           @keyup.enter="handleQuery"
         />
       </el-form-item>
       <el-form-item label="状态" prop="status">
-        <el-select v-model="queryParams.status" placeholder="服务状态" clearable style="width: 240px">
+        <el-select v-model="queryParams.status" placeholder="服务状态" clearable style="width: 240px; min-width: 240px;">
           <el-option
             v-for="dict in statusOptions"
             :key="dict.value"
@@ -79,12 +79,17 @@
           <span>{{ scope.row.duration }}分钟</span>
         </template>
       </el-table-column>
+      <el-table-column label="服务类型" align="center" prop="serviceTypeName">
+        <template #default="scope">
+          <span>{{ scope.row.serviceTypeName }}</span>
+        </template>
+      </el-table-column>
       <el-table-column label="状态" align="center" prop="status">
         <template #default="scope">
           <el-switch
             v-model="scope.row.status"
-            active-value="0"
-            inactive-value="1"
+            active-value="1"
+            inactive-value="0"
             @change="handleStatusChange(scope.row)"
           ></el-switch>
         </template>
@@ -133,12 +138,23 @@
         <el-form-item label="服务时长" prop="duration">
           <el-input-number v-model="form.duration" :min="0" :step="10" controls-position="right" style="width: 100%" />
         </el-form-item>
+        <el-form-item label="服务类型" prop="serviceType">
+          <el-select v-model="form.serviceType" placeholder="请选择服务类型" style="width: 100%">
+            <el-option
+              v-for="dict in serviceTypeOptions"
+              :key="dict.value"
+              :label="dict.label"
+              :value="dict.value"
+            ></el-option>
+          </el-select>
+        </el-form-item>
         <el-form-item label="状态">
           <el-radio-group v-model="form.status">
             <el-radio
               v-for="dict in statusOptions"
               :key="dict.value"
-              :label="dict.value"
+              :value="dict.value"
+              :label="dict.label"
             >{{ dict.label }}</el-radio>
           </el-radio-group>
         </el-form-item>
@@ -156,10 +172,14 @@
 <script setup>
 import { useServiceItemStore } from '@/stores/back/service';
 import { formatDate } from '@/utils/date';
+import { useDict } from '@/utils/dict';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 
 const serviceStore = useServiceItemStore();
+
+// 使用字典
+const { service_status, service_type } = useDict('service_status', 'service_type');
 
 const serviceList = ref([]);
 const open = ref(false);
@@ -172,10 +192,17 @@ const total = ref(0);
 const title = ref("");
 
 // 状态数据字典
-const statusOptions = [
-  { value: "0", label: "正常" },
-  { value: "1", label: "停用" }
-];
+const statusOptions = computed(() => service_status.value || [
+  { value: "1", label: "正常" },
+  { value: "0", label: "停用" }
+]);
+
+// 服务类型选项
+const serviceTypeOptions = computed(() => service_type.value || [
+  { value: "medical", label: "医疗服务" },
+  { value: "cleaning", label: "保洁服务" },
+  { value: "repair", label: "维修服务" }
+]);
 
 // 查询参数
 const queryParams = ref({
@@ -192,7 +219,8 @@ const form = ref({
   description: undefined,
   price: 0,
   duration: 30,
-  status: "0"
+  status: "1",
+  serviceType: "medical"
 });
 
 // 表单校验规则
@@ -209,6 +237,9 @@ const rules = {
   ],
   duration: [
     { required: true, message: "服务时长不能为空", trigger: "blur" }
+  ],
+  serviceType: [
+    { required: true, message: "服务类型不能为空", trigger: "blur" }
   ]
 };
 
@@ -244,7 +275,8 @@ function reset() {
     description: undefined,
     price: 0,
     duration: 30,
-    status: "0"
+    status: "1",
+    serviceType: "medical"
   };
   if (serviceForm.value) {
     serviceForm.value.resetFields();
@@ -285,12 +317,38 @@ function handleAdd() {
 /** 修改按钮操作 */
 async function handleUpdate(row) {
   reset();
-  const serviceId = row.serviceId || ids.value[0];
+  // 确保ID是字符串类型，避免JavaScript大整数精度问题
+  const serviceId = row.serviceId ? String(row.serviceId) : (ids.value[0] ? String(ids.value[0]) : '');
+  console.log('准备修改服务项目，ID:', serviceId);
+  
+  if (!serviceId) {
+    ElMessage.error("服务ID不能为空");
+    return;
+  }
+  
   try {
+    console.log('调用获取服务详情API');
     const response = await serviceStore.getServiceItemDetail(serviceId);
-    form.value = response;
-    open.value = true;
-    title.value = "修改服务项目";
+    console.log('获取到的服务详情:', response);
+    
+    if (response) {
+      // 确保所有必要的字段都存在
+      form.value = {
+        serviceId: response.serviceId,
+        serviceName: response.serviceName || '',
+        description: response.description || '',
+        price: response.price || 0,
+        duration: response.duration || 30,
+        status: response.status || '0',
+        serviceType: response.serviceType || 'medical'
+      };
+      
+      console.log('设置表单数据:', form.value);
+      open.value = true;
+      title.value = "修改服务项目";
+    } else {
+      ElMessage.error("获取服务详情失败");
+    }
   } catch (error) {
     console.error("获取服务详情失败:", error);
     ElMessage.error("获取服务详情失败");
@@ -304,18 +362,34 @@ async function submitForm() {
   await serviceForm.value.validate(async (valid) => {
     if (valid) {
       try {
-        if (form.value.serviceId) {
-          await serviceStore.updateServiceItem(form.value);
+        // 创建一个新对象用于API请求，避免修改原表单数据
+        const apiData = { ...form.value };
+        
+        // 如果是编辑模式，确保serviceId是数字类型
+        if (apiData.serviceId) {
+          apiData.serviceId = Number(apiData.serviceId);
+        }
+        
+        // 确保价格是字符串类型，以便后端正确解析为BigDecimal
+        if (apiData.price !== undefined && apiData.price !== null) {
+          apiData.price = String(apiData.price);
+        }
+        
+        console.log('提交的表单数据:', apiData);
+        
+        if (apiData.serviceId) {
+          await serviceStore.updateServiceItem(apiData);
           ElMessage.success("修改成功");
         } else {
-          await serviceStore.addServiceItem(form.value);
+          await serviceStore.addServiceItem(apiData);
           ElMessage.success("新增成功");
         }
+        
         open.value = false;
         getList();
       } catch (error) {
-        console.error("保存服务失败:", error);
-        ElMessage.error("保存失败");
+        console.error("操作失败:", error);
+        ElMessage.error("操作失败");
       }
     }
   });
@@ -323,16 +397,46 @@ async function submitForm() {
 
 /** 删除按钮操作 */
 function handleDelete(row) {
-  const serviceIds = row.serviceId || ids.value;
-  ElMessageBox.confirm('是否确认删除服务项目编号为"' + serviceIds + '"的数据项?', "警告", {
+  // 如果传入了行对象，使用该行的ID；否则使用选中的ID数组
+  const serviceId = row?.serviceId;
+  const serviceIds = serviceId ? Number(serviceId) : ids.value.map(id => Number(id));
+  
+  console.log('准备删除的服务ID:', serviceIds, typeof serviceIds, Array.isArray(serviceIds));
+  
+  // 构造确认消息
+  const confirmMessage = serviceId 
+    ? `是否确认删除服务项目编号为"${serviceId}"的数据项?`
+    : `是否确认删除选中的${ids.value.length}个服务项目?`;
+  
+  ElMessageBox.confirm(confirmMessage, "警告", {
     confirmButtonText: "确定",
     cancelButtonText: "取消",
     type: "warning"
   }).then(async function() {
     try {
-      await serviceStore.deleteServiceItem(serviceIds);
-      getList();
-      ElMessage.success("删除成功");
+      console.log('用户确认删除，发送删除请求...');
+      
+      let result = null;
+      
+      if (serviceId) {
+        // 单个删除
+        result = await serviceStore.deleteServiceItem(Number(serviceId));
+      } else if (ids.value.length > 0) {
+        // 批量删除
+        result = await serviceStore.batchDeleteServiceItem(ids.value.map(id => Number(id)));
+      } else {
+        ElMessage.warning('请选择要删除的数据');
+        return;
+      }
+      
+      // 只有当返回结果为true时才刷新列表
+      if (result === true) {
+        getList();
+        ElMessage.success("删除成功");
+      } else {
+        console.log('删除操作未返回成功结果:', result);
+        // 错误消息已在store方法中处理
+      }
     } catch (error) {
       console.error("删除服务失败:", error);
       ElMessage.error("删除失败");

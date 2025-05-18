@@ -5,8 +5,10 @@ import {
   exportServiceOrder,
   getServiceOrderDetail,
   getServiceOrderList,
+  getServiceOrderStatusDict,
   reviewServiceOrder,
-  startServiceOrder
+  startServiceOrder,
+  updateServiceOrder
 } from '@/api/back/service/order';
 import axios from '@/utils/axios'; // 修正axios导入路径
 import { defineStore } from 'pinia';
@@ -17,12 +19,30 @@ export const useServiceOrderStore = defineStore('serviceOrder', () => {
   const orderList = ref([]);
   const total = ref(0);
   const loading = ref(false);
+  const statusOptions = ref([]); // 状态字典选项
 
   // 重置状态
   const resetState = () => {
     orderList.value = [];
     total.value = 0;
     loading.value = false;
+    // 不重置状态字典
+  };
+
+  // 获取状态字典
+  const getStatusDict = async () => {
+    try {
+      const res = await getServiceOrderStatusDict();
+      if (res.code === 200) {
+        statusOptions.value = res.data;
+        return res.data;
+      } else {
+        throw new Error(res.message || '获取状态字典失败');
+      }
+    } catch (error) {
+      console.error('获取状态字典失败:', error);
+      throw error;
+    }
   };
 
   // 获取服务订单列表
@@ -72,13 +92,14 @@ export const useServiceOrderStore = defineStore('serviceOrder', () => {
   };
 
   // 创建服务订单
-  const createOrder = async (data) => {
+  const addOrder = async (data) => {
     try {
       const res = await createServiceOrder({
         userId: data.userId,
-        serviceItemId: data.serviceId,
-        applyReason: data.remark,
-        scheduleTime: data.appointmentTime
+        serviceItemId: data.serviceItemId,
+        applyReason: data.applyReason,
+        scheduleTime: data.scheduleTime,
+        status: data.status
       });
       if (res.code === 200) {
         return res.data;
@@ -87,6 +108,32 @@ export const useServiceOrderStore = defineStore('serviceOrder', () => {
       }
     } catch (error) {
       console.error('创建服务订单失败:', error);
+      throw error;
+    }
+  };
+
+  // 修改服务订单
+  const updateOrder = async (data) => {
+    try {
+      if (!data.id) {
+        throw new Error('订单ID不能为空');
+      }
+      const res = await updateServiceOrder({
+        id: data.id,
+        userId: data.userId,
+        serviceItemId: data.serviceId,
+        applyReason: data.applyReason,
+        scheduleTime: data.scheduleTime,
+        status: data.status,
+        reviewRemark: data.reviewRemark
+      });
+      if (res.code === 200) {
+        return res.data;
+      } else {
+        throw new Error(res.message || '修改服务订单失败');
+      }
+    } catch (error) {
+      console.error('修改服务订单失败:', error);
       throw error;
     }
   };
@@ -175,7 +222,7 @@ export const useServiceOrderStore = defineStore('serviceOrder', () => {
   };
 
   // 导出服务订单
-  const exportOrder = async (params) => {
+  const exportList = async (params) => {
     try {
       return await exportServiceOrder(params);
     } catch (error) {
@@ -195,19 +242,19 @@ export const useServiceOrderStore = defineStore('serviceOrder', () => {
       
       // 根据目标状态调用不同的API
       switch (status) {
-        case '1': // 接单
-          res = await reviewServiceOrder(orderId, { status: 1, reviewRemark: '已接单' });
+        case '1': // 已派单
+          res = await reviewServiceOrder(orderId, { status: 1, reviewRemark: '已派单' });
           break;
-        case '2': // 开始服务
+        case '2': // 服务中
           res = await startServiceOrder(orderId);
           break;
-        case '3': // 完成服务
+        case '3': // 已完成
           res = await completeOrder(orderId, 0, 0); // duration=0, fee=0
           break;
-        case '4': // 取消
+        case '4': // 已取消
           res = await reviewServiceOrder(orderId, { status: 4, reviewRemark: '已取消' });
           break;
-        case '5': // 拒绝
+        case '5': // 已拒绝
           res = await reviewServiceOrder(orderId, { status: 5, reviewRemark: '已拒绝' });
           break;
         default:
@@ -246,17 +293,20 @@ export const useServiceOrderStore = defineStore('serviceOrder', () => {
     orderList,
     total,
     loading,
-    getOrderList,
+    statusOptions,
+    getList: getOrderList,
     getOrderDetail,
-    createOrder,
+    addOrder,
+    updateOrder,
     reviewOrder,
     assignOrder,
     startOrder,
     completeOrder,
     deleteOrder,
-    exportOrder,
+    exportList,
     updateOrderStatus,
     cancelOrder,
-    resetState
+    resetState,
+    getStatusDict
   };
 });

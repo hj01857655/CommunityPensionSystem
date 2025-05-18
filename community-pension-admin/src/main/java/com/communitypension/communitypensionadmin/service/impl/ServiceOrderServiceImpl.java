@@ -43,6 +43,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.communitypension.communitypensionadmin.constant.DictTypeConstants;
+import com.communitypension.communitypensionadmin.utils.DictUtils;
+
 /**
  * 服务预约Service实现类
  */
@@ -469,7 +472,7 @@ public class ServiceOrderServiceImpl extends ServiceImpl<ServiceOrderMapper, Ser
                 row.createCell(1).setCellValue(user != null ? user.getName() : "");
                 row.createCell(2).setCellValue(orderItem.getServiceName());
                 row.createCell(3).setCellValue(orderItem.getScheduleTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-                row.createCell(4).setCellValue(DictUtils.getDictLabel("service_order_status", orderItem.getStatus().toString()));
+                row.createCell(4).setCellValue(DictUtils.getDictLabel(DictTypeConstants.ORDER_STATUS, orderItem.getStatus().toString()));
                 row.createCell(5).setCellValue(orderItem.getActualDuration() != null ? orderItem.getActualDuration() + "分钟" : "");
                 row.createCell(6).setCellValue(orderItem.getActualFee() != null ? orderItem.getActualFee() + "元" : "");
             }
@@ -519,21 +522,88 @@ public class ServiceOrderServiceImpl extends ServiceImpl<ServiceOrderMapper, Ser
      */
     @Override
     public Map<String, Object> getOrderStats(Long serviceItemId, LocalDateTime startTime, LocalDateTime endTime) {
-        LambdaQueryWrapper<ServiceOrder> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(ServiceOrder::getServiceItemId, serviceItemId)
-                .between(ServiceOrder::getScheduleTime, startTime, endTime)
-                .eq(ServiceOrder::getStatus, 3); // 只统计已完成的预约
+        // 获取服务项目信息
+        ServiceItem serviceItem = serviceItemService.getById(serviceItemId);
+        if (serviceItem == null) {
+            throw new BusinessException("服务项目不存在");
+        }
 
-        List<ServiceOrder> orders = this.list(wrapper);
+        // 查询条件
+        LambdaQueryWrapper<ServiceOrder> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(ServiceOrder::getServiceItemId, serviceItemId)
+                .between(ServiceOrder::getScheduleTime, startTime, endTime);
 
-        Map<String, Object> stats = new HashMap<>();
-        stats.put("totalOrders", orders.size());
-        stats.put("totalDuration", orders.stream().mapToInt(ServiceOrder::getActualDuration).sum());
-        stats.put("totalFee", orders.stream().mapToDouble(ServiceOrder::getActualFee).sum());
-        stats.put("averageDuration", orders.isEmpty() ? 0 : orders.stream().mapToInt(ServiceOrder::getActualDuration).average().orElse(0));
-        stats.put("averageFee", orders.isEmpty() ? 0 : orders.stream().mapToDouble(ServiceOrder::getActualFee).average().orElse(0));
+        // 查询预约记录
+        List<ServiceOrder> orders = this.list(queryWrapper);
 
-        return stats;
+        // 统计数据
+        int totalCount = orders.size();
+        int completedCount = 0;
+        int canceledCount = 0;
+        double totalFee = 0.0;
+
+        for (ServiceOrder order : orders) {
+            if (order.getStatus() == ServiceOrderStatus.COMPLETED.getCode()) {
+                completedCount++;
+                totalFee += order.getActualFee() != null ? order.getActualFee() : 0;
+            } else if (order.getStatus() == ServiceOrderStatus.CANCELLED.getCode()) {
+                canceledCount++;
+            }
+        }
+
+        // 返回统计结果
+        Map<String, Object> result = new HashMap<>();
+        result.put("serviceName", serviceItem.getServiceName());
+        result.put("totalCount", totalCount);
+        result.put("completedCount", completedCount);
+        result.put("canceledCount", canceledCount);
+        result.put("totalFee", totalFee);
+        return result;
+    }
+
+    /**
+     * 删除预约
+     *
+     * @param orderIds 预约ID字符串，多个ID用逗号分隔
+     * @return 是否成功
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean deleteOrder(String orderIds) {
+        if (!StringUtils.hasText(orderIds)) {
+            throw new BusinessException("预约ID不能为空");
+        }
+        
+        // 将ID字符串转换为ID数组
+        String[] ids = orderIds.split(",");
+        
+        // 查询这些工单是否存在
+        List<ServiceOrder> orders = this.listByIds(List.of(ids));
+        if (orders.isEmpty() || orders.size() != ids.length) {
+            throw new BusinessException("部分预约不存在");
+        }
+        
+        // 检查工单状态，只有待接单、已拒绝或已取消的工单才能删除
+        for (ServiceOrder order : orders) {
+            int status = order.getStatus();
+            if (status != ServiceOrderStatus.PENDING.getCode() && 
+                status != ServiceOrderStatus.REJECTED.getCode() && 
+                status != ServiceOrderStatus.CANCELLED.getCode()) {
+                throw new BusinessException("只能删除待接单、已拒绝或已取消的预约");
+            }
+        }
+        
+        // 执行删除操作
+        boolean result = this.removeByIds(List.of(ids));
+        
+        // 记录日志
+        if (result) {
+            log.info("删除预约成功，ID: {}", orderIds);
+        } else {
+            log.error("删除预约失败，ID: {}", orderIds);
+        }
+        
+        return result;
     }
 
     /**
@@ -554,49 +624,13 @@ public class ServiceOrderServiceImpl extends ServiceImpl<ServiceOrderMapper, Ser
         if (serviceItem != null) {
             vo.setServiceName(serviceItem.getServiceName());
             vo.setServiceType(serviceItem.getServiceType());
-
-            // 根据服务类型设置中文名称
-            String serviceTypeName = serviceItem.getServiceType();
-            switch (serviceTypeName) {
-                case "medical":
-                    serviceTypeName = "医疗服务";
-                    break;
-                case "cleaning":
-                    serviceTypeName = "清洁服务";
-                    break;
-                case "repair":
-                    serviceTypeName = "维修服务";
-                    break;
-                default:
-                    // 保留原始值
-            }
-            vo.setServiceTypeName(serviceTypeName);
+            // 字典获取服务类型名称
+            String typeName = DictUtils.getDictLabel(DictTypeConstants.SERVICE_TYPE, serviceItem.getServiceType());
+            vo.setServiceTypeName(typeName);
         }
 
-        // 设置状态名称
-        String statusName = String.valueOf(order.getStatus());
-        switch (order.getStatus()) {
-            case 0:
-                statusName = "待审核";
-                break;
-            case 1:
-                statusName = "已派单";
-                break;
-            case 2:
-                statusName = "服务中";
-                break;
-            case 3:
-                statusName = "已完成";
-                break;
-            case 4:
-                statusName = "已取消";
-                break;
-            case 5:
-                statusName = "已拒绝";
-                break;
-            default:
-                // 保留原始值
-        }
+        // 状态名称赋值（用字典工具类替换switch）
+        String statusName = DictUtils.getDictLabel(DictTypeConstants.ORDER_STATUS, order.getStatus() == null ? null : String.valueOf(order.getStatus()));
         vo.setStatusName(statusName);
 
         vo.setActualDuration(order.getActualDuration());

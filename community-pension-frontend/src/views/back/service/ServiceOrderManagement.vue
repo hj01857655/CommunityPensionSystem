@@ -21,8 +21,14 @@
       <el-row :gutter="16" style="margin-top: 8px;">
         <el-col :span="8">
           <el-form-item label="订单状态" prop="status">
-            <el-select v-model="queryParams.status" placeholder="订单状态" clearable style="width: 100%">
-              <el-option v-for="dict in statusOptions" :key="dict.value" :label="dict.label" :value="dict.value" />
+            <el-select v-model="queryParams.status" placeholder="订单状态" clearable style="width: 100%; min-width: 180px;">
+              <el-option 
+                v-for="dict in statusOptions" 
+                :key="dict.value" 
+                :label="dict.label" 
+                :value="dict.value"
+                class="status-option"
+              />
             </el-select>
           </el-form-item>
         </el-col>
@@ -41,6 +47,32 @@
     </el-form>
 
     <el-row :gutter="10" class="mb8">
+      <el-col :span="1.5">
+        <el-button
+          type="primary"
+          plain
+          icon="Plus"
+          @click="handleAdd"
+        >新增</el-button>
+      </el-col>
+      <el-col :span="1.5">
+        <el-button
+          type="success"
+          plain
+          icon="Edit"
+          :disabled="single"
+          @click="handleUpdate"
+        >修改</el-button>
+      </el-col>
+      <el-col :span="1.5">
+        <el-button
+          type="danger"
+          plain
+          icon="Delete"
+          :disabled="multiple"
+          @click="handleDelete()"
+        >删除</el-button>
+      </el-col>
       <el-col :span="1.5">
         <el-button
           type="warning"
@@ -79,17 +111,27 @@
         <template #default="scope">
           <el-button link icon="View" @click="handleView(scope.row)">查看</el-button>
           <!-- 根据当前状态显示对应的操作按钮 -->
-          <template v-if="scope.row.status == 0">
-            <el-button link type="success" icon="Check" @click="handleStatusUpdate(scope.row, '1')">接单</el-button>
-            <el-button link type="danger" icon="Close" @click="handleStatusUpdate(scope.row, '5')">拒绝</el-button>
+          <template v-if="statusOperations[String(scope.row.status)]">
+            <el-button 
+              v-for="op in statusOperations[String(scope.row.status)]" 
+              :key="op.action"
+              link 
+              :type="op.type" 
+              :icon="op.icon" 
+              @click="handleStatusUpdate(scope.row, op.action)"
+            >
+              {{ op.label }}
+            </el-button>
           </template>
-          <template v-else-if="scope.row.status == 1">
-            <el-button link type="primary" icon="VideoPlay" @click="handleStatusUpdate(scope.row, '2')">开始服务</el-button>
-          </template>
-          <template v-else-if="scope.row.status == 2">
-            <el-button link type="success" icon="CircleCheck" @click="handleStatusUpdate(scope.row, '3')">完成服务</el-button>
-          </template>
-          <el-button link type="danger" icon="Delete" @click="handleDelete(scope.row)" v-if="[0, 1, 2].includes(Number(scope.row.status))">取消</el-button>
+          <el-button 
+            link 
+            type="danger" 
+            icon="Delete" 
+            @click="handleDelete(scope.row)" 
+            v-if="deletableStatuses.includes(Number(scope.row.status))"
+          >
+            取消
+          </el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -123,13 +165,63 @@
       </template>
     </el-dialog>
 
-    <!-- 处理订单对话框 -->
-    <el-dialog :title="title" v-model="open" width="500px" append-to-body>
-      <el-form ref="orderForm" :model="form" :rules="rules" label-width="80px">
-        <el-form-item label="状态" prop="status">
-          <el-select v-model="form.status" placeholder="请选择状态">
-            <el-option v-for="dict in statusOptions" :key="dict.value" :label="dict.label" :value="dict.value" />
-          </el-select>
+    <!-- 添加或修改工单对话框 -->
+    <el-dialog :title="title" v-model="open" width="700px" append-to-body>
+      <el-form ref="orderForm" :model="form" :rules="rules" label-width="100px">
+        <el-row>
+          <el-col :span="12">
+            <el-form-item label="用户" prop="userId">
+              <el-select v-model="form.userId" placeholder="请选择用户" filterable clearable style="width: 100%">
+                <el-option
+                  v-for="item in userOptions"
+                  :key="item.userId"
+                  :label="item.name"
+                  :value="item.userId"
+                />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="服务项目" prop="serviceItemId">
+              <el-select v-model="form.serviceItemId" placeholder="请选择服务项目" filterable clearable style="width: 100%">
+                <el-option
+                  v-for="item in serviceOptions"
+                  :key="item.serviceId"
+                  :label="item.serviceName"
+                  :value="item.serviceId"
+                />
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span="12">
+            <el-form-item label="预约时间" prop="scheduleTime">
+              <el-date-picker
+                v-model="form.scheduleTime"
+                type="datetime"
+                placeholder="选择预约时间"
+                style="width: 100%"
+                :disabled-date="disabledDate"
+                value-format="YYYY-MM-DDTHH:mm:ss"
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="状态" prop="status">
+              <el-select v-model="form.status" placeholder="请选择状态" style="width: 100%">
+                <el-option
+                  v-for="dict in statusOptions"
+                  :key="dict.value"
+                  :label="dict.label"
+                  :value="dict.value"
+                />
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-form-item label="申请原因" prop="applyReason">
+          <el-input v-model="form.applyReason" type="textarea" placeholder="请输入申请原因" />
         </el-form-item>
         <el-form-item label="审核备注" prop="reviewRemark">
           <el-input v-model="form.reviewRemark" type="textarea" placeholder="请输入审核备注" />
@@ -146,16 +238,23 @@
 </template>
 
 <script setup>
-import { useServiceOrderStore } from '@/stores/back/service';
+import { useServiceItemStore } from '@/stores/back/service/item';
+import { useServiceOrderStore } from '@/stores/back/service/order';
+import { useUserStore } from '@/stores/back/userStore';
 import { formatDate } from '@/utils/date';
+import { useDict } from '@/utils/dict';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 
 const serviceOrderStore = useServiceOrderStore();
+const userStore = useUserStore();
+const serviceItemStore = useServiceItemStore();
+
+// 使用字典
+const { order_status } = useDict('order_status');
 
 const orderList = ref([]);
 const open = ref(false);
-const viewOpen = ref(false);
 const loading = ref(false);
 const showSearch = ref(true);
 const ids = ref([]);
@@ -163,17 +262,15 @@ const single = ref(true);
 const multiple = ref(true);
 const total = ref(0);
 const title = ref("");
+const viewOpen = ref(false);
 const dateRange = ref([]);
 
+// 用户和服务项目选项
+const userOptions = ref([]);
+const serviceOptions = ref([]);
+
 // 状态数据字典
-const statusOptions = [
-  { value: "0", label: "待处理" },
-  { value: "1", label: "已接单" },
-  { value: "2", label: "服务中" },
-  { value: "3", label: "已完成" },
-  { value: "4", label: "已取消" },
-  { value: "5", label: "已拒绝" }
-];
+const statusOptions = computed(() => order_status.value || []);
 
 // 查询参数
 const queryParams = ref({
@@ -191,34 +288,46 @@ const queryParams = ref({
 const form = ref({
   id: undefined,
   userId: undefined,
-  userName: undefined,
-  serviceId: undefined,
-  serviceName: undefined,
-  serviceTypeName: undefined,
+  serviceItemId: undefined,
   scheduleTime: undefined,
-  status: undefined,
-  statusName: undefined,
+  status: "0",
   applyReason: undefined,
-  reviewRemark: undefined,
-  createTime: undefined,
-  updateTime: undefined
+  reviewRemark: undefined
 });
 
 // 表单校验规则
-const rules = {
-  status: [
-    { required: true, message: "订单状态不能为空", trigger: "change" }
+const rules = ref({
+  userId: [
+    { required: true, message: "用户不能为空", trigger: "blur" }
   ],
-  reviewRemark: [
-    { required: true, message: "审核备注不能为空", trigger: "blur" }
+  serviceItemId: [
+    { required: true, message: "服务项目不能为空", trigger: "blur" }
+  ],
+  scheduleTime: [
+    { required: true, message: "预约时间不能为空", trigger: "blur" },
+    { 
+      validator: (rule, value, callback) => {
+        if (value && new Date(value) <= new Date()) {
+          callback(new Error('预约时间必须大于当前时间'));
+        } else {
+          callback();
+        }
+      }, 
+      trigger: 'change' 
+    }
+  ],
+  status: [
+    { required: true, message: "状态不能为空", trigger: "blur" }
+  ],
+  applyReason: [
+    { required: true, message: "申请原因不能为空", trigger: "blur" },
+    { min: 5, max: 500, message: "申请原因长度必须在5-500个字符之间", trigger: "blur" }
   ]
-};
+});
 
 const orderForm = ref(null);
 
-const canHandleStatus = ['0', '1', '2'];
-
-/** 查询订单列表 */
+/** 查询工单列表 */
 async function getList() {
   loading.value = true;
   try {
@@ -230,24 +339,46 @@ async function getList() {
       queryParams.value.beginTime = undefined;
       queryParams.value.endTime = undefined;
     }
-
-    const response = await serviceOrderStore.getOrderList(queryParams.value);
-    console.log('orderList response:', response);
-    if (response && response.records) {
+    
+    const response = await serviceOrderStore.getList(queryParams.value);
+    if (response) {
       orderList.value = response.records;
       total.value = response.total;
-      response.records.forEach(item => {
-        if (!item.id) {
-          console.error('警告：有工单数据缺少id字段', item);
-        } else {
-          console.log('工单ID:', item.id, '工单数据:', item);
-        }
-      });
     }
   } catch (error) {
-    console.error("获取订单列表失败:", error);
+    console.error("获取工单列表失败:", error);
   } finally {
     loading.value = false;
+  }
+}
+
+/** 获取用户列表 */
+async function getUserList() {
+  try {
+    const response = await userStore.fetchUsers({
+      current: 1,
+      size: 100
+    });
+    if (response && userStore.userList) {
+      userOptions.value = userStore.userList;
+    }
+  } catch (error) {
+    console.error("获取用户列表失败:", error);
+  }
+}
+
+/** 获取服务项目列表 */
+async function getServiceList() {
+  try {
+    const response = await serviceItemStore.getServiceItemList({
+      current: 1,
+      size: 100
+    });
+    if (response && serviceItemStore.serviceItemList) {
+      serviceOptions.value = serviceItemStore.serviceItemList;
+    }
+  } catch (error) {
+    console.error("获取服务项目列表失败:", error);
   }
 }
 
@@ -262,17 +393,11 @@ function reset() {
   form.value = {
     id: undefined,
     userId: undefined,
-    userName: undefined,
-    serviceId: undefined,
-    serviceName: undefined,
-    serviceTypeName: undefined,
+    serviceItemId: undefined,
     scheduleTime: undefined,
-    status: undefined,
-    statusName: undefined,
+    status: "0",
     applyReason: undefined,
-    reviewRemark: undefined,
-    createTime: undefined,
-    updateTime: undefined
+    reviewRemark: undefined
   };
   if (orderForm.value) {
     orderForm.value.resetFields();
@@ -311,9 +436,8 @@ function handleSelectionChange(selection) {
 /** 查看按钮操作 */
 async function handleView(row) {
   reset();
-  const orderId = row.id || ids.value[0];
   try {
-    const response = await serviceOrderStore.getOrderDetail(orderId);
+    const response = await serviceOrderStore.getOrderDetail(row.id);
     if (response) {
       form.value = response;
       viewOpen.value = true;
@@ -324,16 +448,31 @@ async function handleView(row) {
   }
 }
 
-/** 处理按钮操作 */
+/** 新增按钮操作 */
+function handleAdd() {
+  reset();
+  getUserList();
+  getServiceList();
+  open.value = true;
+  title.value = "新增工单";
+}
+
+/** 修改按钮操作 */
 async function handleUpdate(row) {
   reset();
-  const orderId = row.id || ids.value[0];
+  getUserList();
+  getServiceList();
+  const orderId = row?.id || ids.value[0];
   try {
     const response = await serviceOrderStore.getOrderDetail(orderId);
     if (response) {
+      // 确保状态值是字符串类型，与字典中的值类型一致
+      if (response.status !== undefined && response.status !== null) {
+        response.status = String(response.status);
+      }
       form.value = response;
       open.value = true;
-      title.value = "处理订单";
+      title.value = "修改工单";
     }
   } catch (error) {
     console.error("获取订单详情失败:", error);
@@ -348,33 +487,80 @@ async function submitForm() {
   await orderForm.value.validate(async (valid) => {
     if (valid) {
       try {
-        await serviceOrderStore.reviewOrder(form.value.id, form.value);
-        ElMessage.success("处理成功");
+        // 创建一个新对象用于API请求
+        const apiData = { ...form.value };
+        
+        // 额外验证申请原因长度
+        if (apiData.applyReason && apiData.applyReason.length < 5) {
+          ElMessage.error('申请原因长度必须在5-500个字符之间');
+          return;
+        }
+        
+        // 额外验证预约时间
+        if (apiData.scheduleTime && new Date(apiData.scheduleTime) <= new Date()) {
+          ElMessage.error('预约时间必须大于当前时间');
+          return;
+        }
+        
+        // 确保ID是数字类型
+        if (apiData.id) {
+          apiData.id = Number(apiData.id);
+        }
+        
+        // 确保状态值是数字类型
+        if (apiData.status !== undefined && apiData.status !== null) {
+          apiData.status = Number(apiData.status);
+        }
+        
+        if (apiData.id) {
+          await serviceOrderStore.updateOrder(apiData);
+          ElMessage.success("修改成功");
+        } else {
+          await serviceOrderStore.addOrder(apiData);
+          ElMessage.success("新增成功");
+        }
+        
         open.value = false;
         getList();
       } catch (error) {
-        console.error("处理订单失败:", error);
-        ElMessage.error("处理失败");
+        console.error("操作失败:", error);
+        ElMessage.error(error.message || "操作失败");
       }
     }
   });
 }
 
-/** 取消订单按钮操作 */
+/** 状态修改操作 */
+async function handleStatusUpdate(row, status) {
+  // 从字典中查找对应状态的标签
+  const statusItem = statusOptions.value.find(item => item.value === status);
+  const text = statusItem ? statusItem.label : '更新状态';
+  
+  try {
+    await serviceOrderStore.updateOrderStatus(row.id, status);
+    getList();
+    ElMessage.success(`${text}成功`);
+  } catch (error) {
+    console.error(`${text}失败:`, error);
+    ElMessage.error(`${text}失败`);
+  }
+}
+
+/** 删除按钮操作 */
 function handleDelete(row) {
-  const orderIds = row.id || ids.value;
-  ElMessageBox.confirm('是否确认取消订单编号为"' + orderIds + '"的数据项?', "警告", {
+  const orderIds = row?.id || ids.value;
+  ElMessageBox.confirm('是否确认删除工单编号为"' + orderIds + '"的数据项?', "警告", {
     confirmButtonText: "确定",
     cancelButtonText: "取消",
     type: "warning"
   }).then(async function() {
     try {
-      await serviceOrderStore.cancelOrder(orderIds);
+      await serviceOrderStore.deleteOrder(orderIds);
       getList();
-      ElMessage.success("取消成功");
+      ElMessage.success("删除成功");
     } catch (error) {
-      console.error("取消订单失败:", error);
-      ElMessage.error("取消失败");
+      console.error("删除工单失败:", error);
+      ElMessage.error("删除失败");
     }
   });
 }
@@ -393,25 +579,36 @@ function handleExport() {
   serviceOrderStore.exportList(queryParams.value);
 }
 
-/** 状态更新 */
-async function handleStatusUpdate(row, status) {
-  console.log('handleStatusUpdate row:', row);
-  if (!row.id) {
-    ElMessage.error('工单ID不存在，无法更新状态！');
-    return;
-  }
-  try {
-    await serviceOrderStore.updateOrderStatus(row.id, status);
-    ElMessage.success("状态更新成功");
-    getList();
-  } catch (error) {
-    console.error("状态更新失败:", error);
-    ElMessage.error("状态更新失败");
-  }
-}
+// 禁用过去的日期
+const disabledDate = (time) => {
+  return time.getTime() < Date.now();
+};
+
+// 定义状态操作映射
+const statusOperations = computed(() => {
+  return {
+    '0': [
+      { type: 'success', icon: 'Check', action: '1', label: '派单' },
+      { type: 'danger', icon: 'Close', action: '5', label: '拒绝' }
+    ],
+    '1': [
+      { type: 'primary', icon: 'VideoPlay', action: '2', label: '开始服务' }
+    ],
+    '2': [
+      { type: 'success', icon: 'CircleCheck', action: '3', label: '完成服务' }
+    ]
+  };
+});
+
+// 获取可删除的状态列表
+const deletableStatuses = [0, 1, 2];
 
 onMounted(() => {
+  // 获取工单列表
   getList();
+  // 获取用户和服务项目列表，以便在新增和修改时使用
+  getUserList();
+  getServiceList();
 });
 </script>
 

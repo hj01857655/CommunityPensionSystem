@@ -54,3 +54,14 @@ export const listHealthRecords = (page, size, params = {}) => {
 export const getElders = () => {
     return axios.get('/api/system/user/elders');
 };
+
+// 导出健康记录
+export const exportHealthRecords = (params = {}) => {
+    return axios.get('/api/health/record/export', {
+        params,
+        responseType: 'blob'  // 指定响应类型为blob
+    }).catch(error => {
+        console.error('Error exporting health records:', error);
+        throw error;
+    });
+};
