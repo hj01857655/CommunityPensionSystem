@@ -55,7 +55,7 @@ export const updatePhysicalExamReport = (data) => {
 
 // 删除体检报告
 export const deletePhysicalExamReport = (id) => {
-  return axios.delete(`/api/physicalExamReport/delete/${id}`)
+  return axios.delete(`/api/physicalExamReport/${id}`)
     .catch(error => {
       console.error('Error deleting physical exam report:', error);
       return Promise.reject(error);
