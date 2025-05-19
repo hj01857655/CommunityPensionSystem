@@ -27,7 +27,7 @@
     "vue-echarts": "^7.0.3",
     "vue-router": "4",
     "vue3-treeselect": "^0.1.10",
-    "xlsx": "^0.18.5"
+    "xlsx": "0.18.5"
   },
   "devDependencies": {
     "@babel/core": "^7.12.16",
