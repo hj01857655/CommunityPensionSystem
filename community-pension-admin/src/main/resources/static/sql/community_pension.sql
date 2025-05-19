@@ -11,7 +11,7 @@
  Target Server Version : 80400 (8.4.0)
  File Encoding         : 65001
 
- Date: 19/05/2025 01:12:55
+ Date: 19/05/2025 09:44:43
 */
 
 SET NAMES utf8mb4;
@@ -237,7 +237,7 @@ CREATE TABLE `dict_data`  (
   `update_time` datetime NULL DEFAULT NULL COMMENT '更新时间',
   `remark` varchar(500) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '备注',
   PRIMARY KEY (`dict_code`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 196 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '字典数据表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 199 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '字典数据表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of dict_data
@@ -364,6 +364,9 @@ INSERT INTO `dict_data` VALUES (192, 2, '中度', 'medium', 'abnormal_level', ''
 INSERT INTO `dict_data` VALUES (193, 3, '重度', 'high', 'abnormal_level', '', 'danger', 'N', '0', 'admin', '2025-05-19 00:00:49', '', NULL, '重度异常');
 INSERT INTO `dict_data` VALUES (194, 1, '正常', '1', 'service_status', '', 'primary', 'Y', '0', 'admin', '2025-05-19 00:17:14', 'admin', '2025-05-19 00:17:14', '服务项目正常状态（上架）');
 INSERT INTO `dict_data` VALUES (195, 2, '停用', '0', 'service_status', '', 'danger', 'N', '0', 'admin', '2025-05-19 00:17:14', 'admin', '2025-05-19 00:17:14', '服务项目停用状态（下架）');
+INSERT INTO `dict_data` VALUES (196, 1, '待审核', '0', 'service_review_status', '', 'info', 'Y', '0', 'admin', '2025-05-19 09:26:56', '', NULL, '服务评价待管理员审核状态');
+INSERT INTO `dict_data` VALUES (197, 2, '已通过', '1', 'service_review_status', '', 'success', 'N', '0', 'admin', '2025-05-19 09:26:56', '', NULL, '服务评价审核通过状态');
+INSERT INTO `dict_data` VALUES (198, 3, '已拒绝', '2', 'service_review_status', '', 'danger', 'N', '0', 'admin', '2025-05-19 09:26:56', '', NULL, '服务评价审核拒绝状态');
 
 -- ----------------------------
 -- Table structure for dict_type
@@ -381,7 +384,7 @@ CREATE TABLE `dict_type`  (
   `remark` varchar(500) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '备注',
   PRIMARY KEY (`dict_id`) USING BTREE,
   UNIQUE INDEX `dict_type`(`dict_type` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 121 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '字典类型表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 123 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '字典类型表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of dict_type
@@ -412,6 +415,7 @@ INSERT INTO `dict_type` VALUES (117, '监测类型', 'monitor_type', '0', 'admin
 INSERT INTO `dict_type` VALUES (118, '监测状态', 'monitor_status', '0', 'admin', '2025-05-19 00:00:49', '', NULL, '健康监测状态');
 INSERT INTO `dict_type` VALUES (119, '异常级别', 'abnormal_level', '0', 'admin', '2025-05-19 00:00:49', '', NULL, '健康监测异常级别');
 INSERT INTO `dict_type` VALUES (120, '服务状态', 'service_status', '0', 'admin', '2025-05-19 00:17:14', 'admin', '2025-05-19 00:17:14', '服务项目状态：上架或下架');
+INSERT INTO `dict_type` VALUES (122, '服务评价状态', 'service_review_status', '0', 'admin', '2025-05-19 09:26:56', 'admin', '2025-05-19 09:26:56', '服务评价的审核状态');
 
 -- ----------------------------
 -- Table structure for elder_kin_relation
@@ -691,7 +695,7 @@ CREATE TABLE `notification`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_status`(`status` ASC) USING BTREE,
   INDEX `idx_publish_time`(`publish_time` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 34 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '通知公告表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 35 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '通知公告表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of notification
@@ -720,6 +724,7 @@ INSERT INTO `notification` VALUES (30, 1002, '服务预约通知', '尊敬的格
 INSERT INTO `notification` VALUES (31, 1002, '服务预约通知', '尊敬的格拉克结果用户，\n\n您的服务预约（预约号：8）预约审核通过。\n\n预约详情：\n- 服务项目：null\n- 预约时间：2025-05-21 10:00:00\n\n您的预约已通过审核，服务人员将按预约时间上门服务，请保持电话畅通。\n\n如有疑问，请联系客服中心。', 'system', 0, '2025-05-18 22:39:34', '2025-05-18 22:39:34', '2025-05-18 22:39:34');
 INSERT INTO `notification` VALUES (32, 1002, '服务预约通知', '尊敬的格拉克结果用户，\n\n您的服务预约（预约号：8）服务已开始。\n\n预约详情：\n- 服务项目：null\n- 预约时间：2025-05-21 10:00:00\n\n您的服务正在进行中，如有问题请联系客服。\n\n如有疑问，请联系客服中心。', 'system', 0, '2025-05-18 22:56:39', '2025-05-18 22:56:39', '2025-05-18 22:56:39');
 INSERT INTO `notification` VALUES (33, 1002, '服务预约通知', '尊敬的格拉克结果用户，\n\n您的服务预约（预约号：8）服务已完成。\n\n预约详情：\n- 服务项目：null\n- 预约时间：2025-05-21 10:00:00\n\n您的服务已完成，感谢您的使用，欢迎对本次服务进行评价。\n- 实际服务时长：0分钟\n- 实际服务费用：0.0元\n\n如有疑问，请联系客服中心。', 'system', 0, '2025-05-18 22:56:52', '2025-05-18 22:56:52', '2025-05-18 22:56:52');
+INSERT INTO `notification` VALUES (34, 2, '服务预约通知', '尊敬的刘大毛用户，\n\n您的服务预约（预约号：9）预约已创建，等待审核。\n\n预约详情：\n- 服务项目：null\n- 预约时间：2025-05-20 09:32:00\n\n您的预约正在审核中，请耐心等待。审核结果将以系统通知的形式告知您。\n\n如有疑问，请联系客服中心。', 'system', 0, '2025-05-19 09:32:12', '2025-05-19 09:32:12', '2025-05-19 09:32:12');
 
 -- ----------------------------
 -- Table structure for physical_exam_report
@@ -978,7 +983,7 @@ CREATE TABLE `service_order`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_user_status`(`user_id` ASC, `status` ASC) USING BTREE,
   CONSTRAINT `service_order_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 9 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '服务工单表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 10 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '服务工单表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of service_order
@@ -989,6 +994,7 @@ INSERT INTO `service_order` VALUES (5, 2, 1002, 3, '1111111111111111111', '111',
 INSERT INTO `service_order` VALUES (6, 2, 1002, 3, 'fghfhjgjhhjkghghj', '1111111111111', '2025-05-20 08:42:00', 0.00, 0, 'Ldamao', '2025-05-17 01:42:28', 'Ldamao', '2025-05-18 22:30:01', NULL);
 INSERT INTO `service_order` VALUES (7, 1002, 1002, 3, '飞鱼服复古', '已接单', '2025-05-21 16:00:00', 0.00, 0, 'admin', '2025-05-18 22:37:41', 'admin', '2025-05-18 22:37:41', NULL);
 INSERT INTO `service_order` VALUES (8, 1002, 1002, 3, '人发范德萨', '已接单', '2025-05-21 10:00:00', 0.00, 0, 'admin', '2025-05-18 22:39:30', 'admin', '2025-05-18 22:39:30', NULL);
+INSERT INTO `service_order` VALUES (9, 2, 4004, 0, '2222222222222', NULL, '2025-05-20 09:32:00', NULL, NULL, 'Ldamao', '2025-05-19 09:32:12', 'Ldamao', '2025-05-19 09:32:12', NULL);
 
 -- ----------------------------
 -- Table structure for service_review
@@ -1029,7 +1035,7 @@ CREATE TABLE `service_review`  (
 -- ----------------------------
 -- Records of service_review
 -- ----------------------------
-INSERT INTO `service_review` VALUES (1, 1002, 3, 2, 0, 0, 5, '服务非常好，医生很专业，态度也很好！强烈推荐！', '2025-05-06 16:30:25', 0, 0, '11111', '2025-05-17 18:50:13', 2, 'Ldamao', 'Ldamao', '首次评价，非常满意', NULL, '2025-05-06 16:30:25', NULL, '2025-05-18 22:30:56', 0);
+INSERT INTO `service_review` VALUES (1, 1002, 3, 2, 0, 0, 5, '服务非常好，医生很专业，态度也很好！强烈推荐！', '2025-05-06 16:30:25', 0, 1, '11111', '2025-05-17 18:50:13', 2, 'Ldamao', 'Ldamao', '首次评价，非常满意', NULL, '2025-05-06 16:30:25', NULL, '2025-05-18 22:30:56', 0);
 INSERT INTO `service_review` VALUES (2, 3002, 4, 2, 0, 0, 3, '服务还可以，师傅上门比较准时，但是问题没有完全解决，希望改进。', '2025-05-05 16:30:25', 0, 0, '感谢您的反馈，我们已联系师傅跟进处理，给您带来不便非常抱歉。', '2025-05-06 16:30:25', NULL, 'Ldamao_kin', 'admin', '家属代评，管理员已回复', NULL, '2025-05-05 16:30:25', NULL, '2025-05-06 17:27:17', 0);
 
 -- ----------------------------
