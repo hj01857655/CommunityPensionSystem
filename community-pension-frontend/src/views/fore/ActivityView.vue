@@ -858,7 +858,7 @@ const handleCancel = async (activity) => {
     });
 
     // 调用API取消报名
-    const success = await activityStore.cancelActivityRegistration(activity.id, elderId);
+    const success = await activityStore.cancelActivityRegistrationAction(activity.id, elderId);
     if (success) {
       // 刷新列表
       ElMessage.success('取消报名成功');
