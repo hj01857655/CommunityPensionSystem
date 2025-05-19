@@ -54,7 +54,7 @@
           />
         </el-tooltip>
         <el-dropdown @command="changeRefreshTime" trigger="click">
-          <el-button type="text">
+          <el-button link>
             <el-icon><ArrowDown /></el-icon>
           </el-button>
           <template #dropdown>
@@ -81,7 +81,7 @@
             <el-checkbox v-model="column.visible" @click.stop>{{ column.label }}</el-checkbox>
           </el-dropdown-item>
           <el-dropdown-item divided>
-            <el-button type="text" @click="resetColumnSettings">重置</el-button>
+            <el-button link @click="resetColumnSettings">重置</el-button>
           </el-dropdown-item>
         </el-dropdown-menu>
       </template>
@@ -461,7 +461,12 @@ const handleDateRangeChange = (val) => {
 }
 
 // 搜索
-const handleSearch = () => {
+const handleSearch = async () => {
+  // 确保活动类型数据已加载
+  if (!activityTypes.value || activityTypes.value.length === 0) {
+    await loadActivityTypes()
+  }
+  
   activityStore.queryParams.pageNum = 1
   getList()
 }
@@ -479,11 +484,64 @@ const handleSelectionChange = (selection) => {
   selectedRows.value = selection
 }
 
+// 加载活动类型数据
+const loadActivityTypes = async () => {
+  try {
+    // 直接从后端获取字典数据
+    const response = await getDictDataByType('activity_type')
+    if (response.code === 200 && response.data && response.data.length > 0) {
+      activityTypes.value = response.data.map(item => ({
+        value: item.dictValue,
+        label: item.dictLabel
+      }))
+      console.log('活动类型数据加载成功:', activityTypes.value)
+      return true
+    } else {
+      console.warn('获取活动类型数据为空，使用默认数据')
+      // 使用默认数据
+      activityTypes.value = [
+        { value: '1', label: '文化娱乐' },
+        { value: '2', label: '健康讲座' },
+        { value: '3', label: '体育健身' },
+        { value: '4', label: '志愿服务' },
+        { value: '5', label: '节日庆祝' },
+        { value: '6', label: '技能培训' },
+        { value: '7', label: '社交联谊' },
+        { value: '8', label: '公益慈善' },
+        { value: '9', label: '其他活动' }
+      ]
+      return false
+    }
+  } catch (error) {
+    console.error('获取活动类型数据失败:', error)
+    // 出错时使用默认数据
+    activityTypes.value = [
+      { value: '1', label: '文化娱乐' },
+      { value: '2', label: '健康讲座' },
+      { value: '3', label: '体育健身' },
+      { value: '4', label: '志愿服务' },
+      { value: '5', label: '节日庆祝' },
+      { value: '6', label: '技能培训' },
+      { value: '7', label: '社交联谊' },
+      { value: '8', label: '公益慈善' },
+      { value: '9', label: '其他活动' }
+    ]
+    return false
+  }
+}
+
 // 新增活动
-const handleAdd = () => {
+const handleAdd = async () => {
   resetForm()
+  
+  // 确保活动类型数据已加载
+  if (!activityTypes.value || activityTypes.value.length === 0) {
+    await loadActivityTypes()
+  }
+  
   dialogType.value = 'add'
   dialogVisible.value = true
+  // 注意：对话框标题直接在模板中通过三元表达式设置，无需在这里设置
 }
 
 // 查看活动
@@ -912,21 +970,22 @@ const loadMore = async () => {
 }
 
 // 初始化
-onMounted(() => {
+onMounted(async () => {
   try {
+    // 首先加载活动类型数据
+    await loadActivityTypes()
+    
+    // 然后加载活动列表
     getList()
+    
     // 组件卸载时清除定时器
     onBeforeUnmount(() => {
       stopAutoRefresh()
     })
-    // 获取字典数据（使用 useDict 替换 getDictDataByType）
-    const { activity_type } = useDict('activity_type')
-    activityTypes.value = activity_type.value.map(item => ({
-      value: item.dictValue,
-      label: item.dictLabel
-    }))
   } catch (error) {
     console.error('活动列表初始化失败:', error)
+    // 即使出错也尝试加载活动列表
+    getList()
   }
 })
 </script>
