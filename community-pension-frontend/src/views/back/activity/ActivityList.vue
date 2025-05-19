@@ -294,7 +294,7 @@ const handleDelete = (row) => {
   }).then(() => {
     loading.value = true
     // 直接删除活动
-    activityStore.deleteActivity(row.id, true).then(() => {
+    activityStore.deleteActivity(row.id).then(() => {
       ElMessage.success('删除成功');
       getList();
     }).catch(error => {
@@ -327,7 +327,7 @@ const handleBatchDelete = () => {
     let errorMessage = ''
     
     const deletePromises = ids.map(id => 
-      activityStore.deleteActivity(id, true).catch(error => {
+      activityStore.deleteActivity(id).catch(error => {
         hasError = true
         if (error.response && error.response.data && error.response.data.message) {
           errorMessage = error.response.data.message

@@ -91,14 +91,13 @@ export const update = (id, data) => {
 /**
  * 删除活动
  * @param {string|number} id - 活动ID
- * @param {boolean} force - 是否强制删除
  * @returns {Promise<{
  *   code: number,
  *   msg: string
  * }>}
  */
-export const deleteActivity = (id, force = false) => {
-  return axios.delete(`/api/activity/${id}${force ? '?force=true' : ''}`)
+export const deleteActivity = (id) => {
+  return axios.delete(`/api/activity/${id}`)
 }
 
 /**

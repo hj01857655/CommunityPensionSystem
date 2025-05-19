@@ -1,15 +1,15 @@
 import {
-  create,
-  deleteActivity as apiDeleteActivity,
-  getDetail,
-  getList,
-  getStats,
-  update,
-  updateStatus
+    deleteActivity as apiDeleteActivity,
+    create,
+    getDetail,
+    getList,
+    getStats,
+    update,
+    updateStatus
 } from '@/api/back/activity'
-import {ElMessage} from 'element-plus'
-import {defineStore} from 'pinia'
-import {reactive, ref} from 'vue'
+import { ElMessage } from 'element-plus'
+import { defineStore } from 'pinia'
+import { reactive, ref } from 'vue'
 
 export const useActivityStore = defineStore('activity', () => {
     // state
@@ -75,12 +75,14 @@ export const useActivityStore = defineStore('activity', () => {
         }
     }
 
-    async function deleteActivity(id, force = false) {
+    async function deleteActivity(id) {
         try {
-            await apiDeleteActivity(id, force)
-            return true //
+            await apiDeleteActivity(id)
+            ElMessage.success('删除成功')
+            await fetchActivityList()
+            return Promise.resolve()
         } catch (error) {
-            throw error //
+            return Promise.reject(error)
         }
     }
 
