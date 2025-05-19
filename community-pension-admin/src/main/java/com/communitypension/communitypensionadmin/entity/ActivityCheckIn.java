@@ -22,6 +22,16 @@ public class ActivityCheckIn {
      * 报名ID
      */
     private Long registerId;
+    
+    /**
+     * 活动ID
+     */
+    private Long activityId;
+    
+    /**
+     * 老人ID
+     */
+    private Long elderId;
 
     /**
      * 签到人ID（老人本人或家属）

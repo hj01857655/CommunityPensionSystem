@@ -179,9 +179,10 @@
 </template>
 
 <script setup>
-import { registerActivity as apiRegisterActivity, getActivityDetail, getActivityList } from '@/api/fore/activity';
+import { getActivityDetail, getActivityList } from '@/api/fore/activity';
 import { cancelAppointment } from '@/api/fore/service';
 import HomeCard from '@/components/fore/HomeCard.vue';
+import { useActivityStore } from '@/stores/fore/activityStore';
 import { useHealthStore } from '@/stores/fore/healthStore';
 import useServiceStore from '@/stores/fore/serviceStore';
 import { useUserStore } from '@/stores/fore/userStore';
@@ -195,6 +196,7 @@ import { useRouter } from 'vue-router';
 const router = useRouter();
 const userStore = useUserStore();
 const serviceStore = useServiceStore();
+const activityStore = useActivityStore();
 
 const props = defineProps({
     isLoggedIn: {
@@ -863,20 +865,25 @@ const registerActivity = async (activityId) => {
         return;
     }
 
-  try {
-        // 调用活动报名的API
-        const response = await apiRegisterActivity(activityId);
-
-    if (response.code === 200) {
-            ElMessage.success('活动报名成功');
-            // 刷新活动列表
-            await fetchRecentActivities();
+    try {
+        // 先获取活动详情
+        const response = await getActivityDetail(activityId);
+        if (response && response.code === 200 && response.data) {
+            const activity = response.data;
+            // 调用store的报名方法
+            const success = await activityStore.registerActivityAction(activity);
+            
+            if (success) {
+                ElMessage.success('活动报名成功');
+                // 刷新活动列表
+                await fetchRecentActivities();
+            }
         } else {
-            ElMessage.error(response.msg || '活动报名失败');
+            ElMessage.error('获取活动详情失败');
         }
     } catch (error) {
         console.error('活动报名失败:', error);
-        ElMessage.error('活动报名失败');
+        ElMessage.error(error.message || '活动报名失败');
     }
 };
 

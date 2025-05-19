@@ -2,9 +2,9 @@
   <div class="main-container">
     <div class="content-container">
       <router-view v-slot="{ Component }">
-        <transition name="fade" mode="out-in">
+        <transition mode="out-in" name="fade">
           <keep-alive :include="cachedViews">
-            <component :is="Component" :key="$route.path" />
+            <component :is="Component" :key="$route.path"/>
           </keep-alive>
         </transition>
       </router-view>
@@ -14,7 +14,7 @@
 
 <script setup>
 import {computed} from 'vue';
-import {useTagsViewStore} from '@/stores/tagsView';
+import {useTagsViewStore} from '@/stores/back/tagsViewStore';
 
 const tagsViewStore = useTagsViewStore();
 

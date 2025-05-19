@@ -30,7 +30,7 @@
 </template>
 
 <script setup>
-import { useTagsViewStore } from '@/stores/tagsView';
+import { useTagsViewStore } from '@/stores/back/tagsViewStore';
 import { ElScrollbar } from 'element-plus';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -78,19 +78,16 @@ function getDefaultTitle(path) {
 function isAffix(tag) {
   // 首页标签始终固定，不允许关闭
   if (!tag) return false;
-  
-  // 规范化路径进行比较
-  const normalizedPath = tag.path?.replace(/\/$/, '');
-  
-  // 判断是否是首页标签
-  return tag?.meta?.affix || normalizedPath === '/admin/home' || normalizedPath === '/dashboard';
+
+  // 判断是否是首页标签或有affix标记
+  return tag?.meta?.affix || isHomePath(tag.path);
 }
 
 // 处理标签点击事件
 function handleTagClick(tag) {
   // 确保标签被正确激活
   tagsViewStore.updateVisitedView(tag);
-  
+
   // 如果是当前活动标签，则刷新当前页面
   if (isActive(tag) && tag.path === route.path) {
     // 如果已经是当前标签，则刷新当前页面
@@ -122,11 +119,11 @@ onBeforeUnmount(() => {
 // 检查标签是否激活
 function isActive(tag) {
   if (!tag) return false;
-  
-  // 规范化路径进行比较
-  const tagPath = tag.path.replace(/\/$/, '');
-  const routePath = route.path.replace(/\/$/, '');
-  
+
+  // 使用规范化路径进行比较
+  const tagPath = normalizePath(tag.path);
+  const routePath = normalizePath(route.path);
+
   // 直接比较规范化后的路径
   return tagPath === routePath;
 }
@@ -137,16 +134,16 @@ function closeSelectedTag(tag) {
   if (isAffix(tag)) {
     return;
   }
-  
+
   // 检查是否是当前活动标签
   const currentIsActive = isActive(tag);
   let nextTag = null;
-  
+
   // 如果关闭的是当前活动标签，需要确定下一个要导航到的标签
   if (currentIsActive) {
     // 获取标签在数组中的位置
     const tagIndex = visitedViews.value.findIndex(v => v.path === tag.path);
-    
+
     // 首先尝试导航到最后一个标签（排除当前标签）
     const lastTag = visitedViews.value[visitedViews.value.length - 1];
     if (lastTag && lastTag.path !== tag.path) {
@@ -155,19 +152,16 @@ function closeSelectedTag(tag) {
     // 如果最后一个标签就是当前标签，则尝试前一个标签
     else if (tagIndex > 0) {
       nextTag = visitedViews.value[tagIndex - 1];
-    } 
+    }
     // 如果没有前一个，尝试导航到后一个标签
     else if (visitedViews.value.length > tagIndex + 1) {
       nextTag = visitedViews.value[tagIndex + 1];
     }
-    
+
     // 如果上述标签都不存在，则导航到首页
     if (!nextTag) {
       // 尝试找到首页标签
-      const homeTag = visitedViews.value.find(v => {
-        const normalizedPath = v.path.replace(/\/$/, '');
-        return normalizedPath === '/admin/home' || normalizedPath === '/dashboard';
-      });
+      const homeTag = visitedViews.value.find(v => isHomePath(v.path));
       nextTag = homeTag || { path: '/admin/home', fullPath: '/admin/home' }; // 确保总有后备
     }
   }
@@ -193,19 +187,12 @@ function refreshSelectedTag(tag) {
   tagsViewStore.delCachedView(tag).then(() => {
     // 使用 nextTick 确保 DOM 更新后再执行刷新操作
     nextTick(() => {
-      // 获取当前路径
-      const { fullPath, path } = route;
-      const currentPath = fullPath || path;
-      
       // 如果当前标签就是要刷新的标签
       if (tag.path === route.path || tag.fullPath === route.fullPath) {
-        // 不使用重定向路由，改用其他方式刷新
-        // 先导航到一个不同的路径（如首页），然后再导航回来
-        const homeTag = tagsViewStore.visitedViews.find(v => {
-          const normalizedPath = v.path.replace(/\/$/, '');
-          return normalizedPath === '/admin/home';
-        });
-        
+        // 查找首页标签作为中转页
+        const homeTag = tagsViewStore.visitedViews.find(v => isHomePath(v.path));
+
+        // 如果有首页标签且不是当前标签，通过首页中转刷新
         if (homeTag && homeTag.path !== tag.path) {
           // 先导航到首页
           router.push(homeTag.path).then(() => {
@@ -248,15 +235,12 @@ function closeOthersTags() {
 function closeAllTags() {
   // 先关闭菜单
   closeMenu();
-  
+
   // 调用 store action 删除所有视图
   tagsViewStore.delAllViews().then(({ visitedViews: remainingViews }) => {
     // 确保标签列表中只有一个首页标签
-    const homeTag = remainingViews.find(tag => {
-      const normalizedPath = tag.path.replace(/\/$/, '');
-      return normalizedPath === '/admin/home' || normalizedPath === '/dashboard';
-    });
-    
+    const homeTag = remainingViews.find(tag => isHomePath(tag.path));
+
     // 如果当前活动路由不在剩余标签中，导航到首页
     if (!remainingViews.some(v => isActive(v))) {
       // 使用 nextTick 确保 DOM 更新后再导航
@@ -335,20 +319,45 @@ function closeMenu() {
   visible.value = false;
 }
 
-// 新增：滚动到当前激活的标签
+// 工具函数：规范化路径（移除尾部斜杠）
+function normalizePath(path) {
+  return path?.replace(/\/$/, '') || '';
+}
+
+// 工具函数：判断是否是首页路径
+function isHomePath(path) {
+  const normalizedPath = normalizePath(path);
+  return normalizedPath === '/admin/home' || normalizedPath === '/dashboard';
+}
+
+// 滚动到当前激活的标签
 function moveToCurrentTag() {
   nextTick(() => {
-    for (const tag of tagRefs.value || []) {
-      const tagPath = tag.$el.getAttribute('data-path'); // 从 ref 获取实际 path
-      if (tagPath === route.path) {
-        // 调用滚动方法，需要获取 el-scrollbar 实例
-        // 这里假设 el-scrollbar 组件可以通过 ref 访问，或者需要找到其他方式
-        // (此部分可能需要根据 ElScrollbar 的 API 调整)
-        // 示例性代码：
-        // const scrollbarInstance = ... // 获取 el-scrollbar 实例
-        // const tagElement = tag.$el;
-        // scrollbarInstance.scrollTo({ left: tagElement.offsetLeft, behavior: 'smooth' }); 
-        break;
+    // 查找当前激活的标签元素
+    const activeTag = tagRefs.value?.find(tag => {
+      const tagPath = tag.$el.getAttribute('data-path');
+      return tagPath === route.path;
+    });
+
+    if (activeTag && activeTag.$el) {
+      // 获取标签元素和滚动容器
+      const tagElement = activeTag.$el;
+      const scrollContainer = document.querySelector('.tags-view-wrapper');
+
+      if (scrollContainer && tagElement) {
+        // 计算滚动位置，使标签居中显示
+        const containerWidth = scrollContainer.offsetWidth;
+        const tagWidth = tagElement.offsetWidth;
+        const tagOffsetLeft = tagElement.offsetLeft;
+
+        // 计算滚动位置，使标签尽量居中
+        const scrollLeft = tagOffsetLeft - (containerWidth / 2) + (tagWidth / 2);
+
+        // 使用平滑滚动效果
+        scrollContainer.scrollTo({
+          left: Math.max(0, scrollLeft),
+          behavior: 'smooth'
+        });
       }
     }
   });
@@ -362,14 +371,14 @@ function moveToCurrentTag() {
   background: linear-gradient(to right, #f8f9fa, #ffffff);
   border-bottom: 1px solid #e4e7ed;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-  
+
   .custom-scrollbar {
     :deep(.el-scrollbar__bar.is-horizontal) {
       height: 4px;
       bottom: 0;
       opacity: 0.2;
       transition: opacity 0.3s;
-      
+
       &:hover {
         opacity: 0.8;
       }
@@ -398,17 +407,17 @@ function moveToCurrentTag() {
       text-overflow: ellipsis;
       border-radius: 4px;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      
+
       &.tag-click-effect {
         animation: tagPulse 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       }
-      
+
       @keyframes tagPulse {
         0% { transform: scale(1); }
         50% { transform: scale(0.95); }
         100% { transform: scale(1); }
       }
-      
+
       &:hover:not(.active) {
         color: #409eff;
         border-color: #c6e2ff;
@@ -434,7 +443,7 @@ function moveToCurrentTag() {
         padding-right: 12px;
         position: relative;
         overflow: visible;
-        
+
         &::before {
           content: '';
           position: absolute;
@@ -446,7 +455,7 @@ function moveToCurrentTag() {
           background: rgba(255, 255, 255, 0.8);
           border-radius: 2px;
         }
-        
+
         &::after {
           content: '';
           position: absolute;
@@ -460,7 +469,7 @@ function moveToCurrentTag() {
           box-shadow: 0 0 6px rgba(0, 0, 0, 0.1);
         }
       }
-      
+
       .el-icon-close {
         margin-left: 6px;
         width: 18px;
@@ -475,12 +484,12 @@ function moveToCurrentTag() {
         display: flex;
         align-items: center;
         justify-content: center;
-        
+
         &:hover {
           background-color: #f56c6c;
           color: #fff;
         }
-        
+
         &::after {
           content: '×';
           font-size: 14px;
@@ -504,7 +513,7 @@ function moveToCurrentTag() {
     border: 1px solid #ebeef5;
     min-width: 120px;
     animation: menuFadeIn 0.2s ease-out;
-    
+
     @keyframes menuFadeIn {
       from {
         opacity: 0;
@@ -524,7 +533,7 @@ function moveToCurrentTag() {
       display: flex;
       align-items: center;
       position: relative;
-      
+
       &::before {
         content: '';
         position: absolute;
@@ -539,7 +548,7 @@ function moveToCurrentTag() {
       &:hover {
         background: #f5f7fa;
         color: #409eff;
-        
+
         &::before {
           width: 3px;
         }

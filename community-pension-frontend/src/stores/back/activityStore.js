@@ -7,6 +7,7 @@ import {
     update,
     updateStatus
 } from '@/api/back/activity'
+import { registerActivity as apiRegisterActivity } from '@/api/fore/activity'
 import { ElMessage } from 'element-plus'
 import { defineStore } from 'pinia'
 import { reactive, ref } from 'vue'
@@ -88,11 +89,12 @@ export const useActivityStore = defineStore('activity', () => {
 
     async function updateActivityStatus(id, status) {
         try {
-            await updateStatus(id, {status})
+            // 修复：直接传递status值，而不是包装成对象
+            await updateStatus(id, status)
             ElMessage.success('更新活动状态成功')
             await fetchActivityList()
         } catch (error) {
-            ElMessage.error('更新活动状态失败')
+            ElMessage.error('更新活动状态失败: ' + (error.message || '未知错误'))
             throw error
         }
     }
@@ -119,6 +121,17 @@ export const useActivityStore = defineStore('activity', () => {
         })
     }
 
+    async function registerActivity(activityId, elderData) {
+        try {
+            await apiRegisterActivity(activityId, elderData)
+            ElMessage.success('活动报名成功')
+            return Promise.resolve()
+        } catch (error) {
+            ElMessage.error('活动报名失败: ' + (error.message || '未知错误'))
+            return Promise.reject(error)
+        }
+    }
+
     return {
         activityList,
         currentActivity,
@@ -132,6 +145,7 @@ export const useActivityStore = defineStore('activity', () => {
         deleteActivity,
         updateActivityStatus,
         fetchActivityStats,
-        resetQueryParams
+        resetQueryParams,
+        registerActivity
     }
-}) 
+})

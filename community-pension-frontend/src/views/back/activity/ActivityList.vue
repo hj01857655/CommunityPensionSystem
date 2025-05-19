@@ -31,52 +31,145 @@
     <!-- 操作按钮 -->
     <el-row :gutter="10" class="mb8">
       <el-col :span="1.5">
-        <el-button type="primary" plain :icon="Plus" @click="handleAdd">新增活动</el-button>
+        <el-button type="primary" plain :icon="Plus" @click="handleAdd">新增</el-button>
       </el-col>
       <el-col :span="1.5">
-        <el-button type="danger" plain :icon="Delete" @click="handleBatchDelete">批量删除</el-button>
+        <el-button type="danger" plain :icon="Delete" @click="handleBatchDelete" :disabled="!selectedRows.length">
+          批量删除
+          <span v-if="selectedRows.length">({{ selectedRows.length }})</span>
+        </el-button>
       </el-col>
       <el-col :span="1.5">
         <el-button type="warning" plain :icon="Download" @click="handleExport">导出</el-button>
       </el-col>
-      <right-toolbar v-model:showSearch="showSearch" @queryTable="getList" :columns="columns"></right-toolbar>
+      <el-col :span="12" class="text-right">
+        <el-tooltip content="自动刷新" placement="top">
+          <el-switch
+            v-model="isAutoRefresh"
+            inline-prompt
+            :active-text="autoRefreshTime + 's'"
+            inactive-text="关闭"
+            @change="toggleAutoRefresh"
+            style="margin-right: 10px;"
+          />
+        </el-tooltip>
+        <el-dropdown @command="changeRefreshTime" trigger="click">
+          <el-button type="text">
+            <el-icon><ArrowDown /></el-icon>
+          </el-button>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item :command="10">10秒</el-dropdown-item>
+              <el-dropdown-item :command="30">30秒</el-dropdown-item>
+              <el-dropdown-item :command="60">1分钟</el-dropdown-item>
+              <el-dropdown-item :command="300">5分钟</el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
+      </el-col>
+      <right-toolbar v-model:showSearch="showSearch" @queryTable="getList" :columns="columns" :showAdd="false"></right-toolbar>
     </el-row>
 
+    <!-- 列设置下拉菜单 -->
+    <el-dropdown trigger="click" @command="handleColumnCommand">
+      <el-button type="primary" class="column-settings-btn">
+        列设置<el-icon class="el-icon--right"><ArrowDown /></el-icon>
+      </el-button>
+      <template #dropdown>
+        <el-dropdown-menu>
+          <el-dropdown-item v-for="column in columns" :key="column.key" :command="column.key">
+            <el-checkbox v-model="column.visible" @click.stop>{{ column.label }}</el-checkbox>
+          </el-dropdown-item>
+          <el-dropdown-item divided>
+            <el-button type="text" @click="resetColumnSettings">重置</el-button>
+          </el-dropdown-item>
+        </el-dropdown-menu>
+      </template>
+    </el-dropdown>
+
     <!-- 活动列表 -->
-    <el-table v-loading="activityStore.loading" :data="activityStore.activityList" @selection-change="handleSelectionChange">
-      <el-table-column type="selection" width="55" align="center" v-if="columns[0].visible" />
-      <el-table-column prop="title" label="活动标题" min-width="200" v-if="columns[1].visible" />
-      <el-table-column prop="typeName" label="活动类型" width="120" v-if="columns[2].visible" />
-      <el-table-column prop="status" label="活动状态" width="100" v-if="columns[3].visible">
-        <template #default="{ row }">
-          <el-tag :type="getStatusType(row.status)">{{ getStatusText(row.status) }}</el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column prop="startTime" label="开始时间" width="160" v-if="columns[4].visible" />
-      <el-table-column prop="endTime" label="结束时间" width="160" v-if="columns[5].visible" />
-      <el-table-column prop="location" label="活动地点" width="150" v-if="columns[6].visible" />
-      <el-table-column prop="maxParticipants" label="人数上限" width="100" align="center" v-if="columns[7].visible" />
-      <el-table-column prop="currentParticipants" label="当前人数" width="100" align="center" v-if="columns[8].visible" />
-      <el-table-column label="操作" width="200" fixed="right" v-if="columns[9].visible">
-        <template #default="{ row }">
-          <el-button type="primary" link :icon="View" @click="handleView(row)">查看</el-button>
-          <el-button type="primary" link :icon="Edit" @click="handleEdit(row)">编辑</el-button>
-          <el-dropdown @command="(command) => handleStatusCommand(command, row)">
-            <el-button type="primary" link>
-              状态<el-icon class="el-icon--right"><ArrowDown /></el-icon>
-            </el-button>
-            <template #dropdown>
-              <el-dropdown-menu>
-                <el-dropdown-item v-if="row.status === 0" command="start">开始报名</el-dropdown-item>
-                <el-dropdown-item v-if="row.status === 1" command="end">开始活动</el-dropdown-item>
-                <el-dropdown-item v-if="row.status === 2" command="finish">结束活动</el-dropdown-item>
-                <el-dropdown-item v-if="row.status < 3" command="cancel">取消活动</el-dropdown-item>
-              </el-dropdown-menu>
-            </template>
-          </el-dropdown>
-          <el-button type="danger" link :icon="Delete" @click="handleDelete(row)">删除</el-button>
-        </template>
-      </el-table-column>
+    <el-table
+      v-loading="activityStore.loading"
+      :data="activityStore.activityList"
+      @selection-change="handleSelectionChange"
+      @sort-change="handleSortChange"
+      @filter-change="handleFilterChange"
+      :row-key="row => row.id"
+      :row-class-name="tableRowClassName"
+      :header-cell-style="{background: '#f5f7fa', color: '#606266'}"
+      border
+      stripe
+      highlight-current-row
+      @row-contextmenu="handleContextMenu"
+      style="width: 100%"
+      v-el-table-infinite-scroll="loadMore"
+    >
+      <template v-for="column in columns" :key="column.key">
+        <!-- 选择列 -->
+        <el-table-column 
+          v-if="column.key === 0 && column.visible"
+          type="selection" 
+          :width="column.width" 
+          :align="column.align || 'center'"
+          :fixed="column.fixed"
+        />
+        
+        <!-- 状态列 -->
+        <el-table-column 
+          v-else-if="column.key === 3 && column.visible"
+          :prop="column.prop" 
+          :label="column.label" 
+          :width="column.width" 
+          :align="column.align || 'center'"
+          :sortable="column.sortable"
+          :filters="column.filterOptions"
+          :column-key="column.prop"
+          :filter-multiple="column.filterOptions?.length > 0"
+          :fixed="column.fixed"
+        >
+          <template #default="{ row }">
+            <el-tag :type="getStatusType(row.status)">{{ getStatusText(row.status) }}</el-tag>
+          </template>
+        </el-table-column>
+        
+        <!-- 操作列 -->
+        <el-table-column 
+          v-else-if="column.key === 9 && column.visible"
+          :label="column.label" 
+          :width="column.width" 
+          :fixed="column.fixed"
+          class-name="small-padding fixed-width"
+        >
+          <template #default="{ row }">
+            <el-button type="primary" link :icon="View" @click="handleView(row)">查看</el-button>
+            <el-button type="primary" link :icon="Edit" @click="handleEdit(row)">编辑</el-button>
+            <el-dropdown @command="(command) => handleStatusCommand(command, row)">
+              <el-button type="primary" link>
+                状态<el-icon class="el-icon--right"><ArrowDown /></el-icon>
+              </el-button>
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item v-if="row.status === 0" command="start">开始报名</el-dropdown-item>
+                  <el-dropdown-item v-if="row.status === 1" command="end">开始活动</el-dropdown-item>
+                  <el-dropdown-item v-if="row.status === 2" command="finish">结束活动</el-dropdown-item>
+                  <el-dropdown-item v-if="row.status < 3" command="cancel">取消活动</el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
+            <el-button type="danger" link :icon="Delete" @click="handleDelete(row)">删除</el-button>
+          </template>
+        </el-table-column>
+        <!-- 其它普通列 -->
+        <el-table-column
+          v-else-if="column.visible"
+          :prop="column.prop"
+          :label="column.label"
+          :width="column.width"
+          :align="column.align || 'center'"
+          :sortable="column.sortable"
+          :fixed="column.fixed"
+        />
+      </template>
     </el-table>
 
     <!-- 分页组件 -->
@@ -94,15 +187,15 @@
           </el-select>
         </el-form-item>
         <el-form-item label="活动时间" prop="timeRange">
-          <el-date-picker 
-            v-model="formData.timeRange" 
-            type="datetimerange" 
-            range-separator="至" 
-            start-placeholder="开始时间" 
-            end-placeholder="结束时间" 
-            style="width: 100%" 
+          <el-date-picker
+            v-model="formData.timeRange"
+            type="datetimerange"
+            range-separator="至"
+            start-placeholder="开始时间"
+            end-placeholder="结束时间"
+            style="width: 100%"
             value-format="YYYY-MM-DDTHH:mm:ss"
-            :disabled-date="disabledDate" 
+            :disabled-date="disabledDate"
           />
         </el-form-item>
         <el-form-item label="活动地点" prop="location">
@@ -120,6 +213,16 @@
         <el-form-item label="活动描述" prop="description">
           <el-input v-model="formData.description" type="textarea" :rows="4" placeholder="请输入活动描述" />
         </el-form-item>
+        <el-form-item label="活动状态" prop="status" v-if="dialogType === 'edit' || dialogType === 'view'">
+          <el-select v-model="formData.status" placeholder="请选择活动状态" style="width: 100%" v-if="dialogType === 'edit'">
+            <el-option label="未开始" :value="0" />
+            <el-option label="报名中" :value="1" />
+            <el-option label="进行中" :value="2" />
+            <el-option label="已结束" :value="3" />
+            <el-option label="已取消" :value="4" />
+          </el-select>
+          <el-tag v-else :type="getStatusType(formData.status)">{{ getStatusText(formData.status) }}</el-tag>
+        </el-form-item>
       </el-form>
       <template #footer>
         <span class="dialog-footer">
@@ -132,17 +235,40 @@
 </template>
 
 <script setup>
-import { getDictDataByType } from '@/api/back/system/dict/data'
+import RightToolbar from '@/components/common/base/RightToolbar/index.vue'
 import Pagination from '@/components/common/table/Pagination.vue'
-import RightToolbar from '@/components/common/table/TableToolbar.vue'
 import { useActivityStore } from '@/stores/back/activityStore'
+const activityStore = useActivityStore();
 import { ArrowDown, Delete, Download, Edit, Plus, Refresh, Search, View } from '@element-plus/icons-vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { onMounted, reactive, ref } from 'vue'
+import { ElDropdown, ElDropdownItem, ElDropdownMenu, ElMessage, ElMessageBox, ElTooltip } from 'element-plus'
+import { nextTick, onBeforeUnmount, onMounted, ref, reactive } from 'vue'
+import { useDict } from '@/utils/dict'
+
+// 注册表格无限滚动指令
+const vElTableInfiniteScroll = {
+  mounted(el, binding) {
+    const scrollWrap = el.querySelector('.el-table__body-wrapper')
+    const scrollLoad = () => {
+      const scrollDistance = scrollWrap.scrollHeight - scrollWrap.scrollTop - scrollWrap.clientHeight
+      if (scrollDistance <= 50) {
+        binding.value()
+      }
+    }
+    scrollWrap.addEventListener('scroll', scrollLoad)
+    el._scrollLoad = scrollLoad
+  },
+  unmounted(el) {
+    const scrollWrap = el.querySelector('.el-table__body-wrapper')
+    if (scrollWrap && el._scrollLoad) {
+      scrollWrap.removeEventListener('scroll', el._scrollLoad)
+    }
+  }
+}
+
+
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
-const activityStore = useActivityStore()
 const searchFormRef = ref()
 const formRef = ref()
 const showSearch = ref(true)
@@ -154,16 +280,110 @@ const loading = ref(false)
 
 // 表格列控制
 const columns = ref([
-  { key: 'selection', label: '选择列', visible: true },
-  { key: 'title', label: '活动标题', visible: true },
-  { key: 'type', label: '活动类型', visible: true },
-  { key: 'status', label: '活动状态', visible: true },
-  { key: 'startTime', label: '开始时间', visible: true },
-  { key: 'endTime', label: '结束时间', visible: true },
-  { key: 'location', label: '活动地点', visible: true },
-  { key: 'maxParticipants', label: '人数上限', visible: true },
-  { key: 'currentParticipants', label: '当前人数', visible: true },
-  { key: 'operation', label: '操作', visible: true }
+  { 
+    key: 0, 
+    label: '选择', 
+    prop: 'selection',
+    visible: true, 
+    fixed: 'left',
+    width: 50,
+    sortable: false,
+    filterable: false
+  },
+  { 
+    key: 1, 
+    label: '活动标题', 
+    prop: 'title',
+    visible: true, 
+    minWidth: 200,
+    sortable: 'custom',
+    filterable: true,
+    filterOptions: []
+  },
+  { 
+    key: 2, 
+    label: '活动类型', 
+    prop: 'type',
+    visible: true, 
+    width: 120,
+    sortable: 'custom',
+    filterable: true,
+    filterOptions: []
+  },
+  { 
+    key: 3, 
+    label: '活动状态', 
+    prop: 'status',
+    visible: true, 
+    width: 100,
+    sortable: 'custom',
+    filterable: true,
+    filterOptions: [
+      { text: '未开始', value: 0 },
+      { text: '报名中', value: 1 },
+      { text: '进行中', value: 2 },
+      { text: '已结束', value: 3 },
+      { text: '已取消', value: 4 }
+    ]
+  },
+  { 
+    key: 4, 
+    label: '开始时间', 
+    prop: 'startTime',
+    visible: true, 
+    width: 160,
+    sortable: 'custom',
+    filterable: false
+  },
+  { 
+    key: 5, 
+    label: '结束时间', 
+    prop: 'endTime',
+    visible: true, 
+    width: 160,
+    sortable: 'custom',
+    filterable: false
+  },
+  { 
+    key: 6, 
+    label: '活动地点', 
+    prop: 'location',
+    visible: true, 
+    minWidth: 150,
+    sortable: 'custom',
+    filterable: true,
+    filterOptions: []
+  },
+  { 
+    key: 7, 
+    label: '人数上限', 
+    prop: 'maxParticipants',
+    visible: true, 
+    width: 100,
+    sortable: 'custom',
+    filterable: false,
+    align: 'center'
+  },
+  { 
+    key: 8, 
+    label: '当前人数', 
+    prop: 'currentParticipants',
+    visible: true, 
+    width: 100,
+    sortable: 'custom',
+    filterable: false,
+    align: 'center'
+  },
+  { 
+    key: 9, 
+    label: '操作', 
+    prop: 'actions',
+    visible: true, 
+    width: 200,
+    fixed: 'right',
+    sortable: false,
+    filterable: false
+  }
 ])
 
 // 活动类型选项
@@ -213,6 +433,9 @@ const formRules = {
   ],
   description: [
     { required: true, message: '请输入活动描述', trigger: 'blur' }
+  ],
+  status: [
+    { required: true, message: '请选择活动状态', trigger: 'change' }
   ]
 }
 
@@ -325,8 +548,8 @@ const handleBatchDelete = () => {
     loading.value = true
     let hasError = false
     let errorMessage = ''
-    
-    const deletePromises = ids.map(id => 
+
+    const deletePromises = ids.map(id =>
       activityStore.deleteActivity(id).catch(error => {
         hasError = true
         if (error.response && error.response.data && error.response.data.message) {
@@ -336,10 +559,10 @@ const handleBatchDelete = () => {
         return Promise.resolve(false)
       })
     )
-    
+
     Promise.all(deletePromises).then(results => {
       const successCount = results.filter(result => result === true).length
-      
+
       if (successCount === ids.length) {
         ElMessage.success('批量删除成功')
       } else if (successCount > 0) {
@@ -350,7 +573,7 @@ const handleBatchDelete = () => {
       } else {
         ElMessage.error(errorMessage || '批量删除失败')
       }
-      
+
       getList()
     }).finally(() => {
       loading.value = false
@@ -378,20 +601,20 @@ const handleStatusCommand = (command, row) => {
     'finish': { value: 3, text: '结束活动' },
     'cancel': { value: 4, text: '取消活动' }
   }
-  
+
   const { value, text } = statusMap[command]
-  
+
   // 检查状态流转是否合法
   if (command === 'end' && row.status !== 1) {
     ElMessage.warning('只有在报名中的活动才能开始活动')
     return
   }
-  
+
   if (command === 'finish' && row.status !== 2) {
     ElMessage.warning('只有进行中的活动才能结束活动')
     return
   }
-  
+
   ElMessageBox.confirm(`确认将活动"${row.title}"状态更改为"${text}"吗？`, '提示', {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
@@ -451,7 +674,7 @@ const handleSubmit = () => {
         formData.startTime = formData.timeRange[0]
         formData.endTime = formData.timeRange[1]
       }
-      
+
       loading.value = true
       if (dialogType.value === 'add') {
         activityStore.createActivity(formData).then(() => {
@@ -515,21 +738,193 @@ const handlePagination = ({ page, limit }) => {
   getList()
 }
 
+// 自动刷新相关
+const autoRefreshInterval = ref(null)
+const autoRefreshTime = ref(30) // 默认30秒自动刷新
+const isAutoRefresh = ref(false)
+
+// 开始自动刷新
+const startAutoRefresh = () => {
+  if (autoRefreshInterval.value) clearInterval(autoRefreshInterval.value)
+  autoRefreshInterval.value = setInterval(() => {
+    getList()
+  }, autoRefreshTime.value * 1000)
+}
+
+// 停止自动刷新
+const stopAutoRefresh = () => {
+  if (autoRefreshInterval.value) {
+    clearInterval(autoRefreshInterval.value)
+    autoRefreshInterval.value = null
+  }
+}
+
+// 切换自动刷新
+const toggleAutoRefresh = (val) => {
+  if (val) {
+    startAutoRefresh()
+  } else {
+    stopAutoRefresh()
+  }
+}
+
+// 修改自动刷新时间
+const changeRefreshTime = (time) => {
+  autoRefreshTime.value = time
+  if (isAutoRefresh.value) {
+    startAutoRefresh()
+  }
+}
+
+// 处理表格排序
+const handleSortChange = ({ column, prop, order }) => {
+  if (!prop) {
+    activityStore.queryParams.orderByColumn = ''
+    activityStore.queryParams.isAsc = ''
+  } else {
+    activityStore.queryParams.orderByColumn = prop
+    activityStore.queryParams.isAsc = order === 'ascending' ? 'asc' : 'desc'
+  }
+  getList()
+}
+
+// 处理列筛选
+const handleFilterChange = (filters) => {
+  Object.keys(filters).forEach(prop => {
+    const column = columns.value.find(col => col.prop === prop)
+    if (column && column.filterable) {
+      activityStore.queryParams[`${prop}Filter`] = filters[prop]
+    }
+  })
+  getList()
+}
+
+// 重置所有筛选
+const resetAllFilters = () => {
+  columns.value.forEach(column => {
+    if (column.filterable) {
+      activityStore.queryParams[`${column.prop}Filter`] = []
+    }
+  })
+  getList()
+}
+
+// 表格行类名
+const tableRowClassName = ({ row }) => {
+  if (row.status === 3) return 'disabled-row' // 已结束的活动
+  if (row.status === 4) return 'canceled-row' // 已取消的活动
+  return ''
+}
+
+// 处理右键菜单
+const contextMenu = ref(null)
+const showContextMenu = ref(false)
+const contextMenuPosition = ref({ x: 0, y: 0 })
+const contextMenuRow = ref(null)
+
+const handleContextMenu = (row, column, event) => {
+  event.preventDefault()
+  contextMenuRow.value = row
+  contextMenuPosition.value = {
+    x: event.clientX,
+    y: event.clientY
+  }
+  showContextMenu.value = true
+  
+  // 点击其他地方关闭菜单
+  const closeMenu = (e) => {
+    if (!contextMenu.value?.contains(e.target)) {
+      showContextMenu.value = false
+      document.removeEventListener('click', closeMenu)
+    }
+  }
+  nextTick(() => {
+    document.addEventListener('click', closeMenu)
+  })
+}
+
+// 处理列设置
+const handleColumnCommand = (command) => {
+  const column = columns.value.find(col => col.key === command)
+  if (column) {
+    column.visible = !column.visible
+  }
+}
+
+// 重置列设置
+const resetColumnSettings = () => {
+  columns.value.forEach(col => {
+    col.visible = true
+  })
+}
+
+// 处理菜单项点击
+const handleMenuCommand = (command) => {
+  const row = contextMenuRow.value
+  switch (command) {
+    case 'view':
+      handleView(row)
+      break
+    case 'edit':
+      handleEdit(row)
+      break
+    case 'delete':
+      handleDelete(row)
+      break
+    case 'export':
+      handleExportRow(row)
+      break
+  }
+  showContextMenu.value = false
+}
+
+// 导出单行数据
+const handleExportRow = (row) => {
+  // 这里实现导出单行数据的逻辑
+  ElMessage.success(`导出活动: ${row.title}`)
+}
+
+// 滚动加载更多
+const loadingMore = ref(false)
+const noMoreData = ref(false)
+
+const loadMore = async () => {
+  if (loadingMore.value || noMoreData.value) return
+  
+  loadingMore.value = true
+  try {
+    const currentPage = activityStore.queryParams.pageNum
+    const total = activityStore.total
+    const pageSize = activityStore.queryParams.pageSize
+    
+    if (currentPage * pageSize >= total) {
+      noMoreData.value = true
+      return
+    }
+    
+    activityStore.queryParams.pageNum++
+    await activityStore.getActivityList()
+  } catch (error) {
+    console.error('加载更多失败:', error)
+  } finally {
+    loadingMore.value = false
+  }
+}
+
 // 初始化
 onMounted(() => {
   try {
     getList()
-    // 获取字典数据
-    getDictDataByType('activity_type').then(res => {
-      if (res.code === 200 && res.data) {
-        activityTypes.value = res.data.map(item => ({
-          value: item.dictValue,
-          label: item.dictLabel
-        }))
-      }
-    }).catch(() => {
-      // 如果API调用失败，保留默认选项
+    // 组件卸载时清除定时器
+    onBeforeUnmount(() => {
+      stopAutoRefresh()
     })
+    // 获取字典数据（使用 useDict 替换 getDictDataByType）
+    const { activity_type } = useDict('activity_type')
+    activityTypes.value = activity_type.value.map(item => ({
+      value: item.dictValue,
+      label: item.dictLabel
+    }))
   } catch (error) {
     console.error('活动列表初始化失败:', error)
   }
@@ -537,8 +932,117 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.column-settings-btn {
+  margin-left: 10px;
+}
+
+.column-settings-btn .el-icon {
+  margin-left: 5px;
+}
+
+.column-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+}
+
+.column-item .el-checkbox {
+  margin-right: 8px;
+}
+
+.column-label {
+  margin-left: 5px;
+}
+
+/* 表格操作按钮 */
+.table-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+/* 响应式调整 */
+@media screen and (max-width: 1200px) {
+  .el-table__body {
+    font-size: 12px;
+  }
+  
+  .el-button + .el-button {
+    margin-left: 4px;
+  }
+  
+  .el-button--small {
+    padding: 5px 8px;
+  }
+}
 .app-container {
   padding: 20px;
+  position: relative;
+}
+
+/* 右键菜单样式 */
+.context-menu {
+  position: fixed;
+  z-index: 3000;
+  background: #fff;
+  border: 1px solid #e4e7ed;
+  border-radius: 4px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  padding: 5px 0;
+  min-width: 120px;
+}
+
+.context-menu-item {
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #606266;
+  display: flex;
+  align-items: center;
+}
+
+.context-menu-item i {
+  margin-right: 8px;
+}
+
+.context-menu-item:hover {
+  background: #f5f7fa;
+  color: #409eff;
+}
+
+/* 禁用行样式 */
+:deep(.disabled-row) {
+  color: #909399;
+  background-color: #f5f7fa !important;
+}
+
+/* 已取消行样式 */
+:deep(.canceled-row) {
+  color: #c0c4cc;
+  text-decoration: line-through;
+}
+
+/* 标题单元格 */
+.title-cell {
+  display: inline-block;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
+
+/* 加载更多提示 */
+.load-more {
+  text-align: center;
+  padding: 10px;
+  color: #909399;
+  font-size: 12px;
+}
+
+/* 操作列按钮间距 */
+.el-button + .el-dropdown {
+  margin-left: 8px;
 }
 
 .mb8 {

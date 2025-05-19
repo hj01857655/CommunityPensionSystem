@@ -24,10 +24,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -59,6 +59,17 @@ public class ActivityCheckInServiceImpl extends ServiceImpl<ActivityCheckInMappe
             throw new BusinessException("只有已通过审核的报名可以签到");
         }
 
+        // 获取活动信息
+        Activity activity = activityService.getById(register.getActivityId());
+        if (activity == null) {
+            throw new BusinessException("活动不存在");
+        }
+
+        // 检查活动状态是否为“进行中”
+        if (activity.getStatus() != 2) {
+            throw new BusinessException("只有进行中的活动才能签到");
+        }
+
         // 检查是否已经签到
         ActivityCheckIn existingCheckIn = baseMapper.getCheckInByRegisterId(registerId);
         if (existingCheckIn != null) {
@@ -68,6 +79,8 @@ public class ActivityCheckInServiceImpl extends ServiceImpl<ActivityCheckInMappe
         // 创建签到记录
         ActivityCheckIn checkIn = new ActivityCheckIn();
         checkIn.setRegisterId(registerId);
+        checkIn.setActivityId(register.getActivityId());
+        checkIn.setElderId(register.getElderId());
         checkIn.setCheckInUserId(checkInUserId);
         checkIn.setIsProxyCheckIn(isProxyCheckIn);
         checkIn.setSignInTime(LocalDateTime.now());
@@ -92,6 +105,32 @@ public class ActivityCheckInServiceImpl extends ServiceImpl<ActivityCheckInMappe
     public boolean batchCheckIn(List<Long> registerIds, Long checkInUserId, Integer isProxyCheckIn) {
         if (registerIds == null || registerIds.isEmpty()) {
             return false;
+        }
+
+        // 首先检查所有报名记录对应的活动状态
+        Map<Long, ActivityRegister> registerMap = activityRegisterService.listByIds(registerIds).stream()
+                .collect(Collectors.toMap(ActivityRegister::getId, register -> register));
+
+        // 获取所有活动ID
+        Set<Long> activityIds = registerMap.values().stream()
+                .map(ActivityRegister::getActivityId)
+                .collect(Collectors.toSet());
+
+        // 检查活动状态
+        Map<Long, Activity> activityMap = activityService.listByIds(activityIds).stream()
+                .collect(Collectors.toMap(Activity::getId, activity -> activity));
+
+        // 验证所有活动是否都处于“进行中”状态
+        for (ActivityRegister register : registerMap.values()) {
+            Activity activity = activityMap.get(register.getActivityId());
+            if (activity == null || activity.getStatus() != 2) {
+                throw new BusinessException("只有进行中的活动才能签到");
+            }
+
+            // 检查报名状态
+            if (register.getStatus() != 1) {
+                throw new BusinessException("只有已通过审核的报名可以签到");
+            }
         }
 
         boolean allSuccess = true;
@@ -141,7 +180,7 @@ public class ActivityCheckInServiceImpl extends ServiceImpl<ActivityCheckInMappe
         // 查询已通过审核的报名记录
         LambdaQueryWrapper<ActivityRegister> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(ActivityRegister::getActivityId, activityId)
-               .eq(ActivityRegister::getStatus, 1); // 1-已通过
+                .eq(ActivityRegister::getStatus, 1); // 1-已通过
         long approvedCount = activityRegisterService.count(wrapper);
 
         // 查询已签到的记录数

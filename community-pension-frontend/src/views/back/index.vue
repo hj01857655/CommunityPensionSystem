@@ -38,7 +38,7 @@ import Header from '@/components/back/layout/Header.vue'; //头部
 import Sidebar from '@/components/back/layout/Sidebar.vue'; //侧边栏
 import TagsView from '@/components/back/layout/TagsView.vue';
 import { useAdminStore } from '@/stores/back/adminStore';
-import { useTagsViewStore } from '@/stores/tagsView';
+import { useTagsViewStore } from '@/stores/back/tagsViewStore';
 import { ElMessage } from 'element-plus';
 import { onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';

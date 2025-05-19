@@ -41,7 +41,37 @@ export const getUserInfo = async (userId) => {
  * @param {Object} data - 用户信息
  */
 export const addUser = data => {
-  return axios.post('/api/system/user/add', data);
+  console.log('API层发送的新增用户数据:', JSON.stringify(data, null, 2));
+  
+  // 创建一个新对象，确保一些必要字段存在
+  const processedData = { ...data };
+  
+  // 确保roleIds字段存在且格式正确（数组格式）
+  if (processedData.roleId !== undefined && !processedData.roleIds) {
+    processedData.roleIds = [processedData.roleId];
+    // 移除单独的roleId，防止与roleIds冲突
+    delete processedData.roleId;
+  }
+  
+  // 确保有默认密码
+  if (!processedData.password) {
+    processedData.password = '123456';
+  }
+  
+  // 确保isActive格式正确（后端可能需要数值而非布尔值）
+  if (processedData.isActive !== undefined) {
+    processedData.isActive = Number(processedData.isActive);
+  }
+  
+  // 去除undefined和null值，避免传递可能导致后端解析错误的值
+  Object.keys(processedData).forEach(key => {
+    if (processedData[key] === undefined || processedData[key] === null) {
+      delete processedData[key];
+    }
+  });
+  
+  console.log('处理后发送的新增用户数据:', JSON.stringify(processedData, null, 2));
+  return axios.post('/api/system/user/add', processedData);
 };
 
 /**

@@ -36,8 +36,8 @@
             <el-table-column label="服务信息" min-width="150">
               <template #default="{ row }">
                 <div class="service-info">
-                  <div><span class="price-tag"><el-icon><Money /></el-icon> {{ row.price }} 元</span></div>
-                  <div><span class="duration-tag"><el-icon><Timer /></el-icon> {{ row.duration }} 分钟</span></div>
+                  <div><span class="price-tag">{{ row.price ? `${row.price} 元` : '价格未设置' }}</span></div>
+                  <div><span class="duration-tag">{{ row.duration ? `${row.duration} 分钟` : '时长未设置' }}</span></div>
                 </div>
               </template>
             </el-table-column>
@@ -833,7 +833,7 @@ const handleCancel = async (appointment) => {
       type: 'warning'
     });
 
-    await serviceStore.cancelAppointment(appointment.id);
+    await serviceStore.cancelServiceAppointment(appointment.id);
     ElMessage.success('预约取消成功');
     fetchMyAppointments();
   } catch (error) {
@@ -889,7 +889,7 @@ const submitEvaluation = async () => {
           appointmentId: currentAppointment.value.id
         };
 
-        await serviceStore.submitEvaluation(params);
+        await serviceStore.handleEvaluateService(params.appointmentId, params);
         ElMessage.success('评价提交成功');
         evaluationDialogVisible.value = false;
         // 重新获取预约列表

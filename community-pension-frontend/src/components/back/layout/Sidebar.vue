@@ -163,7 +163,7 @@
             <el-icon>
               <Calendar />
             </el-icon>
-            <span>活动参与管理</span>
+            <span>活动报名管理</span>
           </template>
         </el-menu-item>
         <el-menu-item index="/admin/activity/checkin">
@@ -198,12 +198,11 @@
 </template>
 
 <script setup>
-import { useTagsViewStore } from '@/stores/tagsView';
+import { useTagsViewStore } from '@/stores/back/tagsViewStore';
 import {
   Bell,
   Calendar,
   Collection,
-  Document,
   FirstAidKit,
   HomeFilled,
   Menu,

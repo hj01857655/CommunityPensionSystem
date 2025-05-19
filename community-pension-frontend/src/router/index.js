@@ -1,5 +1,6 @@
-import { useTagsViewStore } from '@/stores/tagsView';
+import { useTagsViewStore } from '@/stores/back/tagsViewStore';
 import { TokenManager } from '@/utils/axios';
+import ActivityDetailView from '@/views/fore/ActivityDetailView.vue'; // 活动详情视图组件
 import ActivityView from '@/views/fore/ActivityView.vue'; // 社区活动视图组件
 import HealthView from '@/views/fore/HealthView.vue';
 import NoticeView from '@/views/fore/NoticeView.vue';
@@ -70,6 +71,12 @@ const routes = [
                 name: 'ActivityView',
                 component: ActivityView,
                 meta: {title: '社区活动', icon: 'calendar', requiresAuth: true, roles: ['elder', 'kin']} // 社区活动路由，整合了活动列表和我的报名
+            },
+            {
+                path: 'activity/:id',
+                name: 'ActivityDetailView',
+                component: ActivityDetailView,
+                meta: {title: '活动详情', icon: 'calendar', requiresAuth: true, roles: ['elder', 'kin']} // 活动详情路由
             },
             {
                 path: 'notice',

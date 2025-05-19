@@ -28,7 +28,7 @@ import axios from '@/utils/axios'
  * }>}
  */
 export const getList = (params) => {
-  return axios.get('/api/activity/checkin/list', { params })
+  return axios.get('/api/activity/check-in/list', { params })
 }
 
 /**
@@ -48,51 +48,54 @@ export const getList = (params) => {
  * }>}
  */
 export const getDetail = (id) => {
-  return axios.get(`/api/activity/checkin/${id}`)
+  return axios.get(`/api/activity/check-in/register/${id}`)
 }
 
 /**
  * 签到
  * @param {Object} data - 签到数据
- * @param {string|number} data.activityId - 活动ID
- * @param {string|number} data.participantId - 参与者ID
- * @param {string} data.checkinTime - 签到时间
- * @param {string} data.remark - 签到备注
+ * @param {string|number} data.registerId - 报名记录ID
+ * @param {string|number} data.checkInUserId - 签到人ID
+ * @param {number} data.isProxyCheckIn - 是否代签：0-本人签到，1-他人代签
  * @returns {Promise<{
  *   code: number,
  *   msg: string
  * }>}
  */
 export const create = (data) => {
-  return axios.post('/api/activity/checkin', data)
+  return axios.post('/api/activity/check-in', data)
 }
 
 /**
  * 批量签到
  * @param {Object} data - 批量签到数据
- * @param {string|number} data.activityId - 活动ID
- * @param {Array<string|number>} data.participantIds - 参与者ID列表
- * @param {string} data.checkinTime - 签到时间
- * @param {string} data.remark - 签到备注
+ * @param {Array<string|number>} data.registerIds - 报名记录ID列表
+ * @param {string|number} data.checkInUserId - 签到人ID
+ * @param {number} data.isProxyCheckIn - 是否代签：0-本人签到，1-他人代签
  * @returns {Promise<{
  *   code: number,
  *   msg: string
  * }>}
  */
 export const batchCreate = (data) => {
-  return axios.post('/api/activity/checkin/batch', data)
+  return axios.post('/api/activity/check-in/batch', data.registerIds, {
+    params: {
+      checkInUserId: data.checkInUserId,
+      isProxyCheckIn: data.isProxyCheckIn
+    }
+  })
 }
 
 /**
- * 取消签到
- * @param {string|number} id - 签到记录ID
+ * 签退
+ * @param {string|number} registerId - 报名记录ID
  * @returns {Promise<{
  *   code: number,
  *   msg: string
  * }>}
  */
-export const cancel = (id) => {
-  return axios.put(`/api/activity/checkin/${id}/cancel`)
+export const signOut = (registerId) => {
+  return axios.post(`/api/activity/check-in/signout/${registerId}`)
 }
 
 /**
@@ -101,7 +104,7 @@ export const cancel = (id) => {
  * @returns {Promise<Blob>} Excel文件
  */
 export const exportList = (params) => {
-  return axios.get('/api/activity/checkin/export', { 
+  return axios.get('/api/activity/check-in/export', { 
     params,
     responseType: 'blob'
   })
@@ -113,33 +116,54 @@ export const exportList = (params) => {
  * @returns {Promise<{
  *   code: number,
  *   data: {
- *     total: number,
- *     checkedIn: number,
- *     notCheckedIn: number
+ *     activityId: number,
+ *     activityTitle: string,
+ *     approvedCount: number,
+ *     checkedInCount: number,
+ *     notCheckedInCount: number,
+ *     checkInRate: string
  *   },
  *   msg: string
  * }>}
  */
 export const getStats = (activityId) => {
-  return axios.get(`/api/activity/checkin/${activityId}/stats`)
+  return axios.get(`/api/activity/check-in/stats/${activityId}`)
 }
 
 /**
- * 获取活动签到记录
+ * 检查老人是否已签到
  * @param {string|number} activityId - 活动ID
+ * @param {string|number} elderId - 老人ID
  * @returns {Promise<{
  *   code: number,
- *   data: Array<{
- *     id: number,
- *     participantId: number,
- *     name: string,
- *     phone: string,
- *     status: number,
- *     checkinTime: string
- *   }>,
+ *   data: boolean,
  *   msg: string
  * }>}
  */
-export const getCheckins = (activityId) => {
-  return axios.get(`/api/activity/checkin/${activityId}/checkins`)
+export const checkElderCheckedIn = (activityId, elderId) => {
+  return axios.get('/api/activity/check-in/check', {
+    params: {
+      activityId,
+      elderId
+    }
+  })
+}
+
+/**
+ * 获取老人对特定活动的报名ID
+ * @param {string|number} activityId - 活动ID
+ * @param {string|number} elderId - 老人ID
+ * @returns {Promise<{
+ *   code: number,
+ *   data: number,
+ *   msg: string
+ * }>}
+ */
+export const getRegisterIdByActivityAndElder = (activityId, elderId) => {
+  return axios.get('/api/activity/check-in/register-id', {
+    params: {
+      activityId,
+      elderId
+    }
+  })
 } 

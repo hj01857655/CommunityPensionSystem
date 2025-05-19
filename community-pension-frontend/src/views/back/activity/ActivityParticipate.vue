@@ -12,11 +12,23 @@
           />
         </el-select>
       </el-form-item>
+      <el-form-item label="报名人" prop="elderName">
+        <el-select v-model="queryParams.elderName" placeholder="请选择报名人" clearable style="width: 200px">
+          <el-option
+            v-for="item in elderOptions"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id"
+          />
+        </el-select>
+      </el-form-item>
       <el-form-item label="报名状态" prop="status">
         <el-select v-model="queryParams.status" placeholder="请选择状态" clearable style="width: 200px">
-          <el-option label="已报名" :value="0" />
-          <el-option label="已签到" :value="1" />
-          <el-option label="已取消" :value="2" />
+          <el-option label="待审核" :value="0" />
+          <el-option label="已通过" :value="1" />
+          <el-option label="已拒绝" :value="2" />
+          <el-option label="已取消" :value="3" />
+          <el-option label="已签到" :value="4" />
         </el-select>
       </el-form-item>
       <el-form-item>
@@ -28,7 +40,7 @@
     <!-- 操作按钮 -->
     <el-row :gutter="10" class="mb8">
       <el-col :span="1.5">
-        <el-button type="primary" plain :icon="Plus" @click="handleAdd">新增报名</el-button>
+        <el-button type="primary" plain :icon="Plus" @click="handleAdd">新增</el-button>
       </el-col>
       <el-col :span="1.5">
         <el-button type="warning" plain :icon="Download" @click="handleExport">导出</el-button>
@@ -53,31 +65,51 @@
       <el-table-column prop="remark" label="备注" v-if="columns[6].visible" />
       <el-table-column label="操作" width="180" v-if="columns[7].visible">
         <template #default="{ row }">
-          <el-button 
-            v-if="row.status === 0"
-            type="primary" 
-            link 
-            :icon="Check"
-            @click="handleAudit(row)"
-          >
-            审核
-          </el-button>
-          <el-button 
-            v-if="row.status === 1"
-            type="primary" 
-            link 
+          <el-button
+            v-if="row.status === 1 && row.activityStatus === 2"
+            type="primary"
+            link
             :icon="Check"
             @click="handleCheckin(row)"
           >
             签到
           </el-button>
-          <el-button 
-            type="primary" 
-            link 
+          <el-tooltip v-else-if="row.status === 1 && row.activityStatus !== 2" content="活动尚未开始或已结束，无法签到" placement="top">
+            <el-button
+              type="info"
+              link
+              :icon="Check"
+              disabled
+            >
+              签到
+            </el-button>
+          </el-tooltip>
+          <el-button
+            v-if="row.status === 0 || row.status === 1"
+            type="danger"
+            link
             :icon="Delete"
             @click="handleCancel(row)"
           >
-            取消
+            取消报名
+          </el-button>
+          <el-button
+            v-if="row.status === 0"
+            type="warning"
+            link
+            :icon="Edit"
+            @click="handleAudit(row)"
+          >
+            审核
+          </el-button>
+          <el-button
+            v-if="row.status === 4"
+            type="info"
+            link
+            :icon="View"
+            @click="handleViewDetail(row)"
+          >
+            查看详情
           </el-button>
         </template>
       </el-table-column>
@@ -157,38 +189,71 @@
         </span>
       </template>
     </el-dialog>
+
+    <!-- 查看详情对话框 -->
+    <el-dialog
+      v-model="detailDialogVisible"
+      title="参与详情"
+      width="600px"
+      append-to-body
+    >
+      <el-descriptions :column="2" border>
+        <el-descriptions-item label="活动名称" :span="2">{{ detailForm.activityTitle }}</el-descriptions-item>
+        <el-descriptions-item label="参与者姓名">{{ detailForm.elderName }}</el-descriptions-item>
+        <el-descriptions-item label="联系电话">{{ detailForm.elderPhone || '无' }}</el-descriptions-item>
+        <el-descriptions-item label="报名时间">{{ detailForm.applyTime }}</el-descriptions-item>
+        <el-descriptions-item label="签到时间">{{ detailForm.signTime }}</el-descriptions-item>
+        <el-descriptions-item label="参与状态" :span="2">
+          <el-tag :type="getStatusType(detailForm.status)">
+            {{ getStatusText(detailForm.status) }}
+          </el-tag>
+        </el-descriptions-item>
+        <el-descriptions-item label="备注" :span="2">{{ detailForm.remark || '无' }}</el-descriptions-item>
+      </el-descriptions>
+
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="detailDialogVisible = false">关闭</el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { Search, Refresh, Plus, Check, Delete, Download } from '@element-plus/icons-vue'
 import RightToolbar from '@/components/common/base/RightToolbar/index.vue'
 import Pagination from '@/components/common/table/Pagination.vue'
+import { useParticipateStore } from '@/stores/back/participateStore'
+import { Check, Delete, Download, Edit, Plus, Refresh, Search, View } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { computed, onMounted, reactive, ref } from 'vue'
+
+// 使用Pinia状态管理
+const participateStore = useParticipateStore()
 
 // 查询参数
 const queryParams = reactive({
   pageNum: 1,
   pageSize: 10,
   activityId: '',
+  elderName: '',
   status: ''
 })
 
-// 遮罩层
-const loading = ref(false)
+// 列表数据
+const participateList = computed(() => participateStore.list)
+const total = computed(() => participateStore.total)
+const loading = computed(() => participateStore.loading)
+
 // 选中数组
 const selectedRows = ref([])
 // 显示搜索条件
 const showSearch = ref(true)
-// 总条数
-const total = ref(0)
-// 报名记录列表
-const participateList = ref([])
+
 // 活动选项
-const activityOptions = ref([])
+const activityOptions = computed(() => participateStore.activityOptions)
 // 老人选项
-const elderOptions = ref([])
+const elderOptions = computed(() => participateStore.elderOptions)
 
 // 列显示控制
 const columns = ref([
@@ -234,24 +299,26 @@ const addRules = {
 const addFormRef = ref(null)
 const queryRef = ref(null)
 
+// 查看详情对话框
+const detailDialogVisible = ref(false)
+const detailForm = reactive({
+  activityTitle: '',
+  elderName: '',
+  elderPhone: '',
+  applyTime: '',
+  signTime: '',
+  status: '',
+  remark: ''
+})
+
 // 获取状态类型
 const getStatusType = (status) => {
-  const types = {
-    0: 'info',
-    1: 'success',
-    2: 'danger'
-  }
-  return types[status] || 'info'
+  return participateStore.statusTypeMap[status] || 'info'
 }
 
 // 获取状态文本
 const getStatusText = (status) => {
-  const texts = {
-    0: '已报名',
-    1: '已签到',
-    2: '已取消'
-  }
-  return texts[status] || '未知'
+  return participateStore.statusTextMap[status] || '未知'
 }
 
 // 多选框选中数据
@@ -261,67 +328,16 @@ const handleSelectionChange = (selection) => {
 
 // 查询参与记录
 const getList = (params) => {
-  loading.value = true
-  
   // 处理分页参数
   if (params) {
     queryParams.pageNum = params.page
     queryParams.pageSize = params.limit
   }
-  
-  // 这里应该调用API获取参与记录列表
-  // 模拟数据
-  setTimeout(() => {
-    // 模拟数据
-    participateList.value = [
-      {
-        id: '1',
-        activityId: '1',
-        activityTitle: '健康讲座',
-        elderId: '1',
-        elderName: '张三',
-        status: 1,
-        signTime: '2025-05-06 09:30:00',
-        applyTime: '2025-05-01 15:20:00',
-        remark: '对健康知识很感兴趣'
-      },
-      {
-        id: '2',
-        activityId: '1',
-        activityTitle: '健康讲座',
-        elderId: '2',
-        elderName: '李四',
-        status: 0,
-        signTime: null,
-        applyTime: '2025-05-02 10:15:00',
-        remark: ''
-      }
-    ]
-    total.value = 2
-    loading.value = false
-  }, 300)
-}
 
-// 查询活动列表
-const getActivityOptions = () => {
-  // 这里应该调用API获取活动列表
-  // 模拟数据
-  activityOptions.value = [
-    { id: '1', title: '健康讲座' },
-    { id: '2', title: '太极拳教学' },
-    { id: '3', title: '书法比赛' }
-  ]
-}
-
-// 查询老人列表
-const getElderOptions = () => {
-  // 这里应该调用API获取老人列表
-  // 模拟数据
-  elderOptions.value = [
-    { id: '1', name: '张三' },
-    { id: '2', name: '李四' },
-    { id: '3', name: '王五' }
-  ]
+  // 调用store获取参与记录列表
+  participateStore.getList(queryParams).catch(error => {
+    ElMessage.error('获取参与记录列表失败：' + error.message)
+  })
 }
 
 // 搜索按钮操作
@@ -338,6 +354,7 @@ const resetQuery = () => {
   queryParams.pageNum = 1
   queryParams.pageSize = 10
   queryParams.activityId = ''
+  queryParams.elderName = ''
   queryParams.status = ''
   handleQuery()
 }
@@ -348,7 +365,7 @@ const handleAdd = () => {
   addForm.activityId = ''
   addForm.elderId = ''
   addForm.remark = ''
-  
+
   if (addFormRef.value) {
     addFormRef.value.resetFields()
   }
@@ -357,13 +374,17 @@ const handleAdd = () => {
 // 提交新增报名
 const handleAddSubmit = () => {
   if (!addFormRef.value) return
-  
+
   addFormRef.value.validate((valid) => {
     if (valid) {
-      // 这里应该调用API提交新增报名
-      ElMessage.success('新增报名成功')
-      addDialogVisible.value = false
-      getList()
+      // 调用store新增报名
+      participateStore.add(addForm).then(response => {
+        ElMessage.success('新增报名成功')
+        addDialogVisible.value = false
+        getList()
+      }).catch(error => {
+        ElMessage.error('新增报名失败：' + error.message)
+      })
     }
   })
 }
@@ -376,8 +397,12 @@ const handleExport = () => {
     type: 'warning',
   })
     .then(() => {
-      // 这里应该调用导出API
-      ElMessage.success('导出成功')
+      // 调用导出API
+      participateStore.exportList(queryParams).then(() => {
+        ElMessage.success('导出成功')
+      }).catch(error => {
+        ElMessage.error('导出失败：' + error.message)
+      })
     })
     .catch(() => {})
 }
@@ -388,7 +413,7 @@ const handleAudit = (row) => {
   auditForm.id = row.id
   auditForm.result = 1
   auditForm.remark = ''
-  
+
   if (auditFormRef.value) {
     auditFormRef.value.resetFields()
   }
@@ -397,27 +422,63 @@ const handleAudit = (row) => {
 // 提交审核
 const handleAuditSubmit = () => {
   if (!auditFormRef.value) return
-  
+
   auditFormRef.value.validate((valid) => {
     if (valid) {
-      // 这里应该调用API提交审核
-      ElMessage.success('审核提交成功')
-      auditDialogVisible.value = false
-      getList()
+      // 调用store提交审核
+      participateStore.audit({
+        id: auditForm.id,
+        status: auditForm.result,
+        remark: auditForm.remark
+      }).then(response => {
+        ElMessage.success('审核提交成功')
+        auditDialogVisible.value = false
+        getList()
+      }).catch(error => {
+        ElMessage.error('审核提交失败：' + error.message)
+      })
     }
   })
 }
 
 // 签到操作
 const handleCheckin = (row) => {
+  // 再次检查活动状态，确保只有"进行中"的活动才能签到
+  if (row.activityStatus !== 2) {
+    ElMessage.warning('只有进行中的活动才能签到');
+    return;
+  }
+
   ElMessageBox.confirm(`确认为 ${row.elderName} 进行签到操作吗?`, '提示', {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     type: 'info'
   }).then(() => {
-    // 这里应该调用API进行签到操作
-    ElMessage.success('签到成功')
-    getList()
+    // 从sessionStorage获取用户信息
+    const userInfoStr = sessionStorage.getItem('userInfo');
+    if (!userInfoStr) {
+      ElMessage.error('未获取到用户信息，请重新登录');
+      return;
+    }
+
+    // 解析用户信息
+    try {
+      const userInfo = JSON.parse(userInfoStr);
+      if (!userInfo || !userInfo.userId) {
+        ElMessage.error('用户信息不完整，请重新登录');
+        return;
+      }
+
+      // 调用store进行签到操作，传入用户ID
+      participateStore.checkin(row.id, userInfo.userId).then(response => {
+        ElMessage.success('签到成功')
+        getList()
+      }).catch(error => {
+        ElMessage.error('签到失败：' + error.message)
+      })
+    } catch (error) {
+      ElMessage.error('解析用户信息失败，请重新登录');
+    }
   }).catch(() => {})
 }
 
@@ -428,16 +489,32 @@ const handleCancel = (row) => {
     cancelButtonText: '取消',
     type: 'warning'
   }).then(() => {
-    // 这里应该调用API取消报名
-    ElMessage.success('取消报名成功')
-    getList()
+    // 调用store取消报名
+    participateStore.cancel(row.id).then(response => {
+      ElMessage.success('取消报名成功')
+      getList()
+    }).catch(error => {
+      ElMessage.error('取消报名失败：' + error.message)
+    })
   }).catch(() => {})
+}
+
+// 查看详情
+const handleViewDetail = (row) => {
+  detailDialogVisible.value = true
+  detailForm.activityTitle = row.activityTitle
+  detailForm.elderName = row.elderName
+  detailForm.elderPhone = row.elderPhone
+  detailForm.applyTime = row.applyTime
+  detailForm.signTime = row.signTime
+  detailForm.status = row.status
+  detailForm.remark = row.remark
 }
 
 // 初始化
 onMounted(() => {
-  getActivityOptions()
-  getElderOptions()
+  participateStore.getActivityOptions()
+  participateStore.getElderOptions()
   getList()
 })
 </script>
@@ -581,20 +658,20 @@ onMounted(() => {
   .activity-participate {
     padding: 16px;
   }
-  
+
   .search-form {
     padding: 16px;
     margin: 0 8px 16px;
   }
-  
+
   :deep(.el-table) {
     margin: 0 8px;
   }
-  
+
   :deep(.el-dialog) {
     margin: 8px !important;
   }
-  
+
   :deep(.el-dialog__body) {
     padding: 16px;
   }

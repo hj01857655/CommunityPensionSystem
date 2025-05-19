@@ -135,8 +135,8 @@
           <el-form-item label="用户账号" prop="username">
             <el-input v-model="form.username" placeholder="用户账号" disabled />
           </el-form-item>
-          <el-form-item label="角色" prop="roleIds">
-            <el-select v-model="form.roleIds" placeholder="请选择角色" multiple @change="handleRoleChange">
+          <el-form-item label="角色" prop="roleId">
+            <el-select v-model="form.roleId" placeholder="请选择角色" @change="handleRoleChange">
               <el-option label="老人" :value="1" />
               <el-option label="家属" :value="2" />
               <el-option label="社区工作人员" :value="3" />
@@ -155,14 +155,14 @@
             <el-input v-model="form.email" placeholder="请输入邮箱" />
           </el-form-item>
           <el-form-item label="状态" prop="isActive">
-            <el-radio-group v-model="form.isActive" :disabled="form.roleIds.includes(4)">
+            <el-radio-group v-model="form.isActive" :disabled="form.roleId === 4">
               <el-radio :value="1">正常</el-radio>
               <el-radio :value="0">停用</el-radio>
             </el-radio-group>
           </el-form-item>
   
           <!-- 老人角色特定的表单项 -->
-          <template v-if="form.roleIds.includes(1)">
+          <template v-if="form.roleId === 1">
             <el-form-item label="身份证号码" prop="idCard">
               <el-input v-model="form.idCard" placeholder="请输入身份证号码" />
             </el-form-item>
@@ -191,7 +191,7 @@
           </template>
   
           <!-- 家属角色特定的表单项 -->
-          <template v-if="form.roleIds.includes(2)">
+          <template v-if="form.roleId === 2">
             <el-form-item label="绑定老人" prop="elderId">
               <el-select v-model="form.elderId" placeholder="请选择要绑定的老人" clearable>
                 <el-option
@@ -222,7 +222,7 @@
           </template>
   
           <!-- 社区工作人员角色特定的表单项 -->
-          <template v-if="form.roleIds.includes(3)">
+          <template v-if="form.roleId === 3">
             <el-form-item label="部门" prop="department">
               <el-input v-model="form.department" placeholder="请输入部门" />
             </el-form-item>
@@ -241,7 +241,7 @@
   
       <!-- 用户详情对话框 -->
       <el-dialog 
-        :title="detailForm && detailForm.isRelatedUser ? `绑定${detailForm.roleIds && detailForm.roleIds.includes(1) ? '老人' : '家属'}详情` : '用户详情'" 
+        :title="detailForm && detailForm.isRelatedUser ? `绑定${detailForm.roleId === 1 ? '老人' : '家属'}详情` : '用户详情'" 
         v-model="detailDialogVisible" 
         width="500px" 
         append-to-body
@@ -254,12 +254,11 @@
             <el-descriptions-item label="邮箱">{{ detailForm.email }}</el-descriptions-item>
             <el-descriptions-item label="角色">
               <el-tag 
-                v-for="(roleId, index) in detailForm.roleIds" 
-                :key="index"
+                v-if="detailForm.roleId"
                 style="margin-right: 4px" 
-                :type="getRoleTagType(roleId)"
+                :type="getRoleTagType(detailForm.roleId)"
               >
-                {{ roleMap[roleId] }}
+                {{ roleMap[detailForm.roleId] }}
               </el-tag>
             </el-descriptions-item>
             <el-descriptions-item label="状态">
@@ -267,7 +266,7 @@
             </el-descriptions-item>
             
             <!-- 老人特有信息 -->
-            <template v-if="detailForm.roleIds && detailForm.roleIds.includes(1)">
+            <template v-if="detailForm.roleId === 1">
               <el-descriptions-item label="身份证号码">{{ detailForm.idCard || '未填写' }}</el-descriptions-item>
               <el-descriptions-item label="出生日期">{{ detailForm.birthday || '未填写' }}</el-descriptions-item>
               <el-descriptions-item label="年龄">{{ detailForm.age || '未填写' }}</el-descriptions-item>
@@ -287,7 +286,7 @@
             </template>
             
             <!-- 家属特有信息 -->
-            <template v-if="detailForm.roleIds && detailForm.roleIds.includes(2)">
+            <template v-if="detailForm.roleId === 2">
               <el-descriptions-item label="绑定老人">
                 <div v-if="detailForm.elders && detailForm.elders.length > 0">
                   <div v-for="(elder, index) in detailForm.elders" :key="index" class="mb-1">
@@ -301,7 +300,7 @@
             </template>
             
             <!-- 社区工作人员特有信息 -->
-            <template v-if="detailForm.roleIds && detailForm.roleIds.includes(3)">
+            <template v-if="detailForm.roleId === 3">
               <el-descriptions-item label="部门">{{ detailForm.department || '未填写' }}</el-descriptions-item>
               <el-descriptions-item label="岗位">{{ detailForm.position || '未填写' }}</el-descriptions-item>
             </template>
@@ -472,7 +471,7 @@ import { onMounted, reactive, ref, watch } from 'vue';
   
   // 判断用户是否拥有某角色
   const hasRole = (user, roleId) => {
-    return user.roleIds && user.roleIds.includes(roleId);
+    return user.roleId === roleId || (user.roleIds && user.roleIds.includes(roleId));
   };
   
   // 获取列表数据
@@ -635,7 +634,7 @@ import { onMounted, reactive, ref, watch } from 'vue';
     phone: '',
     email: '',
     isActive: 1,
-    roleIds: [],
+    roleId: null,
     elderId: null,
     relationship: '',
     department: '',
@@ -662,19 +661,14 @@ import { onMounted, reactive, ref, watch } from 'vue';
   const isKin = ref(false);
   const isStaff = ref(false);
   const isElder = ref(false);
-  const handleRoleChange = (selectedRoles) => {
-    // 检查是否同时选择了老人和家属角色
-    if (selectedRoles.includes(1) && selectedRoles.includes(2)) {
-      ElMessage.warning('不能同时选择老人和家属角色');
-      // 恢复之前的选择
-      form.value.roleIds = form.value.roleIds.filter(roleId => !(roleId === 1 || roleId === 2));
-      return;
-    }
-  
+  const handleRoleChange = (roleId) => {
+    // 将选择的角色ID转换为数组格式
+    form.value.roleId = roleId;
+    
     // 更新角色状态
-    isKin.value = selectedRoles.includes(2);
-    isStaff.value = selectedRoles.includes(3);
-    isElder.value = selectedRoles.includes(1);
+    isKin.value = roleId === 2;
+    isStaff.value = roleId === 3;
+    isElder.value = roleId === 1;
   
     // 如果是家属角色，获取可绑定的老人列表
     if (isKin.value) {  
@@ -726,11 +720,18 @@ import { onMounted, reactive, ref, watch } from 'vue';
   });
   // 表单校验规则
   const rules = {
-    username: [{ required: true, message: '请输入用户名称', trigger: 'blur' }],
+    username: [
+      { required: true, message: '请输入用户名称', trigger: 'blur' },
+      { min: 4, max: 50, message: '用户名长度必须在4-50个字符之间', trigger: 'blur' }
+    ],
     password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
-    phone: [{ required: true, message: '请输入手机号码', trigger: 'blur' }],
+    name: [{ required: true, message: '请输入姓名', trigger: 'blur' }],
+    phone: [
+      { required: true, message: '请输入手机号码', trigger: 'blur' },
+      { pattern: /^1[3-9]\d{9}$/, message: '手机号码格式不正确', trigger: 'blur' }
+    ],
     email: [{ required: true, message: '请输入邮箱', trigger: 'blur' }],
-    roleIds: [{ required: true, message: '请选择角色', trigger: 'change' }]
+    roleId: [{ required: true, message: '请选择角色', trigger: 'change' }]
   };
   
   // 取消按钮
@@ -749,7 +750,7 @@ import { onMounted, reactive, ref, watch } from 'vue';
       phone: '',
       email: '',
       isActive: 1,
-      roleIds: [],
+      roleId: null,
       elderId: null,
       relationship: '',
       department: '',
@@ -807,11 +808,15 @@ import { onMounted, reactive, ref, watch } from 'vue';
       }
   
       const userData = userResponse.data;
-      const roleIds = userData.roleIds || [];
+      // 获取用户角色（兼容后端可能返回的不同格式）
+      let roleId = userData.roleId;
+      if (!roleId && userData.roleIds && userData.roleIds.length > 0) {
+        roleId = userData.roleIds[0];
+      }
       
       // 如果是家属角色，则获取与老人的关系信息
       let relationshipInfo = '';
-      if (roleIds.includes(2) && row.elders && row.elders.length > 0) {
+      if (roleId === 2 && row.elders && row.elders.length > 0) {
         relationshipInfo = row.elders[0].relationType || '';
       }
       
@@ -819,15 +824,15 @@ import { onMounted, reactive, ref, watch } from 'vue';
       form.value = {
         ...userData,
         userId: row.userId, // 确保设置userId
-        roleIds: roleIds,   // 获取用户角色
+        roleId: roleId, // 设置单个角色ID
         elderId: userData.bindElderIds?.[0] || null, // 获取绑定的老人ID
         relationship: relationshipInfo || userData.relationType || '' // 获取关系类型
       };
   
       // 更新角色状态
-      isKin.value = roleIds.includes(2);
-      isStaff.value = roleIds.includes(3);
-      isElder.value = roleIds.includes(1);
+      isKin.value = roleId === 2;
+      isStaff.value = roleId === 3;
+      isElder.value = roleId === 1;
   
       // 如果是家属角色，获取可绑定的老人列表
       if (isKin.value) {
@@ -868,20 +873,26 @@ import { onMounted, reactive, ref, watch } from 'vue';
     formRef.value?.validate(async (valid) => {
       if (valid) {
         try {
+          // 添加额外验证，确保username不为空
+          if (!form.value.username || form.value.username.trim() === '') {
+            ElMessage.error('用户名不能为空，请先输入姓名');
+            return;
+          }
+          
           // 创建一个新的表单对象，避免修改原始表单
           let formToSubmit = {};
           
           // 如果是家属角色
-          if (form.value.roleIds.includes(2)) {
+          if (form.value.roleId === 2) {
             // 仅保留基本信息，不传递绑定相关信息
             const { 
               userId, username, name, password, phone, email, 
-              isActive, roleIds
+              isActive, roleId
             } = form.value;
             
             formToSubmit = { 
               userId, username, name, password, phone, email, 
-              isActive, roleIds
+              isActive, roleId
             };
             
             // 单独处理绑定关系，如果设置了新的elderId和relationship，并且之前没有绑定过
@@ -912,45 +923,45 @@ import { onMounted, reactive, ref, watch } from 'vue';
             }
           }
           // 如果是老人角色
-          else if (form.value.roleIds.includes(1)) {
+          else if (form.value.roleId === 1) {
             // 老人角色只保留老人相关信息
             const {
               userId, username, name, password, phone, email,
-              isActive, roleIds, idCard, birthday, age,
+              isActive, roleId, idCard, birthday, age,
               emergencyContactName, emergencyContactPhone, healthCondition
             } = form.value;
             
             formToSubmit = {
               userId, username, name, password, phone, email,
-              isActive, roleIds, idCard, birthday, age,
+              isActive, roleId, idCard, birthday, age,
               emergencyContactName, emergencyContactPhone, healthCondition
             };
           }
           // 如果是社区工作人员角色
-          else if (form.value.roleIds.includes(3)) {
+          else if (form.value.roleId === 3) {
             // 社区工作人员角色包含department和position字段
             const {
               userId, username, name, password, phone, email,
-              isActive, roleIds, department, position
+              isActive, roleId, department, position
             } = form.value;
             
             formToSubmit = {
               userId, username, name, password, phone, email,
-              isActive, roleIds, department, position
+              isActive, roleId, department, position
             };
           }
           // 如果是管理员角色
-          else if (form.value.roleIds.includes(4)) {
+          else if (form.value.roleId === 4) {
             // 管理员角色只保留基本信息，并且状态始终为启用
             const {
               userId, username, name, password, phone, email,
-              roleIds
+              roleId
             } = form.value;
             
             formToSubmit = {
               userId, username, name, password, phone, email,
               isActive: 1, // 管理员始终为启用状态
-              roleIds
+              roleId
             };
           }
           // 其他角色
@@ -958,12 +969,12 @@ import { onMounted, reactive, ref, watch } from 'vue';
             // 其他角色只保留基本信息
             const {
               userId, username, name, password, phone, email,
-              isActive, roleIds
+              isActive, roleId
             } = form.value;
             
             formToSubmit = {
               userId, username, name, password, phone, email,
-              isActive, roleIds
+              isActive, roleId
             };
           }
 
@@ -973,6 +984,15 @@ import { onMounted, reactive, ref, watch } from 'vue';
           if (dialogType.value === 'add') {
             // 新增用户不需要userId
             const { userId, ...addData } = formToSubmit;
+            
+            // 确保密码字段存在，如果不存在则使用默认密码
+            if (!addData.password) {
+              addData.password = '123456';
+            }
+            
+            // 记录发送到后端的数据
+            console.log('新增用户准备提交的数据:', JSON.stringify(addData, null, 2));
+            
             const res = await userStore.handleAddUser(addData);
             success = !!res;
             
@@ -982,6 +1002,7 @@ import { onMounted, reactive, ref, watch } from 'vue';
             }
           } else {
             // 更新用户需要userId
+            console.log('更新用户准备提交的数据:', JSON.stringify(formToSubmit, null, 2));
             success = await userStore.handleUpdateUser(formToSubmit);
           }
   
@@ -1172,7 +1193,7 @@ import { onMounted, reactive, ref, watch } from 'vue';
     const row = {
       userId: detailForm.value.userId,
       username: detailForm.value.username,
-      roleIds: detailForm.value.roleIds || [],
+      roleId: detailForm.value.roleId || null,
       // 如果详情页中已加载了绑定关系，则传递给编辑页面
       kins: detailForm.value.kins || [],
       elders: detailForm.value.elders || []

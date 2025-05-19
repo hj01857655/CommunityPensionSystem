@@ -75,16 +75,11 @@ const isTokenExpired = (token) => {
     try {
         const tokenValue = token.startsWith('Bearer ') ? token.substring(7) : token;
         if (!tokenValue.includes('.') || tokenValue.split('.').length !== 3) {
-            console.error('Invalid token format');
             return true;
         }
         const decoded = jwtDecode(tokenValue);
-        if (decoded.exp < Date.now() / 1000) {
-            console.warn("Token 已过期,请重新登录", new Date(decoded.exp * 1000).toLocaleString());
-        }
         return decoded.exp < Date.now() / 1000;
     } catch (error) {
-        console.error('Token decode error:', error);
         return true;
     }
 };
@@ -123,7 +118,6 @@ const refreshAdminToken = async () => {
             throw new Error(response.data.message || '刷新令牌失败');
         }
     } catch (error) {
-        console.error('刷新令牌错误:', error);
         throw new Error('刷新令牌过程中发生错误，请重新登录');
     }
 };
@@ -139,11 +133,6 @@ instance.interceptors.request.use(
         // 登录接口不需要token
         const loginPaths = ['/api/auth/login', '/api/auth/adminLogin'];  // 更新登录路径
         if (loginPaths.some(path => config.url === path)) {
-            console.log('登录请求，跳过token验证:', {
-                url: config.url,
-                method: config.method,
-                data: config.data
-            });
             return config;
         }
         
@@ -165,7 +154,6 @@ instance.interceptors.request.use(
         return config;
     },
     async error => {
-        console.error('请求拦截器错误:', error);
         return Promise.reject(error);
     }
 );
@@ -173,13 +161,6 @@ instance.interceptors.request.use(
 // 响应拦截器
 instance.interceptors.response.use(
     async response => {
-        // 调试日志
-        // console.log("响应拦截器", response);
-        // console.log("收到响应:", {
-        //     url: response.config.url,
-        //     status: response.status,
-        //     data: response.data
-        // });
         // 处理二进制数据
         if (response.config.responseType === 'blob') {
             return response;
@@ -210,15 +191,26 @@ instance.interceptors.response.use(
         return response;
     },
     async error => {
-        console.error("详细响应拦截器错误:", error);
-        console.error("错误响应:", error.response);
-        
         const { response, config } = error;
         
         // 网络连接错误处理
         if (!response) {
-            console.error('网络连接异常');
             return Promise.reject(new Error('网络连接失败，请检查网络后重试'));
+        }
+
+        // 提取后端返回的错误信息
+        let errorMessage = '请求失败';
+        if (response.data) {
+            if (typeof response.data === 'string') {
+                try {
+                    const parsedError = JSON.parse(response.data);
+                    errorMessage = parsedError.message || parsedError.msg || parsedError.error || response.data;
+                } catch (e) {
+                    errorMessage = response.data;
+                }
+            } else if (response.data.message || response.data.msg || response.data.error) {
+                errorMessage = response.data.message || response.data.msg || response.data.error;
+            }
         }
 
         // 统一错误处理
@@ -253,16 +245,41 @@ instance.interceptors.response.use(
                         });
                     });
                 }
-                return '认证失败，请重新登录';
+                
+                return '登录状态已过期，请重新登录';
             },
-            403: () => '权限不足，请联系管理员',
-            404: () => `资源不存在: ${config.url}`,
-            500: () => '服务器繁忙，请稍后重试',
-            default: () => response.data?.message || '未知错误'
+            403: () => '您没有权限访问该资源',
+            404: () => '请求的资源不存在',
+            500: () => {
+                // 针对活动状态API的特殊处理
+                if (config.url.includes('/api/activity/register/status/')) {
+                    // 这可能是因为用户未注册该活动，我们返回一个特定的错误
+                    return { isSpecialError: true, type: 'NOT_REGISTERED', message: '未找到报名记录' };
+                }
+                
+                // 应用相关的特殊错误处理
+                if (errorMessage.includes('不存在') || errorMessage.includes('未找到')) {
+                    return { isSpecialError: true, type: 'NOT_FOUND', message: errorMessage };
+                }
+                
+                return errorMessage || '服务器繁忙，请稍后重试';
+            },
+            502: () => '网关错误',
+            503: () => '服务不可用',
+            504: () => '网关超时',
         };
 
-        const message = await (errorHandler[response.status]?.() || errorHandler.default());
-        return Promise.reject(new Error(message));
+        // 处理错误
+        const handler = errorHandler[response.status];
+        const errMsg = handler ? await handler() : errorMessage || `未知错误(${response.status})`;
+        
+        // 如果是特殊处理的错误，直接返回
+        if (errMsg && typeof errMsg === 'object' && errMsg.isSpecialError) {
+            return Promise.reject(new Error(errMsg.message));
+        }
+        
+        // 一般错误直接返回错误消息
+        return Promise.reject(new Error(errMsg));
     }
 );
 

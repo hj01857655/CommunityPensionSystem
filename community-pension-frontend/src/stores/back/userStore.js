@@ -235,7 +235,18 @@ export const useUserStore = defineStore('user', () => {
      */
     const handleAddUser = async (userData) => {
         try {
-            const res = await addUser(userData);
+            // 处理roleId，转换为后端期望的格式
+            const dataToSubmit = { ...userData };
+            
+            // 如果存在roleId但不存在roleIds，创建roleIds数组
+            if (dataToSubmit.roleId !== undefined && !dataToSubmit.roleIds) {
+                dataToSubmit.roleIds = [dataToSubmit.roleId];
+            }
+            
+            // 日志输出提交的数据，帮助调试
+            console.log('提交到后端的用户数据:', JSON.stringify(dataToSubmit, null, 2));
+            
+            const res = await addUser(dataToSubmit);
             if (res.code === 200) {
                 ElMessage.success('新增用户成功');
                 return res; // 后端应返回新增用户的ID
@@ -261,17 +272,25 @@ export const useUserStore = defineStore('user', () => {
                 return false;
             }
 
+            // 创建一个新对象用于提交
+            const dataToSubmit = { ...userData };
+            
+            // 处理roleId，转换为后端期望的格式
+            // 如果存在roleId但不存在roleIds，创建roleIds数组
+            if (dataToSubmit.roleId !== undefined && !dataToSubmit.roleIds) {
+                dataToSubmit.roleIds = [dataToSubmit.roleId];
+            }
             // 确保roleIds不为null
-            if (!userData.roleIds) {
-                userData.roleIds = [];
+            else if (!dataToSubmit.roleIds) {
+                dataToSubmit.roleIds = [];
             }
 
             // 确保isActive不为undefined
-            if (userData.isActive === undefined) {
-                userData.isActive = 1;
+            if (dataToSubmit.isActive === undefined) {
+                dataToSubmit.isActive = 1;
             }
 
-            const response = await updateUser(userData.userId, userData);
+            const response = await updateUser(dataToSubmit.userId, dataToSubmit);
             if (response.code === 200) {
                 ElMessage.success('更新用户成功');
                 return true;

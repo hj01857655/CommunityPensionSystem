@@ -110,7 +110,9 @@ export const deleteActivity = (id) => {
  * }>}
  */
 export const updateStatus = (id, status) => {
-  return axios.put(`/api/activity/${id}/status`, { status })
+  // 确保参数格式正确，如果传入的是数字，将其包装为对象
+  const data = typeof status === 'object' ? status : { status };
+  return axios.put(`/api/activity/${id}/status`, data)
 }
 
 /**
@@ -136,8 +138,8 @@ export const getStats = (id) => {
  * @returns {Promise<Blob>} Excel文件
  */
 export const exportList = (params) => {
-  return axios.get('/api/activity/export', { 
+  return axios.get('/api/activity/export', {
     params,
     responseType: 'blob'
   })
-} 
+}
