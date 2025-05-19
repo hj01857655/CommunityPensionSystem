@@ -80,7 +80,7 @@
     </el-table>
 
     <!-- 分页组件 -->
-    <pagination v-if="activityStore.total > 0" :total="activityStore.total" :page="activityStore.queryParams.pageNum" :limit="activityStore.queryParams.pageSize" @pagination="getList" />
+    <pagination v-if="activityStore.total > 0" :total="activityStore.total" :page="activityStore.queryParams.pageNum" :limit="activityStore.queryParams.pageSize" @pagination="handlePagination" />
 
     <!-- 活动表单对话框 -->
     <el-dialog v-model="dialogVisible" :title="dialogType === 'add' ? '新增活动' : dialogType === 'edit' ? '编辑活动' : '活动详情'" width="700px" append-to-body destroy-on-close>
@@ -94,7 +94,16 @@
           </el-select>
         </el-form-item>
         <el-form-item label="活动时间" prop="timeRange">
-          <el-date-picker v-model="formData.timeRange" type="datetimerange" range-separator="至" start-placeholder="开始时间" end-placeholder="结束时间" style="width: 100%" value-format="YYYY-MM-DD HH:mm:ss" />
+          <el-date-picker 
+            v-model="formData.timeRange" 
+            type="datetimerange" 
+            range-separator="至" 
+            start-placeholder="开始时间" 
+            end-placeholder="结束时间" 
+            style="width: 100%" 
+            value-format="YYYY-MM-DDTHH:mm:ss"
+            :disabled-date="disabledDate" 
+          />
         </el-form-item>
         <el-form-item label="活动地点" prop="location">
           <el-input v-model="formData.location" placeholder="请输入活动地点" />
@@ -180,7 +189,8 @@ const formData = reactive({
   currentParticipants: 0,
   image: '',
   description: '',
-  status: 0
+  status: 0,
+  organizerId: parseInt(sessionStorage.getItem('userId')) || 1 // 从会话存储中获取当前用户ID作为组织者ID
 })
 
 // 表单验证规则
@@ -204,6 +214,11 @@ const formRules = {
   description: [
     { required: true, message: '请输入活动描述', trigger: 'blur' }
   ]
+}
+
+// 禁用过去的日期
+const disabledDate = (time) => {
+  return time.getTime() < Date.now()
 }
 
 // 获取活动列表
@@ -278,14 +293,22 @@ const handleDelete = (row) => {
     type: 'warning'
   }).then(() => {
     loading.value = true
-    activityStore.deleteActivity(row.id).then(() => {
-      ElMessage.success('删除成功')
-      getList()
+    // 直接删除活动
+    activityStore.deleteActivity(row.id, true).then(() => {
+      ElMessage.success('删除成功');
+      getList();
+    }).catch(error => {
+      console.error('删除活动失败:', error);
+      if (error.response && error.response.data && error.response.data.message) {
+        ElMessage.error(error.response.data.message);
+      } else {
+        ElMessage.error('删除活动失败');
+      }
     }).finally(() => {
-      loading.value = false
-    })
-  }).catch(() => {})
-}
+      loading.value = false;
+    });
+  }).catch(() => {});
+};
 
 // 批量删除
 const handleBatchDelete = () => {
@@ -300,10 +323,34 @@ const handleBatchDelete = () => {
     type: 'warning'
   }).then(() => {
     loading.value = true
-    // 暂时注释掉，因为store中可能没有实现此方法
-    // activityStore.batchDeleteActivity(ids).then(() => {
-    Promise.all(ids.map(id => activityStore.deleteActivity(id))).then(() => {
-      ElMessage.success('批量删除成功')
+    let hasError = false
+    let errorMessage = ''
+    
+    const deletePromises = ids.map(id => 
+      activityStore.deleteActivity(id, true).catch(error => {
+        hasError = true
+        if (error.response && error.response.data && error.response.data.message) {
+          errorMessage = error.response.data.message
+        }
+        // 返回一个成功的Promise，避免Promise.all中断
+        return Promise.resolve(false)
+      })
+    )
+    
+    Promise.all(deletePromises).then(results => {
+      const successCount = results.filter(result => result === true).length
+      
+      if (successCount === ids.length) {
+        ElMessage.success('批量删除成功')
+      } else if (successCount > 0) {
+        ElMessage.warning(`部分删除成功，${successCount}/${ids.length}条记录删除成功`)
+        if (errorMessage) {
+          ElMessage.error(errorMessage)
+        }
+      } else {
+        ElMessage.error(errorMessage || '批量删除失败')
+      }
+      
       getList()
     }).finally(() => {
       loading.value = false
@@ -411,6 +458,13 @@ const handleSubmit = () => {
           ElMessage.success('添加成功')
           dialogVisible.value = false
           getList()
+        }).catch(error => {
+          console.error('创建活动失败:', error)
+          if (error.response && error.response.data && error.response.data.message) {
+            ElMessage.error(error.response.data.message)
+          } else {
+            ElMessage.error('创建活动失败')
+          }
         }).finally(() => {
           loading.value = false
         })
@@ -419,6 +473,13 @@ const handleSubmit = () => {
           ElMessage.success('更新成功')
           dialogVisible.value = false
           getList()
+        }).catch(error => {
+          console.error('更新活动失败:', error)
+          if (error.response && error.response.data && error.response.data.message) {
+            ElMessage.error(error.response.data.message)
+          } else {
+            ElMessage.error('更新活动失败')
+          }
         }).finally(() => {
           loading.value = false
         })
@@ -442,8 +503,16 @@ const resetForm = () => {
     currentParticipants: 0,
     image: '',
     description: '',
-    status: 0
+    status: 0,
+    organizerId: parseInt(sessionStorage.getItem('userId')) || 1
   })
+}
+
+// 处理分页
+const handlePagination = ({ page, limit }) => {
+  activityStore.queryParams.pageNum = page
+  activityStore.queryParams.pageSize = limit
+  getList()
 }
 
 // 初始化

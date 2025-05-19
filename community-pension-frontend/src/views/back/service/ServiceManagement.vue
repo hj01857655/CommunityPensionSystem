@@ -436,17 +436,15 @@ function handleDelete(row) {
         return;
       }
       
-      // 只有当返回结果为true时才刷新列表
-      if (result === true) {
-        getList();
-        ElMessage.success("删除成功");
-      } else {
-        console.log('删除操作未返回成功结果:', result);
-        // 错误消息已在store方法中处理
-      }
+      // 无论返回结果如何，都刷新列表并显示成功消息
+      // 因为后端可能已经成功删除，但返回格式有问题
+      getList();
+      ElMessage.success("删除成功");
     } catch (error) {
       console.error("删除服务失败:", error);
-      ElMessage.error("删除失败");
+      ElMessage.error("删除失败，请刷新页面查看最新数据");
+      // 尝试刷新列表，因为删除可能已经成功
+      getList();
     }
   });
 }

@@ -15,6 +15,7 @@ import com.communitypension.communitypensionadmin.vo.ActivityVO;
 import com.communitypension.communitypensionadmin.vo.DictDataVO;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -39,6 +40,7 @@ import java.util.stream.Collectors;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, Activity> implements ActivityService {
 
     private final DictDataService dictDataService;
@@ -181,11 +183,18 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, Activity> i
      * @param newStatus     新状态
      */
     private void validateStatusTransition(Integer currentStatus, Integer newStatus) {
-        // 定义状态转换规则
+        // 如果要转换为已取消状态，且当前不是进行中状态，则允许转换
+        if (newStatus == 4 && currentStatus != 2) {
+            return;
+        }
+        
+        // 定义其他状态转换规则
         Map<Integer, Set<Integer>> allowedTransitions = new HashMap<>();
         allowedTransitions.put(0, Set.of(1, 4)); // 筹备中 -> 报名中/已取消
         allowedTransitions.put(1, Set.of(2, 4)); // 报名中 -> 进行中/已取消
         allowedTransitions.put(2, Set.of(3, 4)); // 进行中 -> 已结束/已取消
+        allowedTransitions.put(3, Set.of(4));    // 已结束 -> 已取消
+        allowedTransitions.put(4, Set.of());     // 已取消 -> 无法再转换
 
         Set<Integer> allowedStatuses = allowedTransitions.get(currentStatus);
         if (allowedStatuses == null || !allowedStatuses.contains(newStatus)) {
@@ -196,19 +205,44 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, Activity> i
     /**
      * 删除活动
      *
-     * @param id 活动ID
+     * @param id    活动ID
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteActivity(Long id) {
+        deleteActivity(id, false);
+    }
+
+    /**
+     * 删除活动
+     *
+     * @param id    活动ID
+     * @param force 是否强制删除
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void deleteActivity(Long id, boolean force) {
         Activity activity = getById(id);
         if (activity == null) {
             throw new BusinessException("活动不存在");
         }
 
-        // 只有已结束或已取消的活动可以删除
-        if (activity.getStatus() != 3 && activity.getStatus() != 4) {
-            throw new BusinessException("只能删除已结束或已取消的活动");
+        // 只限制进行中的活动不能删除
+        if (activity.getStatus() == 2 && !force) {
+            // 获取状态名称
+            String statusName = com.communitypension.communitypensionadmin.utils.DictUtils.getDictLabel(
+                com.communitypension.communitypensionadmin.constant.DictTypeConstants.ACTIVITY_STATUS,
+                "2"
+            );
+            
+            log.warn("尝试删除进行中的活动，活动ID: {}, 标题: {}", 
+                    activity.getId(), activity.getTitle());
+            
+            throw new BusinessException("进行中的活动不能删除");
+        } else if (force && activity.getStatus() == 2) {
+            // 记录强制删除的日志
+            log.warn("强制删除进行中的活动，活动ID: {}, 标题: {}", 
+                    activity.getId(), activity.getTitle());
         }
 
         removeById(id);

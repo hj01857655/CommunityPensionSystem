@@ -317,7 +317,7 @@ const initActiveTab = () => {
 };
 
 const activeTab = ref(initActiveTab())
-const debugMode = ref(true)  // 开启调试模式
+const debugMode = ref(process.env.NODE_ENV === 'development')  // 只在开发环境开启调试模式
 
 // 本地状态存储预约列表数据，不再使用计算属性
 const localAppointments = ref([]);
@@ -684,7 +684,7 @@ const openBookingDialog = async (service) => {
   }
 
   // 获取服务项目ID，使用正确的字段名serviceId
-  const serviceId = service.serviceId;
+  const serviceId = service.id || service.serviceId;
   
   if (!serviceId) {
     ElMessage.error('服务项目ID不存在，请刷新页面后重试');
@@ -732,8 +732,8 @@ const submitBooking = async () => {
       try {
         submitting.value = true;
         
-        // 优先使用表单中的serviceItemId，如果不存在则尝试从currentService获取
-        const serviceItemId = bookingForm.serviceItemId || (currentService.value ? currentService.value.serviceId : null);
+        // 优先使用表单中的serviceItemId
+        const serviceItemId = bookingForm.serviceItemId;
         
         // 检查服务项目是否存在
         if (!serviceItemId) {
@@ -755,8 +755,18 @@ const submitBooking = async () => {
         
         // 检查是否是未来时间
         const scheduleDateTime = new Date(scheduleTime);
-        if (scheduleDateTime <= new Date()) {
+        const now = new Date();
+        
+        // 添加至少提前1小时预约的限制
+        const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
+        
+        if (scheduleDateTime <= now) {
           ElMessage.error('预约时间必须大于当前时间');
+          return;
+        }
+        
+        if (scheduleDateTime <= oneHourLater) {
+          ElMessage.error('预约时间必须至少提前1小时');
           return;
         }
         
@@ -788,7 +798,12 @@ const submitBooking = async () => {
         }
       } catch (error) {
         console.error('预约提交失败:', error);
-        ElMessage.error(error.message || '预约提交失败');
+        // 增强错误处理，提供更详细的错误信息
+        if (error.response && error.response.data && error.response.data.message) {
+          ElMessage.error(error.response.data.message);
+        } else {
+          ElMessage.error(error.message || '预约提交失败，请稍后重试或联系客服');
+        }
       } finally {
         submitting.value = false;
       }

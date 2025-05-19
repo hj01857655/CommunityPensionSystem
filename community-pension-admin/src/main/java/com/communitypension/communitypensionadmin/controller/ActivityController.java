@@ -1,11 +1,12 @@
 package com.communitypension.communitypensionadmin.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.communitypension.communitypensionadmin.utils.Result;
 import com.communitypension.communitypensionadmin.dto.ActivityDTO;
 import com.communitypension.communitypensionadmin.dto.ActivityQuery;
+import com.communitypension.communitypensionadmin.dto.StatusUpdateDTO;
 import com.communitypension.communitypensionadmin.service.ActivityService;
 import com.communitypension.communitypensionadmin.service.DictDataService;
-import com.communitypension.communitypensionadmin.utils.Result;
 import com.communitypension.communitypensionadmin.vo.ActivityVO;
 import com.communitypension.communitypensionadmin.vo.DictDataVO;
 import jakarta.servlet.http.HttpServletResponse;
@@ -74,8 +75,8 @@ public class ActivityController {
      * 更新活动状态
      */
     @PutMapping("/{id}/status")
-    public Result<Void> updateActivityStatus(@PathVariable Long id, @RequestParam Integer status) {
-        activityService.updateActivityStatus(id, status);
+    public Result<Void> updateActivityStatus(@PathVariable Long id, @RequestBody StatusUpdateDTO statusDto) {
+        activityService.updateActivityStatus(id, statusDto.getStatus());
         return Result.success("状态更新成功");
     }
 
