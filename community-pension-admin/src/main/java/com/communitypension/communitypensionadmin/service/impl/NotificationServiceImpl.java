@@ -53,6 +53,12 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
     @Override
     public void saveNotification(Notification notification) {
         notification.setStatus(0); // 设置为草稿状态
+        
+        // 如果没有设置userId，则设置为系统用户ID（假设系统用户ID为1）
+        if (notification.getUserId() == null) {
+            notification.setUserId(4L); // 设置为系统用户ID
+        }
+        
         notificationMapper.insert(notification);
     }
 

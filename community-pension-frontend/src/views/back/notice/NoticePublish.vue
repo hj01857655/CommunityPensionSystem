@@ -197,7 +197,8 @@ const noticeForm = reactive({
   publishTime: '',
   status: '0', // 默认为草稿状态
   receivers: ['all'],
-  isTop: false
+  isTop: false,
+  userId: parseInt(sessionStorage.getItem('userId')) || 1 // 添加用户ID字段
 });
 
 // 表单验证规则

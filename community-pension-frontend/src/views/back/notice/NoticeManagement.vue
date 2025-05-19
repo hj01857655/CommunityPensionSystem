@@ -23,7 +23,13 @@
         <!-- 操作按钮 -->
         <el-row :gutter="10" class="mb8">
             <el-col :span="1.5">
-                <el-button type="primary" plain :icon="Plus" @click="handleAdd">发布通知</el-button>
+                <el-button 
+                    type="primary" 
+                    size="default" 
+                    :icon="Plus" 
+                    @click="handleAdd"
+                    style="font-weight: bold; padding: 8px 16px; min-width: 100px;"
+                >发布通知</el-button>
             </el-col>
             <right-toolbar v-model:showSearch="showSearch" @queryTable="handleQuery"></right-toolbar>
         </el-row>
@@ -598,5 +604,3 @@ onMounted(() => {
     background: #a8a8a8;
 }
 </style>
-
-

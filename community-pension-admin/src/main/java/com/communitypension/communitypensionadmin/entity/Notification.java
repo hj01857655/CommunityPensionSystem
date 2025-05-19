@@ -8,6 +8,8 @@ import lombok.AllArgsConstructor;
 
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 /**
  * 通知实体类
  *
@@ -67,6 +69,7 @@ public class Notification {
      * 发布时间
      */
     @TableField(fill = FieldFill.INSERT_UPDATE)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime publishTime;
     
     @TableField(exist = false)
