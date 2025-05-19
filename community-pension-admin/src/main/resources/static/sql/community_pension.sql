@@ -11,7 +11,7 @@
  Target Server Version : 80400 (8.4.0)
  File Encoding         : 65001
 
- Date: 19/05/2025 09:48:04
+ Date: 19/05/2025 10:55:19
 */
 
 SET NAMES utf8mb4;
@@ -47,7 +47,7 @@ CREATE TABLE `activities`  (
   INDEX `idx_end_time`(`end_time` ASC) USING BTREE,
   INDEX `idx_register_start_time`(`register_start_time` ASC) USING BTREE,
   INDEX `idx_register_end_time`(`register_end_time` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 72 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '社区活动表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 78 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '社区活动表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of activities
@@ -695,7 +695,7 @@ CREATE TABLE `notification`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_status`(`status` ASC) USING BTREE,
   INDEX `idx_publish_time`(`publish_time` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 35 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '通知公告表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 36 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '通知公告表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of notification
@@ -725,6 +725,7 @@ INSERT INTO `notification` VALUES (31, 1002, '服务预约通知', '尊敬的格
 INSERT INTO `notification` VALUES (32, 1002, '服务预约通知', '尊敬的格拉克结果用户，\n\n您的服务预约（预约号：8）服务已开始。\n\n预约详情：\n- 服务项目：null\n- 预约时间：2025-05-21 10:00:00\n\n您的服务正在进行中，如有问题请联系客服。\n\n如有疑问，请联系客服中心。', 'system', 0, '2025-05-18 22:56:39', '2025-05-18 22:56:39', '2025-05-18 22:56:39');
 INSERT INTO `notification` VALUES (33, 1002, '服务预约通知', '尊敬的格拉克结果用户，\n\n您的服务预约（预约号：8）服务已完成。\n\n预约详情：\n- 服务项目：null\n- 预约时间：2025-05-21 10:00:00\n\n您的服务已完成，感谢您的使用，欢迎对本次服务进行评价。\n- 实际服务时长：0分钟\n- 实际服务费用：0.0元\n\n如有疑问，请联系客服中心。', 'system', 0, '2025-05-18 22:56:52', '2025-05-18 22:56:52', '2025-05-18 22:56:52');
 INSERT INTO `notification` VALUES (34, 2, '服务预约通知', '尊敬的刘大毛用户，\n\n您的服务预约（预约号：9）预约已创建，等待审核。\n\n预约详情：\n- 服务项目：null\n- 预约时间：2025-05-20 09:32:00\n\n您的预约正在审核中，请耐心等待。审核结果将以系统通知的形式告知您。\n\n如有疑问，请联系客服中心。', 'system', 0, '2025-05-19 09:32:12', '2025-05-19 09:32:12', '2025-05-19 09:32:12');
+INSERT INTO `notification` VALUES (35, 2, '服务预约通知', '尊敬的刘大毛用户，\n\n您的服务预约（预约号：9）预约审核通过。\n\n预约详情：\n- 服务项目：null\n- 预约时间：2025-05-20 09:32:00\n\n您的预约已通过审核，服务人员将按预约时间上门服务，请保持电话畅通。\n\n如有疑问，请联系客服中心。', 'system', 0, '2025-05-19 09:58:03', '2025-05-19 09:58:03', '2025-05-19 09:58:03');
 
 -- ----------------------------
 -- Table structure for physical_exam_report
@@ -945,7 +946,7 @@ CREATE TABLE `service_item`  (
   `update_time` datetime NULL DEFAULT NULL,
   `remark` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '备注',
   PRIMARY KEY (`service_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 4005 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '服务项目表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 4006 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '服务项目表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of service_item
@@ -994,7 +995,7 @@ INSERT INTO `service_order` VALUES (5, 2, 1002, 3, '1111111111111111111', '111',
 INSERT INTO `service_order` VALUES (6, 2, 1002, 3, 'fghfhjgjhhjkghghj', '1111111111111', '2025-05-20 08:42:00', 0.00, 0, 'Ldamao', '2025-05-17 01:42:28', 'Ldamao', '2025-05-18 22:30:01', NULL);
 INSERT INTO `service_order` VALUES (7, 1002, 1002, 3, '飞鱼服复古', '已接单', '2025-05-21 16:00:00', 0.00, 0, 'admin', '2025-05-18 22:37:41', 'admin', '2025-05-18 22:37:41', NULL);
 INSERT INTO `service_order` VALUES (8, 1002, 1002, 3, '人发范德萨', '已接单', '2025-05-21 10:00:00', 0.00, 0, 'admin', '2025-05-18 22:39:30', 'admin', '2025-05-18 22:39:30', NULL);
-INSERT INTO `service_order` VALUES (9, 2, 4004, 0, '2222222222222', NULL, '2025-05-20 09:32:00', NULL, NULL, 'Ldamao', '2025-05-19 09:32:12', 'Ldamao', '2025-05-19 09:32:12', NULL);
+INSERT INTO `service_order` VALUES (9, 2, 4004, 1, '2222222222222', '已派单', '2025-05-20 09:32:00', NULL, NULL, 'Ldamao', '2025-05-19 09:32:12', 'Ldamao', '2025-05-19 09:32:12', NULL);
 
 -- ----------------------------
 -- Table structure for service_review

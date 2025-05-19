@@ -43,13 +43,6 @@ public interface ActivityService extends IService<Activity> {
     void deleteActivity(Long id);
     
     /**
-     * 删除活动（支持强制删除）
-     * @param id 活动ID
-     * @param force 是否强制删除
-     */
-    void deleteActivity(Long id, boolean force);
-    
-    /**
      * 更新活动状态
      */
     void updateActivityStatus(Long id, Integer status);

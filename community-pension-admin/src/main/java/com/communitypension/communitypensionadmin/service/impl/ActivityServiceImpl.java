@@ -205,30 +205,18 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, Activity> i
     /**
      * 删除活动
      *
-     * @param id    活动ID
+     * @param id 活动ID
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteActivity(Long id) {
-        deleteActivity(id, false);
-    }
-
-    /**
-     * 删除活动
-     *
-     * @param id    活动ID
-     * @param force 是否强制删除
-     */
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void deleteActivity(Long id, boolean force) {
         Activity activity = getById(id);
         if (activity == null) {
             throw new BusinessException("活动不存在");
         }
 
         // 只限制进行中的活动不能删除
-        if (activity.getStatus() == 2 && !force) {
+        if (activity.getStatus() == 2) {
             // 获取状态名称
             String statusName = com.communitypension.communitypensionadmin.utils.DictUtils.getDictLabel(
                 com.communitypension.communitypensionadmin.constant.DictTypeConstants.ACTIVITY_STATUS,
@@ -239,10 +227,6 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, Activity> i
                     activity.getId(), activity.getTitle());
             
             throw new BusinessException("进行中的活动不能删除");
-        } else if (force && activity.getStatus() == 2) {
-            // 记录强制删除的日志
-            log.warn("强制删除进行中的活动，活动ID: {}, 标题: {}", 
-                    activity.getId(), activity.getTitle());
         }
 
         removeById(id);
