@@ -5,7 +5,13 @@
       <!-- 搜索区域 -->
       <el-form :model="queryParams" ref="queryRef" :inline="true">
         <el-form-item label="字典类型" prop="dictType">
-          <el-select v-model="queryParams.dictType" placeholder="请选择字典类型" clearable style="width:200px">
+          <el-select 
+            v-model="queryParams.dictType" 
+            placeholder="请选择字典类型" 
+            clearable 
+            style="width:200px"
+            @change="handleQuery"
+          >
             <el-option
               v-for="dict in dictTypeOptions"
               :key="dict.value"
@@ -20,10 +26,17 @@
             placeholder="请输入字典标签"
             clearable
             @keyup.enter="handleQuery"
+            @input="handleQuery"
           />
         </el-form-item>
         <el-form-item label="状态" prop="status">
-          <el-select v-model="queryParams.status" placeholder="字典状态" clearable style="width:200px">
+          <el-select 
+            v-model="queryParams.status" 
+            placeholder="字典状态" 
+            clearable 
+            style="width:200px"
+            @change="handleQuery"
+          >
             <el-option label="全部" :value="''" />
             <el-option
               v-for="dict in normal_disable"

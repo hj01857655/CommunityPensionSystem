@@ -8,10 +8,17 @@
           clearable
           style="width: 240px; min-width: 240px;"
           @keyup.enter="handleQuery"
+          @input="handleQuery"
         />
       </el-form-item>
       <el-form-item label="状态" prop="status">
-        <el-select v-model="queryParams.status" placeholder="服务状态" clearable style="width: 240px; min-width: 240px;">
+        <el-select 
+          v-model="queryParams.status" 
+          placeholder="服务状态" 
+          clearable 
+          style="width: 240px; min-width: 240px;"
+          @change="handleQuery"
+        >
           <el-option
             v-for="dict in statusOptions"
             :key="dict.value"

@@ -70,7 +70,7 @@ export const replyServiceReview = (data) => {
 /**
  * 审核评价 (对应 auditServiceReview)
  * @param {Object} data - 审核数据 (应符合 ServiceReviewAuditDTO 结构)
- * @param {number} data.id - 评价ID
+ * @param {number[]} data.ids - 评价ID列表
  * @param {number} data.status - 审核状态
  * @param {string} [data.auditReason] - 审核理由
  * @returns {Promise<{code: number, msg: string}>}

@@ -2,7 +2,8 @@ import {
   deleteServiceReview,
   getServiceReviewDetail,
   getServiceReviewList,
-  replyServiceReview
+  replyServiceReview,
+  auditServiceReview
 } from '@/api/back/service/review';
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
@@ -75,6 +76,21 @@ export const useServiceReviewStore = defineStore('serviceReview', () => {
     }
   };
 
+  // 审核服务评价
+  const auditReview = async (auditData) => {
+    try {
+      const res = await auditServiceReview(auditData);
+      if (res.code === 200) {
+        return res;
+      } else {
+        throw new Error(res.msg || '审核服务评价失败');
+      }
+    } catch (error) {
+      console.error('审核服务评价失败:', error);
+      return Promise.reject(error);
+    }
+  };
+
   // 删除服务评价
   const deleteReview = async (reviewId) => {
     try {
@@ -97,7 +113,8 @@ export const useServiceReviewStore = defineStore('serviceReview', () => {
     getReviewList,
     getReviewDetail,
     replyReview,
+    auditReview,
     deleteReview,
     resetState
   };
-}); 
+});

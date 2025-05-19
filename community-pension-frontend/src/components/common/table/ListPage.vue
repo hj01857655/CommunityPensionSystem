@@ -99,11 +99,11 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, watch, onMounted } from 'vue';
-import SearchForm from './SearchForm.vue';
-import TableToolbar from './TableToolbar.vue';
+import { computed, onMounted, reactive, ref, watch } from 'vue';
 import DataTable from './DataTable.vue';
 import Pagination from './Pagination.vue';
+import SearchForm from './SearchForm.vue';
+import TableToolbar from './TableToolbar.vue';
 
 const props = defineProps({
   // 是否显示搜索表单
@@ -114,7 +114,7 @@ const props = defineProps({
   // 是否在表单值变化时自动搜索
   autoSearch: {
     type: Boolean,
-    default: false
+    default: true
   },
   // 是否显示工具栏
   showToolbar: {

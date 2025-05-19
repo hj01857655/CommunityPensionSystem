@@ -343,6 +343,7 @@
         </div>
       </template>
     </el-dialog>
+
   </div>
 </template>
 
@@ -350,6 +351,7 @@
 import {getUserList} from '@/api/back/system/user';
 import {useHealthRecordStore} from '@/stores/back/health/healthRecordStore';
 import {formatDate, formatDateTime} from '@/utils/date';
+import * as XLSX from 'xlsx';
 import {exportHealthRecords} from '@/api/back/health/records';
 import {ElMessage, ElMessageBox} from 'element-plus';
 import {computed, onMounted, ref} from 'vue';
@@ -723,27 +725,60 @@ const handleExport = async () => {
   try {
     ElMessage.info('正在准备导出数据，请稍候...');
     
-    // 获取筛选条件
-    const params = {
-      elderName: queryParams.value.elderName || undefined,
-      recordType: queryParams.value.recordType || undefined,
-      startTime: queryParams.value.timeRange && queryParams.value.timeRange[0] ? formatDate(queryParams.value.timeRange[0]) : undefined,
-      endTime: queryParams.value.timeRange && queryParams.value.timeRange[1] ? formatDate(queryParams.value.timeRange[1]) : undefined
-    };
+    // 准备导出数据
+    const exportData = recordList.value.map(record => ({
+      '记录ID': record.id,
+      '老人姓名': record.elderName,
+      '年龄': record.elderAge,
+      '性别': record.elderGender,
+      '血压': record.bloodPressure,
+      '心率': record.heartRate,
+      '血糖': record.bloodSugar,
+      '体温': record.temperature,
+      '体重(kg)': record.weight,
+      '身高(cm)': record.height,
+      'BMI': record.bmi,
+      '记录类型': record.recordType,
+      '症状': record.symptoms,
+      '诊断结果': record.diagnosis,
+      '处方': record.prescription,
+      '建议': record.advice,
+      '记录时间': formatDate(record.recordTime),
+      '记录人员': record.recorder,
+      '备注': record.remark
+    }));
     
-    // 调用API获取数据
-    const res = await exportHealthRecords(params);
+    // 创建工作簿
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, '健康档案记录');
     
-    // 创建Blob对象
-    const blob = new Blob([res.data], { type: 'application/vnd.ms-excel' });
+    // 设置列宽
+    const columnWidths = [
+      { wch: 8 },  // 记录ID
+      { wch: 10 }, // 老人姓名
+      { wch: 6 },  // 年龄
+      { wch: 6 },  // 性别
+      { wch: 10 }, // 血压
+      { wch: 8 },  // 心率
+      { wch: 8 },  // 血糖
+      { wch: 8 },  // 体温
+      { wch: 10 }, // 体重
+      { wch: 10 }, // 身高
+      { wch: 8 },  // BMI
+      { wch: 12 }, // 记录类型
+      { wch: 20 }, // 症状
+      { wch: 20 }, // 诊断结果
+      { wch: 20 }, // 处方
+      { wch: 20 }, // 建议
+      { wch: 18 }, // 记录时间
+      { wch: 12 }, // 记录人员
+      { wch: 20 }  // 备注
+    ];
+    worksheet['!cols'] = columnWidths;
     
-    // 创建下载链接
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `健康记录导出_${formatDate(new Date())}.xlsx`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // 导出Excel文件
+    XLSX.writeFile(workbook, `健康档案记录_${formatDate(new Date())}.xlsx`);
     
     ElMessage.success('导出成功');
   } catch (error) {

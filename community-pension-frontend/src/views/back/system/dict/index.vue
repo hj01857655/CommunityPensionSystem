@@ -9,6 +9,7 @@
             placeholder="请输入字典名称"
             clearable
             @keyup.enter="handleQuery"
+            @input="handleQuery"
           />
         </el-form-item>
         <el-form-item label="字典类型" prop="dictType">
@@ -17,10 +18,17 @@
             placeholder="请输入字典类型"
             clearable
             @keyup.enter="handleQuery"
+            @input="handleQuery"
           />
         </el-form-item>
         <el-form-item label="状态" prop="status">
-          <el-select v-model="data.queryParams.status" placeholder="字典状态" clearable style="width: 200px">
+          <el-select 
+            v-model="data.queryParams.status" 
+            placeholder="字典状态" 
+            clearable 
+            style="width: 200px"
+            @change="handleQuery"
+          >
             <el-option
               v-for="dict in statusOptions"
               :key="dict.value"
@@ -182,7 +190,7 @@ import { useDictTypeStore } from '@/stores/back/dictTypeStore'
 import { formatDateTime } from '@/utils/date'
 import { useDict } from '@/utils/dict'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { computed, getCurrentInstance, onMounted, reactive, ref, toRefs } from 'vue'
+import { computed, getCurrentInstance, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 const dictTypeStore = useDictTypeStore()
