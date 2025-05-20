@@ -717,7 +717,6 @@ function showEmergencyAlert(message) {
           <p class="emergency-time">时间: ${formatDateTime(message.timestamp)}</p>
       </div>
       <div class="emergency-alert-footer">
-          <button class="play-sound-btn">播放警报声</button>
           <button class="handle-btn">立即处理</button>
       </div>
   `;
