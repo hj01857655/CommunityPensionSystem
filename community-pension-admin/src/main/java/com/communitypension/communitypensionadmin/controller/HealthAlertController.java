@@ -1,10 +1,10 @@
 package com.communitypension.communitypensionadmin.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.communitypension.communitypensionadmin.dto.HealthAlertDTO;
+import com.communitypension.communitypensionadmin.pojo.dto.HealthAlertDTO;
 import com.communitypension.communitypensionadmin.service.HealthAlertService;
 import com.communitypension.communitypensionadmin.utils.Result;
-import com.communitypension.communitypensionadmin.vo.HealthAlertVO;
+import com.communitypension.communitypensionadmin.pojo.vo.HealthAlertVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;

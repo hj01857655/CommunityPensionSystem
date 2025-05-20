@@ -267,8 +267,8 @@ export const useUserStore = defineStore('foreground-user', () => {
       if (response.code === 200 && response.data) {
         const userData = response.data;
         // 确保角色ID存在
-        if (!userData.roleId && userData.roleIds && userData.roleIds.length > 0) {
-          userData.roleId = userData.roleIds[0];
+        if (!userData.roleId && userData.roleIdList && userData.roleIdList.length > 0) {
+          userData.roleId = userData.roleIdList[0];
         }
         
         // 存储到本地和store

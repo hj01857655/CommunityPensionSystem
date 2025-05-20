@@ -428,7 +428,7 @@ const profileForm = ref({
   department: '',//部门
   position: '',//职位
   isActive: 1,//是否激活
-  roleIds: [],//角色ID列表
+  roleIdList: [],//角色ID列表
   roles: [],//角色列表
   roleNames: [],//角色名称列表
   bindElderIds: null,//绑定的老人ID列表
@@ -492,7 +492,7 @@ const initFormData = async () => {
       emergencyContactName: userInfo.emergencyContactName || '',
       emergencyContactPhone: userInfo.emergencyContactPhone || '',
       username: userInfo.username || '',
-      roleIds: userInfo.roleIds || [],
+      roleIdList: userInfo.roleIdList || [],
       bindElderIds: userInfo.bindElderIds || [],
       bindKinIds: userInfo.bindKinIds || [],
       relationType: userInfo.relationType || '',

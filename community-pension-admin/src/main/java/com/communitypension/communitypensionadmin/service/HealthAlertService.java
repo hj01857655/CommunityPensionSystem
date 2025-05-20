@@ -2,9 +2,9 @@ package com.communitypension.communitypensionadmin.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.communitypension.communitypensionadmin.dto.HealthAlertDTO;
+import com.communitypension.communitypensionadmin.pojo.dto.HealthAlertDTO;
 import com.communitypension.communitypensionadmin.entity.HealthAlert;
-import com.communitypension.communitypensionadmin.vo.HealthAlertVO;
+import com.communitypension.communitypensionadmin.pojo.vo.HealthAlertVO;
 
 import java.time.LocalDateTime;
 import java.util.List;

@@ -422,14 +422,14 @@ async function handleAdd() {
 
 /** 删除按钮操作 */
 function handleDelete(row) {
-  const roleIds = row.roleId || ids.value;
-  ElMessageBox.confirm('是否确认删除角色编号为"' + roleIds + '"的数据项?', "警告", {
+  const roleIdList = row.roleId || ids.value;
+  ElMessageBox.confirm('是否确认删除角色编号为"' + roleIdList + '"的数据项?', "警告", {
     confirmButtonText: "确定",
     cancelButtonText: "取消",
     type: "warning"
   }).then(async function () {
     try {
-      await roleStore.removeRole(roleIds);
+      await roleStore.removeRole(roleIdList);
       getList();
       ElMessage.success("删除成功");
     } catch (error) {

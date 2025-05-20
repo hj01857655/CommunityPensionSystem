@@ -1,11 +1,11 @@
 package com.communitypension.communitypensionadmin.converter;
 
-import com.communitypension.communitypensionadmin.dto.ActivityRegisterDTO;
+import com.communitypension.communitypensionadmin.pojo.dto.ActivityRegisterDTO;
 import com.communitypension.communitypensionadmin.entity.Activity;
 import com.communitypension.communitypensionadmin.entity.ActivityRegister;
 import com.communitypension.communitypensionadmin.entity.User;
-import com.communitypension.communitypensionadmin.vo.ActivityRegisterExportVO;
-import com.communitypension.communitypensionadmin.vo.ActivityRegisterVO;
+import com.communitypension.communitypensionadmin.pojo.vo.ActivityRegisterExportVO;
+import com.communitypension.communitypensionadmin.pojo.vo.ActivityRegisterVO;
 import com.communitypension.communitypensionadmin.utils.DictUtils;
 import com.communitypension.communitypensionadmin.constant.DictTypeConstants;
 import org.springframework.beans.BeanUtils;

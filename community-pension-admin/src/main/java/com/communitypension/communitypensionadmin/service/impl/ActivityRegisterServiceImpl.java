@@ -11,7 +11,7 @@ import com.communitypension.communitypensionadmin.mapper.ActivityRegisterMapper;
 import com.communitypension.communitypensionadmin.service.ActivityRegisterService;
 import com.communitypension.communitypensionadmin.service.ActivityService;
 import com.communitypension.communitypensionadmin.service.UserService;
-import com.communitypension.communitypensionadmin.vo.ActivityRegisterVO;
+import com.communitypension.communitypensionadmin.pojo.vo.ActivityRegisterVO;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -3,7 +3,7 @@
 <mapper namespace="com.communitypension.communitypensionadmin.mapper.HealthAlertMapper">
 
     <!-- 结果映射 -->
-    <resultMap id="HealthAlertResultMap" type="com.communitypension.communitypensionadmin.vo.HealthAlertVO">
+    <resultMap id="HealthAlertResultMap" type="com.communitypension.communitypensionadmin.pojo.vo.HealthAlertVO">
         <id column="id" property="id"/>
         <result column="elder_id" property="elderId"/>
         <result column="elder_name" property="elderName"/>

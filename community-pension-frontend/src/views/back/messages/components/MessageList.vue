@@ -45,9 +45,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { useMessageStore } from '@/stores/back/messageStore'
+import { storeToRefs } from 'pinia'
 
 const props = defineProps({
   type: {
@@ -58,33 +60,29 @@ const props = defineProps({
 })
 
 const router = useRouter()
-const messages = ref([])
-const currentPage = ref(1)
-const pageSize = ref(10)
-const total = ref(0)
+const messageStore = useMessageStore()
+const { messages, loading, pagination } = storeToRefs(messageStore)
 
-// 模拟数据，实际项目中应该从API获取
+const currentPage = computed({
+  get: () => pagination.value.current,
+  set: (val) => pagination.value.current = val
+})
+
+const pageSize = computed({
+  get: () => pagination.value.size,
+  set: (val) => pagination.value.size = val
+})
+
+const total = computed(() => pagination.value.total)
+
+// 从后端获取消息列表
 const fetchMessages = async () => {
   try {
-    // 这里应该调用API获取消息列表
-    // const response = await api.getMessages({
-    //   page: currentPage.value,
-    //   size: pageSize.value,
-    //   type: props.type
-    // })
-    
-    // 模拟数据
-    const mockData = Array.from({ length: 15 }, (_, index) => ({
-      id: index + 1,
-      sender: `用户${index + 1}`,
-      title: `消息标题 ${index + 1}`,
-      content: `这是消息内容，这是一个示例消息，ID: ${index + 1}`,
-      createTime: new Date(Date.now() - index * 86400000).toLocaleString(),
-      read: props.type === 'read' ? true : (props.type === 'unread' ? false : (index % 2 === 0))
-    }))
-    
-    messages.value = mockData
-    total.value = 50 // 模拟总数
+    await messageStore.fetchMessages({
+      current: currentPage.value,
+      size: pageSize.value,
+      type: props.type
+    })
   } catch (error) {
     ElMessage.error('获取消息列表失败：' + error.message)
   }
@@ -92,28 +90,20 @@ const fetchMessages = async () => {
 
 // 查看消息详情
 const viewDetail = (id) => {
-  router.push(`/back/messages/${id}`)
+  router.push(`/admin/messages/${id}`)
 }
 
 // 标记消息为已读
 const markAsRead = async (id) => {
   try {
-    // 这里应该调用API标记消息为已读
-    // await api.markMessageAsRead(id)
-    ElMessage.success('已标记为已读')
-    
-    // 更新本地数据
-    const message = messages.value.find(item => item.id === id)
-    if (message) {
-      message.read = true
-    }
+    await messageStore.markAsRead(id)
     
     // 如果当前是未读列表，则需要重新加载
     if (props.type === 'unread') {
       fetchMessages()
     }
   } catch (error) {
-    ElMessage.error('操作失败：' + error.message)
+    // 错误已在store中处理
   }
 }
 
@@ -126,12 +116,14 @@ const deleteMessage = async (id) => {
       type: 'warning'
     })
     
-    // 这里应该调用API删除消息
-    // await api.deleteMessage(id)
-    ElMessage.success('删除成功')
+    // 发送WebSocket消息删除消息
+    messageStore.sendUserMessage({
+      type: 'deleteMessage',
+      data: { id }
+    })
     
     // 从列表中移除
-    messages.value = messages.value.filter(item => item.id !== id)
+    fetchMessages() // 重新加载消息列表
   } catch (error) {
     if (error !== 'cancel') {
       ElMessage.error('删除失败：' + error.message)

@@ -213,12 +213,13 @@ function handleMessage(message) {
     // 根据消息类型处理
     switch (message.type) {
         case 'EMERGENCY':
-            // 检查当前用户是否为管理员
+            // 检查当前用户是否为后台用户
             const userInfo = getUserInfo();
-            if (userInfo && userInfo.roleId === 4) { // 角色ID 4为管理员
+            // 角色ID 3和4为后台用户（社区工作人员）
+            if (userInfo && (userInfo.roleId === 3 || userInfo.roleId === 4)) {
                 handleEmergencyMessage(message);
             } else {
-                console.log('收到紧急消息，但当前用户非管理员，忽略');
+                console.log('收到紧急消息，但当前用户非后台用户，忽略');
             }
             break;
         case 'SYSTEM':

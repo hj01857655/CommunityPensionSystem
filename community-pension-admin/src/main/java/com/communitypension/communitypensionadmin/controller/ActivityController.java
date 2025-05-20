@@ -2,13 +2,13 @@ package com.communitypension.communitypensionadmin.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.communitypension.communitypensionadmin.utils.Result;
-import com.communitypension.communitypensionadmin.dto.ActivityDTO;
-import com.communitypension.communitypensionadmin.dto.ActivityQuery;
-import com.communitypension.communitypensionadmin.dto.StatusUpdateDTO;
+import com.communitypension.communitypensionadmin.pojo.dto.ActivityDTO;
+import com.communitypension.communitypensionadmin.pojo.dto.ActivityQuery;
+import com.communitypension.communitypensionadmin.pojo.dto.StatusUpdateDTO;
 import com.communitypension.communitypensionadmin.service.ActivityService;
 import com.communitypension.communitypensionadmin.service.DictDataService;
-import com.communitypension.communitypensionadmin.vo.ActivityVO;
-import com.communitypension.communitypensionadmin.vo.DictDataVO;
+import com.communitypension.communitypensionadmin.pojo.vo.ActivityVO;
+import com.communitypension.communitypensionadmin.pojo.vo.DictDataVO;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;

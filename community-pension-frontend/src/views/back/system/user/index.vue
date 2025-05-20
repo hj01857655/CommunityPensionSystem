@@ -60,7 +60,7 @@
               v-for="(roleName, index) in scope.row.roleNames" 
               :key="index"
               style="margin-right: 4px" 
-              :type="getRoleTagType(scope.row.roleIds[index])"
+              :type="getRoleTagType(scope.row.roleIdList[index])"
             >
               {{ roleName }}
             </el-tag>
@@ -471,7 +471,7 @@ import { onMounted, reactive, ref, watch } from 'vue';
   
   // 判断用户是否拥有某角色
   const hasRole = (user, roleId) => {
-    return user.roleId === roleId || (user.roleIds && user.roleIds.includes(roleId));
+    return user.roleId === roleId || (user.roleIdList && user.roleIdList.includes(roleId));
   };
   
   // 获取列表数据
@@ -480,9 +480,9 @@ import { onMounted, reactive, ref, watch } from 'vue';
     
     // 处理用户绑定关系信息
     const promises = userList.value.map(async (user) => {
-      // 确保roleIds不为null
-      if (!user.roleIds) {
-        user.roleIds = [];
+      // 确保roleIdList不为null
+      if (!user.roleIdList) {
+        user.roleIdList = [];
       }
   
       // 如果是家属角色
@@ -649,7 +649,7 @@ import { onMounted, reactive, ref, watch } from 'vue';
   const roleForm = ref({
     userId: undefined,
     username: undefined,
-    roleIds: []
+    roleIdList: []
   });
   const roles = [
     { value: 1, label: '老人' },
@@ -810,8 +810,8 @@ import { onMounted, reactive, ref, watch } from 'vue';
       const userData = userResponse.data;
       // 获取用户角色（兼容后端可能返回的不同格式）
       let roleId = userData.roleId;
-      if (!roleId && userData.roleIds && userData.roleIds.length > 0) {
-        roleId = userData.roleIds[0];
+      if (!roleId && userData.roleIdList && userData.roleIdList.length > 0) {
+        roleId = userData.roleIdList[0];
       }
       
       // 如果是家属角色，则获取与老人的关系信息
@@ -954,8 +954,7 @@ import { onMounted, reactive, ref, watch } from 'vue';
           else if (form.value.roleId === 4) {
             // 管理员角色只保留基本信息，并且状态始终为启用
             const {
-              userId, username, name, password, phone, email,
-              roleId
+              userId, username, name, password, phone, email, roleId
             } = form.value;
             
             formToSubmit = {
@@ -1031,7 +1030,7 @@ import { onMounted, reactive, ref, watch } from 'vue';
   const submitRoleForm = async () => {
     const success = await userStore.assignUserRole(
       roleForm.value.userId,
-      roleForm.value.roleIds
+      roleForm.value.roleIdList
     );
   
     if (success) {
@@ -1227,7 +1226,7 @@ import { onMounted, reactive, ref, watch } from 'vue';
       }
       
       const userData = response.data;
-      const roleIds = userData.roleIds || [];
+      const roleIdList = userData.roleIdList || [];
       
       // 获取绑定关系信息
       let userWithRelations = { 
@@ -1239,7 +1238,7 @@ import { onMounted, reactive, ref, watch } from 'vue';
       const promises = [];
       
       // 如果是老人角色，获取其绑定的家属信息
-      if (roleIds.includes(1)) {
+      if (roleIdList.includes(1)) {
         promises.push(
           userStore.fetchKinsByElderId(userId)
             .then(kins => {
@@ -1255,7 +1254,7 @@ import { onMounted, reactive, ref, watch } from 'vue';
       }
       
       // 如果是家属角色，获取其绑定的老人信息
-      if (roleIds.includes(2)) {
+      if (roleIdList.includes(2)) {
         promises.push(
           userStore.fetchEldersByKinId(userId)
             .then(elders => {

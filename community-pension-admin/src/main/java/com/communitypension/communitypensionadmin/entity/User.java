@@ -128,20 +128,22 @@ public class User extends BaseEntity {
 
 
     /**
-     * 角色ID列表，不直接映射到数据库表
+     * 角色ID，不直接映射到数据库表
      */
-    @TableField(exist = false,typeHandler = JacksonTypeHandler.class)
-    private List<Long> roleIds;
+    @TableField(exist = false)
+    private Long roleId;
+    
     /**
-     * 用户角色列表，不直接映射到数据库表
+     * 用户角色，不直接映射到数据库表
      */
-    @TableField(exist = false,typeHandler =JacksonTypeHandler.class)
-    private List<String> roles;
+    @TableField(exist = false)
+    private String role;
+    
     /**
-     * 用户角色名列表，不直接映射到数据库表
+     * 用户角色名，不直接映射到数据库表
      */
-    @TableField(exist = false,typeHandler = JacksonTypeHandler.class)
-    private List<String> roleNames;
+    @TableField(exist = false)
+    private String roleName;
 
 
 

@@ -24,23 +24,29 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import MessageList from './components/MessageList.vue'
+import { useMessageStore } from '@/stores/back/messageStore'
 
+const messageStore = useMessageStore()
 const activeTab = ref('all')
 
 // 标记所有消息为已读
 const markAllAsRead = async () => {
   try {
-    // 这里应该调用API来标记所有消息为已读
-    // await api.markAllMessagesAsRead()
-    ElMessage.success('所有消息已标记为已读')
-    // 刷新消息列表
+    await messageStore.markAllAsRead()
+    // 消息列表组件会自动监听Store中的数据变化
   } catch (error) {
-    ElMessage.error('操作失败：' + error.message)
+    // 错误已在store中处理
   }
 }
+
+// 初始化WebSocket连接
+onMounted(() => {
+  // 确保WebSocket连接已建立
+  messageStore.initWsConnection()
+})
 </script>
 
 <style scoped>

@@ -7,7 +7,7 @@ import com.communitypension.communitypensionadmin.entity.DictData;
 import com.communitypension.communitypensionadmin.exception.BusinessException;
 import com.communitypension.communitypensionadmin.mapper.DictDataMapper;
 import com.communitypension.communitypensionadmin.service.DictDataService;
-import com.communitypension.communitypensionadmin.vo.DictDataVO;
+import com.communitypension.communitypensionadmin.pojo.vo.DictDataVO;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.Row;

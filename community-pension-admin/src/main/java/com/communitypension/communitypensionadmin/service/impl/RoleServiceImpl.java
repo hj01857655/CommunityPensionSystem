@@ -40,11 +40,11 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
     }
 
     @Override
-    public List<String> selectRolesByUserId(Long userId) {
+    public List<String> selectRoleListByUserId(Long userId) {
         if (userId == null) {
             throw new IllegalArgumentException("用户ID不能为空");
         }
-        return roleMapper.selectRolesByUserId(userId);
+        return roleMapper.selectRoleListByUserId(userId);
     }
 
     @Override
@@ -153,18 +153,18 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean deleteRoleByIds(String[] roleIds) {
-        if (roleIds == null || roleIds.length == 0) {
+    public boolean deleteRoleByIdList(String[] roleIdList) {
+        if (roleIdList == null || roleIdList.length == 0) {
             throw new IllegalArgumentException("角色ID不能为空");
         }
         
-        // 转换为Long类型的roleId列表
-        List<Long> roleIdList = Arrays.stream(roleIds)
+        // 转换为Long类型的roleId列表，避免与参数名重复
+        List<Long> longRoleIdList = Arrays.stream(roleIdList)
                 .map(Long::valueOf)
                 .toList();
         
         // 检查是否允许删除
-        roleIdList.forEach(roleId -> {
+        longRoleIdList.forEach(roleId -> {
             Role role = new Role();
             role.setRoleId(roleId);
             checkRoleAllowed(role);
@@ -176,6 +176,6 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
         });
         
         // 删除角色
-        return removeBatchByIds(roleIdList);
+        return removeBatchByIds(longRoleIdList);
     }
 }

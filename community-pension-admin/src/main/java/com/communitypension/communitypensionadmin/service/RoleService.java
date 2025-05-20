@@ -33,7 +33,7 @@ public interface RoleService extends IService<Role> {
      * @param userId 用户id
      * @return 角色
      */
-    List<String> selectRolesByUserId(Long userId);
+    List<String> selectRoleListByUserId(Long userId);
 
     /**
      * 根据角色ID查询角色
@@ -92,10 +92,10 @@ public interface RoleService extends IService<Role> {
 
     /**
      * 批量删除角色信息
-     * @param roleIds 需要删除的角色ID
+     * @param roleIdList 需要删除的角色ID
      * @return 结果
      */
-    boolean deleteRoleByIds(String[] roleIds);
+    boolean deleteRoleByIdList(String[] roleIdList);
 
 
 

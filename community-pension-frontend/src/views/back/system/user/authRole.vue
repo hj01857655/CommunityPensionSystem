@@ -17,13 +17,17 @@
     </el-form>
 
     <h4 class="form-header h4">角色信息</h4>
-    <el-table v-loading="loading" :row-key="getRowKey" @row-click="clickRow" ref="roleRef" @selection-change="handleSelectionChange" :data="tableData">
+    <el-table v-loading="loading" :row-key="getRowKey" @row-click="clickRow" ref="roleRef" :data="tableData">
       <el-table-column label="序号" width="55" type="index" align="center">
         <template #default="scope">
           <span>{{ (pageNum - 1) * pageSize + scope.$index + 1 }}</span>
         </template>
       </el-table-column>
-      <el-table-column type="selection" :reserve-selection="true" width="55"></el-table-column>
+      <el-table-column type="radio" width="55">
+        <template #default="scope">
+          <el-radio v-model="selectedRoleId" :label="scope.row.roleId" @change="handleRadioChange(scope.row)">&nbsp;</el-radio>
+        </template>
+      </el-table-column>
       <el-table-column label="角色编号" align="center" prop="roleId" />
       <el-table-column label="角色名称" align="center" prop="roleName" />
       <el-table-column label="权限字符" align="center" prop="roleKey" />
@@ -56,10 +60,10 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick, computed } from 'vue';
-import { ElMessage } from 'element-plus';
-import { formatDate } from '@/utils/date';
 import { getAuthRole, updateAuthRole } from '@/api/back/system/user';
+import { formatDate } from '@/utils/date';
+import { ElMessage } from 'element-plus';
+import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 const route = useRoute();
@@ -72,7 +76,7 @@ const loading = ref(true);
 const total = ref(0);
 const pageNum = ref(1);
 const pageSize = ref(10);
-const roleIds = ref([]);
+const selectedRoleId = ref(null); // 选中的角色ID
 const roles = ref([]);
 const form = ref({
   nickName: '',
@@ -90,14 +94,13 @@ const tableData = computed(() => {
 
 /** 单击选中行数据 */
 function clickRow(row) {
-  if (roleRef.value) {
-    roleRef.value.toggleRowSelection(row);
-  }
+  selectedRoleId.value = row.roleId;
 }
 
-/** 多选框选中数据 */
-function handleSelectionChange(selection) {
-  roleIds.value = selection.map((item) => item.roleId);
+/** 处理单选框变化 */
+function handleRadioChange(row) {
+  // 单选框已经处理了选中逻辑，不需要额外操作
+  console.log('选中角色:', row.roleName);
 }
 
 /** 保存选中的数据编号 */
@@ -116,8 +119,14 @@ function submitForm() {
     ElMessage.error('用户ID不能为空');
     return;
   }
-  const rIds = roleIds.value.join(',');
-  updateAuthRole({ userId, roleIds: rIds }).then((response) => {
+  
+  if (!selectedRoleId.value) {
+    ElMessage.warning('请选择一个角色');
+    return;
+  }
+  
+  // 只提交选中的一个角色ID
+  updateAuthRole({ userId, roleId: selectedRoleId.value.toString() }).then((response) => {
     if (response.code === 200) {
       ElMessage.success('授权成功');
       handleClose();
@@ -157,13 +166,10 @@ async function initData() {
       roles.value = response.roles || [];
       total.value = roles.value.length;
       
-      await nextTick();
-      if (roleRef.value && Array.isArray(roles.value)) {
-        roles.value.forEach((row) => {
-          if (row.flag) {
-            roleRef.value.toggleRowSelection(row);
-          }
-        });
+      // 查找当前用户已分配的角色
+      const userRole = roles.value.find(role => role.flag);
+      if (userRole) {
+        selectedRoleId.value = userRole.roleId;
       }
     } else {
       ElMessage.error(res.message || '获取角色信息失败');

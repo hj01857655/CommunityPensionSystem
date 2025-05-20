@@ -3,7 +3,7 @@ package com.communitypension.communitypensionadmin.service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.communitypension.communitypensionadmin.entity.ActivityRegister;
-import com.communitypension.communitypensionadmin.vo.ActivityRegisterVO;
+import com.communitypension.communitypensionadmin.pojo.vo.ActivityRegisterVO;
 
 import jakarta.servlet.http.HttpServletResponse;
 

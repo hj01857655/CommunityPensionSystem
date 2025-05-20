@@ -46,11 +46,10 @@ export const addUser = data => {
   // 创建一个新对象，确保一些必要字段存在
   const processedData = { ...data };
   
-  // 确保roleIds字段存在且格式正确（数组格式）
-  if (processedData.roleId !== undefined && !processedData.roleIds) {
-    processedData.roleIds = [processedData.roleId];
-    // 移除单独的roleId，防止与roleIds冲突
-    delete processedData.roleId;
+  // 确保roleId字段存在且格式正确
+  if (processedData.roleId === undefined) {
+    // 如果没有提供roleId，设置一个默认值
+    processedData.roleId = 1; // 默认角色ID
   }
   
   // 确保有默认密码
@@ -152,11 +151,11 @@ export const getUserRoles = userId => {
 /**
  * 分配用户角色
  * @param {number} userId - 用户ID
- * @param {number[]} roleIds - 角色ID数组
+ * @param {number} roleId - 角色ID
  * @returns {Promise<{code: number, msg: string}>}
  */
-export function assignRole(userId, roleIds) {
-    return axios.post(`/api/system/user/assignRoles/${userId}/`, roleIds);
+export function assignRole(userId, roleId) {
+    return axios.post(`/api/system/user/assignRole/${userId}/`, roleId);
 }
 
 /**
@@ -189,12 +188,12 @@ export const getAuthRole = userId => {
  * 更新用户角色授权信息
  * @param {Object} data - 授权信息
  * @param {number} data.userId - 用户ID
- * @param {string} data.roleIds - 角色ID字符串，多个ID用逗号分隔
+ * @param {string} data.roleId - 角色ID
  * @returns {Promise<{code: number, msg: string}>}
  */
 export const updateAuthRole = data => {
   return axios.put(`/api/system/user/${data.userId}/auth-role`, {
-    roleIds: data.roleIds
+    roleId: data.roleId
   });
 };
 

@@ -56,8 +56,8 @@ public class RoleController {
     @Operation(summary = "获取所有角色")
     public Result<List<Role>> all() {
         try {
-            List<Role> roles = roleService.selectRoleAll();
-            return Result.success(roles);
+            List<Role> roleList = roleService.selectRoleAll();
+            return Result.success(roleList);
         } catch (Exception e) {
             logger.error("获取所有角色失败", e);
             return Result.error("获取所有角色失败: " + e.getMessage());
@@ -181,7 +181,7 @@ public class RoleController {
     @Operation(summary = "获取用户角色")
     public Result<List<String>> getUserRole(@PathVariable Long userId) {
         try {
-            List<String> role = roleService.selectRolesByUserId(userId);
+            List<String> role = roleService.selectRoleListByUserId(userId);
             return Result.success(role);
         } catch (Exception e) {
             logger.error("获取用户角色失败", e);

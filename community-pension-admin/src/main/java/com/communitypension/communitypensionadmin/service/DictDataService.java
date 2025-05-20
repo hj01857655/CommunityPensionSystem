@@ -2,7 +2,7 @@ package com.communitypension.communitypensionadmin.service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.communitypension.communitypensionadmin.entity.DictData;
-import com.communitypension.communitypensionadmin.vo.DictDataVO;
+import com.communitypension.communitypensionadmin.pojo.vo.DictDataVO;
 import java.util.List;
 
 /**

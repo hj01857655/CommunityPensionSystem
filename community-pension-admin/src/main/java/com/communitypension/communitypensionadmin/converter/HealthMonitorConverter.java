@@ -1,9 +1,9 @@
 package com.communitypension.communitypensionadmin.converter;
 
-import com.communitypension.communitypensionadmin.dto.HealthMonitorDTO;
+import com.communitypension.communitypensionadmin.pojo.dto.HealthMonitorDTO;
 import com.communitypension.communitypensionadmin.entity.HealthMonitor;
 import com.communitypension.communitypensionadmin.entity.User;
-import com.communitypension.communitypensionadmin.vo.HealthMonitorVO;
+import com.communitypension.communitypensionadmin.pojo.vo.HealthMonitorVO;
 import org.springframework.beans.BeanUtils;
 
 import java.time.LocalDate;

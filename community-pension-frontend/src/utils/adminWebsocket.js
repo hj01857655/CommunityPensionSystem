@@ -459,55 +459,49 @@ function playAlertSound() {
       titleFlashing = !titleFlashing;
     }, 500);
     
-    // 使用Web Audio API播放警报声
-    if (window.AudioContext || window.webkitAudioContext) {
-      // 创建Audio Context
-      const AudioContext = window.AudioContext || window.webkitAudioContext;
-      const audioContext = new AudioContext();
-      window._emergencyAudioContext = audioContext;
+    // 使用HTML5 Audio API播放警报声
+    // 浏览器安全策略要求音频播放必须由用户交互触发
+    try {
+      // 如果已经创建了音频元素，直接使用
+      if (!window._emergencyAudio) {
+        // 创建音频元素
+        const audio = new Audio('/static/sounds/emergency-alert.mp3');
+        audio.volume = 0.8;
+        audio.loop = true;
+        window._emergencyAudio = audio;
+        
+        // 预加载音频
+        audio.load();
+        
+        // 添加音频播放错误处理
+        audio.onerror = (e) => {
+          console.error('警报声播放错误:', e);
+        };
+      }
       
-      // 加载警报声文件
-      fetch('/static/sounds/emergency-alert.mp3')
-        .then(response => response.arrayBuffer())
-        .then(arrayBuffer => audioContext.decodeAudioData(arrayBuffer))
-        .then(audioBuffer => {
-          // 创建音频源
-          const source = audioContext.createBufferSource();
-          source.buffer = audioBuffer;
+      // 尝试播放音频
+      // 使用Promise包装play()方法，因为它返回Promise
+      const playPromise = window._emergencyAudio.play();
+      
+      // 处理自动播放策略限制
+      if (playPromise !== undefined) {
+        playPromise.catch(error => {
+          // 自动播放被阻止，显示一个播放按钮
+          console.warn('由于浏览器安全策略，无法自动播放警报声，请点击弹窗上的按钮手动播放', error);
           
-          // 创建音量控制
-          const gainNode = audioContext.createGain();
-          gainNode.gain.value = 0.8; // 设置音量
-          
-          // 连接音频节点
-          source.connect(gainNode);
-          gainNode.connect(audioContext.destination);
-          
-          // 设置循环
-          source.loop = true;
-          
-          // 开始播放
-          source.start(0);
-          
-          // 存储音频源以便停止
-          window._emergencyAudioSource = source;
-          window._emergencyAudioGain = gainNode;
-          
-          // 10秒后停止循环
-          setTimeout(() => {
-            if (window._emergencyAudioSource) {
-              window._emergencyAudioSource.loop = false;
-            }
-          }, 10000);
-        })
-        .catch(error => {
-          console.error('加载警报声文件失败:', error);
-          // 如果Web Audio API失败，尝试使用传统Audio元素
-          fallbackToTraditionalAudio();
+          // 将音频播放按钮添加到弹窗中（在showEmergencyAlert函数中处理）
+          window._needManualPlayAudio = true;
         });
-    } else {
-      // 浏览器不支持Web Audio API，尝试使用传统Audio元素
-      fallbackToTraditionalAudio();
+      }
+      
+      // 10秒后停止循环
+      setTimeout(() => {
+        if (window._emergencyAudio && !window._emergencyAudio.paused) {
+          window._emergencyAudio.loop = false;
+        }
+      }, 10000);
+    } catch (error) {
+      console.error('创建警报声播放器失败:', error);
     }
     
     // 10秒后自动停止标题闪烁
@@ -707,6 +701,15 @@ function showEmergencyAlert(message) {
   // 创建弹窗元素
   const alertDiv = document.createElement('div');
   alertDiv.className = 'emergency-alert';
+  
+  // 准备弹窗内容
+  let footerContent = `<button class="handle-btn">立即处理</button>`;
+  
+  // 如果需要手动播放音频，添加播放按钮
+  if (window._needManualPlayAudio) {
+    footerContent = `<button class="play-sound-btn">播放警报声</button>` + footerContent;
+  }
+  
   alertDiv.innerHTML = `
       <div class="emergency-alert-header">
           <h3>${message.title || '紧急呼叫警报'}</h3>
@@ -717,7 +720,7 @@ function showEmergencyAlert(message) {
           <p class="emergency-time">时间: ${formatDateTime(message.timestamp)}</p>
       </div>
       <div class="emergency-alert-footer">
-          <button class="handle-btn">立即处理</button>
+          ${footerContent}
       </div>
   `;
   
@@ -825,20 +828,39 @@ function showEmergencyAlert(message) {
   // 添加事件监听
   const closeBtn = alertDiv.querySelector('.close-btn');
   closeBtn.addEventListener('click', function() {
-      // 停止警报声
-      stopAlertSound();
-      // 移除弹窗
-      document.body.removeChild(alertDiv);
+    // 停止警报声
+    stopAlertSound();
+    // 移除弹窗
+    document.body.removeChild(alertDiv);
   });
+  
+  // 如果有播放按钮，添加点击事件
+  const playSoundBtn = alertDiv.querySelector('.play-sound-btn');
+  if (playSoundBtn) {
+    playSoundBtn.addEventListener('click', function() {
+      // 用户交互触发的音频播放
+      if (window._emergencyAudio) {
+        window._emergencyAudio.play()
+          .then(() => {
+            console.log('用户交互触发的音频播放成功');
+            // 播放成功后隐藏按钮
+            playSoundBtn.style.display = 'none';
+          })
+          .catch(error => {
+            console.error('即使有用户交互也无法播放音频:', error);
+          });
+      }
+    });
+  }
   
   const handleBtn = alertDiv.querySelector('.handle-btn');
   handleBtn.addEventListener('click', function() {
-      // 停止警报声
-      stopAlertSound();
-      // 跳转到后台首页，因为当前没有专门的紧急呼叫管理页面
-      window.location.href = '/admin/home';
-      // 移除弹窗
-      document.body.removeChild(alertDiv);
+    // 停止警报声
+    stopAlertSound();
+    // 跳转到紧急呼叫处理页面
+    window.location.href = '/admin/emergency-calls';
+    // 移除弹窗
+    document.body.removeChild(alertDiv);
   });
   
   // 尝试自动播放警报声
@@ -894,13 +916,42 @@ export function setMessageHandlers(handlers) {
   console.log('设置消息处理器:', messageHandlers);
 }
 
+/**
+ * 发送消息到WebSocket服务器
+ * @param {string} type 消息类型
+ * @param {Object} data 消息数据
+ * @returns {boolean} 是否发送成功
+ */
+function sendMessage(type, data) {
+  if (!socket || socket.readyState !== WebSocket.OPEN) {
+    console.error('WebSocket未连接，无法发送消息');
+    return false;
+  }
+
+  try {
+    const message = {
+      type: type,
+      data: data,
+      timestamp: new Date().toISOString()
+    };
+    
+    socket.send(JSON.stringify(message));
+    console.log('消息已发送:', message);
+    return true;
+  } catch (error) {
+    console.error('发送消息失败:', error);
+    return false;
+  }
+}
+
 // 导出WebSocket客户端API
 export default {
   init: initWebSocket,
   close: closeWebSocket,
   setMessageHandlers: setMessageHandlers,
   isConnected: isWebSocketConnected,
-  testConnection: testSimpleConnection
+  testConnection: testSimpleConnection,
+  sendMessage: sendMessage
 }
 
 /**

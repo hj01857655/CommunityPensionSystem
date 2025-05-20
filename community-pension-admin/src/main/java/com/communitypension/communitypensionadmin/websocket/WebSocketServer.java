@@ -215,8 +215,15 @@ public class WebSocketServer {
             log.info("WebSocket连接：用户名 {} 转换为用户ID {}", username, userId);
 
             // 根据角色ID判断用户类型
-            // 角色ID为4的是管理员，其他是普通用户
-            String userType = (roleId != null && roleId == 4) ? "ADMIN" : "USER";
+            // 角色ID 1和2：老人和家属（前台用户）
+            // 角色ID 3和4：社区工作人员（后台用户）
+            boolean isBackendUser = false;
+            if (roleId != null) {
+                // 后台用户角色ID为3或4
+                isBackendUser = roleId == 3 || roleId == 4;
+                log.info("WebSocket连接：用户 {} 的角色ID为 {}，是否为后台用户: {}", username, roleId, isBackendUser);
+            }
+            String userType = isBackendUser ? "ADMIN" : "USER";
             USER_TYPE_MAP.put(userId, userType);
             log.info("WebSocket连接：用户 {} 的类型为 {}", username, userType);
 

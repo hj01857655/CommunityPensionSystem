@@ -160,6 +160,7 @@ const handleLogin = async () => {
       loading.value = true;
       if(typeof loginForm.roleId === 'string'){
         loginForm.roleId = getRoleId(loginForm.roleId);
+        storage.setItem("roleId", loginForm.roleId === 4 ? "4" : "3");
       }
       const res = await adminStore.login(loginForm);
       if (res.code === 200) {

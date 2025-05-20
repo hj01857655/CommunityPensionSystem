@@ -1,9 +1,9 @@
 package com.communitypension.communitypensionadmin.converter;
 
-import com.communitypension.communitypensionadmin.dto.ServiceReviewDTO;
+import com.communitypension.communitypensionadmin.pojo.dto.ServiceReviewDTO;
 import com.communitypension.communitypensionadmin.entity.ServiceReview;
 import com.communitypension.communitypensionadmin.entity.User;
-import com.communitypension.communitypensionadmin.vo.ServiceReviewVO;
+import com.communitypension.communitypensionadmin.pojo.vo.ServiceReviewVO;
 import org.springframework.beans.BeanUtils;
 import com.communitypension.communitypensionadmin.utils.DictUtils;
 import com.communitypension.communitypensionadmin.constant.DictTypeConstants;

@@ -2,7 +2,7 @@ package com.communitypension.communitypensionadmin.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.communitypension.communitypensionadmin.entity.Notification;
-import com.communitypension.communitypensionadmin.query.NotificationQuery;
+import com.communitypension.communitypensionadmin.pojo.query.NotificationQuery;
 import com.communitypension.communitypensionadmin.service.NotificationService;
 import com.communitypension.communitypensionadmin.utils.Result;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -570,6 +570,8 @@ const handleResize = () => {
   }
 }
 
+import AdminWebSocketClient from '@/utils/adminWebsocket';
+
 onMounted(() => {
   // 初始化数据
   refreshData()
@@ -588,7 +590,15 @@ onMounted(() => {
   // 设置定时刷新
   refreshTimer = setInterval(refreshData, 60000) // 每分钟刷新一次
   
-  // WebSocket已在main.js中初始化，这里不需要重复初始化
+  // 确保 WebSocket 连接初始化
+  const token = sessionStorage.getItem('admin-access-token');
+  if (token) {
+    console.log('在后台首页初始化 WebSocket 连接');
+    // 强制初始化 WebSocket，确保连接已建立
+    AdminWebSocketClient.init(token, true);
+  } else {
+    console.warn('无法获取管理员 token，无法初始化 WebSocket');
+  }
 })
 
 onUnmounted(() => {

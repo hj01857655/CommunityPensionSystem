@@ -19,7 +19,7 @@ public interface RoleMapper extends BaseMapper<Role> {
             "LEFT JOIN user_role ur ON r.role_id = ur.role_id " +
             "LEFT JOIN user u ON ur.user_id = u.user_id " +
             "WHERE ur.user_id = #{userId}")
-    List<String> selectRoleNamesByUserId(@Param("userId") Long userId);
+    List<String> selectRoleNameListByUserId(@Param("userId") Long userId);
 
     /**
      * 根据用户ID查询角色
@@ -31,7 +31,7 @@ public interface RoleMapper extends BaseMapper<Role> {
             "LEFT JOIN user_role ur ON r.role_id = ur.role_id " +
             "LEFT JOIN user u ON ur.user_id = u.user_id " +
             "WHERE ur.user_id = #{userId}")
-    List<String> selectRolesByUserId(@Param("userId") Long userId);
+    List<String> selectRoleListByUserId(@Param("userId") Long userId);
     /**
      * 根据条件分页查询角色列表
      * @param role 角色

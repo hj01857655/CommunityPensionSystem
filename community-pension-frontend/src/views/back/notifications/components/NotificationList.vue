@@ -37,9 +37,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { useNotificationStore } from '@/stores/back/notificationStore'
+import { storeToRefs } from 'pinia'
 
 const props = defineProps({
   type: {
@@ -50,32 +52,29 @@ const props = defineProps({
 })
 
 const router = useRouter()
-const notifications = ref([])
-const currentPage = ref(1)
-const pageSize = ref(10)
-const total = ref(0)
+const notificationStore = useNotificationStore()
+const { notifications, loading, pagination } = storeToRefs(notificationStore)
 
-// 模拟数据，实际项目中应该从API获取
+const currentPage = computed({
+  get: () => pagination.value.current,
+  set: (val) => pagination.value.current = val
+})
+
+const pageSize = computed({
+  get: () => pagination.value.size,
+  set: (val) => pagination.value.size = val
+})
+
+const total = computed(() => pagination.value.total)
+
+// 从后端获取通知列表
 const fetchNotifications = async () => {
   try {
-    // 这里应该调用API获取通知列表
-    // const response = await api.getNotifications({
-    //   page: currentPage.value,
-    //   size: pageSize.value,
-    //   type: props.type
-    // })
-    
-    // 模拟数据
-    const mockData = Array.from({ length: 15 }, (_, index) => ({
-      id: index + 1,
-      title: `通知标题 ${index + 1}`,
-      content: `这是通知内容，这是一个示例通知，ID: ${index + 1}`,
-      createTime: new Date(Date.now() - index * 86400000).toLocaleString(),
-      read: props.type === 'read' ? true : (props.type === 'unread' ? false : (index % 2 === 0))
-    }))
-    
-    notifications.value = mockData
-    total.value = 50 // 模拟总数
+    await notificationStore.fetchNotifications({
+      current: currentPage.value,
+      size: pageSize.value,
+      type: props.type
+    })
   } catch (error) {
     ElMessage.error('获取通知列表失败：' + error.message)
   }
@@ -83,28 +82,20 @@ const fetchNotifications = async () => {
 
 // 查看通知详情
 const viewDetail = (id) => {
-  router.push(`/back/notifications/${id}`)
+  router.push(`/admin/notifications/${id}`)
 }
 
 // 标记通知为已读
 const markAsRead = async (id) => {
   try {
-    // 这里应该调用API标记通知为已读
-    // await api.markNotificationAsRead(id)
-    ElMessage.success('已标记为已读')
-    
-    // 更新本地数据
-    const notification = notifications.value.find(item => item.id === id)
-    if (notification) {
-      notification.read = true
-    }
+    await notificationStore.markAsRead(id)
     
     // 如果当前是未读列表，则需要重新加载
     if (props.type === 'unread') {
       fetchNotifications()
     }
   } catch (error) {
-    ElMessage.error('操作失败：' + error.message)
+    // 错误已在store中处理
   }
 }
 

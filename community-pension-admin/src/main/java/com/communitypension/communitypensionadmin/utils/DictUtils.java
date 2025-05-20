@@ -1,7 +1,7 @@
 package com.communitypension.communitypensionadmin.utils;
 
 import com.communitypension.communitypensionadmin.service.DictDataService;
-import com.communitypension.communitypensionadmin.vo.DictDataVO;
+import com.communitypension.communitypensionadmin.pojo.vo.DictDataVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 

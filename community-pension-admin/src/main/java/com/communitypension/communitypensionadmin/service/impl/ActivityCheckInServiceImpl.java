@@ -13,7 +13,7 @@ import com.communitypension.communitypensionadmin.service.ActivityCheckInService
 import com.communitypension.communitypensionadmin.service.ActivityRegisterService;
 import com.communitypension.communitypensionadmin.service.ActivityService;
 import com.communitypension.communitypensionadmin.service.UserService;
-import com.communitypension.communitypensionadmin.vo.ActivityCheckInVO;
+import com.communitypension.communitypensionadmin.pojo.vo.ActivityCheckInVO;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

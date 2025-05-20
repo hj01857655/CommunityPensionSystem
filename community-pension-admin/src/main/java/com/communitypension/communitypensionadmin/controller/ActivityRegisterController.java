@@ -2,10 +2,10 @@ package com.communitypension.communitypensionadmin.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.communitypension.communitypensionadmin.utils.Result;
-import com.communitypension.communitypensionadmin.dto.AuditDTO;
-import com.communitypension.communitypensionadmin.dto.BatchAuditDTO;
+import com.communitypension.communitypensionadmin.pojo.dto.AuditDTO;
+import com.communitypension.communitypensionadmin.pojo.dto.BatchAuditDTO;
 import com.communitypension.communitypensionadmin.service.ActivityRegisterService;
-import com.communitypension.communitypensionadmin.vo.ActivityRegisterVO;
+import com.communitypension.communitypensionadmin.pojo.vo.ActivityRegisterVO;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

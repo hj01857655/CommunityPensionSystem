@@ -127,9 +127,9 @@
           <el-row :gutter="20">
             <el-col :span="12">
               <el-form-item label="是否外链">
-                <el-radio-group v-model="form.isExternal">
-                  <el-radio :value="true">是</el-radio>
-                  <el-radio :value="false">否</el-radio>
+                <el-radio-group v-model="form.isFrame">
+                  <el-radio :value="0">是</el-radio>
+                  <el-radio :value="1">否</el-radio>
                 </el-radio-group>
               </el-form-item>
             </el-col>
@@ -299,7 +299,7 @@ const rules = {
     },
     {
       validator: (rule, value, callback) => {
-        if (form.isExternal && value && !value.startsWith('http')) {
+        if (form.isFrame === 0 && value && !value.startsWith('http')) {
           callback(new Error('外链必须以http(s)://开头'));
         } else {
           callback();
@@ -395,7 +395,7 @@ const resetFormData = (formName) => {
       icon: '',
       menuType: 'M',
       orderNum: 1,
-      isExternal: false,
+      isFrame: 1,
       path: '',
       component: '',
       perms: '',

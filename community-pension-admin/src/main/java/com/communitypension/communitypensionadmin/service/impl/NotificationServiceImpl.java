@@ -9,7 +9,7 @@ import com.communitypension.communitypensionadmin.entity.ServiceOrder;
 import com.communitypension.communitypensionadmin.entity.User;
 import com.communitypension.communitypensionadmin.enums.ServiceOrderStatus;
 import com.communitypension.communitypensionadmin.mapper.NotificationMapper;
-import com.communitypension.communitypensionadmin.query.NotificationQuery;
+import com.communitypension.communitypensionadmin.pojo.query.NotificationQuery;
 import com.communitypension.communitypensionadmin.service.NotificationService;
 import com.communitypension.communitypensionadmin.utils.DictUtils;
 import lombok.RequiredArgsConstructor;

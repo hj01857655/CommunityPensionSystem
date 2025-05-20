@@ -1,6 +1,7 @@
 package com.communitypension.communitypensionadmin.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.communitypension.communitypensionadmin.pojo.dto.UserRoleInfo;
 import com.communitypension.communitypensionadmin.entity.UserRole;
 import org.apache.ibatis.annotations.*;
 import java.util.List;
@@ -26,7 +27,7 @@ public interface UserRoleMapper extends BaseMapper<UserRole> {
      * @return 角色ID列表
      */
     @Select("SELECT role_id FROM user_role WHERE user_id = #{userId}")
-    List<Long> selectRoleIdsByUserId(@Param("userId") Long userId);
+    List<Long> selectRoleIdListByUserId(@Param("userId") Long userId);
 
     /**
      * 根据用户ID删除用户角色关联
@@ -58,4 +59,15 @@ public interface UserRoleMapper extends BaseMapper<UserRole> {
     @Update("UPDATE user_role SET role_id = #{roleId} WHERE user_id = #{userId} ")
     void updateUserRole(@Param("userId") Long userId, @Param("roleId") Long roleId);
 
+    /**
+     * 获取用户角色信息
+     * @param userId 用户ID
+     * @return 用户角色信息
+     */
+    @Select("SELECT r.role_id as roleId, r.role_name as roleName, r.role_key as role " +
+            "FROM user_role ur " +
+            "JOIN role r ON ur.role_id = r.role_id " +
+            "WHERE ur.user_id = #{userId} " +
+            "LIMIT 1")
+    UserRoleInfo selectUserRoleInfo(@Param("userId") Long userId);
 } 

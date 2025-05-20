@@ -2,11 +2,11 @@ package com.communitypension.communitypensionadmin.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.communitypension.communitypensionadmin.dto.ServiceReviewAuditDTO;
-import com.communitypension.communitypensionadmin.dto.ServiceReviewDTO;
-import com.communitypension.communitypensionadmin.dto.ServiceReviewReplyDTO;
+import com.communitypension.communitypensionadmin.pojo.dto.ServiceReviewAuditDTO;
+import com.communitypension.communitypensionadmin.pojo.dto.ServiceReviewDTO;
+import com.communitypension.communitypensionadmin.pojo.dto.ServiceReviewReplyDTO;
 import com.communitypension.communitypensionadmin.entity.ServiceReview;
-import com.communitypension.communitypensionadmin.vo.ServiceReviewVO;
+import com.communitypension.communitypensionadmin.pojo.vo.ServiceReviewVO;
 
 import java.util.List;
 import java.util.Map;

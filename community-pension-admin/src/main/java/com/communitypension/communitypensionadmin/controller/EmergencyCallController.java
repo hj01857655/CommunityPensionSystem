@@ -2,7 +2,7 @@ package com.communitypension.communitypensionadmin.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.communitypension.communitypensionadmin.entity.EmergencyCall;
-import com.communitypension.communitypensionadmin.query.EmergencyCallQuery;
+import com.communitypension.communitypensionadmin.pojo.query.EmergencyCallQuery;
 import com.communitypension.communitypensionadmin.service.EmergencyCallService;
 import com.communitypension.communitypensionadmin.utils.Result;
 import com.communitypension.communitypensionadmin.websocket.WebSocketServer;

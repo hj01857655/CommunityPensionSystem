@@ -2,10 +2,10 @@ package com.communitypension.communitypensionadmin.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.communitypension.communitypensionadmin.utils.Result;
-import com.communitypension.communitypensionadmin.dto.ServiceOrderDTO;
+import com.communitypension.communitypensionadmin.pojo.dto.ServiceOrderDTO;
 import com.communitypension.communitypensionadmin.entity.ServiceOrder;
 import com.communitypension.communitypensionadmin.service.ServiceOrderService;
-import com.communitypension.communitypensionadmin.vo.ServiceOrderVO;
+import com.communitypension.communitypensionadmin.pojo.vo.ServiceOrderVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;

@@ -2,9 +2,9 @@ package com.communitypension.communitypensionadmin.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.communitypension.communitypensionadmin.dto.HealthRecordDTO;
+import com.communitypension.communitypensionadmin.pojo.dto.HealthRecordDTO;
 import com.communitypension.communitypensionadmin.entity.HealthRecord;
-import com.communitypension.communitypensionadmin.vo.HealthRecordVO;
+import com.communitypension.communitypensionadmin.pojo.vo.HealthRecordVO;
 
 /**
  * 健康档案Service接口

@@ -46,7 +46,7 @@ export const updateUserInfo = async (data) => {
             healthCondition: data.healthCondition || "",
 
             // 角色相关字段
-            roleIds: userInfo.roleIds || [Number(userInfo.roleId) || 1],
+            roleIdList: userInfo.roleIdList || [Number(userInfo.roleId) || 1],
 
             // 其他可能需要的字段
             allergy: data.allergy || "",

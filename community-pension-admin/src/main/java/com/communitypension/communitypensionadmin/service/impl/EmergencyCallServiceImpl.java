@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.communitypension.communitypensionadmin.entity.EmergencyCall;
 import com.communitypension.communitypensionadmin.entity.User;
 import com.communitypension.communitypensionadmin.mapper.EmergencyCallMapper;
-import com.communitypension.communitypensionadmin.query.EmergencyCallQuery;
+import com.communitypension.communitypensionadmin.pojo.query.EmergencyCallQuery;
 import com.communitypension.communitypensionadmin.service.EmergencyCallService;
 import com.communitypension.communitypensionadmin.service.NotificationService;
 import com.communitypension.communitypensionadmin.service.UserService;

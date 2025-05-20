@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.communitypension.communitypensionadmin.entity.Notification;
 import com.communitypension.communitypensionadmin.entity.ServiceOrder;
 import com.communitypension.communitypensionadmin.entity.User;
-import com.communitypension.communitypensionadmin.query.NotificationQuery;
+import com.communitypension.communitypensionadmin.pojo.query.NotificationQuery;
 import java.util.List;
 import java.util.Map;
 

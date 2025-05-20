@@ -2,10 +2,10 @@ package com.communitypension.communitypensionadmin.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.communitypension.communitypensionadmin.dto.ActivityDTO;
-import com.communitypension.communitypensionadmin.dto.ActivityQuery;
+import com.communitypension.communitypensionadmin.pojo.dto.ActivityDTO;
+import com.communitypension.communitypensionadmin.pojo.dto.ActivityQuery;
 import com.communitypension.communitypensionadmin.entity.Activity;
-import com.communitypension.communitypensionadmin.vo.ActivityVO;
+import com.communitypension.communitypensionadmin.pojo.vo.ActivityVO;
 
 import jakarta.servlet.http.HttpServletResponse;
 import java.time.LocalDateTime;

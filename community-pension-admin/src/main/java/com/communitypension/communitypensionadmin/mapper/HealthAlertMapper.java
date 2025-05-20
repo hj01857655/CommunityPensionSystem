@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.communitypension.communitypensionadmin.entity.HealthAlert;
-import com.communitypension.communitypensionadmin.vo.HealthAlertVO;
+import com.communitypension.communitypensionadmin.pojo.vo.HealthAlertVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 

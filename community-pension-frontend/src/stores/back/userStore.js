@@ -235,17 +235,13 @@ export const useUserStore = defineStore('user', () => {
      */
     const handleAddUser = async (userData) => {
         try {
-            // 处理roleId，转换为后端期望的格式
+            // 只提交 roleId 字段，不提交 roleIdList
             const dataToSubmit = { ...userData };
-            
-            // 如果存在roleId但不存在roleIds，创建roleIds数组
-            if (dataToSubmit.roleId !== undefined && !dataToSubmit.roleIds) {
-                dataToSubmit.roleIds = [dataToSubmit.roleId];
+            if (dataToSubmit.roleIdList) {
+                delete dataToSubmit.roleIdList;
             }
-            
             // 日志输出提交的数据，帮助调试
             console.log('提交到后端的用户数据:', JSON.stringify(dataToSubmit, null, 2));
-            
             const res = await addUser(dataToSubmit);
             if (res.code === 200) {
                 ElMessage.success('新增用户成功');
@@ -271,25 +267,16 @@ export const useUserStore = defineStore('user', () => {
                 ElMessage.error('用户ID不能为空');
                 return false;
             }
-
             // 创建一个新对象用于提交
             const dataToSubmit = { ...userData };
-            
-            // 处理roleId，转换为后端期望的格式
-            // 如果存在roleId但不存在roleIds，创建roleIds数组
-            if (dataToSubmit.roleId !== undefined && !dataToSubmit.roleIds) {
-                dataToSubmit.roleIds = [dataToSubmit.roleId];
+            // 只提交 roleId 字段，不提交 roleIdList
+            if (dataToSubmit.roleIdList) {
+                delete dataToSubmit.roleIdList;
             }
-            // 确保roleIds不为null
-            else if (!dataToSubmit.roleIds) {
-                dataToSubmit.roleIds = [];
-            }
-
             // 确保isActive不为undefined
             if (dataToSubmit.isActive === undefined) {
                 dataToSubmit.isActive = 1;
             }
-
             const response = await updateUser(dataToSubmit.userId, dataToSubmit);
             if (response.code === 200) {
                 ElMessage.success('更新用户成功');
@@ -366,12 +353,12 @@ export const useUserStore = defineStore('user', () => {
     /**
      * 分配角色
      * @param {number} userId - 用户ID
-     * @param {number[]} roleIds - 角色ID数组
+     * @param {number[]} roleIdList - 角色ID数组
      * @returns {Promise<boolean>}
      */
-    const handleAssignRole = async (userId, roleIds) => {
+    const handleAssignRole = async (userId, roleIdList) => {
         try {
-            const res = await assignRole(userId, roleIds);
+            const res = await assignRole(userId, roleIdList);
             if (res.code === 200) {
                 ElMessage.success('角色分配成功');
                 return true;
@@ -446,10 +433,15 @@ export const useUserStore = defineStore('user', () => {
      * 更新用户角色授权信息
      * @param {Object} data - 授权信息
      * @param {number} data.userId - 用户ID
-     * @param {string} data.roleIds - 角色ID字符串，多个ID用逗号分隔
+     * @param {string} data.roleIdList - 角色ID字符串，多个ID用逗号分隔
      * @returns {Promise<{code: number, msg: string}>}
      */
     const handleUpdateAuthRole = async (data) => {
+    // 兼容调用：如有 data.roleIds，自动转换为 roleIdList
+    if (data.roleIds && !data.roleIdList) {
+        data.roleIdList = data.roleIds;
+        delete data.roleIds;
+    }
         try {
             const res = await updateAuthRole(data);
             if (res.code === 200) {

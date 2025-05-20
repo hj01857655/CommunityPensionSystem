@@ -3,7 +3,7 @@ package com.communitypension.communitypensionadmin.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.communitypension.communitypensionadmin.service.DictDataService;
 import com.communitypension.communitypensionadmin.utils.Result;
-import com.communitypension.communitypensionadmin.vo.DictDataVO;
+import com.communitypension.communitypensionadmin.pojo.vo.DictDataVO;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;

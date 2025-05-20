@@ -42,7 +42,7 @@ export const useAdminStore = defineStore('admin', () => {
     };
     return roles.value.map(roleId => roleMap[roleId]);
   });
-  const roleIds = computed(() => {
+  const roleIdList = computed(() => {
     const roleMap = {
       '老人': 1,
       '家属': 2,
@@ -272,7 +272,7 @@ export const useAdminStore = defineStore('admin', () => {
     hasToken,
     username,
     roleNames,
-    roleIds,
+    roleIdList,
     // actions
     setUserInfo,
     setToken,

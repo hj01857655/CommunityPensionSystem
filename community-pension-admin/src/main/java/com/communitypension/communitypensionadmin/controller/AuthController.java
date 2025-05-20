@@ -8,13 +8,12 @@ import com.communitypension.communitypensionadmin.service.TokenBlacklistService;
 import com.communitypension.communitypensionadmin.service.UserService;
 import com.communitypension.communitypensionadmin.utils.JwtTokenUtil;
 import com.communitypension.communitypensionadmin.utils.Result;
-import com.communitypension.communitypensionadmin.vo.UserVO;
+import com.communitypension.communitypensionadmin.pojo.vo.UserVO;
 import io.jsonwebtoken.Claims;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -24,6 +23,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+
 /**
  * 认证管理控制器
  */
@@ -37,25 +37,26 @@ public class AuthController {
      */
     private final JwtTokenUtil jwtTokenUtil;
     /**
+     * 注入TokenBlacklistService
+     */
+    private final TokenBlacklistService tokenBlacklistService;
+    /**
      * 注入UserService
      */
     @Autowired
     private UserService userService;
-
     /**
      * 注入UserConverter
      */
     @Autowired
     private UserConverter userConverter;
-    /**
-     * 注入TokenBlacklistService
-     */
-    private final TokenBlacklistService tokenBlacklistService;
+
     @Autowired
-    public AuthController(JwtTokenUtil jwtTokenUtil,TokenBlacklistService tokenBlacklistService) {
+    public AuthController(JwtTokenUtil jwtTokenUtil, TokenBlacklistService tokenBlacklistService) {
         this.jwtTokenUtil = jwtTokenUtil;
         this.tokenBlacklistService = tokenBlacklistService;
     }
+
     /**
      * 用户登录
      *
@@ -127,6 +128,7 @@ public class AuthController {
             return Result.error(500, "[前台]登录时发生错误: " + e.getMessage());
         }
     }
+
     /**
      * 管理员登录
      *
@@ -142,14 +144,14 @@ public class AuthController {
             Long roleId = loginDTO.getRoleId();
 
             // 2. 验证是否为后台角色
-            if(!RoleEnum.isBackendRole(roleId)){
+            if (!RoleEnum.isBackendRole(roleId)) {
                 logger.warn("[后台]用户 {} 尝试以 {} 身份登录后台", username, RoleEnum.getDescription(roleId));
                 return ResponseEntity.status(403).body(Result.error("您没有权限登录后台系统"));
             }
 
             // 3. 验证用户是否存在
             User user = userService.getUserByUsername(username);
-            if(user == null) {
+            if (user == null) {
                 logger.warn("[后台]用户名不存在: {}", username);
                 return ResponseEntity.status(401).body(Result.error("用户名或密码错误"));
             }
@@ -169,7 +171,7 @@ public class AuthController {
             }
 
             // 6. 验证用户是否拥有该角色
-            if(!userService.hasRole(user.getUserId(), roleId)){
+            if (!userService.hasRole(user.getUserId(), roleId)) {
                 logger.warn("[后台]用户角色不匹配: {} (尝试使用角色: {})", username, RoleEnum.getDescription(roleId));
                 return ResponseEntity.status(403).body(Result.error("您没有权限使用此角色登录"));
             }
@@ -207,7 +209,7 @@ public class AuthController {
     public ResponseEntity<Result<Object>> adminLogout(@RequestBody Map<String, Object> logoutData) {
         String username = (String) logoutData.get("username");
         User user = userService.getUserByUsername(username);
-        if(!user.getUsername().equals(username)){
+        if (!user.getUsername().equals(username)) {
             return ResponseEntity.status(401).body(Result.error("用户名错误"));
 
         }
@@ -217,6 +219,7 @@ public class AuthController {
         }
         return ResponseEntity.status(401).body(Result.error("权限不足"));
     }
+
     @Operation(summary = "刷新令牌")
     @PostMapping("/refresh")
     public ResponseEntity<Result<Map<String, String>>> refreshToken(@RequestHeader("Refresh-Token") String refreshToken) {
@@ -230,7 +233,7 @@ public class AuthController {
 
             // 在refreshToken方法开始处添加检查
             // 检查黑名单, 如果令牌在黑名单中，返回错误响应
-            if(tokenBlacklistService.isBlacklisted(refreshToken)) {
+            if (tokenBlacklistService.isBlacklisted(refreshToken)) {
                 return ResponseEntity.status(401).body(Result.error("令牌已失效"));
             }
 
@@ -332,10 +335,10 @@ public class AuthController {
 
         // 6. 使用UserConverter将User转换为UserVO，并设置角色信息
         UserVO userVO = userConverter.toUserVOWithRole(
-            user,
-            userService.getUserRole(user.getUserId(), roleId),
-            roleId,
-            userService.getUserRoleName(user.getUserId(), roleId)
+                user,
+                userService.getUserRole(roleId),
+                roleId,
+                userService.getUserRoleName(roleId)
         );
         response.put("user", userVO);
 

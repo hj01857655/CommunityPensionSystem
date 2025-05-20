@@ -1,9 +1,9 @@
 package com.communitypension.communitypensionadmin.converter;
 
-import com.communitypension.communitypensionadmin.dto.HealthRecordDTO;
+import com.communitypension.communitypensionadmin.pojo.dto.HealthRecordDTO;
 import com.communitypension.communitypensionadmin.entity.HealthRecord;
 import com.communitypension.communitypensionadmin.entity.User;
-import com.communitypension.communitypensionadmin.vo.HealthRecordVO;
+import com.communitypension.communitypensionadmin.pojo.vo.HealthRecordVO;
 import org.springframework.beans.BeanUtils;
 
 import java.math.BigDecimal;
