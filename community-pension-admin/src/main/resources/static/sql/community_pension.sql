@@ -11,7 +11,7 @@
  Target Server Version : 80400 (8.4.0)
  File Encoding         : 65001
 
- Date: 19/05/2025 20:55:10
+ Date: 20/05/2025 11:34:22
 */
 
 SET NAMES utf8mb4;
@@ -47,7 +47,7 @@ CREATE TABLE `activities`  (
   INDEX `idx_end_time`(`end_time` ASC) USING BTREE,
   INDEX `idx_register_start_time`(`register_start_time` ASC) USING BTREE,
   INDEX `idx_register_end_time`(`register_end_time` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 78 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '社区活动表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 79 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '社区活动表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of activities
@@ -73,7 +73,7 @@ INSERT INTO `activities` VALUES (18, '社区摄影展', '9', '展示社区居民
 INSERT INTO `activities` VALUES (19, '社区烹饪大赛', '9', '展示大家的厨艺,品尝各种美味佳肴。', '/images/activities/default.jpg', '2023-08-05 19:00:00', '2023-08-05 21:30:00', '2023-07-29 19:00:00', '2023-08-04 19:00:00', '社区活动中心', 40, NULL, 1, '???,???,???', 9, 3, '2025-03-13 18:17:14', '2025-05-15 17:33:11');
 INSERT INTO `activities` VALUES (20, '社区户外探险', '9', '一起探索大自然,体验户外运动的乐趣。', '/images/activities/default.jpg', '2023-08-10 09:00:00', '2023-08-10 16:00:00', '2023-08-03 09:00:00', '2023-08-09 09:00:00', '社区公园', 60, NULL, 1, '???,???,???', 10, 3, '2025-03-13 18:17:14', '2025-05-15 17:33:11');
 INSERT INTO `activities` VALUES (21, '社区音乐会', '1', '欣赏各种精彩的音乐表演,享受美好的音乐时光。', '/images/activities/default.jpg', '2025-05-20 00:00:00', '2025-06-27 00:00:00', '2023-06-18 19:30:00', '2023-06-24 19:30:00', '社区文化中心', 80, NULL, 1, '健康,娱乐,社交', 1, 2, '2025-03-13 18:17:30', '2025-05-15 17:33:12');
-INSERT INTO `activities` VALUES (22, '社区绘画展', '1', '欣赏社区居民的绘画作品,感受艺术的魅力。', '/images/activities/default.jpg', '2025-05-20 00:00:00', '2025-06-30 00:00:00', '2023-06-24 14:00:00', '2023-06-30 14:00:00', '社区文化中心', 50, NULL, 1, '健康,娱乐,社交', 2, 1, '2025-03-13 18:17:30', '2025-05-15 17:33:12');
+INSERT INTO `activities` VALUES (22, '社区绘画展', '1', '欣赏社区居民的绘画作品,感受艺术的魅力。', '/images/activities/default.jpg', '2025-05-20 00:00:00', '2025-06-30 00:00:00', '2023-06-24 14:00:00', '2023-06-30 14:00:00', '社区文化中心', 50, NULL, 1, '健康,娱乐,社交', 2, 2, '2025-03-13 18:17:30', '2025-05-15 17:33:12');
 INSERT INTO `activities` VALUES (23, '社区舞蹈课', '3', '学习各种流行舞蹈,展现自己的舞蹈才能。', '/images/activities/default.jpg', '2023-07-05 19:00:00', '2023-07-05 21:00:00', '2023-06-28 19:00:00', '2023-07-04 19:00:00', '社区活动中心', 40, NULL, 1, '健康,娱乐,社交', 3, 3, '2025-03-13 18:17:30', '2025-05-15 17:33:12');
 INSERT INTO `activities` VALUES (24, '社区趣味运动会', '3', '参加各种有趣的运动项目,增强身体素质。', '/images/activities/default.jpg', '2023-07-10 09:00:00', '2023-07-10 12:00:00', '2023-07-03 09:00:00', '2023-07-09 09:00:00', '社区体育场', 80, NULL, 1, '健康,娱乐,社交', 4, 3, '2025-03-13 18:17:30', '2025-05-15 17:33:12');
 INSERT INTO `activities` VALUES (25, '社区电影欣赏', '1', '观看精彩的电影作品,享受电影带来的视听盛宴。', '/images/activities/default.jpg', '2023-07-15 19:00:00', '2023-07-15 21:30:00', '2023-07-08 19:00:00', '2023-07-14 19:00:00', '社区文化中心', 60, NULL, 1, '健康,娱乐,社交', 5, 3, '2025-03-13 18:17:30', '2025-05-15 17:33:12');
@@ -445,6 +445,59 @@ INSERT INTO `elder_kin_relation` VALUES (1000, 1001, '父女');
 INSERT INTO `elder_kin_relation` VALUES (1002, 1003, '子女');
 
 -- ----------------------------
+-- Table structure for emergency_calls
+-- ----------------------------
+DROP TABLE IF EXISTS `emergency_calls`;
+CREATE TABLE `emergency_calls`  (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `user_id` bigint NOT NULL,
+  `user_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `location` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL,
+  `message` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `status` enum('submitted','processing','completed','cancelled') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT 'submitted',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `processed_by` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL,
+  `processed_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `user_id`(`user_id` ASC) USING BTREE,
+  CONSTRAINT `emergency_calls_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE RESTRICT ON UPDATE RESTRICT
+) ENGINE = InnoDB AUTO_INCREMENT = 35 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of emergency_calls
+-- ----------------------------
+INSERT INTO `emergency_calls` VALUES (6, 2, '刘大毛', NULL, NULL, 'submitted', '2025-05-20 01:40:37', '2025-05-20 01:40:37', NULL, NULL);
+INSERT INTO `emergency_calls` VALUES (7, 2, '刘大毛', NULL, NULL, 'submitted', '2025-05-20 01:40:40', '2025-05-20 01:40:40', NULL, NULL);
+INSERT INTO `emergency_calls` VALUES (8, 2, '刘大毛', NULL, NULL, 'submitted', '2025-05-20 01:40:55', '2025-05-20 01:40:55', NULL, NULL);
+INSERT INTO `emergency_calls` VALUES (9, 2, '刘大毛', NULL, NULL, 'submitted', '2025-05-20 01:41:01', '2025-05-20 01:41:01', NULL, NULL);
+INSERT INTO `emergency_calls` VALUES (10, 2, '刘大毛', NULL, NULL, 'submitted', '2025-05-20 01:44:20', '2025-05-20 01:44:20', NULL, NULL);
+INSERT INTO `emergency_calls` VALUES (11, 2, '刘大毛', NULL, NULL, 'submitted', '2025-05-20 01:54:02', '2025-05-20 01:54:02', NULL, NULL);
+INSERT INTO `emergency_calls` VALUES (12, 2, '刘大毛', NULL, NULL, 'submitted', '2025-05-20 01:59:01', '2025-05-20 01:59:01', NULL, NULL);
+INSERT INTO `emergency_calls` VALUES (13, 2, '刘大毛', NULL, NULL, 'submitted', '2025-05-20 09:46:26', '2025-05-20 09:46:26', NULL, NULL);
+INSERT INTO `emergency_calls` VALUES (14, 2, '刘大毛', NULL, NULL, 'submitted', '2025-05-20 09:46:39', '2025-05-20 09:46:39', NULL, NULL);
+INSERT INTO `emergency_calls` VALUES (15, 2, '刘大毛', NULL, NULL, 'submitted', '2025-05-20 09:46:54', '2025-05-20 09:46:54', NULL, NULL);
+INSERT INTO `emergency_calls` VALUES (16, 2, '刘大毛', NULL, NULL, 'submitted', '2025-05-20 10:12:42', '2025-05-20 10:12:42', NULL, NULL);
+INSERT INTO `emergency_calls` VALUES (17, 2, '刘大毛', NULL, NULL, 'submitted', '2025-05-20 10:36:31', '2025-05-20 10:36:31', NULL, NULL);
+INSERT INTO `emergency_calls` VALUES (18, 2, '刘大毛', NULL, NULL, 'submitted', '2025-05-20 11:06:38', '2025-05-20 11:06:38', NULL, NULL);
+INSERT INTO `emergency_calls` VALUES (19, 2, '刘大毛', NULL, NULL, 'submitted', '2025-05-20 11:07:11', '2025-05-20 11:07:11', NULL, NULL);
+INSERT INTO `emergency_calls` VALUES (20, 2, '刘大毛', NULL, NULL, 'submitted', '2025-05-20 11:08:11', '2025-05-20 11:08:11', NULL, NULL);
+INSERT INTO `emergency_calls` VALUES (21, 2, '刘大毛', NULL, NULL, 'submitted', '2025-05-20 11:10:08', '2025-05-20 11:10:08', NULL, NULL);
+INSERT INTO `emergency_calls` VALUES (22, 2, '刘大毛', NULL, NULL, 'submitted', '2025-05-20 11:14:40', '2025-05-20 11:14:40', NULL, NULL);
+INSERT INTO `emergency_calls` VALUES (23, 2, '刘大毛', NULL, NULL, 'submitted', '2025-05-20 11:18:18', '2025-05-20 11:18:18', NULL, NULL);
+INSERT INTO `emergency_calls` VALUES (24, 2, '刘大毛', NULL, NULL, 'submitted', '2025-05-20 11:19:17', '2025-05-20 11:19:17', NULL, NULL);
+INSERT INTO `emergency_calls` VALUES (25, 2, '刘大毛', NULL, NULL, 'submitted', '2025-05-20 11:19:55', '2025-05-20 11:19:55', NULL, NULL);
+INSERT INTO `emergency_calls` VALUES (26, 2, '刘大毛', NULL, NULL, 'submitted', '2025-05-20 11:20:16', '2025-05-20 11:20:16', NULL, NULL);
+INSERT INTO `emergency_calls` VALUES (27, 2, '刘大毛', NULL, NULL, 'submitted', '2025-05-20 11:20:58', '2025-05-20 11:20:58', NULL, NULL);
+INSERT INTO `emergency_calls` VALUES (28, 2, '刘大毛', NULL, NULL, 'submitted', '2025-05-20 11:22:58', '2025-05-20 11:22:58', NULL, NULL);
+INSERT INTO `emergency_calls` VALUES (29, 2, '刘大毛', NULL, NULL, 'submitted', '2025-05-20 11:23:41', '2025-05-20 11:23:41', NULL, NULL);
+INSERT INTO `emergency_calls` VALUES (30, 2, '刘大毛', NULL, NULL, 'submitted', '2025-05-20 11:26:42', '2025-05-20 11:26:42', NULL, NULL);
+INSERT INTO `emergency_calls` VALUES (31, 2, '刘大毛', NULL, NULL, 'submitted', '2025-05-20 11:27:02', '2025-05-20 11:27:02', NULL, NULL);
+INSERT INTO `emergency_calls` VALUES (32, 2, '刘大毛', NULL, NULL, 'submitted', '2025-05-20 11:28:24', '2025-05-20 11:28:24', NULL, NULL);
+INSERT INTO `emergency_calls` VALUES (33, 2, '刘大毛', NULL, NULL, 'submitted', '2025-05-20 11:32:52', '2025-05-20 11:32:52', NULL, NULL);
+INSERT INTO `emergency_calls` VALUES (34, 2, '刘大毛', NULL, NULL, 'submitted', '2025-05-20 11:33:05', '2025-05-20 11:33:05', NULL, NULL);
+
+-- ----------------------------
 -- Table structure for health_alert
 -- ----------------------------
 DROP TABLE IF EXISTS `health_alert`;
@@ -703,7 +756,7 @@ CREATE TABLE `notification`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_status`(`status` ASC) USING BTREE,
   INDEX `idx_publish_time`(`publish_time` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 40 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '通知公告表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 69 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '通知公告表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of notification
@@ -718,6 +771,35 @@ INSERT INTO `notification` VALUES (36, 2, '服务预约通知', '尊敬的刘大
 INSERT INTO `notification` VALUES (37, 2, '服务预约通知', '尊敬的刘大毛用户，\n\n您的服务预约（预约号：10）预约审核通过。\n\n预约详情：\n- 服务项目：null\n- 预约时间：2025-05-20 08:41:00\n\n您的预约已通过审核，服务人员将按预约时间上门服务，请保持电话畅通。\n\n如有疑问，请联系客服中心。', 'system', 0, '2025-05-19 20:42:51', '2025-05-19 20:42:51', '2025-05-19 20:42:51');
 INSERT INTO `notification` VALUES (38, 2, '服务预约通知', '尊敬的刘大毛用户，\n\n您的服务预约（预约号：10）预约已取消。\n\n预约详情：\n- 服务项目：null\n- 预约时间：2025-05-20 08:41:00\n\n您的预约已取消。\n\n如有疑问，请联系客服中心。', 'system', 0, '2025-05-19 20:44:10', '2025-05-19 20:44:10', '2025-05-19 20:44:10');
 INSERT INTO `notification` VALUES (39, 2, '服务预约通知', '尊敬的刘大毛用户，\n\n您的服务预约（预约号：9）预约已取消。\n\n预约详情：\n- 服务项目：null\n- 预约时间：2025-05-20 09:32:00\n\n您的预约已取消。\n\n如有疑问，请联系客服中心。', 'system', 0, '2025-05-19 20:45:59', '2025-05-19 20:45:59', '2025-05-19 20:45:59');
+INSERT INTO `notification` VALUES (40, 999, '紧急呼叫警报', '收到来自用户 刘大毛 的紧急呼叫！\n请立即处理！', 'emergency', 0, '2025-05-20 01:40:37', '2025-05-20 01:40:37', '2025-05-20 01:40:37');
+INSERT INTO `notification` VALUES (41, 999, '紧急呼叫警报', '收到来自用户 刘大毛 的紧急呼叫！\n请立即处理！', 'emergency', 0, '2025-05-20 01:40:40', '2025-05-20 01:40:40', '2025-05-20 01:40:40');
+INSERT INTO `notification` VALUES (42, 999, '紧急呼叫警报', '收到来自用户 刘大毛 的紧急呼叫！\n请立即处理！', 'emergency', 0, '2025-05-20 01:40:55', '2025-05-20 01:40:55', '2025-05-20 01:40:55');
+INSERT INTO `notification` VALUES (43, 999, '紧急呼叫警报', '收到来自用户 刘大毛 的紧急呼叫！\n请立即处理！', 'emergency', 0, '2025-05-20 01:41:01', '2025-05-20 01:41:01', '2025-05-20 01:41:01');
+INSERT INTO `notification` VALUES (44, 999, '紧急呼叫警报', '收到来自用户 刘大毛 的紧急呼叫！\n请立即处理！', 'emergency', 0, '2025-05-20 01:44:20', '2025-05-20 01:44:20', '2025-05-20 01:44:20');
+INSERT INTO `notification` VALUES (45, 999, '紧急呼叫警报', '收到来自用户 刘大毛 的紧急呼叫！\n请立即处理！', 'emergency', 0, '2025-05-20 01:54:02', '2025-05-20 01:54:02', '2025-05-20 01:54:02');
+INSERT INTO `notification` VALUES (46, 999, '紧急呼叫警报', '收到来自用户 刘大毛 的紧急呼叫！\n请立即处理！', 'emergency', 0, '2025-05-20 01:59:01', '2025-05-20 01:59:01', '2025-05-20 01:59:01');
+INSERT INTO `notification` VALUES (47, 999, '紧急呼叫警报', '收到来自用户 刘大毛 的紧急呼叫！\n请立即处理！', 'emergency', 0, '2025-05-20 09:46:26', '2025-05-20 09:46:26', '2025-05-20 09:46:26');
+INSERT INTO `notification` VALUES (48, 999, '紧急呼叫警报', '收到来自用户 刘大毛 的紧急呼叫！\n请立即处理！', 'emergency', 0, '2025-05-20 09:46:39', '2025-05-20 09:46:39', '2025-05-20 09:46:39');
+INSERT INTO `notification` VALUES (49, 999, '紧急呼叫警报', '收到来自用户 刘大毛 的紧急呼叫！\n请立即处理！', 'emergency', 0, '2025-05-20 09:46:54', '2025-05-20 09:46:54', '2025-05-20 09:46:54');
+INSERT INTO `notification` VALUES (50, 999, '紧急呼叫警报', '收到来自用户 刘大毛 的紧急呼叫！\n请立即处理！', 'emergency', 0, '2025-05-20 10:12:42', '2025-05-20 10:12:42', '2025-05-20 10:12:42');
+INSERT INTO `notification` VALUES (51, 999, '紧急呼叫警报', '收到来自用户 刘大毛 的紧急呼叫！\n请立即处理！', 'emergency', 0, '2025-05-20 10:36:31', '2025-05-20 10:36:31', '2025-05-20 10:36:31');
+INSERT INTO `notification` VALUES (52, 999, '紧急呼叫警报', '收到来自用户 刘大毛 的紧急呼叫！\n请立即处理！', 'emergency', 0, '2025-05-20 11:06:38', '2025-05-20 11:06:38', '2025-05-20 11:06:38');
+INSERT INTO `notification` VALUES (53, 999, '紧急呼叫警报', '收到来自用户 刘大毛 的紧急呼叫！\n请立即处理！', 'emergency', 0, '2025-05-20 11:07:11', '2025-05-20 11:07:11', '2025-05-20 11:07:11');
+INSERT INTO `notification` VALUES (54, 999, '紧急呼叫警报', '收到来自用户 刘大毛 的紧急呼叫！\n请立即处理！', 'emergency', 0, '2025-05-20 11:08:11', '2025-05-20 11:08:11', '2025-05-20 11:08:11');
+INSERT INTO `notification` VALUES (55, 999, '紧急呼叫警报', '收到来自用户 刘大毛 的紧急呼叫！\n请立即处理！', 'emergency', 0, '2025-05-20 11:10:08', '2025-05-20 11:10:08', '2025-05-20 11:10:08');
+INSERT INTO `notification` VALUES (56, 999, '紧急呼叫警报', '收到来自用户 刘大毛 的紧急呼叫！\n请立即处理！', 'emergency', 0, '2025-05-20 11:14:40', '2025-05-20 11:14:40', '2025-05-20 11:14:40');
+INSERT INTO `notification` VALUES (57, 999, '紧急呼叫警报', '收到来自用户 刘大毛 的紧急呼叫！\n请立即处理！', 'emergency', 0, '2025-05-20 11:18:18', '2025-05-20 11:18:18', '2025-05-20 11:18:18');
+INSERT INTO `notification` VALUES (58, 999, '紧急呼叫警报', '收到来自用户 刘大毛 的紧急呼叫！\n请立即处理！', 'emergency', 0, '2025-05-20 11:19:17', '2025-05-20 11:19:17', '2025-05-20 11:19:17');
+INSERT INTO `notification` VALUES (59, 999, '紧急呼叫警报', '收到来自用户 刘大毛 的紧急呼叫！\n请立即处理！', 'emergency', 0, '2025-05-20 11:19:55', '2025-05-20 11:19:55', '2025-05-20 11:19:55');
+INSERT INTO `notification` VALUES (60, 999, '紧急呼叫警报', '收到来自用户 刘大毛 的紧急呼叫！\n请立即处理！', 'emergency', 0, '2025-05-20 11:20:16', '2025-05-20 11:20:16', '2025-05-20 11:20:16');
+INSERT INTO `notification` VALUES (61, 999, '紧急呼叫警报', '收到来自用户 刘大毛 的紧急呼叫！\n请立即处理！', 'emergency', 0, '2025-05-20 11:20:58', '2025-05-20 11:20:58', '2025-05-20 11:20:58');
+INSERT INTO `notification` VALUES (62, 999, '紧急呼叫警报', '收到来自用户 刘大毛 的紧急呼叫！\n请立即处理！', 'emergency', 0, '2025-05-20 11:22:58', '2025-05-20 11:22:58', '2025-05-20 11:22:58');
+INSERT INTO `notification` VALUES (63, 999, '紧急呼叫警报', '收到来自用户 刘大毛 的紧急呼叫！\n请立即处理！', 'emergency', 0, '2025-05-20 11:23:41', '2025-05-20 11:23:41', '2025-05-20 11:23:41');
+INSERT INTO `notification` VALUES (64, 999, '紧急呼叫警报', '收到来自用户 刘大毛 的紧急呼叫！\n请立即处理！', 'emergency', 0, '2025-05-20 11:26:42', '2025-05-20 11:26:42', '2025-05-20 11:26:42');
+INSERT INTO `notification` VALUES (65, 999, '紧急呼叫警报', '收到来自用户 刘大毛 的紧急呼叫！\n请立即处理！', 'emergency', 0, '2025-05-20 11:27:02', '2025-05-20 11:27:02', '2025-05-20 11:27:02');
+INSERT INTO `notification` VALUES (66, 999, '紧急呼叫警报', '收到来自用户 刘大毛 的紧急呼叫！\n请立即处理！', 'emergency', 0, '2025-05-20 11:28:24', '2025-05-20 11:28:24', '2025-05-20 11:28:24');
+INSERT INTO `notification` VALUES (67, 999, '紧急呼叫警报', '收到来自用户 刘大毛 的紧急呼叫！\n请立即处理！', 'emergency', 0, '2025-05-20 11:32:52', '2025-05-20 11:32:52', '2025-05-20 11:32:52');
+INSERT INTO `notification` VALUES (68, 999, '紧急呼叫警报', '收到来自用户 刘大毛 的紧急呼叫！\n请立即处理！', 'emergency', 0, '2025-05-20 11:33:05', '2025-05-20 11:33:05', '2025-05-20 11:33:05');
 
 -- ----------------------------
 -- Table structure for physical_exam_report
@@ -749,7 +831,6 @@ CREATE TABLE `physical_exam_report`  (
 -- ----------------------------
 INSERT INTO `physical_exam_report` VALUES (1, 'PE20240001', 2, '张三', 75, '男', 2, '2024-05-02', '市人民医院', '血脂偏高，建议复查', '/upload/physical_exam/57088d81-7643-4cc0-bc25-6032fa57fcce.pdf', '2025-05-13 17:59:09', '2025-05-15 17:25:21');
 INSERT INTO `physical_exam_report` VALUES (2, 'PE20230002', 2, '李四', 77, '女', 2, '2023-11-15', '社区卫生服务中心', '各项指标正常', '/upload/physical_exam/d798d64c-8859-49fb-9477-f483c2163dfd.pdf', '2025-05-13 17:59:09', '2025-05-15 17:30:10');
-INSERT INTO `physical_exam_report` VALUES (3, NULL, 1002, '格拉克结果', 57, '男', NULL, '2025-05-05', '长沙市立医院', '肺结核', NULL, '2025-05-19 01:12:09', '2025-05-19 01:12:09');
 
 -- ----------------------------
 -- Table structure for physical_exam_report_item
@@ -981,12 +1062,12 @@ CREATE TABLE `service_order`  (
 -- ----------------------------
 -- Records of service_order
 -- ----------------------------
-INSERT INTO `service_order` VALUES (3, 2, 1002, 3, '13433432', '1', '2025-04-29 10:40:00', 0.00, 0, NULL, '2025-04-05 00:39:10', 'admin', '2025-05-18 22:29:49', NULL);
-INSERT INTO `service_order` VALUES (4, 2, 3001, 3, '要求认真仔细一点的阿姨', '1', '2025-04-29 08:54:00', 0.00, 0, NULL, '2025-04-05 00:54:48', 'admin', '2025-05-18 22:49:14', NULL);
-INSERT INTO `service_order` VALUES (5, 2, 1002, 3, '1111111111111111111', '111', '2025-05-28 15:11:00', 0.00, 0, 'Ldamao', '2025-05-05 17:12:04', 'Ldamao', '2025-05-18 22:29:51', NULL);
-INSERT INTO `service_order` VALUES (6, 2, 1002, 3, 'fghfhjgjhhjkghghj', '1111111111111', '2025-05-20 08:42:00', 0.00, 0, 'Ldamao', '2025-05-17 01:42:28', 'Ldamao', '2025-05-18 22:30:01', NULL);
-INSERT INTO `service_order` VALUES (7, 1002, 1002, 3, '飞鱼服复古', '已接单', '2025-05-21 16:00:00', 0.00, 0, 'admin', '2025-05-18 22:37:41', 'admin', '2025-05-18 22:37:41', NULL);
-INSERT INTO `service_order` VALUES (8, 1002, 1002, 3, '人发范德萨', '已接单', '2025-05-21 10:00:00', 0.00, 0, 'admin', '2025-05-18 22:39:30', 'admin', '2025-05-18 22:39:30', NULL);
+INSERT INTO `service_order` VALUES (3, 2, 1002, 2, '13433432', '1', '2025-04-29 10:40:00', 10.00, 100, NULL, '2025-04-05 00:39:10', 'admin', '2025-05-19 23:15:53', NULL);
+INSERT INTO `service_order` VALUES (4, 2, 3001, 2, '要求认真仔细一点的阿姨', '1', '2025-04-29 08:54:00', 10.00, 100, NULL, '2025-04-05 00:54:48', 'admin', '2025-05-19 23:15:58', NULL);
+INSERT INTO `service_order` VALUES (5, 2, 1002, 2, '1111111111111111111', '111', '2025-05-28 15:11:00', 10.00, 100, 'Ldamao', '2025-05-05 17:12:04', 'Ldamao', '2025-05-19 23:16:02', NULL);
+INSERT INTO `service_order` VALUES (6, 2, 1002, 2, 'fghfhjgjhhjkghghj', '1111111111111', '2025-05-20 08:42:00', 10.00, 100, 'Ldamao', '2025-05-17 01:42:28', 'Ldamao', '2025-05-19 23:16:06', NULL);
+INSERT INTO `service_order` VALUES (7, 1002, 1002, 2, '飞鱼服复古', '已接单', '2025-05-21 16:00:00', 10.00, 100, 'admin', '2025-05-18 22:37:41', 'admin', '2025-05-19 23:16:19', NULL);
+INSERT INTO `service_order` VALUES (8, 1002, 1002, 2, '人发范德萨', '已接单', '2025-05-21 10:00:00', 10.00, 100, 'admin', '2025-05-18 22:39:30', 'admin', '2025-05-19 23:16:22', NULL);
 INSERT INTO `service_order` VALUES (9, 2, 4004, 4, '2222222222222', '已派单', '2025-05-20 09:32:00', NULL, NULL, 'Ldamao', '2025-05-19 09:32:12', 'Ldamao', '2025-05-19 09:32:12', NULL);
 INSERT INTO `service_order` VALUES (10, 2, 4004, 4, '222222', '已派单', '2025-05-20 08:41:00', NULL, NULL, 'Ldamao', '2025-05-19 20:41:38', 'Ldamao', '2025-05-19 20:41:38', NULL);
 

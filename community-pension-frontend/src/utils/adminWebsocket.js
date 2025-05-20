@@ -356,6 +356,11 @@ function stopHeartbeat() {
   }
 }
 
+// 存储已处理的紧急消息类型
+// 用于过滤不同类型的紧急消息，比如“紧急呼叫警报”和“紧急呼叫通知”
+let lastEmergencyTime = 0;
+const EMERGENCY_COOLDOWN = 5000; // 5秒内只处理一条紧急消息
+
 /**
  * 处理接收到的消息
  * @param {Object} message 消息对象
@@ -364,6 +369,17 @@ function handleMessage(message) {
   // 根据消息类型处理
   switch (message.type) {
     case 'EMERGENCY':
+      // 时间限制去重逻辑
+      const now = Date.now();
+      if (now - lastEmergencyTime < EMERGENCY_COOLDOWN) {
+        console.log('在冷却时间内收到紧急消息，忽略:', message);
+        return;
+      }
+      
+      // 更新最后一次紧急消息时间
+      lastEmergencyTime = now;
+      
+      // 处理紧急消息
       handleEmergencyMessage(message);
       break;
     case 'SYSTEM':
@@ -536,6 +552,90 @@ function fallbackToTraditionalAudio() {
 }
 
 /**
+ * 用户交互触发的警报声播放
+ * 这个函数在用户点击按钮后调用，可以绕过浏览器的自动播放限制
+ */
+function playAlertSoundWithUserGesture() {
+  try {
+    // 先停止之前的音频（如果有）
+    stopAlertSound();
+    
+    // 使用Web Audio API播放警报声
+    if (window.AudioContext || window.webkitAudioContext) {
+      // 创建Audio Context
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      const audioContext = new AudioContext();
+      window._emergencyAudioContext = audioContext;
+      
+      // 加载警报声文件
+      fetch('/static/sounds/emergency-alert.mp3')
+        .then(response => response.arrayBuffer())
+        .then(arrayBuffer => audioContext.decodeAudioData(arrayBuffer))
+        .then(audioBuffer => {
+          // 创建音频源
+          const source = audioContext.createBufferSource();
+          source.buffer = audioBuffer;
+          
+          // 创建音量控制
+          const gainNode = audioContext.createGain();
+          gainNode.gain.value = 0.8; // 设置音量
+          
+          // 连接音频节点
+          source.connect(gainNode);
+          gainNode.connect(audioContext.destination);
+          
+          // 设置循环
+          source.loop = true;
+          
+          // 开始播放
+          source.start(0);
+          
+          // 存储音频源以便停止
+          window._emergencyAudioSource = source;
+          window._emergencyAudioGain = gainNode;
+          
+          console.log('用户交互触发的警报声播放成功');
+        })
+        .catch(error => {
+          console.error('加载警报声文件失败:', error);
+          // 如果Web Audio API失败，尝试使用传统Audio元素
+          playTraditionalAudioWithUserGesture();
+        });
+    } else {
+      // 浏览器不支持Web Audio API，尝试使用传统Audio元素
+      playTraditionalAudioWithUserGesture();
+    }
+  } catch (error) {
+    console.error('创建警报失败:', error);
+    // 尝试使用传统Audio元素
+    playTraditionalAudioWithUserGesture();
+  }
+}
+
+/**
+ * 用户交互触发的传统Audio元素播放
+ */
+function playTraditionalAudioWithUserGesture() {
+  try {
+    const audio = new Audio('/static/sounds/emergency-alert.mp3');
+    audio.volume = 0.8;
+    audio.loop = true;
+    const playPromise = audio.play();
+    window._emergencyAudio = audio;
+    
+    if (playPromise !== undefined) {
+      playPromise.then(() => {
+        console.log('传统Audio播放成功');
+      }).catch(error => {
+        console.warn('传统Audio播放失败，即使有用户交互:', error);
+      });
+    }
+  } catch (error) {
+    console.error('创建传统Audio元素失败:', error);
+  }
+}
+
+/**
  * 停止警报提示
  */
 function stopAlertSound() {
@@ -617,6 +717,7 @@ function showEmergencyAlert(message) {
           <p class="emergency-time">时间: ${formatDateTime(message.timestamp)}</p>
       </div>
       <div class="emergency-alert-footer">
+          <button class="play-sound-btn">播放警报声</button>
           <button class="handle-btn">立即处理</button>
       </div>
   `;
@@ -686,6 +787,22 @@ function showEmergencyAlert(message) {
           padding: 10px 15px;
           text-align: right;
           border-top: 1px solid #eee;
+          display: flex;
+          justify-content: flex-end;
+          gap: 10px;
+      }
+      
+      .play-sound-btn {
+          padding: 8px 15px;
+          background-color: #ff9800;
+          color: #fff;
+          border: none;
+          border-radius: 3px;
+          cursor: pointer;
+      }
+      
+      .play-sound-btn:hover {
+          background-color: #e68a00;
       }
       
       .handle-btn {
@@ -713,6 +830,13 @@ function showEmergencyAlert(message) {
       stopAlertSound();
       // 移除弹窗
       document.body.removeChild(alertDiv);
+  });
+  
+  // 添加播放警报声按钮的事件处理
+  const playSoundBtn = alertDiv.querySelector('.play-sound-btn');
+  playSoundBtn.addEventListener('click', function() {
+      // 用户交互触发的音频播放
+      playAlertSoundWithUserGesture();
   });
   
   const handleBtn = alertDiv.querySelector('.handle-btn');
