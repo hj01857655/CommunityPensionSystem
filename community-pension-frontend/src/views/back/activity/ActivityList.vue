@@ -235,14 +235,14 @@
 </template>
 
 <script setup>
-import RightToolbar from '@/components/common/base/RightToolbar/index.vue'
-import Pagination from '@/components/common/table/Pagination.vue'
-import { useActivityStore } from '@/stores/back/activityStore'
+import RightToolbar from '@/components/common/base/RightToolbar/index.vue';
+import Pagination from '@/components/common/table/Pagination.vue';
+import { useActivityStore } from '@/stores/back/activityStore';
+import { useDict } from '@/utils/dict';
+import { ArrowDown, Delete, Download, Edit, Plus, Refresh, Search, View } from '@element-plus/icons-vue';
+import { ElDropdown, ElDropdownItem, ElDropdownMenu, ElMessage, ElMessageBox, ElTooltip } from 'element-plus';
+import { nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
 const activityStore = useActivityStore();
-import { ArrowDown, Delete, Download, Edit, Plus, Refresh, Search, View } from '@element-plus/icons-vue'
-import { ElDropdown, ElDropdownItem, ElDropdownMenu, ElMessage, ElMessageBox, ElTooltip } from 'element-plus'
-import { nextTick, onBeforeUnmount, onMounted, ref, reactive } from 'vue'
-import { useDict } from '@/utils/dict'
 
 // 注册表格无限滚动指令
 const vElTableInfiniteScroll = {
@@ -266,7 +266,7 @@ const vElTableInfiniteScroll = {
 }
 
 
-import { useRouter } from 'vue-router'
+import { useRouter } from 'vue-router';
 
 const router = useRouter()
 const searchFormRef = ref()
@@ -365,16 +365,6 @@ const columns = ref([
     align: 'center'
   },
   { 
-    key: 8, 
-    label: '当前人数', 
-    prop: 'currentParticipants',
-    visible: true, 
-    width: 100,
-    sortable: 'custom',
-    filterable: false,
-    align: 'center'
-  },
-  { 
     key: 9, 
     label: '操作', 
     prop: 'actions',
@@ -406,8 +396,7 @@ const formData = reactive({
   endTime: '',
   location: '',
   maxParticipants: 50,
-  currentParticipants: 0,
-  image: '',
+  // 移除 currentParticipants 和 image 字段，因为后端不支持
   description: '',
   status: 0,
   organizerId: parseInt(sessionStorage.getItem('userId')) || 1 // 从会话存储中获取当前用户ID作为组织者ID
@@ -487,17 +476,21 @@ const handleSelectionChange = (selection) => {
 // 加载活动类型数据
 const loadActivityTypes = async () => {
   try {
-    // 直接从后端获取字典数据
-    const response = await getDictDataByType('activity_type')
-    if (response.code === 200 && response.data && response.data.length > 0) {
-      activityTypes.value = response.data.map(item => ({
-        value: item.dictValue,
-        label: item.dictLabel
-      }))
-      console.log('活动类型数据加载成功:', activityTypes.value)
-      return true
+    // 使用 useDict 函数获取字典数据
+    const { activity_type } = useDict('activity_type');
+    
+    // 等待字典数据加载
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    if (activity_type.value && activity_type.value.length > 0) {
+      activityTypes.value = activity_type.value.map(item => ({
+        value: item.value,
+        label: item.label
+      }));
+      console.log('活动类型数据加载成功:', activityTypes.value);
+      return true;
     } else {
-      console.warn('获取活动类型数据为空，使用默认数据')
+      console.warn('获取活动类型数据为空，使用默认数据');
       // 使用默认数据
       activityTypes.value = [
         { value: '1', label: '文化娱乐' },
@@ -509,11 +502,11 @@ const loadActivityTypes = async () => {
         { value: '7', label: '社交联谊' },
         { value: '8', label: '公益慈善' },
         { value: '9', label: '其他活动' }
-      ]
-      return false
+      ];
+      return false;
     }
   } catch (error) {
-    console.error('获取活动类型数据失败:', error)
+    console.error('获取活动类型数据失败:', error);
     // 出错时使用默认数据
     activityTypes.value = [
       { value: '1', label: '文化娱乐' },
@@ -525,8 +518,8 @@ const loadActivityTypes = async () => {
       { value: '7', label: '社交联谊' },
       { value: '8', label: '公益慈善' },
       { value: '9', label: '其他活动' }
-    ]
-    return false
+    ];
+    return false;
   }
 }
 
@@ -728,14 +721,25 @@ const handleImageChange = (res) => {
 const handleSubmit = () => {
   formRef.value?.validate((valid) => {
     if (valid) {
-      if (formData.timeRange && formData.timeRange.length === 2) {
-        formData.startTime = formData.timeRange[0]
-        formData.endTime = formData.timeRange[1]
+      // 创建一个新对象来保存要提交的数据
+      const submitData = { ...formData };
+      
+      // 处理时间范围
+      if (submitData.timeRange && submitData.timeRange.length === 2) {
+        submitData.startTime = submitData.timeRange[0]
+        submitData.endTime = submitData.timeRange[1]
+        // 删除timeRange字段，因为后端不需要
+        delete submitData.timeRange
+      }
+      
+      // 确保type字段是字符串类型，与后端保持一致
+      if (submitData.type && typeof submitData.type === 'number') {
+        submitData.type = submitData.type.toString()
       }
 
       loading.value = true
       if (dialogType.value === 'add') {
-        activityStore.createActivity(formData).then(() => {
+        activityStore.createActivity(submitData).then(() => {
           ElMessage.success('添加成功')
           dialogVisible.value = false
           getList()
@@ -750,7 +754,7 @@ const handleSubmit = () => {
           loading.value = false
         })
       } else if (dialogType.value === 'edit') {
-        activityStore.updateActivity(formData.id, formData).then(() => {
+        activityStore.updateActivity(submitData.id, submitData).then(() => {
           ElMessage.success('更新成功')
           dialogVisible.value = false
           getList()
@@ -781,8 +785,7 @@ const resetForm = () => {
     endTime: '',
     location: '',
     maxParticipants: 50,
-    currentParticipants: 0,
-    image: '',
+    // 移除 currentParticipants 和 image 字段，因为后端不支持
     description: '',
     status: 0,
     organizerId: parseInt(sessionStorage.getItem('userId')) || 1
@@ -969,6 +972,11 @@ const loadMore = async () => {
   }
 }
 
+// 组件卸载时清除定时器
+onBeforeUnmount(() => {
+  stopAutoRefresh()
+})
+
 // 初始化
 onMounted(async () => {
   try {
@@ -977,11 +985,6 @@ onMounted(async () => {
     
     // 然后加载活动列表
     getList()
-    
-    // 组件卸载时清除定时器
-    onBeforeUnmount(() => {
-      stopAutoRefresh()
-    })
   } catch (error) {
     console.error('活动列表初始化失败:', error)
     // 即使出错也尝试加载活动列表
