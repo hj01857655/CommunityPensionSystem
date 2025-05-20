@@ -18,10 +18,10 @@ public class ServiceReviewDTO {
     private Long id;
 
     /**
-     * 服务预约ID
+     * 关联订单ID (服务预约ID)
      */
-    @NotNull(message = "服务预约ID不能为空")
-    private Long serviceAppointmentId;
+    @NotNull(message = "预约ID不能为空")
+    private Long orderId;
 
     /**
      * 服务ID

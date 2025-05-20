@@ -36,7 +36,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
                     "/static/**",
                     "/public/**",
                     "/upload/**",        // 不拦截上传文件访问路径
-                     "/actuator/**"
+                    "/actuator/**",
+                    "/websocket/**"       // 不拦截WebSocket请求
                 );
     }
     // 配置静态资源映射

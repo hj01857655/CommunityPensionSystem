@@ -6,6 +6,7 @@ import jakarta.websocket.*;
 import jakarta.websocket.server.PathParam;
 import jakarta.websocket.server.ServerEndpoint;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -31,9 +32,28 @@ public class WebSocketServer {
     private static final Map<Session, Long> SESSION_USER_MAP = new ConcurrentHashMap<>();
 
     /**
+     * 用于存储用户类型，key为用户ID，value为用户类型（ADMIN或USER）
+     */
+    private static final Map<Long, String> USER_TYPE_MAP = new ConcurrentHashMap<>();
+
+    /**
      * JSON转换器
      */
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static ObjectMapper objectMapper;
+
+    /**
+     * JWT工具类
+     */
+    private static JwtTokenUtil jwtTokenUtil;
+
+    /**
+     * 注入ObjectMapper
+     *
+     * @param mapper 配置好的ObjectMapper
+     */
+    public static void setObjectMapper(ObjectMapper mapper) {
+        WebSocketServer.objectMapper = mapper;
+    }
 
     /**
      * 发送消息给指定用户
@@ -45,9 +65,13 @@ public class WebSocketServer {
         Session session = ONLINE_SESSIONS.get(userId);
         if (session != null && session.isOpen()) {
             try {
-                String messageText = OBJECT_MAPPER.writeValueAsString(message);
+                if (objectMapper == null) {
+                    log.error("ObjectMapper未初始化，无法发送消息");
+                    return;
+                }
+                String messageText = objectMapper.writeValueAsString(message);
                 session.getBasicRemote().sendText(messageText);
-                log.info("发送消息给用户{}：{}", userId, messageText);
+                log.info("发送消息给用户{}\uff1a{}", userId, messageText);
             } catch (Exception e) {
                 log.error("发送消息给用户{}失败", userId, e);
             }
@@ -63,7 +87,11 @@ public class WebSocketServer {
      */
     public static void broadcastMessage(Object message) {
         try {
-            String messageText = OBJECT_MAPPER.writeValueAsString(message);
+            if (objectMapper == null) {
+                log.error("ObjectMapper未初始化，无法广播消息");
+                return;
+            }
+            String messageText = objectMapper.writeValueAsString(message);
             for (Map.Entry<Long, Session> entry : ONLINE_SESSIONS.entrySet()) {
                 Session session = entry.getValue();
                 if (session.isOpen()) {
@@ -77,6 +105,48 @@ public class WebSocketServer {
             log.info("广播消息：{}，当前在线人数：{}", messageText, ONLINE_SESSIONS.size());
         } catch (Exception e) {
             log.error("广播消息失败", e);
+        }
+    }
+
+    /**
+     * 广播紧急消息给所有在线管理员
+     *
+     * @param message 紧急消息内容
+     */
+    public static void broadcastEmergencyMessage(Object message) {
+        try {
+            if (objectMapper == null) {
+                log.error("ObjectMapper未初始化，无法广播紧急消息");
+                return;
+            }
+
+            // 添加消息类型
+            if (message instanceof Map) {
+                ((Map) message).put("type", "EMERGENCY");
+            }
+
+            String messageText = objectMapper.writeValueAsString(message);
+            int adminCount = 0;
+
+            for (Map.Entry<Long, Session> entry : ONLINE_SESSIONS.entrySet()) {
+                Long userId = entry.getKey();
+                Session session = entry.getValue();
+
+                // 只向管理员发送紧急消息
+                String userType = USER_TYPE_MAP.get(userId);
+                if ("ADMIN".equals(userType) && session.isOpen()) {
+                    try {
+                        session.getBasicRemote().sendText(messageText);
+                        adminCount++;
+                    } catch (IOException e) {
+                        log.error("广播紧急消息给管理员{}失败", userId, e);
+                    }
+                }
+            }
+
+            log.info("广播紧急消息：{}，当前在线管理员数：{}", messageText, adminCount);
+        } catch (Exception e) {
+            log.error("广播紧急消息失败", e);
         }
     }
 
@@ -101,14 +171,28 @@ public class WebSocketServer {
     }
 
     /**
+     * 注入JwtTokenUtil
+     *
+     * @param util 配置好的JwtTokenUtil
+     */
+    @Autowired
+    public void setJwtTokenUtil(JwtTokenUtil util) {
+        WebSocketServer.jwtTokenUtil = util;
+    }
+
+    /**
      * 连接建立成功调用的方法
      */
     @OnOpen
     public void onOpen(Session session, @PathParam("token") String token) {
         try {
-            // 验证token并获取用户ID
-            // 修复：创建JwtTokenUtil实例并正确转换返回值
-            JwtTokenUtil jwtTokenUtil = new JwtTokenUtil();
+            // 验证token并获取用户信息
+            if (jwtTokenUtil == null) {
+                log.error("WebSocket连接失败：JwtTokenUtil未注入");
+                session.close();
+                return;
+            }
+
             String username = jwtTokenUtil.getUsernameFromToken(token);
             if (username == null) {
                 log.warn("WebSocket连接失败：无效的token");
@@ -116,15 +200,25 @@ public class WebSocketServer {
                 return;
             }
 
-            // 将用户名转换为用户ID
-            Long userId = null;
+            // 获取用户角色ID
+            Long roleId = null;
             try {
-                userId = Long.parseLong(username);
-            } catch (NumberFormatException e) {
-                log.warn("WebSocket连接失败：用户ID格式不正确");
-                session.close();
-                return;
+                roleId = jwtTokenUtil.getRoleIdFromToken(token);
+                log.info("WebSocket连接：用户 {} 的角色ID为 {}", username, roleId);
+            } catch (Exception e) {
+                log.warn("WebSocket连接：无法获取用户角色ID", e);
             }
+
+            // 使用用户名的哈希码作为用户ID
+            // 这样可以处理非数字格式的用户名，如"admin"
+            Long userId = (long) username.hashCode();
+            log.info("WebSocket连接：用户名 {} 转换为用户ID {}", username, userId);
+
+            // 根据角色ID判断用户类型
+            // 角色ID为4的是管理员，其他是普通用户
+            String userType = (roleId != null && roleId == 4) ? "ADMIN" : "USER";
+            USER_TYPE_MAP.put(userId, userType);
+            log.info("WebSocket连接：用户 {} 的类型为 {}", username, userType);
 
             // 存储连接
             ONLINE_SESSIONS.put(userId, session);

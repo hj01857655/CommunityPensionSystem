@@ -1,5 +1,19 @@
 <template>
-    <div class="dashboard">
+    <div class="dashboard router-view" v-bind="$attrs">
+        <!-- 紧急呼叫按钮 -->        
+        <div class="emergency-call-container">
+            <el-button 
+                type="danger" 
+                size="large" 
+                class="emergency-call-button"
+                @click="showEmergencyCallDialog"
+                :loading="emergencyCallLoading"
+            >
+                <el-icon><AlarmClock /></el-icon>
+                紧急呼叫
+            </el-button>
+        </div>
+
         <el-card class="content-card" shadow="hover">
             <div class="dashboard-header">
                 <div>
@@ -163,7 +177,7 @@
                 <el-col :span="24" :md="8">
                     <home-card title="紧急求助" icon="Warning" class="emergency-card" :show-more="false">
                         <div class="emergency-content">
-                            <el-button type="danger" size="large" :icon="Phone" @click="handleEmergencyCall">
+                            <el-button type="danger" size="large" :icon="Phone" @click="openEmergencyCallDialog">
                                 紧急呼叫
                             </el-button>
                             <div class="emergency-info">
@@ -176,6 +190,49 @@
             </el-row>
         </el-card>
     </div>
+    <!-- 紧急呼叫对话框 -->
+    <el-dialog
+        v-model="emergencyDialogVisible"
+        title="紧急呼叫"
+        width="500px"
+        :close-on-click-modal="false"
+        :show-close="!emergencyCallLoading"
+        :close-on-press-escape="!emergencyCallLoading"
+    >
+        <div class="emergency-dialog-content">
+            <div class="emergency-warning">
+                <el-icon class="warning-icon"><Warning /></el-icon>
+                <span>您正在发起紧急呼叫，系统将通知管理人员并提供紧急救援。</span>
+            </div>
+            
+            <el-form :model="emergencyForm" label-width="80px" class="emergency-form">
+                <el-form-item label="您的位置">
+                    <el-input v-model="emergencyForm.location" placeholder="请输入您的具体位置，例如：3号楼2单元501室" :disabled="emergencyCallLoading" />
+                </el-form-item>
+                <el-form-item label="紧急信息">
+                    <el-input 
+                        v-model="emergencyForm.message" 
+                        type="textarea" 
+                        :rows="3" 
+                        placeholder="请简要描述您的情况，例如：我感觉胸闷气短，需要紧急救援"
+                        :disabled="emergencyCallLoading"
+                    />
+                </el-form-item>
+            </el-form>
+            
+            <div class="emergency-actions">
+                <el-button 
+                    @click="emergencyDialogVisible = false" 
+                    :disabled="emergencyCallLoading"
+                >取消</el-button>
+                <el-button 
+                    type="danger" 
+                    @click="handleEmergencyCallSubmit" 
+                    :loading="emergencyCallLoading"
+                >发送紧急呼叫</el-button>
+            </div>
+        </div>
+    </el-dialog>
 </template>
 
 <script setup>
@@ -188,10 +245,12 @@ import useServiceStore from '@/stores/fore/serviceStore';
 import { useUserStore } from '@/stores/fore/userStore';
 import { formatDate, formatDateTime } from '@/utils/date';
 import { Clock, Location, Phone, Refresh, Warning } from '@element-plus/icons-vue';
-import { ElMessage } from 'element-plus';
+import { ElMessage, ElMessageBox } from 'element-plus';
 import { storeToRefs } from 'pinia';
 import { computed, onBeforeUnmount, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
+import { sendEmergencyCall as apiSendEmergencyCall } from '@/api/fore/emergency';
+
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -576,8 +635,6 @@ const recentNotices = ref([
     { date: '2025-02-20', title: '系统维护通知：2月25日凌晨停机2小时' },
     // 更多通知公告
 ]);
-const emergencyContact = ref('张三');
-const emergencyPhone = ref('123-456-7890');
 
 // 天气数据
 const weatherData = ref({
@@ -590,7 +647,132 @@ const weatherData = ref({
   updateTime: new Date().toLocaleString()
 });
 
-// 定时刷新相关设置
+// 紧急呼叫相关变量
+const emergencyCallLoading = ref(false);
+
+// 紧急联系人信息
+const emergencyContact = ref('社区养老服务中心');
+const emergencyPhone = ref('120 / 110');
+
+// 直接发送紧急呼叫
+const sendEmergencyCall = async () => {
+    if (emergencyCallLoading.value) return;
+    
+    try {
+        emergencyCallLoading.value = true;
+        
+        // 获取用户信息
+        const userInfo = userStore.userInfo || JSON.parse(localStorage.getItem('userInfo') || '{}');
+        if (!userInfo || !userInfo.userId) {
+            ElMessage.warning('请先登录');
+            emergencyCallLoading.value = false;
+            return;
+        }
+        
+        // 构建紧急呼叫数据
+        const callData = {
+            userId: userInfo.userId,
+            userName: userInfo.name || userInfo.username || '未知用户'
+        };
+        
+        // 发送紧急呼叫请求
+        const res = await sendEmergencyCall(callData);
+        
+        if (res.code === 200) {
+            // 显示成功通知
+            ElNotification({
+                title: '紧急呼叫已发送',
+                message: '工作人员将尽快与您联系，请保持电话畅通',
+                type: 'success',
+                duration: 5000
+            });
+            
+            // 同时拨打紧急电话
+            ElMessageBox.confirm('是否同时拨打紧急电话？', '紧急呼叫', {
+                confirmButtonText: '拨打',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }).then(() => {
+                // 模拟拨打电话
+                window.location.href = `tel:${emergencyPhone.value.split(' / ')[0]}`;
+            }).catch(() => {
+                // 用户取消拨打
+            });
+        } else {
+            ElMessage.error(res.message || '紧急呼叫发送失败');
+        }
+    } catch (error) {
+        console.error('紧急呼叫发送失败:', error);
+        ElMessage.error(error.message || '紧急呼叫发送失败');
+    } finally {
+        emergencyCallLoading.value = false;
+    }
+};
+
+// 发送紧急呼叫
+const handleEmergencyCallSubmit = async () => {
+    if (emergencyCallLoading.value) return;
+    
+    try {
+        emergencyCallLoading.value = true;
+        
+        // 获取用户信息
+        const userInfo = userStore.userInfo || JSON.parse(localStorage.getItem('userInfo') || '{}');
+        if (!userInfo || !userInfo.userId) {
+            ElMessage.warning('请先登录');
+            emergencyCallLoading.value = false;
+            return;
+        }
+        
+        // 构建紧急呼叫数据
+        const callData = {
+            userId: userInfo.userId,
+            userName: userInfo.name || userInfo.username || '未知用户',
+            location: emergencyForm.value.location || '未提供位置信息',
+            message: emergencyForm.value.message || '紧急求助'
+        };
+        
+        // 发送紧急呼叫请求
+        const res = await sendEmergencyCall(callData);
+        
+        if (res.code === 200) {
+            // 关闭对话框
+            emergencyDialogVisible.value = false;
+            
+            // 显示成功通知
+            ElNotification({
+                title: '紧急呼叫已发送',
+                message: '工作人员将尽快与您联系，请保持电话畅通',
+                type: 'success',
+                duration: 5000
+            });
+            
+            // 同时拨打紧急电话
+            ElMessageBox.confirm('是否同时拨打紧急电话？', '紧急呼叫', {
+                confirmButtonText: '拨打',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }).then(() => {
+                window.location.href = `tel:${emergencyPhone.value.split('/')[0].trim()}`;
+            }).catch(() => {
+                // 用户取消操作
+            });
+        } else {
+            ElMessage.error(res.message || '紧急呼叫发送失败');
+        }
+    } catch (error) {
+        console.error('紧急呼叫发送失败:', error);
+        ElMessage.error('紧急呼叫发送失败，请直接拨打紧急电话');
+    } finally {
+        emergencyCallLoading.value = false;
+    }
+};
+
+// 处理紧急呼叫按钮点击
+const openEmergencyCallDialog = () => {
+    showEmergencyCallDialog();
+};
+
 const refreshInterval = ref(300000); // 默认5分钟刷新一次
 const refreshTimer = ref(null);
 
@@ -820,10 +1002,7 @@ const viewNoticeDetail = (notice) => {
     // 查看通知详情的逻辑
 };
 
-const handleEmergencyCall = () => {
-    console.log('紧急呼叫');
-    // 紧急呼叫的逻辑
-};
+
 
 // 处理菜单选择
 const handleMenuSelect = (routeName) => {
@@ -932,16 +1111,78 @@ const handleResetEvent = () => {
   // 重置所有数据
   healthData.value = null;
   services.value = [];
-  activities.value = [];
-  // 重新初始化
-  initializeData();
+};
+
+// 紧急呼叫相关变量
+const emergencyDialogVisible = ref(false);
+const emergencyForm = ref({
+location: '',
+message: ''
+});
+
+// 显示紧急呼叫对话框 - 现在改为直接发送紧急呼叫，不再显示对话框
+const showEmergencyCallDialog = async () => {
+    if (!userStore.isLoggedIn) {
+        ElMessage.warning('请先登录再发起紧急呼叫');
+        return;
+    }
+
+    try {
+        emergencyCallLoading.value = true;
+        
+        // 获取用户信息
+        const userInfo = userStore.userInfo || JSON.parse(localStorage.getItem('userInfo') || '{}');
+        if (!userInfo || !userInfo.userId) {
+            ElMessage.warning('无法获取用户信息，请重新登录');
+            return;
+        }
+        
+        // 准备紧急呼叫数据，只需要用户ID和名称
+        const callData = {
+            userId: Number(userInfo.userId), // 确保是数字类型
+            userName: userInfo.name || userInfo.username || '未知用户'
+        };
+        
+        // 发送紧急呼叫
+        const res = await apiSendEmergencyCall(callData);
+        
+        if (res.code === 200) {
+            // 显示成功提示
+            ElMessage.success('紧急呼叫已发送，管理人员将尽快联系您');
+            
+            // 询问是否需要拨打紧急电话
+            ElMessageBox.confirm('是否需要拨打紧急电话？', '紧急呼叫', {
+                confirmButtonText: '拨打120',
+                cancelButtonText: '不需要',
+                type: 'warning'
+            }).then(() => {
+                // 模拟拨打电话（在移动设备上会尝试拨打）
+                window.location.href = 'tel:120';
+            }).catch(() => {
+                // 用户取消拨打，不做处理
+            });
+        } else {
+            ElMessage.error(res.message || '紧急呼叫发送失败');
+        }
+    } catch (error) {
+        console.error('发送紧急呼叫失败:', error);
+        ElMessage.error('发送紧急呼叫失败，请重试或直接拨打120');
+    } finally {
+        emergencyCallLoading.value = false;
+    }
 };
 
 // 修改变量访问方式
 const MAX_RETRY_COUNT = 3; // 添加最大重试次数常量
 </script>
 
-<style scoped>
+<script>
+export default {
+  inheritAttrs: false  // 禁用自动属性继承
+}
+</script>
+
+<style lang="scss" scoped>
 /* 基础布局样式 */
 .dashboard {
     width: 100%;
@@ -1128,6 +1369,94 @@ const MAX_RETRY_COUNT = 3; // 添加最大重试次数常量
                 font-size: 14px;
             }
         }
+    }
+}
+/* 紧急呼叫按钮样式 */
+.emergency-call-container {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    z-index: 1000;
+}
+
+.emergency-call-button {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    font-size: 16px;
+    font-weight: bold;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 4px 12px rgba(255, 0, 0, 0.3);
+    animation: pulse 2s infinite;
+}
+
+.emergency-call-button .el-icon {
+    font-size: 28px;
+    margin-bottom: 8px;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 15px rgba(255, 0, 0, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(255, 0, 0, 0);
+    }
+}
+
+/* 紧急呼叫对话框样式 */
+.emergency-dialog-content {
+    padding: 10px;
+}
+
+.emergency-warning {
+    display: flex;
+    align-items: center;
+    background-color: #fff3f3;
+    border-left: 4px solid #f56c6c;
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+}
+
+.emergency-warning .warning-icon {
+    font-size: 24px;
+    color: #f56c6c;
+    margin-right: 10px;
+}
+
+.emergency-form {
+    margin: 20px 0;
+}
+
+.emergency-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .emergency-call-container {
+        bottom: 20px;
+        right: 20px;
+    }
+    
+    .emergency-call-button {
+        width: 100px;
+        height: 100px;
+        font-size: 14px;
+    }
+    
+    .emergency-call-button .el-icon {
+        font-size: 24px;
     }
 }
 </style>

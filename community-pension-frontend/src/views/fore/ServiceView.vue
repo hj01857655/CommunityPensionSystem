@@ -36,8 +36,8 @@
             <el-table-column label="服务信息" min-width="150">
               <template #default="{ row }">
                 <div class="service-info">
-                  <div><span class="price-tag">{{ row.price ? `${row.price} 元` : '价格未设置' }}</span></div>
-                  <div><span class="duration-tag">{{ row.duration ? `${row.duration} 分钟` : '时长未设置' }}</span></div>
+                  <div><span class="price-tag">{{ row.price || row.serviceFee || row.actualFee || 0 }} 元</span></div>
+                  <div><span class="duration-tag">{{ row.duration || row.serviceDuration || row.actualDuration || 0 }} 分钟</span></div>
                 </div>
               </template>
             </el-table-column>
@@ -88,8 +88,8 @@
             <el-table-column label="服务信息" min-width="150">
               <template #default="{ row }">
                 <div class="service-info">
-                  <div><span class="price-tag">{{ row.price || 0 }} 元</span></div>
-                  <div><span class="duration-tag">{{ row.duration || 0 }} 分钟</span></div>
+                  <div><span class="price-tag">{{ row.price || row.serviceFee || row.actualFee || 0 }} 元</span></div>
+                  <div><span class="duration-tag">{{ row.duration || row.serviceDuration || row.actualDuration || 0 }} 分钟</span></div>
                 </div>
               </template>
             </el-table-column>
@@ -141,10 +141,6 @@
                   <el-button v-if="row.status === 0 || row.status === 1" size="small" type="danger"
                              @click="handleCancel(row)">
                     取消
-                  </el-button>
-                  <el-button v-if="row.status === 3 && !row.evaluated" size="small" type="success"
-                             @click="openEvaluationDialog(row)">
-                    评价
                   </el-button>
                 </div>
               </template>
@@ -214,28 +210,6 @@
       </el-descriptions>
     </el-dialog>
 
-    <!-- 服务评价对话框 -->
-    <el-dialog v-model="evaluationDialogVisible" title="服务评价" width="500px">
-      <el-form ref="evaluationFormRef" :model="evaluationForm" :rules="evaluationRules" label-width="100px">
-        <el-form-item label="服务名称">
-          <span>{{ currentAppointment.serviceName }}</span>
-        </el-form-item>
-        <el-form-item label="评分" prop="rating">
-          <el-rate v-model="evaluationForm.rating" :colors="['#99A9BF', '#F7BA2A', '#FF9900']"
-                   :texts="['很差', '较差', '一般', '较好', '很好']" show-text/>
-        </el-form-item>
-        <el-form-item label="评价内容" prop="content">
-          <el-input v-model="evaluationForm.content" :rows="4" placeholder="请输入您的评价内容" type="textarea"/>
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="evaluationDialogVisible = false">取消</el-button>
-          <el-button :loading="submittingEvaluation" type="primary" @click="submitEvaluation">提交评价</el-button>
-        </span>
-      </template>
-    </el-dialog>
-
     <!-- 预约详情对话框 -->
     <el-dialog v-model="appointmentDetailVisible" title="预约详情" width="600px">
       <el-descriptions :column="2" border>
@@ -244,6 +218,9 @@
         <el-descriptions-item label="价格">
           <template v-if="currentAppointment.price !== null && currentAppointment.price !== undefined">
             {{ currentAppointment.price }} 元
+          </template>
+          <template v-else-if="currentAppointment.serviceFee !== null && currentAppointment.serviceFee !== undefined">
+            {{ currentAppointment.serviceFee }} 元
           </template>
           <template v-else-if="currentAppointment.actualFee !== null && currentAppointment.actualFee !== undefined">
             {{ currentAppointment.actualFee }} 元
@@ -256,8 +233,10 @@
           <template v-if="currentAppointment.duration !== null && currentAppointment.duration !== undefined">
             {{ currentAppointment.duration }} 分钟
           </template>
-          <template
-              v-else-if="currentAppointment.actualDuration !== null && currentAppointment.actualDuration !== undefined">
+          <template v-else-if="currentAppointment.serviceDuration !== null && currentAppointment.serviceDuration !== undefined">
+            {{ currentAppointment.serviceDuration }} 分钟
+          </template>
+          <template v-else-if="currentAppointment.actualDuration !== null && currentAppointment.actualDuration !== undefined">
             {{ currentAppointment.actualDuration }} 分钟
           </template>
           <template v-else>
@@ -289,14 +268,14 @@
 </template>
 
 <script setup>
-import {computed, onBeforeUnmount, onMounted, reactive, ref, watch} from 'vue'
-import {ElMessage, ElMessageBox} from 'element-plus'
-import {formatDateTime} from '@/utils/date'
-import {Calendar, Search, User} from '@element-plus/icons-vue'
+import { checkHoliday } from '@/api/fore/holiday'
 import useServiceStore from '@/stores/fore/serviceStore'
 import useUserStore from '@/stores/fore/userStore'
-import {checkHoliday} from '@/api/fore/holiday'
-import {useRoute, useRouter} from 'vue-router'
+import { formatDateTime } from '@/utils/date'
+import { Calendar, Search } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
 const serviceStore = useServiceStore()
 const userStore = useUserStore()
@@ -844,68 +823,13 @@ const handleCancel = async (appointment) => {
   }
 };
 
-// 评价对话框相关
-const evaluationDialogVisible = ref(false)
-const currentAppointment = ref({})
-const evaluationFormRef = ref(null)
-const submittingEvaluation = ref(false)
-
-const evaluationForm = reactive({
-  rating: 0,
-  content: ''
-})
-
-const evaluationRules = {
-  rating: [
-    {required: true, message: '请选择评分', trigger: 'change'}
-  ],
-  content: [
-    {required: true, message: '请输入评价内容', trigger: 'blur'},
-    {min: 5, max: 500, message: '评价内容长度在 5 到 500 个字符', trigger: 'blur'}
-  ]
-}
-
-// 打开评价对话框
-const openEvaluationDialog = async (appointment) => {
-  const isLoggedIn = await checkLoginStatus();
-  if (!isLoggedIn) return;
-
-  currentAppointment.value = appointment;
-  evaluationDialogVisible.value = true;
-};
-
-// 提交评价
-const submitEvaluation = async () => {
-  const isLoggedIn = await checkLoginStatus();
-  if (!isLoggedIn) return;
-
-  if (!evaluationFormRef.value) return;
-
-  await evaluationFormRef.value.validate(async (valid) => {
-    if (valid) {
-      try {
-        const params = {
-          ...evaluationForm.value,
-          appointmentId: currentAppointment.value.id
-        };
-
-        await serviceStore.handleEvaluateService(params.appointmentId, params);
-        ElMessage.success('评价提交成功');
-        evaluationDialogVisible.value = false;
-        // 重新获取预约列表
-        fetchMyAppointments();
-      } catch (error) {
-        console.error('评价提交失败:', error);
-        ElMessage.error(error.message || '评价提交失败');
-      }
-    }
-  });
-};
-
 // 监听预约列表数据变化
 watch(() => serviceStore.myAppointments, (newVal) => {
   // 监听预约列表数据变化
 }, {deep: true})
+
+// 添加回currentAppointment变量，因为预约详情对话框可能会使用
+const currentAppointment = ref({})
 
 // 监听总数变化
 watch(() => serviceStore.appointmentTotal, (newVal) => {
@@ -949,7 +873,9 @@ const viewAppointmentDetail = (appointment) => {
   // 创建一个新对象以避免修改原始数据
   currentAppointment.value = {
     ...appointment,
-    // 不需要设置默认值，让模板中的条件判断来处理
+    // 确保价格和时长数据存在
+    price: appointment.price || appointment.serviceFee || appointment.actualFee || 0,
+    duration: appointment.duration || appointment.serviceDuration || appointment.actualDuration || 0
   };
 
   appointmentDetailVisible.value = true;
@@ -1028,7 +954,7 @@ onMounted(async () => {
     categoryOptions.value = Array.from(categories);
   }
 
-  // 添加事件监听，防止外部刷新影响标签页状态
+  // 添加事件监听，防止外部刷新影响标签页
   window.addEventListener('refresh-dashboard-data', handleRefreshEvent);
 });
 

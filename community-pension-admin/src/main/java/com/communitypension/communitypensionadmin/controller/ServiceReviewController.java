@@ -93,9 +93,9 @@ public class ServiceReviewController {
     @GetMapping("/check")
     @Operation(summary = "检查用户是否已评价服务预约", description = "检查用户是否已评价服务预约")
     public Result<Boolean> checkReviewExists(
-            @RequestParam Long serviceAppointmentId,
+            @RequestParam Long orderId,
             @RequestParam Long elderId) {
-        return Result.success(serviceReviewService.checkReviewExists(serviceAppointmentId, elderId));
+        return Result.success(serviceReviewService.checkReviewExists(orderId, elderId));
     }
 
     /**

@@ -1,7 +1,6 @@
 import {
   cancelAppointment,
   createAppointment,
-  evaluateService,
   getMyAppointments,
   getServiceDetail,
   getServiceList
@@ -93,15 +92,26 @@ const useServiceStore = defineStore('service', () => {
         // API直接返回数组，不需要取records
         const appointments = Array.isArray(res.data) ? res.data : [];
         
+        // 对数据进行预处理，确保必要的字段存在
+        const processedAppointments = appointments.map(item => {
+          // 确保服务信息字段存在
+          return {
+            ...item,
+            // 尝试从各种可能的字段中获取价格和时长信息
+            price: item.price || item.serviceFee || item.actualFee || 0,
+            duration: item.duration || item.serviceDuration || item.actualDuration || 0
+          };
+        });
+        
         // 确保数据被正确赋值 - 遍历添加
-        appointments.forEach(item => {
+        processedAppointments.forEach(item => {
           myAppointments.value.push(item);
         });
         
         // 设置总数
-        appointmentTotal.value = appointments.length;
+        appointmentTotal.value = processedAppointments.length;
         
-        return appointments;
+        return processedAppointments;
       } else {
         throw new Error(res.message || '获取预约列表失败');
       }
@@ -134,26 +144,6 @@ const useServiceStore = defineStore('service', () => {
     }
   };
 
-  // 评价服务
-  const handleEvaluateService = async (appointmentId, evaluation) => {
-    try {
-      loading.value = true;
-      const res = await evaluateService(appointmentId, evaluation);
-      if (res.code === 200) {
-        ElMessage.success('评价成功');
-        return res.data;
-      } else {
-        ElMessage.error(res.message || '评价失败');
-        throw new Error(res.message || '评价失败');
-      }
-    } catch (error) {
-      console.error('评价失败:', error);
-      throw error;
-    } finally {
-      loading.value = false;
-    }
-  };
-
   // 重置状态
   const resetState = () => {
     serviceList.value = [];
@@ -176,7 +166,6 @@ const useServiceStore = defineStore('service', () => {
     createServiceAppointment,
     fetchMyAppointments,
     cancelServiceAppointment,
-    handleEvaluateService,
     resetState
   };
 });

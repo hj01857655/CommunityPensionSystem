@@ -79,7 +79,9 @@ file:
 
 logging:
   level:
-    com.communitypension.communitypensionadmin.mapper: DEBUG
-    org.springframework.jdbc: DEBUG
-    com.zaxxer.hikari: DEBUG
-    org.hibernate: DEBUG
+    # com.communitypension.communitypensionadmin.mapper: DEBUG
+    # org.springframework.jdbc: DEBUG
+    # com.zaxxer.hikari: DEBUG
+    # org.hibernate: DEBUG
+    com.communitypension.communitypensionadmin.websocket: DEBUG
+    org.springframework.web.socket: DEBUG

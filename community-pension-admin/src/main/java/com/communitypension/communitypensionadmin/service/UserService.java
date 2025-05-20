@@ -233,4 +233,10 @@ public interface UserService extends IService<User> {
      * @return 用户数量
      */
     long countByCreateTimeBetween(LocalDateTime startTime, LocalDateTime endTime);
+    
+    /**
+     * 获取所有管理员用户
+     * @return 管理员用户列表
+     */
+    List<User> getAdminUsers();
 }

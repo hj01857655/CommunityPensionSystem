@@ -224,6 +224,7 @@ import {
   getUserTrendData,
   getWarningData
 } from '@/api/back/dashboard'
+// WebSocket已在main.js中初始化
 import CountTo from '@/components/common/utils/CountTo/index.vue'
 import * as echarts from 'echarts'
 import { ElMessage } from 'element-plus'
@@ -586,6 +587,8 @@ onMounted(() => {
   
   // 设置定时刷新
   refreshTimer = setInterval(refreshData, 60000) // 每分钟刷新一次
+  
+  // WebSocket已在main.js中初始化，这里不需要重复初始化
 })
 
 onUnmounted(() => {
@@ -600,6 +603,7 @@ onUnmounted(() => {
   // 销毁图表实例
   trendChart?.dispose()
   pieChart?.dispose()
+  
 })
 </script>
 

@@ -49,6 +49,12 @@ public interface UserMapper extends BaseMapper<User> {
             "WHERE ur.role_id = 1")
     // 老人角色ID
     List<User> selectAllElders();
+    
+    /**
+     * 根据角色ID查询用户ID列表
+     * @param roleId 角色ID
+     * @return 用户ID列表
+     */
+    @Select("SELECT user_id FROM user_role WHERE role_id = #{roleId}")
+    List<Long> selectUserIdsByRoleId(Long roleId);
 }
-
-

@@ -49,7 +49,7 @@ public class ServiceReviewServiceImpl extends ServiceImpl<ServiceReviewMapper, S
     @Transactional(rollbackFor = Exception.class)
     public Long addServiceReview(ServiceReviewDTO reviewDTO) {
         // 检查服务预约是否存在
-        ServiceOrder order = serviceOrderService.getById(reviewDTO.getServiceAppointmentId());
+        ServiceOrder order = serviceOrderService.getById(reviewDTO.getOrderId());
         if (order == null) {
             throw new BusinessException("服务预约不存在");
         }
@@ -60,7 +60,7 @@ public class ServiceReviewServiceImpl extends ServiceImpl<ServiceReviewMapper, S
         }
 
         // 检查是否已评价
-        if (checkReviewExists(reviewDTO.getServiceAppointmentId(), reviewDTO.getElderId())) {
+        if (checkReviewExists(reviewDTO.getOrderId(), reviewDTO.getElderId())) {
             throw new BusinessException("您已评价过此服务，不能重复评价");
         }
 

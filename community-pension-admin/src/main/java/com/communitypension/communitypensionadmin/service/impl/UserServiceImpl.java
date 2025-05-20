@@ -577,4 +577,55 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                     .le(endTime != null, User::getCreateTime, endTime);
         return count(queryWrapper);
     }
+    
+    /**
+     * 获取所有管理员和社区工作人员用户
+     * @return 管理员和社区工作人员用户列表
+     */
+    @Override
+    public List<User> getAdminUsers() {
+        // 获取管理员和社区工作人员角色ID
+        List<Long> roleIds = new ArrayList<>();
+        roleIds.add(RoleEnum.ADMIN.getId()); // 管理员角色ID
+        roleIds.add(RoleEnum.STAFF.getId()); // 社区工作人员角色ID
+        
+        LambdaQueryWrapper<Role> roleWrapper = new LambdaQueryWrapper<>();
+        roleWrapper.in(Role::getRoleId, roleIds);
+        List<Role> adminRoles = roleMapper.selectList(roleWrapper);
+        
+        if (adminRoles.isEmpty()) {
+            return new ArrayList<>();
+        }
+        
+        // 获取管理员角色ID列表
+        List<Long> adminRoleIds = adminRoles.stream()
+                .map(Role::getRoleId)
+                .toList();
+        
+        // 直接使用原生SQL查询获取所有具有管理员角色的用户ID
+        // 避免使用LambdaQueryWrapper查询UserRole表，因为实体类与表结构不匹配
+        List<Long> adminUserIds = new ArrayList<>();
+        
+        // 使用userRoleMapper的自定义方法获取用户ID
+        for (Long roleId : adminRoleIds) {
+            // 获取指定角色的所有用户ID
+            List<Long> userIds = userMapper.selectUserIdsByRoleId(roleId);
+            if (userIds != null && !userIds.isEmpty()) {
+                adminUserIds.addAll(userIds);
+            }
+        }
+        
+        // 如果没有管理员用户，返回空列表
+        if (adminUserIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+        
+        // 去除重复的用户ID
+        adminUserIds = adminUserIds.stream().distinct().toList();
+        
+        // 获取管理员用户信息
+        LambdaQueryWrapper<User> userWrapper = new LambdaQueryWrapper<>();
+        userWrapper.in(User::getUserId, adminUserIds);
+        return userMapper.selectList(userWrapper);
+    }
 }

@@ -217,10 +217,8 @@ const routes = [
                     },
                     {
                         path: 'review',
-                        name: 'ServiceReview',
-                        component: () => import('@/views/back/service/ServiceReview.vue'),
-                        meta: {title: '服务评价管理'}
-                    }
+                        redirect: '/admin/services/order'
+                    },
                 ]
             },
             {

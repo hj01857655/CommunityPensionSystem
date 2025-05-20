@@ -1,9 +1,9 @@
 import {
+  auditServiceReview,
   deleteServiceReview,
   getServiceReviewDetail,
   getServiceReviewList,
-  replyServiceReview,
-  auditServiceReview
+  replyServiceReview
 } from '@/api/back/service/review';
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
@@ -25,7 +25,15 @@ export const useServiceReviewStore = defineStore('serviceReview', () => {
   const getReviewList = async (params) => {
     loading.value = true;
     try {
-      const res = await getServiceReviewList(params);
+      // 只传递后端支持的参数
+      const apiParams = {
+        current: params.current,
+        size: params.size,
+        serviceId: params.serviceId,
+        status: params.status
+      };
+      
+      const res = await getServiceReviewList(apiParams);
       if (res.code === 200 && res.data && res.data.records) {
         reviewList.value = res.data.records;
         total.value = Number(res.data.total) || 0;

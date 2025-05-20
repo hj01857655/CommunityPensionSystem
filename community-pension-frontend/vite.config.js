@@ -56,6 +56,11 @@ export default defineConfig({
         target: 'https://api.jiejiariapi.com',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/holiday/, '')
+      },
+      '/websocket': {
+        target: 'http://localhost:9000',
+        ws: true,  // 启用WebSocket代理
+        changeOrigin: true
       }
     }
   },

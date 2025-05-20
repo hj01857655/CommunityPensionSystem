@@ -24,11 +24,6 @@ export const getServiceReviewList = (query) => {
   if (query.status !== null && query.status !== undefined && query.status !== '') {
     params.status = query.status;
   }
-  if (query.userName) params.userName = query.userName;
-  if (query.serviceName) params.serviceName = query.serviceName;
-  if (query.score) params.score = query.score;
-  if (query.beginTime) params.beginTime = query.beginTime;
-  if (query.endTime) params.endTime = query.endTime;
   return axios.get('/api/service/review/list', { params });
 };
 

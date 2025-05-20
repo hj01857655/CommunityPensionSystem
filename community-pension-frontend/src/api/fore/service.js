@@ -101,19 +101,3 @@ export const cancelAppointment = async (orderId, reason) => {
       return Promise.reject(error);
     });
 };
-
-/**
- * 评价服务
- * @param {number} orderId - 预约ID
- * @param {Object} data - 评价数据
- * @param {number} data.rating - 评分（1-5）
- * @param {string} data.content - 评价内容
- * @returns {Promise<{code: number, msg: string}>}
- */
-export const evaluateService = async (orderId, data) => {
-  return axios.post(`/api/service/order/${orderId}/evaluate`, data)
-    .catch(error => {
-      console.error('Error evaluating service:', error);
-      return Promise.reject(error);
-    });
-};

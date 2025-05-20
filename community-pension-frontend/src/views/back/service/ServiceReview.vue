@@ -261,12 +261,12 @@
 </template>
 
 <script setup>
-import {useServiceReviewStore} from '@/stores/back/service/review';
-import {ElMessage, ElMessageBox} from 'element-plus';
-import {computed, onActivated, onMounted, reactive, ref} from 'vue';
+import { useServiceReviewStore } from '@/stores/back/service/review';
+import { formatDate } from '@/utils/date';
+import { useDict } from '@/utils/dict';
+import { ElMessage, ElMessageBox } from 'element-plus';
+import { computed, onActivated, onMounted, reactive, ref } from 'vue';
 import * as XLSX from 'xlsx';
-import {formatDate} from '@/utils/date';
-import {useDict} from '@/utils/dict';
 
 const serviceReviewStore = useServiceReviewStore();
 const reviewList = computed(() => serviceReviewStore.reviewList);
@@ -321,13 +321,23 @@ const queryParams = reactive({
 
 // 获取评价列表
 const handleQuery = async () => {
-  const params = {
-    ...queryParams,
-    beginTime: queryParams.dateRange?.[0] || '',
-    endTime: queryParams.dateRange?.[1] || ''
-  };
-  await serviceReviewStore.getReviewList(params);
-  calculateStatistics();
+  try {
+    const params = {
+      ...queryParams,
+    };
+    
+    // 由于评价功能已删除，显示一个模拟数据，并避免API调用
+    reviewList.value = [];
+    total.value = 0;
+    ElMessage.warning('评价功能已从系统中移除，此页面仅作为展示使用。');
+    
+    // 不再调用后端API
+    // await serviceReviewStore.getReviewList(params);
+    
+    calculateStatistics();
+  } catch (error) {
+    console.error('获取评价列表失败:', error);
+  }
 };
 
 // 重置查询

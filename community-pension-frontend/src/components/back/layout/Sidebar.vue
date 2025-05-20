@@ -98,14 +98,6 @@
             <span>服务工单管理</span>
           </template>
         </el-menu-item>
-        <el-menu-item index="/admin/services/review">
-          <template #title>
-            <el-icon>
-              <Service />
-            </el-icon>
-            <span>服务评价管理</span>
-          </template>
-        </el-menu-item>
       </el-sub-menu>
 
       <!-- 健康监测管理 -->
