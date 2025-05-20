@@ -43,9 +43,9 @@ public interface RoleService extends IService<Role> {
     Role selectRoleById(Long roleId);
 
     /**
-     * 校验角色名称是否唯一
+     * 检查角色名称是否可用
      * @param roleName 角色名称
-     * @return 结果
+     * @return true表示名称可用（不存在），false表示名称已存在
      */
     boolean checkRoleNameUnique(String roleName);
 

@@ -86,10 +86,10 @@ public class RoleController {
     @Operation(summary = "新增角色")
     public Result<String> add(@RequestBody Role role) {
         try {
-            if (roleService.checkRoleNameUnique(role.getRoleName())) {
+            if (!roleService.checkRoleNameUnique(role.getRoleName())) {
                 return Result.error("新增角色'" + role.getRoleName() + "'失败，角色名称已存在");
             }
-            if (roleService.checkRoleKeyUnique(role.getRoleKey())) {
+            if (!roleService.checkRoleKeyUnique(role.getRoleKey())) {
                 return Result.error("新增角色'" + role.getRoleName() + "'失败，角色权限已存在");
             }
             
@@ -226,7 +226,7 @@ public class RoleController {
     }
 
     /**
-     * 获取角色的菜单树
+     * 获取角色菜单树
      */
     @GetMapping("/roleMenuTree/{roleId}")
     @Operation(summary = "获取角色菜单树")
@@ -245,6 +245,29 @@ public class RoleController {
         } catch (Exception e) {
             logger.error("获取角色菜单树失败", e);
             return Result.error("获取角色菜单树失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 获取角色菜单权限（用于前端接口 roleMenuTreeselect）
+     */
+    @GetMapping("/menu/{roleId}")
+    @Operation(summary = "获取角色菜单权限")
+    public Result<Map<String, Object>> getRoleMenuTreeForSelect(@PathVariable("roleId") Long roleId) {
+        try {
+            // 获取所有菜单树
+            List<Menu> menus = roleMenuService.selectMenuTree();
+            // 获取角色已有菜单ID
+            List<Long> checkedKeys = roleMenuService.selectMenuIdsByRoleId(roleId);
+            
+            Map<String, Object> result = new HashMap<>();
+            result.put("menus", menus);
+            result.put("checkedKeys", checkedKeys);
+            
+            return Result.success(result);
+        } catch (Exception e) {
+            logger.error("获取角色菜单权限失败", e);
+            return Result.error("获取角色菜单权限失败: " + e.getMessage());
         }
     }
 }

@@ -1,7 +1,7 @@
 /**
  * 后台通知中心API
  */
-import request from '@/utils/request';
+import request from '@/utils/axios';
 
 /**
  * 获取通知列表
@@ -10,7 +10,7 @@ import request from '@/utils/request';
  */
 export function getNotifications(params) {
   return request({
-    url: '/admin/notifications',
+    url: '/api/notice/list',
     method: 'get',
     params
   });
@@ -23,7 +23,7 @@ export function getNotifications(params) {
  */
 export function getNotificationDetail(id) {
   return request({
-    url: `/admin/notifications/${id}`,
+    url: `/api/notice/${id}`,
     method: 'get'
   });
 }
@@ -35,7 +35,7 @@ export function getNotificationDetail(id) {
  */
 export function markNotificationAsRead(id) {
   return request({
-    url: `/admin/notifications/${id}/read`,
+    url: `/api/notice/read/${id}`,
     method: 'put'
   });
 }
@@ -46,7 +46,7 @@ export function markNotificationAsRead(id) {
  */
 export function markAllNotificationsAsRead() {
   return request({
-    url: '/admin/notifications/read-all',
+    url: '/api/notice/read-all',
     method: 'put'
   });
 }
@@ -58,7 +58,7 @@ export function markAllNotificationsAsRead() {
  */
 export function deleteNotification(id) {
   return request({
-    url: `/admin/notifications/${id}`,
+    url: `/api/notice/${id}`,
     method: 'delete'
   });
 }
@@ -69,7 +69,7 @@ export function deleteNotification(id) {
  */
 export function clearAllNotifications() {
   return request({
-    url: '/admin/notifications/clear-all',
+    url: '/api/notice/clear-all',
     method: 'delete'
   });
 }

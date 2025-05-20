@@ -87,10 +87,7 @@ export const useMessageStore = defineStore('backMessage', () => {
   async function markAsRead(id) {
     try {
       // 发送WebSocket消息标记已读
-      sendMessage({
-        type: 'markMessageRead',
-        data: { id }
-      });
+      AdminWebSocketClient.sendMessage('markMessageRead', { id });
       
       // 更新本地数据
       const message = messages.value.find(m => m.id === id);

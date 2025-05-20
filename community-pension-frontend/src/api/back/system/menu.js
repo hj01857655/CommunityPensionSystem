@@ -32,5 +32,5 @@ export const treeselect = () => {
 
 // 根据角色ID查询菜单树结构
 export const roleMenuTreeselect = (roleId) => {
-    return axios.get('/api/system/role/menu/' + roleId);
+    return axios.get('/api/system/role/roleMenuTree/' + roleId);
 };

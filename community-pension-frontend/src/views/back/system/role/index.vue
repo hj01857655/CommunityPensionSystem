@@ -33,13 +33,13 @@
       </el-form-item>
       <el-form-item label="状态">
         <el-select
-            v-model="queryParams.isActive"
+            v-model="queryParams.status"
             clearable
             placeholder="角色状态"
             style="width: 200px"
         >
-          <el-option :value="1" label="正常"/>
-          <el-option :value="0" label="停用"/>
+          <el-option value="0" label="正常"/>
+          <el-option value="1" label="停用"/>
         </el-select>
       </el-form-item>
       <el-form-item label="创建时间">
@@ -163,9 +163,9 @@
           <el-input-number v-model="form.roleSort" :min="0" controls-position="right"/>
         </el-form-item>
         <el-form-item label="状态">
-          <el-radio-group v-model="form.isActive">
-            <el-radio :label="1">正常</el-radio>
-            <el-radio :label="0">停用</el-radio>
+          <el-radio-group v-model="form.status">
+            <el-radio :value="'0'" label="正常"/>
+            <el-radio :value="'1'" label="停用"/>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="菜单权限">
@@ -178,10 +178,10 @@
               ref="menuRef"
               :check-strictly="!form.menuCheckStrictly"
               :data="menuOptions"
-              :props="{ label: 'label', children: 'children' }"
+              :props="{ label: 'menuName', children: 'children' }"
               class="tree-border"
               empty-text="加载中，请稍候"
-              node-key="id"
+              node-key="menuId"
               show-checkbox
           ></el-tree>
         </el-form-item>
@@ -203,9 +203,10 @@
 import { treeselect as menuTreeselect, roleMenuTreeselect } from "@/api/back/system/menu";
 import { useRoleStore } from '@/stores/back/roleStore';
 import { formatDate } from '@/utils/date';
+import { handleTree } from '@/utils/tree';
 import { Key, User } from '@element-plus/icons-vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { onMounted, ref } from 'vue';
+import { nextTick, onMounted, ref } from 'vue';
 
 const roleStore = useRoleStore();
 
@@ -299,10 +300,21 @@ async function getList() {
 async function getMenuTreeselect() {
   try {
     const response = await menuTreeselect();
-    menuOptions.value = response.data;
+    console.log('菜单树数据:', response.data);
+    
+    // 处理菜单数据
+    let menus = Array.isArray(response.data) ? response.data : [];
+    // 转换为树形结构
+    if (menus.length > 0 && !menus.some(item => item.children && item.children.length > 0)) {
+      console.log('处理前的菜单数据:', menus);
+      menus = handleTree(menus, 'menuId', 'parentId', 'children');
+      console.log('处理后的树形结构:', menus);
+    }
+    menuOptions.value = menus;
   } catch (error) {
     console.error("获取菜单树失败:", error);
     ElMessage.error("获取菜单树失败");
+    menuOptions.value = []; // 确保有默认值
   }
 }
 
@@ -311,9 +323,35 @@ async function getRoleMenuTreeselect(roleId) {
   try {
     // 尝试获取角色菜单树
     const response = await roleMenuTreeselect(roleId);
-    menuOptions.value = response.menus;
+    console.log('角色菜单树数据:', response.data);
+    
+    // 处理菜单数据，使用handleTree转换为树形结构
+    let menus = Array.isArray(response.data.menus) ? response.data.menus : [];
+    // 如果menus已经是树形结构，则直接使用；否则使用handleTree转换
+    if (menus.length > 0 && !menus.some(item => item.children && item.children.length > 0)) {
+      console.log('转换前的菜单数据:', menus);
+      menus = handleTree(menus, 'menuId', 'parentId', 'children');
+      console.log('转换后的树形结构:', menus);
+    }
+    menuOptions.value = menus;
+    
+    // 确保checkedKeys存在且为数组
+    const checkedKeys = Array.isArray(response.data.checkedKeys) ? response.data.checkedKeys : [];
+    console.log('选中的菜单ID:', checkedKeys);
+    
+    // 只有在menuRef已初始化时才设置选中项
     if (menuRef.value) {
-      menuRef.value.setCheckedKeys(response.checkedKeys);
+      // 使用nextTick确保DOM更新后再设置选中项
+      nextTick(() => {
+        try {
+          menuRef.value.setCheckedKeys(checkedKeys);
+          console.log('已设置选中节点');
+        } catch (err) {
+          console.error('设置选中节点失败:', err);
+        }
+      });
+    } else {
+      console.warn('菜单树组件未初始化');
     }
   } catch (error) {
     // 如果获取角色菜单树失败，则获取普通菜单树
@@ -323,11 +361,28 @@ async function getRoleMenuTreeselect(roleId) {
     try {
       // 获取普通菜单树作为备选
       const response = await menuTreeselect();
-      menuOptions.value = response.data;
-      // 不设置选中项
+      let menus = Array.isArray(response.data) ? response.data : [];
+      // 转换为树形结构
+      if (menus.length > 0 && !menus.some(item => item.children && item.children.length > 0)) {
+        menus = handleTree(menus, 'menuId', 'parentId', 'children');
+      }
+      menuOptions.value = menus;
+      console.log('备选菜单树:', menuOptions.value);
+      
+      // 清空选中项
+      if (menuRef.value) {
+        nextTick(() => {
+          try {
+            menuRef.value.setCheckedKeys([]);
+          } catch (err) {
+            console.error('清空选中节点失败:', err);
+          }
+        });
+      }
     } catch (innerError) {
       console.error("获取菜单树失败:", innerError);
       ElMessage.error("获取菜单树失败");
+      menuOptions.value = []; // 确保menuOptions始终有值
     }
   }
 }
@@ -347,7 +402,15 @@ function handleCheckedTreeExpand(value, type) {
   if (type == "menu") {
     const treeList = menuOptions.value;
     for (let i = 0; i < treeList.length; i++) {
-      menuRef.value.store.nodesMap[treeList[i].id].expanded = value;
+      try {
+        // 使用menuId作为节点的key
+        const nodeKey = treeList[i].menuId;
+        if (menuRef.value.store.nodesMap[nodeKey]) {
+          menuRef.value.store.nodesMap[nodeKey].expanded = value;
+        }
+      } catch (err) {
+        console.error('展开/折叠节点失败:', err);
+      }
     }
   }
 }
@@ -355,7 +418,13 @@ function handleCheckedTreeExpand(value, type) {
 /** 树权限（全选/全不选） */
 function handleCheckedTreeNodeAll(value, type) {
   if (type == "menu") {
-    menuRef.value.setCheckedNodes(value ? menuOptions.value : []);
+    try {
+      if (menuRef.value) {
+        menuRef.value.setCheckedNodes(value ? menuOptions.value : []);
+      }
+    } catch (err) {
+      console.error('全选/全不选操作失败:', err);
+    }
   }
 }
 
@@ -397,15 +466,27 @@ async function handleUpdate(row) {
   reset();
   const roleId = row.roleId || ids.value[0];
   try {
+    // 先获取角色基本信息
     const response = await roleStore.fetchRoleInfo(roleId);
     form.value = response.data;
     
     // 将后端返回的status字符串转换为前端表单需要的isActive数值
     form.value.isActive = form.value.status === "0" ? 1 : 0;
     
-    await getRoleMenuTreeselect(roleId);
+    // 先打开对话框，确保DOM渲染完成
     open.value = true;
     title.value = "修改角色";
+    
+    // 使用nextTick确保对话框中的树组件已经渲染
+    nextTick(async () => {
+      try {
+        // 对话框打开后再获取菜单树数据
+        await getRoleMenuTreeselect(roleId);
+      } catch (err) {
+        console.error("加载菜单树失败:", err);
+        ElMessage.warning("加载菜单权限失败，请关闭对话框重试");
+      }
+    });
   } catch (error) {
     console.error("获取角色信息失败:", error);
     ElMessage.error("获取角色信息失败");
@@ -415,9 +496,19 @@ async function handleUpdate(row) {
 /** 新增按钮操作 */
 async function handleAdd() {
   reset();
-  await getMenuTreeselect();
+  // 先打开对话框
   open.value = true;
   title.value = "添加角色";
+  
+  // 使用nextTick确保对话框中的树组件已经渲染
+  nextTick(async () => {
+    try {
+      await getMenuTreeselect();
+    } catch (err) {
+      console.error("加载菜单树失败:", err);
+      ElMessage.warning("加载菜单权限失败，请关闭对话框重试");
+    }
+  });
 }
 
 /** 删除按钮操作 */
@@ -521,7 +612,8 @@ function reset() {
     roleName: undefined,
     roleKey: undefined,
     roleSort: 0,
-    isActive: 1,
+    status: '0',
+    dataScope: '1',
     menuCheckStrictly: true,
     menuIds: [],
     remark: undefined

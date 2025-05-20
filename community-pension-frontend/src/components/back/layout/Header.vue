@@ -223,6 +223,8 @@
 <script setup>
 import {computed, onMounted, ref, watch} from 'vue';
 import {useRouter} from 'vue-router';
+import {useNotificationStore} from '@/stores/back/notificationStore';
+import {useMessageStore} from '@/stores/back/messageStore';
 import {useAdminStore} from '@/stores/back/adminStore';
 import Breadcrumb from './Breadcrumb.vue';
 import {ElMessage, ElMessageBox} from 'element-plus';
@@ -270,23 +272,17 @@ function formatDateTime(date) {
   return `${year}-${month}-${day} ${hours}:${minutes}:${seconds} ${weekDay}`;
 }
 
-// 通知中心数据
-const unreadNotifications = ref([
-  {id: 1, title: '健康异常提醒', content: '张三老人的健康监测设备报告了异常心率数据，请尽快查看。', time: '10分钟前'},
-  {id: 2, title: '服务请求更新', content: '李四老人提交了新的服务请求：日常护理，等待处理。', time: '1小时前'},
-  {id: 3, title: '活动报名通知', content: '社区活动“健康讲座”已有15人报名，活动将于明天上午9点开始。', time: '昨天'}
-]);
-const unreadNotificationsCount = computed(() => unreadNotifications.value.length);
+// 使用通知中心和消息中心的Store
+const notificationStore = useNotificationStore();
+const messageStore = useMessageStore();
 
-// 消息中心数据
-const unreadMessages = ref([
-  {id: 1, sender: '张三 (家属)', avatar: '', content: '您好，我想了解一下我母亲的情况。', time: '5分钟前'},
-  {id: 2, sender: '李四 (护理员)', avatar: '', content: '今天下午有空吗？需要协调一下护理安排。', time: '30分钟前'},
-  {id: 3, sender: '王五 (管理员)', avatar: '', content: '系统更新已完成，可以测试新功能了。', time: '2小时前'},
-  {id: 4, sender: '社区活动通知', avatar: '', content: '健康讲座活动明天开始，别忘了参加！', time: '1天前'},
-  {id: 5, sender: '系统消息', avatar: '', content: '您的密码将在7天后过期，请及时更新。', time: '3天前'}
-]);
-const unreadMessagesCount = computed(() => unreadMessages.value.length);
+// 获取通知中心数据
+const unreadNotifications = computed(() => notificationStore.notifications.filter(notification => !notification.read));
+const unreadNotificationsCount = computed(() => notificationStore.unreadCount);
+
+// 获取消息中心数据
+const unreadMessages = computed(() => messageStore.messages.filter(message => !message.read));
+const unreadMessagesCount = computed(() => messageStore.unreadCount);
 
 const toggleSidebar = () => {
   emit('toggle-sidebar');
@@ -303,42 +299,66 @@ const performSearch = () => {
 
 // 通知中心功能
 const handleNotificationCommand = (command) => {
-  if (command === 'view-all-notifications') {
-    // 注意：需要在路由配置中添加 /admin/notifications 路由
-    router.push({path: '/admin/notifications'});
-  } else if (command.startsWith('view-')) {
-    const id = command.split('-')[1];
-    ElMessage.info(`查看通知 ID: ${id}`);
-    // 注意：需要在路由配置中添加 /admin/notifications/:id 路由
-    router.push({path: `/admin/notifications/${id}`});
-  } else if (command === 'mark-all-read') {
-    markAllNotificationsRead();
+  // 先检查是否是查看全部通知的命令
+  if (command === 'all' || command === 'view-all-notifications') {
+    router.push('/admin/notifications');
+    return;
+  }
+  
+  // 处理查看单条通知的命令
+  if (command.startsWith('view-')) {
+    // 提取ID部分，忽略 'view-' 前缀
+    const parts = command.split('-');
+    // 如果是 view-123 格式，那么ID在索引位置1
+    // 如果是 view-notification-123 格式，那么ID在索引位置2
+    const idStr = parts.length > 2 ? parts[2] : parts[1];
+    const id = parseInt(idStr);
+    
+    // 确保 id 是有效数字
+    if (!isNaN(id)) {
+      notificationStore.markAsRead(id);
+      // 跳转到通知详情页
+      router.push(`/admin/notifications/${id}`);
+    } else {
+      console.error('无效的通知 ID:', idStr);
+    }
   }
 };
 
 const markAllNotificationsRead = () => {
-  unreadNotifications.value = [];
-  ElMessage.success('所有通知已标记为已读');
+  notificationStore.markAllAsRead();
 };
 
 // 消息中心功能
 const handleMessageCommand = (command) => {
-  if (command === 'view-all-messages') {
-    // 注意：需要在路由配置中添加 /admin/messages 路由
-    router.push({path: '/admin/messages'});
-  } else if (command.startsWith('view-msg-')) {
-    const id = command.split('-')[2];
-    ElMessage.info(`查看消息 ID: ${id}`);
-    // 注意：需要在路由配置中添加 /admin/messages/:id 路由
-    router.push({path: `/admin/messages/${id}`});
-  } else if (command === 'mark-all-messages-read') {
-    markAllMessagesRead();
+  // 先检查是否是查看全部消息的命令
+  if (command === 'all' || command === 'view-all-messages') {
+    router.push('/admin/messages');
+    return;
+  }
+  
+  // 处理查看单条消息的命令
+  if (command.startsWith('view-')) {
+    // 提取ID部分，忽略 'view-' 前缀
+    const parts = command.split('-');
+    // 如果是 view-123 格式，那么ID在索引位置1
+    // 如果是 view-msg-123 格式，那么ID在索引位置2
+    const idStr = parts.length > 2 ? parts[2] : parts[1];
+    const id = parseInt(idStr);
+    
+    // 确保 id 是有效数字
+    if (!isNaN(id)) {
+      messageStore.markAsRead(id);
+      // 跳转到消息详情页
+      router.push(`/admin/messages/${id}`);
+    } else {
+      console.error('无效的消息 ID:', idStr);
+    }
   }
 };
 
 const markAllMessagesRead = () => {
-  unreadMessages.value = [];
-  ElMessage.success('所有消息已标记为已读');
+  messageStore.markAllAsRead();
 };
 
 // 主题切换
@@ -526,6 +546,10 @@ const resetSettings = () => {
 onMounted(() => {
   // 初始化主题
   document.documentElement.setAttribute('data-theme', currentTheme.value);
+  
+  // 初始化通知和消息数据
+  notificationStore.fetchNotifications();
+  messageStore.fetchMessages();
   document.documentElement.style.setProperty('--el-color-primary', currentPrimaryColor.value);
   
   // 应用Element Plus暗黑模式
