@@ -836,7 +836,7 @@ function showEmergencyAlert(message) {
       // 停止警报声
       stopAlertSound();
       // 跳转到后台首页，因为当前没有专门的紧急呼叫管理页面
-      window.location.href = '/back';
+      window.location.href = '/admin/home';
       // 移除弹窗
       document.body.removeChild(alertDiv);
   });
