@@ -331,11 +331,11 @@ public class AuthController {
         response.put("refreshToken", tokenPair.refreshToken());
 
         // 6. 使用UserConverter将User转换为UserVO，并设置角色信息
-        UserVO userVO = userConverter.toUserVOWithRoles(
+        UserVO userVO = userConverter.toUserVOWithRole(
             user,
-            userService.getUserRoles(user.getUserId()),
-            userService.getUserRoleIds(user.getUserId()),
-            userService.getUserRoleNames(user.getUserId())
+            userService.getUserRole(user.getUserId(), roleId),
+            roleId,
+            userService.getUserRoleName(user.getUserId(), roleId)
         );
         response.put("user", userVO);
 
