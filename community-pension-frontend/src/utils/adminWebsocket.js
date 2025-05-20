@@ -831,13 +831,6 @@ function showEmergencyAlert(message) {
       document.body.removeChild(alertDiv);
   });
   
-  // 添加播放警报声按钮的事件处理
-  const playSoundBtn = alertDiv.querySelector('.play-sound-btn');
-  playSoundBtn.addEventListener('click', function() {
-      // 用户交互触发的音频播放
-      playAlertSoundWithUserGesture();
-  });
-  
   const handleBtn = alertDiv.querySelector('.handle-btn');
   handleBtn.addEventListener('click', function() {
       // 停止警报声
@@ -847,6 +840,9 @@ function showEmergencyAlert(message) {
       // 移除弹窗
       document.body.removeChild(alertDiv);
   });
+  
+  // 尝试自动播放警报声
+  playAlertSound();
 }
 
 /**
