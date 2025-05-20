@@ -7,7 +7,7 @@
       </el-form-item>
       <el-form-item label="状态" prop="status">
         <el-select v-model="queryParams.status" clearable placeholder="菜单状态" style="width: 200px">
-          <el-option v-for="dict in dict.type.sys_normal_disable" :key="dict.value" :label="dict.label"
+          <el-option v-for="dict in dict.type.normal_disable" :key="dict.value" :label="dict.label"
                      :value="dict.value"/>
         </el-select>
       </el-form-item>
@@ -236,7 +236,7 @@ import {formatDate} from '@/utils/date';
 // 状态数据字典
 const dict = reactive({
   type: {
-    sys_normal_disable: [
+    normal_disable: [
       {value: "0", label: "正常"},
       {value: "1", label: "停用"}
     ],

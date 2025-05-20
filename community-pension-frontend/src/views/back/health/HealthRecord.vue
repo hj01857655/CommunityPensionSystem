@@ -682,22 +682,64 @@ const submitForm = () => {
     if (valid) {
       // 计算BMI
       calculateBMI();
+      
+      // 创建一个新对象，严格按照后端DTO的字段结构
+      // 注意: 不包含 elderName, elderAge, elderGender 等前端显示字段
+      const submitData = {
+        id: form.value.id,
+        elderId: form.value.elderId,
+        bloodPressure: form.value.bloodPressure,
+        heartRate: form.value.heartRate,
+        bloodSugar: form.value.bloodSugar,
+        temperature: form.value.temperature,
+        weight: form.value.weight,
+        height: form.value.height,
+        bmi: form.value.bmi,
+        medicalHistory: form.value.medicalHistory,
+        allergy: form.value.allergy,
+        symptoms: form.value.symptoms,
+        symptomsRecordTime: form.value.symptomsRecordTime,
+        medication: form.value.medication,
+        recordTime: form.value.recordTime,
+        recorderId: form.value.recorderId,
+        recordType: form.value.recordType,
+        remarks: form.value.remarks
+      };
+
+      // 移除值为undefined或null的字段
+      Object.keys(submitData).forEach(key => {
+        if (submitData[key] === undefined || submitData[key] === null) {
+          delete submitData[key];
+        }
+      });
+      
+      // 确保 elderId 存在且非空
+      if (!submitData.elderId) {
+        ElMessage.warning("请选择老人");
+        return;
+      }
+
+      console.log('提交的健康记录数据:', submitData);
 
       if (form.value.id) {
-        healthRecordStore.updateRecord(form.value).then(res => {
+        healthRecordStore.updateRecord(submitData).then(res => {
           ElMessage.success("修改成功");
           open.value = false;
           getList();
         }).catch(err => {
-          ElMessage.error("修改失败：" + (err.message || '未知错误'));
+          const errorMsg = err.response?.data?.message || err.message || '未知错误';
+          ElMessage.error("修改失败：" + errorMsg);
+          console.error("修改健康记录失败:", err);
         });
       } else {
-        healthRecordStore.addRecord(form.value).then(res => {
+        healthRecordStore.addRecord(submitData).then(res => {
           ElMessage.success("新增成功");
           open.value = false;
           getList();
         }).catch(err => {
-          ElMessage.error("新增失败：" + (err.message || '未知错误'));
+          const errorMsg = err.response?.data?.message || err.message || '未知错误';
+          ElMessage.error("新增失败：" + errorMsg);
+          console.error("新增健康记录失败:", err);
         });
       }
     }
@@ -800,21 +842,28 @@ const handleElderChange = (elderId) => {
 /** 获取老人列表 */
 const getElderList = async () => {
   try {
-    // 使用正确的参数调用getUserList
+    // 使用正确的参数调用getUserList，添加角色过滤条件
     const res = await getUserList({
       current: 1,
       size: 100, // 获取足够多的记录以确保所有老人都被加载
-      // 可以添加其他过滤条件，如果有特定字段标识老人角色
+      role: 'elder', // 只获取角色为老人的用户
+      roleId: 1     // 老人角色ID为1
     });
+    console.log('老人列表数据:', res);
 
     // 确保返回的数据格式正确
     if (res.data && res.data.records) {
-      elderOptions.value = res.data.records.map(user => ({
+      // 过滤出角色为老人的用户
+      const elders = res.data.records.filter(user => user.role === 'elder' || user.roleId === 1);
+      
+      elderOptions.value = elders.map(user => ({
         userId: user.userId || '',
         name: user.name || '', // 优先使用name字段，而不是username
         age: user.age || '',
         gender: user.gender || ''
       }));
+      
+      console.log('过滤后的老人列表:', elderOptions.value);
     } else {
       elderOptions.value = [];
       console.warn('获取老人列表返回的数据格式不正确');

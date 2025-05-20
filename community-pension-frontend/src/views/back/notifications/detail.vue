@@ -44,9 +44,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { onMounted, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
 const route = useRoute()
 const router = useRouter()
@@ -102,7 +102,7 @@ const markAsRead = async () => {
 
 // 返回列表
 const goBack = () => {
-  router.push('/back/notifications')
+  router.push('/admin/notifications')
 }
 
 onMounted(() => {

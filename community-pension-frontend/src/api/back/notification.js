@@ -35,8 +35,8 @@ export function getNotificationDetail(id) {
  */
 export function markNotificationAsRead(id) {
   return request({
-    url: `/api/notice/read/${id}`,
-    method: 'put'
+    url: `/api/notice/mark-read/${id}`,
+    method: 'post'
   });
 }
 
@@ -46,8 +46,8 @@ export function markNotificationAsRead(id) {
  */
 export function markAllNotificationsAsRead() {
   return request({
-    url: '/api/notice/read-all',
-    method: 'put'
+    url: '/api/notice/mark-read-all',
+    method: 'get'
   });
 }
 

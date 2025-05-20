@@ -109,12 +109,12 @@
       <el-table-column label="显示顺序" prop="roleSort" width="100"/>
       <el-table-column align="center" label="状态" width="100">
         <template #default="scope">
-          <el-switch
-              v-model="scope.row.isActive"
-              :active-value="1"
-              :inactive-value="0"
-              @change="handleStatusChange(scope.row)"
-          ></el-switch>
+          <el-tag
+            :type="scope.row.status === '0' ? 'success' : 'danger'"
+            :effect="scope.row.status === '0' ? 'light' : 'plain'"
+          >
+            {{ normal_disable.find(dict => dict.value === scope.row.status)?.label || (scope.row.status === '0' ? '正常' : '停用') }}
+          </el-tag>
         </template>
       </el-table-column>
       <el-table-column align="center" label="创建时间" prop="createTime" width="180">
@@ -129,6 +129,13 @@
                 icon="Edit"
                 link
                 @click="handleUpdate(scope.row)"
+            ></el-button>
+          </el-tooltip>
+          <el-tooltip :content="scope.row.status === '0' ? '停用' : '启用'" placement="top">
+            <el-button
+                :icon="scope.row.status === '0' ? 'VideoPause' : 'VideoPlay'"
+                link
+                @click="handleStatusChange(scope.row)"
             ></el-button>
           </el-tooltip>
           <el-tooltip content="删除" placement="top">
@@ -164,8 +171,12 @@
         </el-form-item>
         <el-form-item label="状态">
           <el-radio-group v-model="form.status">
-            <el-radio :value="'0'" label="正常"/>
-            <el-radio :value="'1'" label="停用"/>
+            <el-radio 
+              v-for="dict in normal_disable" 
+              :key="dict.value" 
+              :value="dict.value" 
+              :label="dict.label"
+            />
           </el-radio-group>
         </el-form-item>
         <el-form-item label="菜单权限">
@@ -204,11 +215,15 @@ import { treeselect as menuTreeselect, roleMenuTreeselect } from "@/api/back/sys
 import { useRoleStore } from '@/stores/back/roleStore';
 import { formatDate } from '@/utils/date';
 import { handleTree } from '@/utils/tree';
+import { useDict } from '@/utils/dict';
 import { Key, User } from '@element-plus/icons-vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { nextTick, onMounted, ref } from 'vue';
 
 const roleStore = useRoleStore();
+
+// 获取字典数据
+const { normal_disable } = useDict('normal_disable');
 
 // 遮罩层
 const loading = ref(false);
@@ -400,17 +415,41 @@ const defaultProps = {
 /** 树权限（展开/折叠）*/
 function handleCheckedTreeExpand(value, type) {
   if (type == "menu") {
-    const treeList = menuOptions.value;
-    for (let i = 0; i < treeList.length; i++) {
-      try {
-        // 使用menuId作为节点的key
-        const nodeKey = treeList[i].menuId;
-        if (menuRef.value.store.nodesMap[nodeKey]) {
-          menuRef.value.store.nodesMap[nodeKey].expanded = value;
-        }
-      } catch (err) {
-        console.error('展开/折叠节点失败:', err);
+    try {
+      if (!menuRef.value) {
+        console.warn('菜单树组件未初始化，无法展开/折叠');
+        return;
       }
+      
+      // 递归展开或折叠节点及其子节点
+      function expandNodes(nodes, expandValue, level = 1, maxLevel = -1) {
+        if (!nodes || !Array.isArray(nodes)) return;
+        
+        for (const node of nodes) {
+          // 获取节点ID
+          const nodeKey = node.menuId;
+          
+          if (nodeKey && menuRef.value.store.nodesMap[nodeKey]) {
+            // 如果maxLevel为-1或当前级别小于等于maxLevel，则设置展开状态
+            if (maxLevel === -1 || level <= maxLevel) {
+              menuRef.value.store.nodesMap[nodeKey].expanded = expandValue;
+            }
+          }
+          
+          // 如果有子节点，递归处理
+          if (node.children && node.children.length > 0) {
+            expandNodes(node.children, expandValue, level + 1, maxLevel);
+          }
+        }
+      }
+      
+      // 默认展开所有层级
+      const maxLevel = -1; // -1 表示展开所有层级，1 表示只展开第一级，2 表示展开两级...
+      expandNodes(menuOptions.value, value, 1, maxLevel);
+      
+      console.log(value ? '已展开所有节点' : '已折叠所有节点');
+    } catch (err) {
+      console.error('展开/折叠节点失败:', err);
     }
   }
 }
@@ -538,12 +577,17 @@ function handleExport() {
 
 /** 状态修改 */
 async function handleStatusChange(row) {
-  let text = row.isActive === 1 ? "停用" : "启用";
+  // 如果当前状态是0（正常），则变更为1（停用），反之亦然
+  const newStatus = row.status === '0' ? '1' : '0';
+  const text = newStatus === '0' ? '启用' : '停用';
+  
   try {
     await roleStore.updateRoleStatus({
       roleId: row.roleId,
-      status: row.isActive === 1 ? "1" : "0" // 将isActive的值转换为status期望的格式
+      status: newStatus
     });
+    // 更新成功后，更新本地数据
+    row.status = newStatus;
     ElMessage.success(text + "成功");
   } catch (error) {
     console.error(`${text}角色失败:`, error);
