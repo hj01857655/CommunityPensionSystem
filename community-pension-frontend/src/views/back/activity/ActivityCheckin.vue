@@ -336,7 +336,7 @@
 
 </template>
 
-<script setup lang="ts">
+<script setup>
 import RightToolbar from '@/components/common/base/RightToolbar/index.vue'
 import Pagination from '@/components/common/table/Pagination.vue'
 import { useCheckinStore } from '@/stores/back/checkinStore'
@@ -344,19 +344,6 @@ import { Bell, Check, Download, Edit, More, Plus, Refresh, Search, Setting } fro
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { debounce } from 'lodash-es'
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
-
-interface CheckinRecord {
-  id: string | number;
-  activityTitle: string;
-  activityId: number;
-  elderName: string;
-  elderPhone?: string;
-  signInTime: string;
-  signOutTime?: string;
-  remarks?: string;
-  isProxyCheckIn?: boolean;
-  [key: string]: any;
-}
 
 // 确保在使用之前定义所有变量
 const queryRef = ref()
@@ -375,32 +362,20 @@ const activityOptions = computed(() => checkinStore.activityOptions)
 const elderOptions = computed(() => checkinStore.elderOptions)
 
 // 参考数据
-const selectedRows = ref<CheckinRecord[]>([])
-const date = ref<Date | null>(null)
+const selectedRows = ref([])
+const date = ref(null)
 const addDialogVisible = ref(false)
 const remarkDialogVisible = ref(false)
 
 // 控制搜索区域显示
 const showSearch = ref(false)
 
-// 列配置
-interface Column {
-  key: number;
-  label: string;
-  visible: boolean;
-  prop?: string;
-  width?: number;
-  minWidth?: number;
-  sortable?: boolean;
-  fixed?: 'left' | 'right' | boolean;
-}
-
 // 自动刷新
 const autoRefresh = ref(false)
-let refreshInterval: any = null
+let refreshInterval = null
 
 // 切换自动刷新
-const toggleAutoRefresh = (val: boolean) => {
+const toggleAutoRefresh = (val) => {
   if (val) {
     // 开启自动刷新，每30秒刷新一次
     refreshInterval = setInterval(() => {
@@ -470,7 +445,7 @@ const checkinStats = computed(() => {
 
 
 // 列显示控制
-const columns = ref<Column[]>([
+const columns = ref([
   { key: 0, label: '选择', prop: 'selection', visible: true, width: 50, fixed: true },
   { key: 1, label: '活动名称', prop: 'activityTitle', visible: true, minWidth: 200, sortable: true },
   { key: 2, label: '参与人', prop: 'elderName', visible: true, width: 120 },
@@ -504,14 +479,14 @@ const restoreColumnWidths = () => {
 }
 
 // 处理列显示/隐藏
-const handleColumnCommand = (index: number) => {
+const handleColumnCommand = (index) => {
   const col = columns.value[index]
   col.visible = !col.visible
   saveColumnWidths()
 }
 
 // 处理列宽调整
-const handleColumnResize = (newWidth: number, column: Column) => {
+const handleColumnResize = (newWidth, column) => {
   column.width = newWidth
   saveColumnWidths()
 }
@@ -571,7 +546,7 @@ const handleQuery = () => {
 const debouncedHandleQuery = debounce(handleQuery, 300)
 
 // 处理活动选择变化
-const handleActivityChange = (val: number | null) => {
+const handleActivityChange = (val) => {
   if (val) {
     // 活动选择后自动触发搜索
     debouncedHandleQuery()
@@ -711,7 +686,7 @@ const handleStatusChange = (val) => {
 }
 
 // 计算停留时间（分钟）
-const calculateStayTimeInMinutes = (signInTime: string, signOutTime: string): number => {
+const calculateStayTimeInMinutes = (signInTime, signOutTime) => {
   if (!signInTime || !signOutTime) return 0
 
   const signIn = new Date(signInTime).getTime()
@@ -725,7 +700,7 @@ const calculateStayTimeInMinutes = (signInTime: string, signOutTime: string): nu
 }
 
 // 计算停留时间（格式化显示）
-const calculateStayTime = (signInTime: string, signOutTime: string): string => {
+const calculateStayTime = (signInTime, signOutTime) => {
   const minutes = calculateStayTimeInMinutes(signInTime, signOutTime)
 
   if (minutes <= 0) return '无效时间'
