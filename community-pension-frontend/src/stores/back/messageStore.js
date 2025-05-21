@@ -31,7 +31,7 @@ export const useMessageStore = defineStore('backMessage', () => {
     try {
       loading.value = true;
       const { current = pagination.value.current, size = pagination.value.size, type = 'all' } = params;
-      
+
       // 从WebSocket获取消息，这里我们模拟一些数据
       // 实际应用中，可能需要发送一个特定的消息类型到服务器，请求消息列表
       const mockMessages = Array.from({ length: 15 }, (_, index) => ({
@@ -42,17 +42,17 @@ export const useMessageStore = defineStore('backMessage', () => {
         time: new Date(Date.now() - index * 86400000).toLocaleString(),
         read: type === 'read' ? true : (type === 'unread' ? false : (index % 2 === 0))
       }));
-      
+
       messages.value = mockMessages;
       pagination.value = {
         current,
         size,
         total: 50 // 模拟总数
       };
-      
+
       // 计算未读消息数量
       unreadCount.value = messages.value.filter(m => !m.read).length;
-      
+
       return { data: { records: mockMessages, current, size, total: 50 } };
     } catch (error) {
       ElMessage.error(`获取消息列表失败: ${error.message}`);
@@ -61,7 +61,7 @@ export const useMessageStore = defineStore('backMessage', () => {
       loading.value = false;
     }
   }
-  
+
   /**
    * 添加消息
    * @param {Object} message 消息对象
@@ -71,7 +71,7 @@ export const useMessageStore = defineStore('backMessage', () => {
     if (!message.read) {
       unreadCount.value++;
     }
-    
+
     // 显示消息通知
     ElMessage({
       type: 'info',
@@ -88,14 +88,14 @@ export const useMessageStore = defineStore('backMessage', () => {
     try {
       // 发送WebSocket消息标记已读
       AdminWebSocketClient.sendMessage('markMessageRead', { id });
-      
+
       // 更新本地数据
       const message = messages.value.find(m => m.id === id);
       if (message && !message.read) {
         message.read = true;
         unreadCount.value = Math.max(0, unreadCount.value - 1);
       }
-      
+
       ElMessage.success('已标记为已读');
       return true;
     } catch (error) {
@@ -110,11 +110,8 @@ export const useMessageStore = defineStore('backMessage', () => {
   async function markAllAsRead() {
     try {
       // 发送WebSocket消息标记所有已读
-      sendMessage({
-        type: 'markAllMessagesRead',
-        data: {}
-      });
-      
+      AdminWebSocketClient.sendMessage('markAllMessagesRead', {});
+
       // 更新本地数据
       messages.value.forEach(m => {
         if (!m.read) {
@@ -122,7 +119,7 @@ export const useMessageStore = defineStore('backMessage', () => {
         }
       });
       unreadCount.value = 0;
-      
+
       ElMessage.success('所有消息已标记为已读');
       return true;
     } catch (error) {
@@ -138,7 +135,7 @@ export const useMessageStore = defineStore('backMessage', () => {
   async function sendUserMessage(message) {
     try {
       AdminWebSocketClient.sendMessage('chatMessage', message);
-      
+
       ElMessage.success('消息已发送');
       return true;
     } catch (error) {
@@ -154,11 +151,11 @@ export const useMessageStore = defineStore('backMessage', () => {
     try {
       // 发送WebSocket消息清空所有消息
       AdminWebSocketClient.sendMessage('clearAllMessages', {});
-      
+
       // 更新本地数据
       messages.value = [];
       unreadCount.value = 0;
-      
+
       ElMessage.success('所有消息已清除');
       return true;
     } catch (error) {
