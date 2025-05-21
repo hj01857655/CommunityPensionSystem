@@ -183,9 +183,9 @@ const routes = [
                         meta: {title: '活动管理', icon: 'calendar', requiresAuth: true, roles: ['admin', 'staff']} // 管理员发布和管理活动的页面
                     },
                     {
-                        path: 'participate',
-                        name: 'ActivityParticipate',
-                        component: () => import('@/views/back/activity/ActivityParticipate.vue'),
+                        path: 'registration',
+                        name: 'ActivityRegistration',
+                        component: () => import('@/views/back/activity/ActivityRegistration.vue'),
                         meta: {title: '活动报名管理', icon: 'calendar', requiresAuth: true, roles: ['admin', 'staff']} // 管理活动报名记录的页面
                     },
                     {

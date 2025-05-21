@@ -150,7 +150,7 @@
             <span>活动管理</span>
           </template>
         </el-menu-item>
-        <el-menu-item index="/admin/activity/participate">
+        <el-menu-item index="/admin/activity/registration">
           <template #title>
             <el-icon>
               <Calendar />

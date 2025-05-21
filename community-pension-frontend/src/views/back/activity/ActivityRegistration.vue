@@ -45,7 +45,7 @@
       <el-col :span="1.5">
         <el-button type="warning" plain :icon="Download" @click="handleExport">导出</el-button>
       </el-col>
-      <right-toolbar v-model:showSearch="showSearch" @queryTable="getList" :columns="columns"></right-toolbar>
+      <right-toolbar v-model:showSearch="showSearch" @queryTable="(params) => getList(params)" :columns="columns"></right-toolbar>
     </el-row>
 
     <!-- 报名记录列表 -->
@@ -121,7 +121,7 @@
       :total="total"
       :page="queryParams.pageNum"
       :limit="queryParams.pageSize"
-      @pagination="getList"
+      @pagination="(params) => getList(params)"
     />
 
     <!-- 审核对话框 -->
@@ -343,7 +343,7 @@ const getList = (params) => {
 // 搜索按钮操作
 const handleQuery = () => {
   queryParams.pageNum = 1
-  getList()
+  getList(null)
 }
 
 // 重置按钮操作
@@ -381,7 +381,7 @@ const handleAddSubmit = () => {
       participateStore.add(addForm).then(response => {
         ElMessage.success('新增报名成功')
         addDialogVisible.value = false
-        getList()
+        getList(null)
       }).catch(error => {
         ElMessage.error('新增报名失败：' + error.message)
       })
@@ -433,7 +433,7 @@ const handleAuditSubmit = () => {
       }).then(response => {
         ElMessage.success('审核提交成功')
         auditDialogVisible.value = false
-        getList()
+        getList(null)
       }).catch(error => {
         ElMessage.error('审核提交失败：' + error.message)
       })
@@ -472,7 +472,7 @@ const handleCheckin = (row) => {
       // 调用store进行签到操作，传入用户ID
       participateStore.checkin(row.id, userInfo.userId).then(response => {
         ElMessage.success('签到成功')
-        getList()
+        getList(null)
       }).catch(error => {
         ElMessage.error('签到失败：' + error.message)
       })
@@ -492,7 +492,7 @@ const handleCancel = (row) => {
     // 调用store取消报名
     participateStore.cancel(row.id).then(response => {
       ElMessage.success('取消报名成功')
-      getList()
+      getList(null)
     }).catch(error => {
       ElMessage.error('取消报名失败：' + error.message)
     })
@@ -515,7 +515,7 @@ const handleViewDetail = (row) => {
 onMounted(() => {
   participateStore.getActivityOptions()
   participateStore.getElderOptions()
-  getList()
+  getList(null)
 })
 </script>
 

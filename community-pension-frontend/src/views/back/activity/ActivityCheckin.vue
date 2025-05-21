@@ -337,14 +337,26 @@
 </template>
 
 <script setup lang="ts">
-import { Search, Refresh, Download, Plus, Bell, Setting, Check, Edit, More } from '@element-plus/icons-vue'
 import RightToolbar from '@/components/common/base/RightToolbar/index.vue'
 import Pagination from '@/components/common/table/Pagination.vue'
 import { useCheckinStore } from '@/stores/back/checkinStore'
+import { Bell, Check, Download, Edit, More, Plus, Refresh, Search, Setting } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { computed, onMounted, onUnmounted, reactive, ref, watch, watchEffect } from 'vue'
 import { debounce } from 'lodash-es'
-import type { CheckinRecord } from '@/types/checkin'
+import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
+
+interface CheckinRecord {
+  id: string | number;
+  activityTitle: string;
+  activityId: number;
+  elderName: string;
+  elderPhone?: string;
+  signInTime: string;
+  signOutTime?: string;
+  remarks?: string;
+  isProxyCheckIn?: boolean;
+  [key: string]: any;
+}
 
 // 确保在使用之前定义所有变量
 const queryRef = ref()
@@ -373,14 +385,14 @@ const showSearch = ref(false)
 
 // 列配置
 interface Column {
-  key: number
-  label: string
-  visible: boolean
-  prop?: string
-  width?: number
-  minWidth?: number
-  sortable?: boolean
-  fixed?: boolean
+  key: number;
+  label: string;
+  visible: boolean;
+  prop?: string;
+  width?: number;
+  minWidth?: number;
+  sortable?: boolean;
+  fixed?: 'left' | 'right' | boolean;
 }
 
 // 自动刷新
@@ -410,7 +422,7 @@ const toggleAutoRefresh = (val: boolean) => {
 // 刷新数据
 const refreshData = () => {
   if (queryParams.value.activityId) {
-    getList()
+    getList({}) // 传入空对象作为参数
   }
 }
 
@@ -422,8 +434,6 @@ watch(date, (newVal) => {
     handleQuery()
   }
 })
-
-
 
 // 签到统计数据
 const checkinStats = computed(() => {
@@ -461,13 +471,13 @@ const checkinStats = computed(() => {
 
 // 列显示控制
 const columns = ref<Column[]>([
-  { key: 0, label: '选择', prop: 'selection', visible: true, width: 50, fixed: 'left' },
+  { key: 0, label: '选择', prop: 'selection', visible: true, width: 50, fixed: true },
   { key: 1, label: '活动名称', prop: 'activityTitle', visible: true, minWidth: 200, sortable: true },
   { key: 2, label: '参与人', prop: 'elderName', visible: true, width: 120 },
   { key: 3, label: '签到时间', prop: 'signInTime', visible: true, width: 180, sortable: true },
   { key: 4, label: '签退时间', prop: 'signOutTime', visible: true, width: 180, sortable: true },
   { key: 5, label: '备注', prop: 'remarks', visible: true, minWidth: 150 },
-  { key: 6, label: '操作', visible: true, width: 180, fixed: 'right' }
+  { key: 6, label: '操作', visible: true, width: 180, fixed: true }
 ])
 
 // 保存列宽设置
@@ -554,7 +564,7 @@ const handleQuery = () => {
     return
   }
   queryParams.value.pageNum = 1
-  getList()
+  getList({}) // 传入空对象作为参数
 }
 
 // 防抖的活动查询
@@ -676,7 +686,7 @@ const handleRemarkSubmit = () => {
       // 或者使用通用的更新API
       ElMessage.success('备注添加成功')
       remarkDialogVisible.value = false
-      getList()
+      getList({}) // 传入空对象作为参数
     }
   })
 }
@@ -689,7 +699,7 @@ const handleRowClick = (row) => {
 
 // 处理签退状态变化
 const handleStatusChange = (val) => {
-  // 如果值为空字符串，表示“全部”选项
+  // 如果值为空字符串，表示"全部"选项
   if (val === '') {
     queryParams.value.signoutStatus = ''
   }
@@ -701,11 +711,11 @@ const handleStatusChange = (val) => {
 }
 
 // 计算停留时间（分钟）
-const calculateStayTimeInMinutes = (signInTime, signOutTime) => {
+const calculateStayTimeInMinutes = (signInTime: string, signOutTime: string): number => {
   if (!signInTime || !signOutTime) return 0
 
-  const signIn = new Date(signInTime)
-  const signOut = new Date(signOutTime)
+  const signIn = new Date(signInTime).getTime()
+  const signOut = new Date(signOutTime).getTime()
 
   // 计算时间差（毫秒）
   const diffMs = signOut - signIn
@@ -715,7 +725,7 @@ const calculateStayTimeInMinutes = (signInTime, signOutTime) => {
 }
 
 // 计算停留时间（格式化显示）
-const calculateStayTime = (signInTime, signOutTime) => {
+const calculateStayTime = (signInTime: string, signOutTime: string): string => {
   const minutes = calculateStayTimeInMinutes(signInTime, signOutTime)
 
   if (minutes <= 0) return '无效时间'
@@ -729,9 +739,6 @@ const calculateStayTime = (signInTime, signOutTime) => {
     return `${remainingMinutes}分钟`
   }
 }
-
-
-
 
 // 发送提醒
 const handleRemind = (row) => {
