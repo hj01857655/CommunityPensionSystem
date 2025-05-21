@@ -591,7 +591,8 @@ async function handleStatusChange(row) {
     ElMessage.success(text + "成功");
   } catch (error) {
     console.error(`${text}角色失败:`, error);
-    row.isActive = row.isActive === 1 ? 0 : 1; // 恢复原始状态
+    // 恢复原始状态（使用status字段，而不是isActive）
+    row.status = row.status === '0' ? '1' : '0';
     ElMessage.error(text + "失败");
   }
 }
@@ -602,12 +603,30 @@ async function submitForm() {
 
   await roleFormRef.value.validate(async (valid) => {
     if (valid) {
+      // 创建一个新对象，只包含后端需要的字段
+      const roleData = {};
+      
+      // 复制需要的字段
+      const fieldsToInclude = [
+        'roleId', 'roleName', 'roleKey', 'roleSort', 'dataScope',
+        'menuCheckStrictly', 'remark'
+      ];
+      
+      fieldsToInclude.forEach(field => {
+        if (form.value[field] !== undefined) {
+          roleData[field] = form.value[field];
+        }
+      });
+      
       // 将前端表单的isActive数值转换为后端需要的status字符串
-      const roleData = { ...form.value };
-      roleData.status = roleData.isActive === 1 ? "0" : "1";
+      roleData.status = form.value.isActive === 1 ? "0" : "1";
+      
+      // 获取菜单ID
+      roleData.menuIds = getMenuAllCheckedKeys();
+      
+      console.log('提交的角色数据:', roleData);
       
       if (form.value.roleId != undefined) {
-        roleData.menuIds = getMenuAllCheckedKeys();
         try {
           await roleStore.updateRoleInfo(roleData);
           ElMessage.success("修改成功");
@@ -615,10 +634,9 @@ async function submitForm() {
           getList();
         } catch (error) {
           console.error("修改角色失败:", error);
-          ElMessage.error("修改失败");
+          ElMessage.error("修改失败: " + (error.message || ''));
         }
       } else {
-        roleData.menuIds = getMenuAllCheckedKeys();
         try {
           await roleStore.createRole(roleData);
           ElMessage.success("新增成功");
@@ -626,7 +644,7 @@ async function submitForm() {
           getList();
         } catch (error) {
           console.error("新增角色失败:", error);
-          ElMessage.error("新增失败");
+          ElMessage.error("新增失败: " + (error.message || ''));
         }
       }
     }

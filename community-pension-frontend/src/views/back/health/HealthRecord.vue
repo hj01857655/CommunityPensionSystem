@@ -348,14 +348,12 @@
 </template>
 
 <script setup>
-import {getUserList} from '@/api/back/system/user';
-import {useHealthRecordStore} from '@/stores/back/health/healthRecordStore';
-import {formatDate, formatDateTime} from '@/utils/date';
+import { useHealthRecordStore } from '@/stores/back/health/healthRecordStore';
+import { formatDate, formatDateTime } from '@/utils/date';
+import { useDict } from '@/utils/dict';
+import { ElMessage, ElMessageBox } from 'element-plus';
+import { computed, onMounted, ref } from 'vue';
 import * as XLSX from 'xlsx';
-import {exportHealthRecords} from '@/api/back/health/records';
-import {ElMessage, ElMessageBox} from 'element-plus';
-import {computed, onMounted, ref} from 'vue';
-import {useDict} from '@/utils/dict';
 
 // 从字典中获取记录类型和BMI状态
 const { health_record_type, bmi_status } = useDict('health_record_type', 'bmi_status');
@@ -842,31 +840,40 @@ const handleElderChange = (elderId) => {
 /** 获取老人列表 */
 const getElderList = async () => {
   try {
-    // 使用正确的参数调用getUserList，添加角色过滤条件
+    // 直接使用导入的API
+    const { getUserList } = await import('@/api/back/system/user');
+    
+    // 获取所有用户
     const res = await getUserList({
       current: 1,
-      size: 100, // 获取足够多的记录以确保所有老人都被加载
-      role: 'elder', // 只获取角色为老人的用户
-      roleId: 1     // 老人角色ID为1
+      size: 100 // 获取足够多的记录以确保所有老人都被加载
     });
-    console.log('老人列表数据:', res);
+    
+    console.log('获取到的用户列表数据:', res);
 
     // 确保返回的数据格式正确
-    if (res.data && res.data.records) {
-      // 过滤出角色为老人的用户
-      const elders = res.data.records.filter(user => user.role === 'elder' || user.roleId === 1);
+    if (res.code === 200 && res.data && res.data.records) {
+      // 手动筛选出角色为老人的用户
+      const elders = res.data.records.filter(user => 
+        user.roleId === 1 || user.role === 'elder'
+      );
       
       elderOptions.value = elders.map(user => ({
-        userId: user.userId || '',
-        name: user.name || '', // 优先使用name字段，而不是username
+        userId: user.userId,
+        name: user.name || user.username, // 优先使用name字段
         age: user.age || '',
         gender: user.gender || ''
       }));
       
-      console.log('过滤后的老人列表:', elderOptions.value);
+      console.log('筛选后的老人列表:', elderOptions.value);
+      
+      if (elderOptions.value.length === 0) {
+        ElMessage.warning('未找到老人用户，请先在用户管理中添加老人角色的用户');
+      }
     } else {
       elderOptions.value = [];
-      console.warn('获取老人列表返回的数据格式不正确');
+      console.warn('获取老人列表返回的数据格式不正确或为空');
+      ElMessage.warning('获取老人列表失败，请联系管理员');
     }
   } catch (error) {
     console.error("获取老人列表失败:", error);

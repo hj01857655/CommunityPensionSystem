@@ -84,4 +84,22 @@ public class NotificationController {
         notificationService.revokeNotification(id);
         return Result.success("撤回成功");
     }
+    
+    /**
+     * 标记通知为已读
+     */
+    @PostMapping("/mark-read/{id}")
+    public Result<Void> markAsRead(@PathVariable Long id) {
+        notificationService.markAsRead(id);
+        return Result.success("标记已读成功");
+    }
+    
+    /**
+     * 标记所有通知为已读
+     */
+    @GetMapping("/mark-read-all")
+    public Result<Void> markAllAsRead() {
+        notificationService.markAllNotificationsAsRead();
+        return Result.success("所有通知已标记为已读");
+    }
 } 

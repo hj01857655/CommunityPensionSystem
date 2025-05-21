@@ -1,7 +1,7 @@
 <template>
     <div class="app-container">
       <!-- 搜索条件 -->
-      <el-form :model="queryParams" ref="queryRef" :inline="true" v-show="showSearch" label-width="68px">
+      <el-form :model="queryParams" ref="queryRef" :inline="true" v-show="showSearch" label-width="100px">
         <el-form-item label="用户名称" prop="username">
           <el-input v-model="queryParams.username" placeholder="请输入用户名称" clearable style="width: 200px"
             @keyup.enter="handleQuery" />
@@ -57,13 +57,12 @@
         <el-table-column label="角色" align="center" v-if="columns[7].visible">
           <template #default="scope">
             <el-tag 
-              v-for="(roleName, index) in scope.row.roleNames" 
-              :key="index"
-              style="margin-right: 4px" 
-              :type="getRoleTagType(scope.row.roleIdList[index])"
+              v-if="scope.row.roleName" 
+              :type="getRoleTagType(scope.row.roleId)"
             >
-              {{ roleName }}
+              {{ scope.row.roleName }}
             </el-tag>
+            <span v-else>-</span>
           </template>
         </el-table-column>
         <el-table-column label="绑定关系" align="center" v-if="columns[8].visible">
@@ -411,6 +410,7 @@ import RightToolbar from '@/components/common/base/RightToolbar/index.vue';
 import Pagination from '@/components/common/table/Pagination.vue';
 import { useUserStore } from '@/stores/back/userStore';
 import { formatDate } from '@/utils/date';
+import { useDict } from '@/utils/dict';
 import { ArrowDown, Delete, Edit, Plus, Refresh, Search } from '@element-plus/icons-vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { storeToRefs } from 'pinia';
@@ -422,6 +422,9 @@ import { onMounted, reactive, ref, watch } from 'vue';
   
   // 添加老人列表
   const elderList = ref([]);
+  
+  // 使用useDict获取字典数据
+  const { normal_disable: statusOptions, health_level: healthLevelOptions } = useDict('normal_disable', 'health_level');
   
   // 查询参数
   const queryParams = reactive({
@@ -473,6 +476,24 @@ import { onMounted, reactive, ref, watch } from 'vue';
   const hasRole = (user, roleId) => {
     return user.roleId === roleId || (user.roleIdList && user.roleIdList.includes(roleId));
   };
+  
+  // 根据角色ID获取标签类型
+  const getRoleTagType = (roleId) => {
+    switch (roleId) {
+      case 1: return 'warning';  // 老人
+      case 2: return 'success';  // 家属
+      case 3: return 'info';     // 社区工作人员
+      case 4: return 'danger';   // 管理员
+      default: return '';        // 默认
+    }
+  };
+  
+  // 初始化数据
+  onMounted(() => {
+    getList();
+    getStatusDict();
+    getHealthLevelDict();
+  });
   
   // 获取列表数据
   const getList = async () => {
@@ -857,9 +878,48 @@ import { onMounted, reactive, ref, watch } from 'vue';
         type: 'warning'
       });
   
-      const success = await userStore.handleDeleteUser(row.userId);
-      if (success) {
-        await getList();
+      try {
+        const success = await userStore.handleDeleteUser(row.userId);
+        if (success) {
+          await getList();
+        }
+      } catch (error) {
+        console.error('删除用户失败:', error);
+        
+        // 判断是否是外键约束错误
+        if (error.message && error.message.includes('foreign key constraint fails')) {
+          // 判断是哪个表的外键约束
+          if (error.message.includes('service_order')) {
+            ElMessageBox.alert(
+              '该用户有关联的服务订单记录，无法直接删除。\n\n建议将用户设置为“停用”状态，而不是删除。\n\n如果确实需要删除，请先删除该用户的所有服务订单记录。',
+              '无法删除用户',
+              {
+                confirmButtonText: '知道了',
+                type: 'warning',
+              }
+            );
+          } else if (error.message.includes('health_record')) {
+            ElMessageBox.alert(
+              '该用户有关联的健康记录，无法直接删除。\n\n建议将用户设置为“停用”状态，而不是删除。\n\n如果确实需要删除，请先删除该用户的所有健康记录。',
+              '无法删除用户',
+              {
+                confirmButtonText: '知道了',
+                type: 'warning',
+              }
+            );
+          } else {
+            ElMessageBox.alert(
+              '该用户在系统中有关联的数据记录，无法直接删除。\n\n建议将用户设置为“停用”状态，而不是删除。\n\n如果确实需要删除，请先删除该用户的所有关联记录。',
+              '无法删除用户',
+              {
+                confirmButtonText: '知道了',
+                type: 'warning',
+              }
+            );
+          }
+        } else {
+          ElMessage.error('删除用户失败: ' + (error.message || ''));
+        }
       }
     } catch (error) {
       if (error !== 'cancel') {
@@ -1116,21 +1176,7 @@ import { onMounted, reactive, ref, watch } from 'vue';
     }
   };
   
-  // 在script setup部分添加getRoleTagType方法
-  const getRoleTagType = (roleId) => {
-    switch (roleId) {
-      case 1: // 老人
-        return 'success';
-      case 2: // 家属
-        return 'warning';
-      case 3: // 社区工作人员
-        return 'info';
-      case 4: // 管理员
-        return 'danger';
-      default:
-        return 'info';
-    }
-  };
+  
   
   // 获取未绑定老人的家属列表
   const getUnboundKinsList = async () => {
@@ -1644,6 +1690,20 @@ import { onMounted, reactive, ref, watch } from 'vue';
     } catch (error) {
       if (error !== 'cancel') {
         console.error('获取健康状况字典数据失败:', error);
+      }
+    }
+  };
+  
+  // 获取用户状态字典数据
+  const getStatusDict = async () => {
+    try {
+      const response = await getDictDataByType('normal_disable');
+      if (response.code === 200) {
+        statusOptions.value = response.data;
+      }
+    } catch (error) {
+      if (error !== 'cancel') {
+        console.error('获取用户状态字典数据失败:', error);
       }
     }
   };

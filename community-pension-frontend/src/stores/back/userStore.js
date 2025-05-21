@@ -294,7 +294,7 @@ export const useUserStore = defineStore('user', () => {
     /**
      * 删除用户
      * @param {*} userId
-     * @returns
+     * @returns {Promise<Object|null>} 成功时返回响应对象，失败时抛出异常
      */
     const handleDeleteUser = async (userId) => {
         try {
@@ -303,10 +303,19 @@ export const useUserStore = defineStore('user', () => {
                 ElMessage.success('删除用户成功');
                 return res;
             }
-            ElMessage.error(res.msg || '删除用户失败');
-            return null;
+            // 不在这里显示错误消息，而是抛出异常，让调用者处理
+            const errorMsg = res.message || res.msg || '删除用户失败';
+            throw new Error(errorMsg);
         } catch (error) {
+            // 如果是网络错误或其他异常，直接抛出
             console.error('删除用户失败:', error);
+            
+            // 如果是后端返回的错误响应，提取错误信息
+            if (error.response && error.response.data) {
+                const responseData = error.response.data;
+                throw new Error(responseData.message || responseData.msg || '删除用户失败');
+            }
+            
             throw error;
         }
     };

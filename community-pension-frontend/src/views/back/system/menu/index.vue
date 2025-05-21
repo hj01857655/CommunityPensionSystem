@@ -222,16 +222,15 @@
 </template>
 
 <script setup>
-import {nextTick, onMounted, reactive, ref, computed} from 'vue';
-import {ElMessage, ElMessageBox} from 'element-plus';
-import * as ElementPlusIcons from '@element-plus/icons-vue';
-import {Search, Refresh, Plus, Sort} from '@element-plus/icons-vue';
-import {listMenu, getMenu, delMenu, addMenu, updateMenu} from '@/api/back/system/menu';
+import { addMenu, delMenu, getMenu, listMenu, updateMenu } from '@/api/back/system/menu';
 import IconSelect from '@/components/back/system/menu/IconSelect.vue';
-import SvgIcon from '@/components/back/system/menu/SvgIcon.vue';
-import {handleTree} from '@/utils/tree';
 import RightToolbar from '@/components/back/system/menu/RightToolbar.vue';
-import {formatDate} from '@/utils/date';
+import { formatDate } from '@/utils/date';
+import { handleTree } from '@/utils/tree';
+import * as ElementPlusIcons from '@element-plus/icons-vue';
+import { Plus, Refresh, Search, Sort } from '@element-plus/icons-vue';
+import { ElMessage, ElMessageBox } from 'element-plus';
+import { nextTick, onMounted, reactive, ref } from 'vue';
 
 // 状态数据字典
 const dict = reactive({
@@ -269,7 +268,7 @@ const form = reactive({
   icon: '',
   menuType: 'M',
   orderNum: 1,
-  isExternal: false,
+  isFrame: 1,
   path: '',
   component: '',
   perms: '',

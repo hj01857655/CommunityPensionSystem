@@ -81,13 +81,27 @@ export function initWebSocket(token, force = false, delay = 0) {
     token = token.substring(7);
   }
   
-  // 直接连接到后端服务器，不依赖Vite代理
+  // 动态获取后端地址，而不是硬编码
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  const wsUrl = `${protocol}//localhost:9000/websocket/${token}`;
-  console.log('直接连接到后端服务器:', wsUrl);
-  console.log('完整token信息:', token);
-  console.log('token长度:', token.length);
-  console.log('正在连接WebSocket:', wsUrl);
+  
+  // 从当前页面URL获取主机和端口
+  let host = window.location.hostname;
+  let port = '9000'; // 默认后端端口
+  
+  // 如果是开发环境，使用localhost:9000
+  if (host === 'localhost' && window.location.port === '5173') {
+    host = 'localhost';
+  } else if (process.env.NODE_ENV === 'production') {
+    // 生产环境可能使用相同的主机，但端口不同
+    // 可以根据实际部署情况调整
+    port = '9000';
+  }
+  
+  const wsUrl = `${protocol}//${host}:${port}/websocket/${token}`;
+  console.log('连接到后端 WebSocket 服务器:', wsUrl);
+  console.log('token 信息:', token.substring(0, 10) + '...');
+  console.log('token 长度:', token.length);
+  console.log('正在初始化 WebSocket 连接...');
   
   
   try {
@@ -151,7 +165,7 @@ export function initWebSocket(token, force = false, delay = 0) {
       clearTimeout(connectionTimeout); // 清除连接超时定时器
       console.warn('%cWebSocket连接关闭!', 'color: orange; font-weight: bold', event);
       
-      // 输出更多调试信息
+      // 输出调试信息
       console.warn('关闭详情:', {
         code: event.code,
         reason: event.reason,
@@ -161,9 +175,14 @@ export function initWebSocket(token, force = false, delay = 0) {
       
       // 分析关闭原因
       let closeReason = '';
+      let shouldReconnect = true; // 默认应该重连
+      let reconnectDelay = reconnectCount * 2000; // 指数退避重连延迟
+      
       switch(event.code) {
         case 1000:
           closeReason = '正常关闭';
+          // 即使是正常关闭也尝试重连，但使用较短的延迟
+          reconnectDelay = 1000;
           break;
         case 1001:
           closeReason = '端点离开';
@@ -176,6 +195,16 @@ export function initWebSocket(token, force = false, delay = 0) {
           break;
         case 1006:
           closeReason = '连接异常关闭(可能是token验证失败)';
+          // 如果是认证问题，可能需要重新获取token
+          // 尝试使用新token重连
+          setTimeout(() => {
+            const newToken = sessionStorage.getItem('admin-access-token');
+            if (newToken && newToken !== token) {
+              console.log('检测到新token，尝试使用新token重连');
+              initWebSocket(newToken, true);
+              return;
+            }
+          }, 1000);
           break;
         case 1007:
           closeReason = '数据格式不一致';
@@ -203,16 +232,24 @@ export function initWebSocket(token, force = false, delay = 0) {
       // 清除心跳检测
       clearInterval(heartbeatTimer);
       
-      // 尝试重连
-      if (reconnectCount < MAX_RECONNECT) {
+      // 如果应该重连且未超过最大重连次数
+      if (shouldReconnect && reconnectCount < MAX_RECONNECT) {
         reconnectCount++;
-        const delay = reconnectCount * 2000; // 指数退避，每次等待时间增加
-        console.log(`将在 ${delay/1000} 秒后尝试重新连接，这是第 ${reconnectCount} 次尝试...`);
+        console.log(`将在 ${reconnectDelay/1000} 秒后尝试重新连接，这是第 ${reconnectCount} 次尝试...`);
         
+        // 使用延迟重连，避免频繁重连导致服务器负载过高
         setTimeout(() => {
           console.log(`正在尝试第 ${reconnectCount} 次重连...`);
-          initWebSocket(token);
-        }, delay);
+          initWebSocket(token, true); // 强制重新初始化
+        }, reconnectDelay);
+      } else if (!shouldReconnect) {
+        console.log('根据关闭原因决定不再重连');
+        initialized = false;
+        
+        // 触发断开连接回调
+        if (messageHandlers.onDisconnected) {
+          messageHandlers.onDisconnected(event);
+        }
       } else {
         console.error('超过最大重连次数，不再尝试重连');
         initialized = false;

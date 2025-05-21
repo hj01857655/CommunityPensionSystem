@@ -2,7 +2,7 @@
  * 后台管理系统通知存储
  * 用于管理系统通知、紧急呼叫等通知
  */
-import { clearAllNotifications, getNotifications, markNotificationAsRead } from '@/api/back/notification';
+import { clearAllNotifications, getNotifications, markAllNotificationsAsRead, markNotificationAsRead } from '@/api/back/notification';
 import AdminWebSocketClient from '@/utils/adminWebsocket';
 import { ElMessage } from 'element-plus';
 import { defineStore } from 'pinia';
@@ -96,9 +96,8 @@ export const useNotificationStore = defineStore('backNotification', () => {
    */
   async function markAllAsRead() {
     try {
-      // 由于后端API可能未实现，我们临时使用纯前端实现
-      // 注释掉后端API调用，仅在前端处理
-      // await markAllNotificationsAsRead();
+      // 恢复对后端API的调用
+      await markAllNotificationsAsRead();
       
       // 更新本地数据
       notifications.value.forEach(n => {

@@ -23,6 +23,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.communitypension.communitypensionadmin.utils.SecurityUtils;
 
 /**
  * 通知服务实现类
@@ -113,7 +115,8 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
     public void revokeNotification(Long id) {
         Notification notification = new Notification();
         notification.setId(id);
-        notification.setStatus(2); // 设置为已撤回状态
+        notification.setStatus(0); // 设置为草稿状态
+        notification.setUpdateTime(LocalDateTime.now());
         notificationMapper.updateById(notification);
     }
 
@@ -128,28 +131,14 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void sendSystemMessage(Long userId, String title, String content, String type) {
-        // 类型默认为系统通知
-        if (type == null || type.isEmpty()) {
-            type = DictTypeConstants.NOTICE_TYPE_SYSTEM;
-        }
-        
-        // 获取通知类型标签
-        String typeLabel = DictUtils.getDictLabel(DictTypeConstants.NOTICE_TYPE, type);
-        
-        // 构建通知实体
-        Notification notification = Notification.builder()
-            .userId(userId)
-            .title(title)
-            .content(content)
-            .type(type)  // 设置通知类型
-            .status(0)  // 未读状态
-            .createTime(LocalDateTime.now())
-            .build();
-        
-        // 保存通知
-        this.save(notification);
-        
-        log.info("发送{}通知给用户{}: {}", typeLabel != null ? typeLabel : type, userId, title);
+        Notification notification = new Notification();
+        notification.setUserId(userId);
+        notification.setTitle(title);
+        notification.setContent(content);
+        notification.setType(type);
+        notification.setStatus(0); // 未读状态
+        notification.setCreateTime(LocalDateTime.now());
+        notificationMapper.insert(notification);
     }
 
     /**
@@ -157,12 +146,15 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
      */
     @Override
     public void sendOrderNotification(ServiceOrder order, User user, String message) {
-        // 构建通知内容
-        String title = "服务预约通知";
-        String content = buildOrderNotificationContent(order, user, message);
-
-        // 使用self调用事务方法，确保事务生效
-        self.sendSystemMessage(user.getUserId(), title, content, DictTypeConstants.NOTICE_TYPE_SYSTEM);
+        // 实现发送预约相关通知的逻辑
+        Notification notification = new Notification();
+        notification.setUserId(user.getUserId());
+        notification.setTitle("预约通知");
+        notification.setContent(message);
+        notification.setType("3"); // 服务通知
+        notification.setStatus(0); // 未读状态
+        notification.setCreateTime(LocalDateTime.now());
+        notificationMapper.insert(notification);
     }
 
     /**
@@ -217,29 +209,57 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
 
     @Override
     public List<Map<String, Object>> getRecentNotifications(int limit) {
-        LambdaQueryWrapper<Notification> wrapper = new LambdaQueryWrapper<>();
-        wrapper.orderByDesc(Notification::getCreateTime);
-        wrapper.last("LIMIT " + limit);
-        List<Notification> list = this.list(wrapper);
-        return list.stream().map(n -> {
+        // 实现获取最新通知的逻辑
+        LambdaQueryWrapper<Notification> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.orderByDesc(Notification::getCreateTime);
+        queryWrapper.last("LIMIT " + limit);
+        
+        List<Notification> notifications = notificationMapper.selectList(queryWrapper);
+        List<Map<String, Object>> result = new ArrayList<>();
+        
+        for (Notification notification : notifications) {
             Map<String, Object> map = new HashMap<>();
-            map.put("id", n.getId());
-            map.put("title", n.getTitle());
-            
-            // 使用字典工具类获取通知类型的显示文本
-            String typeText = "通知"; // 默认值
-            if (n.getType() != null && !n.getType().isEmpty()) {
-                String dictLabel = DictUtils.getDictLabel(DictTypeConstants.NOTICE_TYPE, n.getType());
-                if (dictLabel != null && !dictLabel.isEmpty()) {
-                    typeText = dictLabel;
-                }
-            }
-            map.put("type", typeText);
-            
-            map.put("status", getStatusText(n.getStatus()));
-            map.put("date", n.getCreateTime());
-            return map;
-        }).collect(Collectors.toList());
+            map.put("id", notification.getId());
+            map.put("title", notification.getTitle());
+            map.put("content", notification.getContent());
+            map.put("createTime", notification.getCreateTime());
+            map.put("status", notification.getStatus());
+            result.add(map);
+        }
+        
+        return result;
+    }
+
+    @Override
+    public void markAsRead(Long id) {
+        // 检查通知是否存在
+        Notification notification = notificationMapper.selectById(id);
+        if (notification == null) {
+            throw new RuntimeException("通知不存在");
+        }
+        
+        // 更新通知状态为已读
+        Notification update = new Notification();
+        update.setId(id);
+        update.setStatus(1); // 1 表示已读
+        update.setUpdateTime(LocalDateTime.now());
+        notificationMapper.updateById(update);
+    }
+
+    @Override
+    public void markAllNotificationsAsRead() {
+        // 获取当前登录用户ID
+        Long userId = SecurityUtils.getCurrentUserId();
+        
+        // 创建更新条件：用户ID匹配且未读状态
+        LambdaUpdateWrapper<Notification> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.eq(Notification::getUserId, userId)
+                     .eq(Notification::getStatus, 0) // 0表示未读
+                     .set(Notification::getStatus, 1) // 1表示已读
+                     .set(Notification::getUpdateTime, LocalDateTime.now());
+        
+        // 执行批量更新
+        update(updateWrapper);
     }
 
     private String getStatusText(Integer status) {

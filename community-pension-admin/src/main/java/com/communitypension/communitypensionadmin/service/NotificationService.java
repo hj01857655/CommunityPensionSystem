@@ -71,4 +71,15 @@ public interface NotificationService extends IService<Notification> {
      * @return 通知公告列表
      */
     List<Map<String, Object>> getRecentNotifications(int limit);
+
+    /**
+     * 标记通知为已读
+     * @param id 通知ID
+     */
+    void markAsRead(Long id);
+
+    /**
+     * 标记所有通知为已读
+     */
+    void markAllNotificationsAsRead();
 }
