@@ -208,11 +208,36 @@
             </el-row>
           </el-tab-pane>
           <el-tab-pane label="健康指标" name="indicators">
+            <!-- 快速填充工具栏 -->
+            <div class="quick-tools" style="margin-bottom: 15px; padding: 10px; background-color: #f8f9fa; border-radius: 4px;">
+              <el-row :gutter="20">
+                <el-col :span="12">
+                  <el-button type="primary" plain size="small" @click="fillNormalValues">填充正常值</el-button>
+                  <el-button type="warning" plain size="small" @click="clearAllValues">清空所有值</el-button>
+                </el-col>
+                <el-col :span="12" style="text-align: right;">
+                  <el-tag size="small" type="info">提示: 点击按钮快速填充或清空健康指标值</el-tag>
+                </el-col>
+              </el-row>
+            </div>
+            
             <el-row>
               <el-col :span="12">
                 <el-form-item label="血压" prop="bloodPressure">
                   <el-input v-model="form.bloodPressure" placeholder="请输入血压(如120/80)">
                     <template #append>mmHg</template>
+                    <template #prepend>
+                      <el-dropdown trigger="click" @command="handleBloodPressurePreset">
+                        <span style="cursor: pointer;">预设<el-icon class="el-icon--right"><arrow-down /></el-icon></span>
+                        <template #dropdown>
+                          <el-dropdown-menu>
+                            <el-dropdown-item command="120/80">正常 (120/80)</el-dropdown-item>
+                            <el-dropdown-item command="135/85">偏高 (135/85)</el-dropdown-item>
+                            <el-dropdown-item command="110/70">偏低 (110/70)</el-dropdown-item>
+                          </el-dropdown-menu>
+                        </template>
+                      </el-dropdown>
+                    </template>
                   </el-input>
                 </el-form-item>
               </el-col>
@@ -231,6 +256,18 @@
                   <el-input-number v-model="form.bloodSugar" :max="30" :min="0" :precision="1" :step="0.1"
                                    placeholder="请输入血糖" style="width: 100%">
                     <template #append>mmol/L</template>
+                    <template #prepend>
+                      <el-dropdown trigger="click" @command="handleBloodSugarPreset">
+                        <span style="cursor: pointer;">预设</span>
+                        <template #dropdown>
+                          <el-dropdown-menu>
+                            <el-dropdown-item command="5.5">正常 (5.5)</el-dropdown-item>
+                            <el-dropdown-item command="7.0">偏高 (7.0)</el-dropdown-item>
+                            <el-dropdown-item command="4.0">偏低 (4.0)</el-dropdown-item>
+                          </el-dropdown-menu>
+                        </template>
+                      </el-dropdown>
+                    </template>
                   </el-input-number>
                 </el-form-item>
               </el-col>
@@ -238,7 +275,19 @@
                 <el-form-item label="体温" prop="temperature">
                   <el-input-number v-model="form.temperature" :max="45" :min="30" :precision="1" :step="0.1"
                                    placeholder="请输入体温" style="width: 100%">
-                    <template #append>°C</template>
+                    <template #append>℃</template>
+                    <template #prepend>
+                      <el-dropdown trigger="click" @command="handleTemperaturePreset">
+                        <span style="cursor: pointer;">预设</span>
+                        <template #dropdown>
+                          <el-dropdown-menu>
+                            <el-dropdown-item command="36.5">正常 (36.5)</el-dropdown-item>
+                            <el-dropdown-item command="37.5">低热 (37.5)</el-dropdown-item>
+                            <el-dropdown-item command="38.5">发热 (38.5)</el-dropdown-item>
+                          </el-dropdown-menu>
+                        </template>
+                      </el-dropdown>
+                    </template>
                   </el-input-number>
                 </el-form-item>
               </el-col>
@@ -880,6 +929,45 @@ const getElderList = async () => {
     ElMessage.error("获取老人列表失败，请刷新页面重试");
     elderOptions.value = [];
   }
+};
+
+// 处理血压预设值选择
+const handleBloodPressurePreset = (command) => {
+  form.value.bloodPressure = command;
+};
+
+// 处理血糖预设值选择
+const handleBloodSugarPreset = (command) => {
+  form.value.bloodSugar = parseFloat(command);
+};
+
+// 处理体温预设值选择
+const handleTemperaturePreset = (command) => {
+  form.value.temperature = parseFloat(command);
+};
+
+// 填充正常值函数
+const fillNormalValues = () => {
+  form.value.bloodPressure = '120/80';
+  form.value.heartRate = 75;
+  form.value.bloodSugar = 5.5;
+  form.value.temperature = 36.5;
+  form.value.weight = form.value.weight || 65;
+  form.value.height = form.value.height || 170;
+  calculateBMI(); // 重新计算BMI
+  ElMessage.success('已填充正常值');
+};
+
+// 清空所有健康指标值
+const clearAllValues = () => {
+  form.value.bloodPressure = '';
+  form.value.heartRate = 0;
+  form.value.bloodSugar = 0;
+  form.value.temperature = 36.5;
+  form.value.weight = 0;
+  form.value.height = 0;
+  form.value.bmi = 0;
+  ElMessage.info('已清空所有健康指标值');
 };
 
 onMounted(() => {

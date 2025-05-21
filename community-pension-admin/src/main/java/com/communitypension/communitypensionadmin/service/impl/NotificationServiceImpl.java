@@ -55,12 +55,19 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
     @Override
     public void saveNotification(Notification notification) {
         notification.setStatus(0); // 设置为草稿状态
-        
-        // 如果没有设置userId，则设置为系统用户ID（假设系统用户ID为1）
+
+        // 如果没有设置userId，则设置为系统用户ID
         if (notification.getUserId() == null) {
-            notification.setUserId(4L); // 设置为系统用户ID
+            // 获取当前登录用户ID，如果无法获取则使用系统用户ID
+            try {
+                Long currentUserId = SecurityUtils.getCurrentUserId();
+                notification.setUserId(currentUserId);
+            } catch (Exception e) {
+                log.warn("无法获取当前用户ID，使用系统用户ID");
+                notification.setUserId(1L); // 设置为系统用户ID
+            }
         }
-        
+
         notificationMapper.insert(notification);
     }
 
@@ -71,25 +78,25 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
         if (originalNotification == null) {
             throw new RuntimeException("通知不存在");
         }
-        
+
         // 确保更新时间字段被设置
         notification.setUpdateTime(LocalDateTime.now());
-        
+
         // 记录日志
         log.info("更新通知，ID: {}, 标题: {}, 类型: {}", notification.getId(), notification.getTitle(), notification.getType());
-        
+
         // 使用UpdateWrapper明确指定要更新的字段，确保type字段被更新
         LambdaQueryWrapper<Notification> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(Notification::getId, notification.getId());
-        
+
         // 执行更新，确保所有字段都被更新
         int result = notificationMapper.update(notification, queryWrapper);
-        
+
         if (result <= 0) {
             log.error("更新通知失败，ID: {}", notification.getId());
             throw new RuntimeException("更新通知失败");
         }
-        
+
         log.info("更新通知成功，影响行数: {}", result);
     }
 
@@ -100,6 +107,10 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
 
     /**
      * 发布通知
+     * 注意：在通知管理中，status字段有两种用途：
+     * 1. 在通知管理上下文中：0-草稿，1-已发布，2-已撤回
+     * 2. 在用户阅读上下文中：0-未读，1-已读
+     * 
      * @param id 通知ID
      */
     @Override
@@ -108,14 +119,23 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
         notification.setId(id);
         notification.setStatus(1); // 设置为已发布状态
         notification.setUpdateTime(LocalDateTime.now());
+        notification.setPublishTime(LocalDateTime.now()); // 设置发布时间
         notificationMapper.updateById(notification);
     }
 
+    /**
+     * 撤回通知
+     * 注意：在通知管理中，status字段有两种用途：
+     * 1. 在通知管理上下文中：0-草稿，1-已发布，2-已撤回
+     * 2. 在用户阅读上下文中：0-未读，1-已读
+     * 
+     * @param id 通知ID
+     */
     @Override
     public void revokeNotification(Long id) {
         Notification notification = new Notification();
         notification.setId(id);
-        notification.setStatus(0); // 设置为草稿状态
+        notification.setStatus(2); // 设置为已撤回状态（而不是草稿状态）
         notification.setUpdateTime(LocalDateTime.now());
         notificationMapper.updateById(notification);
     }
@@ -150,7 +170,8 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
         Notification notification = new Notification();
         notification.setUserId(user.getUserId());
         notification.setTitle("预约通知");
-        notification.setContent(message);
+        // 使用buildOrderNotificationContent方法构建更丰富的通知内容
+        notification.setContent(buildOrderNotificationContent(order, user, message));
         notification.setType("3"); // 服务通知
         notification.setStatus(0); // 未读状态
         notification.setCreateTime(LocalDateTime.now());
@@ -213,10 +234,10 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
         LambdaQueryWrapper<Notification> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.orderByDesc(Notification::getCreateTime);
         queryWrapper.last("LIMIT " + limit);
-        
+
         List<Notification> notifications = notificationMapper.selectList(queryWrapper);
         List<Map<String, Object>> result = new ArrayList<>();
-        
+
         for (Notification notification : notifications) {
             Map<String, Object> map = new HashMap<>();
             map.put("id", notification.getId());
@@ -226,10 +247,20 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
             map.put("status", notification.getStatus());
             result.add(map);
         }
-        
+
         return result;
     }
 
+    /**
+     * 标记通知为已读
+     * 注意：在用户阅读上下文中，status字段表示：
+     * 0-未读，1-已读
+     * 
+     * 这与通知管理上下文中的status含义不同：
+     * 0-草稿，1-已发布，2-已撤回
+     * 
+     * @param id 通知ID
+     */
     @Override
     public void markAsRead(Long id) {
         // 检查通知是否存在
@@ -237,7 +268,7 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
         if (notification == null) {
             throw new RuntimeException("通知不存在");
         }
-        
+
         // 更新通知状态为已读
         Notification update = new Notification();
         update.setId(id);
@@ -246,18 +277,26 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
         notificationMapper.updateById(update);
     }
 
+    /**
+     * 标记所有通知为已读
+     * 注意：在用户阅读上下文中，status字段表示：
+     * 0-未读，1-已读
+     * 
+     * 这与通知管理上下文中的status含义不同：
+     * 0-草稿，1-已发布，2-已撤回
+     */
     @Override
     public void markAllNotificationsAsRead() {
         // 获取当前登录用户ID
         Long userId = SecurityUtils.getCurrentUserId();
-        
+
         // 创建更新条件：用户ID匹配且未读状态
         LambdaUpdateWrapper<Notification> updateWrapper = new LambdaUpdateWrapper<>();
         updateWrapper.eq(Notification::getUserId, userId)
                      .eq(Notification::getStatus, 0) // 0表示未读
                      .set(Notification::getStatus, 1) // 1表示已读
                      .set(Notification::getUpdateTime, LocalDateTime.now());
-        
+
         // 执行批量更新
         update(updateWrapper);
     }

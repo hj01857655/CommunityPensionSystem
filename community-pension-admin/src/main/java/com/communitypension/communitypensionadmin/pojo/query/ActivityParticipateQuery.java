@@ -1,4 +1,4 @@
-package com.communitypension.communitypensionadmin.query;
+package com.communitypension.communitypensionadmin.pojo.query;
 
 import lombok.Data;
 
@@ -7,42 +7,42 @@ import lombok.Data;
  */
 @Data
 public class ActivityParticipateQuery {
-    
+
     /**
      * 页码
      */
     private Integer pageNum = 1;
-    
+
     /**
      * 每页大小
      */
     private Integer pageSize = 10;
-    
+
     /**
      * 活动ID
      */
     private Long activityId;
-    
+
     /**
      * 用户ID
      */
     private Long userId;
-    
+
     /**
      * 状态：0-待审核，1-已通过，2-已拒绝，3-已取消
      */
     private Integer status;
-    
+
     /**
      * 用户姓名
      */
     private String userName;
-    
+
     /**
      * 开始时间
      */
     private String startTime;
-    
+
     /**
      * 结束时间
      */

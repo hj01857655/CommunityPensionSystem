@@ -8,10 +8,11 @@
           clearable
           style="width: 240px; min-width: 240px;"
           @keyup.enter="handleQuery"
+          @clear="handleQuery"
         />
       </el-form-item>
       <el-form-item label="监测类型" prop="monitoringType">
-        <el-select v-model="queryParams.monitoringType" placeholder="请选择监测类型" clearable style="width: 240px; min-width: 240px;">
+        <el-select v-model="queryParams.monitoringType" placeholder="请选择监测类型" clearable style="width: 240px; min-width: 240px;" @change="handleQuery">
           <el-option
             v-for="dict in monitorTypeOptions"
             :key="dict.value"
@@ -21,7 +22,7 @@
         </el-select>
       </el-form-item>
       <el-form-item label="监测状态" prop="monitoringStatus">
-        <el-select v-model="queryParams.monitoringStatus" placeholder="请选择监测状态" clearable style="width: 240px; min-width: 240px;">
+        <el-select v-model="queryParams.monitoringStatus" placeholder="请选择监测状态" clearable style="width: 240px; min-width: 240px;" @change="handleQuery">
           <el-option
             v-for="dict in monitorStatusOptions"
             :key="dict.value"
@@ -31,7 +32,7 @@
         </el-select>
       </el-form-item>
       <el-form-item label="处理状态" prop="isProcessed">
-        <el-select v-model="queryParams.isProcessed" placeholder="请选择处理状态" clearable style="width: 240px; min-width: 240px;">
+        <el-select v-model="queryParams.isProcessed" placeholder="请选择处理状态" clearable style="width: 240px; min-width: 240px;" @change="handleQuery">
           <el-option
             v-for="dict in processStatusOptions"
             :key="dict.value"
@@ -49,6 +50,7 @@
           end-placeholder="结束日期"
           value-format="YYYY-MM-DD"
           style="width: 240px; min-width: 240px;"
+          @change="dateRange ? handleQuery() : null"
         />
       </el-form-item>
       <el-form-item>
@@ -303,7 +305,7 @@ import { getUserList } from '@/api/back/system/user';
 import { useHealthMonitorStore } from '@/stores/back/health/healthMonitorStore';
 import { useDict } from '@/utils/dict';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 
 const healthMonitorStore = useHealthMonitorStore();
 
@@ -572,6 +574,25 @@ function formatDate(dateStr) {
   return dateStr.replace('T', ' ').substring(0, 19);
 }
 
+// 监听搜索条件变化自动触发搜索
+watch(
+  () => [
+    queryParams.value.elderName,
+    queryParams.value.monitoringType,
+    queryParams.value.monitoringStatus,
+    queryParams.value.isProcessed,
+    dateRange.value
+  ],
+  () => {
+    // 防止初始化时触发，仅在用户操作时触发
+    if (loading.value === false) {
+      console.log('搜索条件变化，自动触发搜索');
+      handleQuery();
+    }
+  },
+  { deep: true }
+);
+
 /** 查询健康监测列表 */
 async function getList() {
   loading.value = true;
@@ -601,18 +622,26 @@ async function getUsers() {
   try {
     const response = await getUserList({ pageSize: 100 });
     if (response.code === 200) {
-      // 只筛选角色为老人(elder)的用户
+      console.log('获取到的用户列表:', response.data.records);
+      
+      // 只筛选角色为老人的用户
       userOptions.value = response.data.records
-        .filter(item => item.roles && item.roles.includes('elder'))
+        .filter(item => {
+          // 检查roleId是否为老人角色ID(1)
+          return item.roleId === 1;
+        })
         .map(item => ({
           value: item.userId,
-          label: item.name,  // 使用name字段作为显示标签
+          label: item.name, // 只使用name字段
           age: item.age,
           gender: item.gender
         }));
+      
+      console.log('筛选后的老人用户列表:', userOptions.value);
     }
   } catch (error) {
     console.error("获取用户列表失败:", error);
+    ElMessage.error("获取用户列表失败");
   }
 }
 

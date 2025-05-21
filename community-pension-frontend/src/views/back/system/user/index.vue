@@ -491,8 +491,6 @@ import { onMounted, reactive, ref, watch } from 'vue';
   // 初始化数据
   onMounted(() => {
     getList();
-    getStatusDict();
-    getHealthLevelDict();
   });
   
   // 获取列表数据
@@ -1677,36 +1675,7 @@ import { onMounted, reactive, ref, watch } from 'vue';
     }
   };
   
-  // 在表单数据下方添加字典选项
-  const healthLevelOptions = ref([]);
-  
-  // 获取健康状况字典数据
-  const getHealthLevelDict = async () => {
-    try {
-      const response = await getDictDataByType('health_level');
-      if (response.code === 200) {
-        healthLevelOptions.value = response.data;
-      }
-    } catch (error) {
-      if (error !== 'cancel') {
-        console.error('获取健康状况字典数据失败:', error);
-      }
-    }
-  };
-  
-  // 获取用户状态字典数据
-  const getStatusDict = async () => {
-    try {
-      const response = await getDictDataByType('normal_disable');
-      if (response.code === 200) {
-        statusOptions.value = response.data;
-      }
-    } catch (error) {
-      if (error !== 'cancel') {
-        console.error('获取用户状态字典数据失败:', error);
-      }
-    }
-  };
+  // 字典数据通过useDict自动获取
   
   // 根据健康状况值获取标签
   const getHealthLevelLabel = (value) => {
@@ -1717,7 +1686,6 @@ import { onMounted, reactive, ref, watch } from 'vue';
   
   onMounted(() => {
     getList();
-    getHealthLevelDict(); // 获取健康状况字典数据
   });
   
   </script>
