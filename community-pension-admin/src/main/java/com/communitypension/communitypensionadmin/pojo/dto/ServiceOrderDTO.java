@@ -1,5 +1,6 @@
 package com.communitypension.communitypensionadmin.pojo.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 import java.time.LocalDateTime;
@@ -34,6 +35,7 @@ public class ServiceOrderDTO {
      */
     @NotNull(message = "预约时间不能为空")
     @Future(message = "预约时间必须大于当前时间")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private LocalDateTime scheduleTime;
     
     /**
