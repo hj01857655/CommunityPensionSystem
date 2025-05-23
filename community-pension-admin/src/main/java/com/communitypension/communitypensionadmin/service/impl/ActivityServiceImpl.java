@@ -96,7 +96,7 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, Activity> i
                 activity.getStatus() == null ? null : String.valueOf(activity.getStatus())
             )
         );
-
+        
         // 设置当前参与人数
         vo.setCurrentParticipants(baseMapper.getCurrentRegisters(activity.getId()));
 
@@ -154,7 +154,7 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, Activity> i
         
         // 对于进行中或已结束的活动，不验证开始时间是否早于当前时间
         boolean skipStartTimeValidation = currentStatus != null && (currentStatus == 2 || currentStatus == 3);
-
+        
         // 验证活动时间
         if (dto.getStartTime().isAfter(dto.getEndTime())) {
             throw new BusinessException("开始时间不能晚于结束时间");
@@ -168,7 +168,7 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, Activity> i
         BeanUtils.copyProperties(dto, activity);
         updateById(activity);
     }
-
+    
 
 
     /**

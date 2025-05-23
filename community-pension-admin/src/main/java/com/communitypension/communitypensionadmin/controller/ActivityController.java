@@ -60,7 +60,9 @@ public class ActivityController {
      * @return 结果
      */
     @PutMapping("/{id}")
-    public Result<Void> updateActivity(@PathVariable Long id, @Validated @RequestBody ActivityDTO dto) {
+    public Result<Void> updateActivity(
+            @PathVariable Long id, 
+            @Validated @RequestBody ActivityDTO dto) {
         activityService.updateActivity(id, dto);
         return Result.success("更新成功");
     }
