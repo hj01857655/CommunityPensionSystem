@@ -37,6 +37,8 @@ public interface ActivityService extends IService<Activity> {
      */
     void updateActivity(Long id, ActivityDTO dto);
     
+
+    
     /**
      * 删除活动
      */

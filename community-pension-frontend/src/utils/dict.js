@@ -10,11 +10,12 @@ const initDictTypeStore = () => {
   return dictTypeStore
 }
 export function useDict(...args) {
-    const res = ref({});
+    // 创建一个响应式对象，为每个字典类型创建一个响应式数组
+    const dictRef = {};
     
     // 初始化所有字典类型为空数组
     args.forEach(dictType => {
-      res.value[dictType] = [];
+      dictRef[dictType] = ref([]);
     });
 
     // 异步获取字典数据
@@ -34,16 +35,19 @@ export function useDict(...args) {
 
         const results = await Promise.all(promises);
         results.forEach(({ type, data }) => {
-          res.value[type] = data;
+          // 更新响应式对象中的数据
+          dictRef[type].value = data;
+          console.log(`字典数据加载成功: ${type}`, data);
         });
       } catch (error) {
         console.error('获取字典数据失败:', error);
       }
     };
 
-    // 立即执行获取数据
+    // 立即执行一次获取数据，确保数据可用
     fetchDictData();
 
-    return toRefs(res.value);
+    // 返回字典对象
+    return dictRef;
 }
 

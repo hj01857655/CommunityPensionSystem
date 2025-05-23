@@ -254,9 +254,14 @@ const isFullscreen = ref(false); // 全屏状态
 const currentTime = ref(formatDateTime(new Date()));
 
 // 每秒更新时间
-setInterval(() => {
+const timer = setInterval(() => {
   currentTime.value = formatDateTime(new Date());
 }, 1000);
+
+onUnmounted(() => {
+  // 清除计时器，防止内存泄漏
+  clearInterval(timer);
+});
 
 // 格式化日期时间
 function formatDateTime(date) {

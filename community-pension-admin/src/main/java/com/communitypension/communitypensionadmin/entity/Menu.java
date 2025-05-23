@@ -27,11 +27,6 @@ public class Menu extends BaseEntity {
     private String status;               // 菜单状态（0正常 1停用）
     private String perms;                // 权限标识
     private String icon;                 // 菜单图标
-    private String createBy;             // 创建者
-    private LocalDateTime createTime;   // 创建时间
-    private String updateBy;             // 更新者
-    private LocalDateTime updateTime;   // 更新时间
-    private String remark;               // 备注
 
 
 }

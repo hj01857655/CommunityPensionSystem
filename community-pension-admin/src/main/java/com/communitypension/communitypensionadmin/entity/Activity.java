@@ -33,6 +33,12 @@ public class Activity {
     private String description;
     
     /**
+     * 活动封面图片URL
+     */
+    @TableField("cover_image")
+    private String coverImage;
+    
+    /**
      * 开始时间
      */
     private LocalDateTime startTime;
@@ -74,21 +80,5 @@ public class Activity {
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updatedAt;
     
-    /**
-     * 组织者姓名(非数据库字段)
-     */
-    @TableField(exist = false)
-    private String organizerName;
-    
-    /**
-     * 当前参与人数(非数据库字段)
-     */
-    @TableField(exist = false)
-    private Integer currentParticipants;
-    
-    /**
-     * 状态名称(非数据库字段)
-     */
-    @TableField(exist = false)
-    private String statusName;
+
 } 

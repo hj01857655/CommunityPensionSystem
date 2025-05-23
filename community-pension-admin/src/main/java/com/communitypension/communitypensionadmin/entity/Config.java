@@ -5,15 +5,15 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
-
-import java.util.Date;
+import lombok.EqualsAndHashCode;
 
 /**
  * 参数配置表 config
  */
 @Data
+@EqualsAndHashCode(callSuper = true)
 @TableName("config")
-public class Config {
+public class Config extends BaseEntity {
     /** 参数主键 */
     @TableId(value = "config_id", type = IdType.AUTO)
     private Integer configId;
@@ -34,25 +34,7 @@ public class Config {
     @TableField("config_type")
     private String configType;
 
-    /** 创建者 */
-    @TableField("create_by")
-    private String createBy;
-
-    /** 创建时间 */
-    @TableField("create_time")
-    private Date createTime;
-
-    /** 更新者 */
-    @TableField("update_by")
-    private String updateBy;
-
-    /** 更新时间 */
-    @TableField("update_time")
-    private Date updateTime;
-    
-    /** 备注 */
-    @TableField("remark")
-    private String remark;
+    // 注意：createBy, createTime, updateBy, updateTime, remark 字段已从BaseEntity继承
 
     @Override
     public String toString() {

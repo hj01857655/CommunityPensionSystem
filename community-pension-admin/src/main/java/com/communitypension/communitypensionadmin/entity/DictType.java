@@ -4,15 +4,15 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
-
-import java.time.LocalDateTime;
+import lombok.EqualsAndHashCode;
 
 /**
  * 字典类型实体
  */
 @Data
+@EqualsAndHashCode(callSuper = true)
 @TableName("dict_type")
-public class DictType {
+public class DictType extends BaseEntity {
     /**
      * 字典主键
      */
@@ -34,25 +34,7 @@ public class DictType {
      */
     private Integer status;
 
-    /**
-     * 创建者
-     */
-    private String createBy;
-
-    /**
-     * 创建时间
-     */
-    private LocalDateTime createTime;
-
-    /**
-     * 更新者
-     */
-    private String updateBy;
-
-    /**
-     * 更新时间
-     */
-    private LocalDateTime updateTime;
+    // 注意：createBy, createTime, updateBy, updateTime 字段已从BaseEntity继承
 
     /**
      * 备注

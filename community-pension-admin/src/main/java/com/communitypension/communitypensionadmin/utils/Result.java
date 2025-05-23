@@ -102,5 +102,24 @@ public class Result<T> {
         result.setTimestamp(System.currentTimeMillis());
         return result;
     }
-
+    
+    //Result.fail("操作失败");
+    public static <T> Result<T> fail(String message) {
+        Result<T> result = new Result<>();
+        result.setCode(400);
+        result.setMessage(message);
+        result.setData(null);
+        result.setTimestamp(System.currentTimeMillis());
+        return result;
+    }
+    
+    //Result.fail(400, "操作失败");
+    public static <T> Result<T> fail(int code, String message) {
+        Result<T> result = new Result<>();
+        result.setCode(code);
+        result.setMessage(message);
+        result.setData(null);
+        result.setTimestamp(System.currentTimeMillis());
+        return result;
+    }
 }

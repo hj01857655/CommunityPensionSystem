@@ -1,48 +1,50 @@
-package com.communitypension.communitypensionadmin.pojo.vo;
+package com.communitypension.communitypensionadmin.pojo.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
-import lombok.Builder;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
 import java.time.LocalDateTime;
 
 /**
- * 活动视图对象
+ * 更新活动的数据传输对象
  * <p>
- * 用于展示活动列表和详情信息
+ * 用于接收前端更新活动时传来的数据，进行数据验证和传输
  * </p>
  */
 @Data
-@Builder
-@NoArgsConstructor  // 添加无参构造函数
-@AllArgsConstructor // 添加全参构造函数
-public class ActivityVO {
+@NoArgsConstructor
+@AllArgsConstructor
+public class UpdateActivityDTO {
     
     /**
      * 活动ID
      */
+    @NotNull(message = "活动ID不能为空")
     private Long id;
     
     /**
      * 活动标题
      */
+    @NotBlank(message = "活动标题不能为空")
+    @Size(max = 100, message = "活动标题长度不能超过100个字符")
     private String title;
     
     /**
-     * 活动类型
+     * 活动类型（字典类型：activity_type）
      */
+    @NotBlank(message = "活动类型不能为空")
     private String type;
-    
-    /**
-     * 活动类型名称
-     */
-    private String typeName;
     
     /**
      * 活动描述
      */
+    @NotBlank(message = "活动描述不能为空")
     private String description;
     
     /**
@@ -52,64 +54,40 @@ public class ActivityVO {
     
     /**
      * 开始时间
-     * <p>格式化为"yyyy-MM-dd HH:mm:ss"格式</p>
      */
+    @NotNull(message = "开始时间不能为空")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private LocalDateTime startTime;
     
     /**
      * 结束时间
-     * <p>格式化为"yyyy-MM-dd HH:mm:ss"格式</p>
      */
+    @NotNull(message = "结束时间不能为空")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private LocalDateTime endTime;
     
     /**
      * 活动地点
      */
+    @NotBlank(message = "活动地点不能为空")
+    @Size(max = 200, message = "活动地点长度不能超过200个字符")
     private String location;
     
     /**
      * 最大参与人数
      */
+    @NotNull(message = "人数上限不能为空")
+    @Min(value = 1, message = "人数上限必须大于0")
     private Integer maxParticipants;
-    
-    /**
-     * 当前参与人数
-     */
-    private Integer currentParticipants;
     
     /**
      * 组织者ID
      */
+    @NotNull(message = "组织者ID不能为空")
     private Long organizerId;
-    
-    /**
-     * 组织者姓名
-     */
-    private String organizerName;
     
     /**
      * 状态：0-筹备中，1-报名中，2-进行中，3-已结束，4-已取消
      */
     private Integer status;
-    
-    /**
-     * 状态名称
-     */
-    private String statusName;
-    
-    /**
-     * 创建时间
-     * <p>格式化为"yyyy-MM-dd HH:mm:ss"格式</p>
-     */
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
-    private LocalDateTime createdAt;
-    
-    /**
-     * 更新时间
-     * <p>格式化为"yyyy-MM-dd HH:mm:ss"格式</p>
-     */
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
-    private LocalDateTime updatedAt;
-} 
+}

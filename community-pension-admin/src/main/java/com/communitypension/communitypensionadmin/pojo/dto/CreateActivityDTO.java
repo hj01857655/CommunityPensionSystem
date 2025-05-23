@@ -12,20 +12,15 @@ import lombok.AllArgsConstructor;
 import java.time.LocalDateTime;
 
 /**
- * 活动数据传输对象
+ * 创建活动的数据传输对象
  * <p>
- * 用于接收前端传来的活动数据，进行数据验证和传输
+ * 用于接收前端创建活动时传来的数据，进行数据验证和传输
  * </p>
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ActivityDTO {
-    
-    /**
-     * 活动ID
-     */
-    private Long id;
+public class CreateActivityDTO {
     
     /**
      * 活动标题
@@ -55,14 +50,14 @@ public class ActivityDTO {
      * 开始时间
      */
     @NotNull(message = "开始时间不能为空")
-    @JsonFormat(pattern = "yyyy-MM-dd[ ]['T']HH:mm:ss", timezone = "GMT+8")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private LocalDateTime startTime;
     
     /**
      * 结束时间
      */
     @NotNull(message = "结束时间不能为空")
-    @JsonFormat(pattern = "yyyy-MM-dd[ ]['T']HH:mm:ss", timezone = "GMT+8")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private LocalDateTime endTime;
     
     /**
@@ -84,11 +79,4 @@ public class ActivityDTO {
      */
     @NotNull(message = "组织者ID不能为空")
     private Long organizerId;
-    
-    /**
-     * 状态：0-筹备中，1-报名中，2-进行中，3-已结束，4-已取消
-     */
-    private Integer status;
-    
-
-} 
+}

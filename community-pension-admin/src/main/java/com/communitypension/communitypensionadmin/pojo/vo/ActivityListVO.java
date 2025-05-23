@@ -9,16 +9,16 @@ import lombok.AllArgsConstructor;
 import java.time.LocalDateTime;
 
 /**
- * 活动视图对象
+ * 活动列表视图对象
  * <p>
- * 用于展示活动列表和详情信息
+ * 用于展示活动列表，包含列表页面需要的简要信息
  * </p>
  */
 @Data
 @Builder
-@NoArgsConstructor  // 添加无参构造函数
-@AllArgsConstructor // 添加全参构造函数
-public class ActivityVO {
+@NoArgsConstructor
+@AllArgsConstructor
+public class ActivityListVO {
     
     /**
      * 活动ID
@@ -39,11 +39,6 @@ public class ActivityVO {
      * 活动类型名称
      */
     private String typeName;
-    
-    /**
-     * 活动描述
-     */
-    private String description;
     
     /**
      * 活动封面图片URL
@@ -70,26 +65,6 @@ public class ActivityVO {
     private String location;
     
     /**
-     * 最大参与人数
-     */
-    private Integer maxParticipants;
-    
-    /**
-     * 当前参与人数
-     */
-    private Integer currentParticipants;
-    
-    /**
-     * 组织者ID
-     */
-    private Long organizerId;
-    
-    /**
-     * 组织者姓名
-     */
-    private String organizerName;
-    
-    /**
      * 状态：0-筹备中，1-报名中，2-进行中，3-已结束，4-已取消
      */
     private Integer status;
@@ -105,11 +80,4 @@ public class ActivityVO {
      */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private LocalDateTime createdAt;
-    
-    /**
-     * 更新时间
-     * <p>格式化为"yyyy-MM-dd HH:mm:ss"格式</p>
-     */
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
-    private LocalDateTime updatedAt;
-} 
+}
