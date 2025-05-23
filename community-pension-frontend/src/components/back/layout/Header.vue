@@ -221,7 +221,7 @@
 </template>
 
 <script setup>
-import {computed, onMounted, ref, watch} from 'vue';
+import {computed, onMounted, onUnmounted, ref, watch} from 'vue';
 import {useRouter} from 'vue-router';
 import {useNotificationStore} from '@/stores/back/notificationStore';
 import {useMessageStore} from '@/stores/back/messageStore';
