@@ -169,7 +169,7 @@ const sendReply = async () => {
 
 // 返回列表
 const goBack = () => {
-  router.push('/back/messages')
+  router.push('/admin/messages')
 }
 
 onMounted(() => {

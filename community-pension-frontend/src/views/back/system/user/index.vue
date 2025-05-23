@@ -180,10 +180,10 @@
             <el-form-item label="健康状况" prop="healthCondition">
               <el-select v-model="form.healthCondition" placeholder="请选择健康状况">
                 <el-option 
-                  v-for="dict in healthLevelOptions" 
-                  :key="dict.dictValue" 
-                  :label="dict.dictLabel" 
-                  :value="dict.dictValue" 
+                  v-for="dict in healthLevelOptions || []" 
+                  :key="dict?.value || ''" 
+                  :label="dict?.label || ''" 
+                  :value="dict?.value || ''" 
                 />
               </el-select>
             </el-form-item>
