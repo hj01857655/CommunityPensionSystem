@@ -55,6 +55,9 @@ public class ActivityController {
 
     /**
      * 更新活动
+     * @param id 活动ID
+     * @param dto 活动数据
+     * @return 结果
      */
     @PutMapping("/{id}")
     public Result<Void> updateActivity(@PathVariable Long id, @Validated @RequestBody ActivityDTO dto) {
