@@ -122,7 +122,14 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, Activity> i
     @Transactional(rollbackFor = Exception.class)
     public void createActivity(ActivityDTO dto) {
         // 验证活动时间
-        validateActivityTime(dto.getStartTime(), dto.getEndTime());
+        if (dto.getStartTime().isAfter(dto.getEndTime())) {
+            throw new BusinessException("开始时间不能晚于结束时间");
+        }
+        
+        // 创建新活动时始终验证开始时间是否早于当前时间
+        if (dto.getStartTime().isBefore(LocalDateTime.now())) {
+            throw new BusinessException("开始时间不能早于当前时间");
+        }
 
         Activity activity = new Activity();
         BeanUtils.copyProperties(dto, activity);
@@ -152,10 +159,17 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, Activity> i
         if (dto.getStartTime().isAfter(dto.getEndTime())) {
             throw new BusinessException("开始时间不能晚于结束时间");
         }
-        if (startTime.isBefore(LocalDateTime.now())) {
+        
+        // 只有对未开始或报名中的活动才验证开始时间是否早于当前时间
+        if (!skipStartTimeValidation && dto.getStartTime().isBefore(LocalDateTime.now())) {
             throw new BusinessException("开始时间不能早于当前时间");
         }
+
+        BeanUtils.copyProperties(dto, activity);
+        updateById(activity);
     }
+
+
 
     /**
      * 更新活动状态
