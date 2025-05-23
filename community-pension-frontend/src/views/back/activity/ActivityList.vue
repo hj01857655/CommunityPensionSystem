@@ -241,7 +241,7 @@ import { useActivityStore } from '@/stores/back/activityStore';
 import { useDict } from '@/utils/dict';
 import { ArrowDown, Delete, Download, Edit, Plus, Refresh, Search, View } from '@element-plus/icons-vue';
 import { ElDropdown, ElDropdownItem, ElDropdownMenu, ElMessage, ElMessageBox, ElTooltip } from 'element-plus';
-import { nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
 const activityStore = useActivityStore();
 
 // 注册表格无限滚动指令
@@ -303,7 +303,7 @@ const columns = ref([
   { 
     key: 2, 
     label: '活动类型', 
-    prop: 'type',
+    prop: 'typeName',
     visible: true, 
     width: 120,
     sortable: 'custom',
@@ -477,13 +477,18 @@ const handleSelectionChange = (selection) => {
 const loadActivityTypes = async () => {
   try {
     // 使用 useDict 函数获取字典数据
-    const { activity_type } = useDict('activity_type');
+    console.log('正在使用useDict获取活动类型字典数据...');
+    
+    // 创建字典引用
+    const dictRef = useDict('activity_type');
     
     // 等待字典数据加载
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise(resolve => setTimeout(resolve, 800));
     
-    if (activity_type.value && activity_type.value.length > 0) {
-      activityTypes.value = activity_type.value.map(item => ({
+    // 检查字典数据是否加载成功
+    if (dictRef && dictRef.activity_type && dictRef.activity_type.value && dictRef.activity_type.value.length > 0) {
+      // 将字典数据转换为前端需要的格式
+      activityTypes.value = dictRef.activity_type.value.map(item => ({
         value: item.value,
         label: item.label
       }));
@@ -491,34 +496,9 @@ const loadActivityTypes = async () => {
       return true;
     } else {
       console.warn('获取活动类型数据为空，使用默认数据');
-      // 使用默认数据
-      activityTypes.value = [
-        { value: '1', label: '文化娱乐' },
-        { value: '2', label: '健康讲座' },
-        { value: '3', label: '体育健身' },
-        { value: '4', label: '志愿服务' },
-        { value: '5', label: '节日庆祝' },
-        { value: '6', label: '技能培训' },
-        { value: '7', label: '社交联谊' },
-        { value: '8', label: '公益慈善' },
-        { value: '9', label: '其他活动' }
-      ];
       return false;
     }
   } catch (error) {
-    console.error('获取活动类型数据失败:', error);
-    // 出错时使用默认数据
-    activityTypes.value = [
-      { value: '1', label: '文化娱乐' },
-      { value: '2', label: '健康讲座' },
-      { value: '3', label: '体育健身' },
-      { value: '4', label: '志愿服务' },
-      { value: '5', label: '节日庆祝' },
-      { value: '6', label: '技能培训' },
-      { value: '7', label: '社交联谊' },
-      { value: '8', label: '公益慈善' },
-      { value: '9', label: '其他活动' }
-    ];
     return false;
   }
 }

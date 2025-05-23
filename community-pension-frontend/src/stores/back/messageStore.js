@@ -6,6 +6,15 @@ import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import AdminWebSocketClient from '@/utils/adminWebsocket';
 import { ElMessage } from 'element-plus';
+import { 
+  getMessages, 
+  getMessage, 
+  markMessageRead, 
+  markAllMessagesRead, 
+  deleteMessage, 
+  clearAllMessages, 
+  sendMessage 
+} from '@/api/back/message';
 
 export const useMessageStore = defineStore('backMessage', () => {
   // 消息列表
@@ -32,28 +41,23 @@ export const useMessageStore = defineStore('backMessage', () => {
       loading.value = true;
       const { current = pagination.value.current, size = pagination.value.size, type = 'all' } = params;
 
-      // 从WebSocket获取消息，这里我们模拟一些数据
-      // 实际应用中，可能需要发送一个特定的消息类型到服务器，请求消息列表
-      const mockMessages = Array.from({ length: 15 }, (_, index) => ({
-        id: index + 1,
-        sender: `用户 ${index + 1}`,
-        avatar: '',
-        content: `这是一条测试消息，ID: ${index + 1}`,
-        time: new Date(Date.now() - index * 86400000).toLocaleString(),
-        read: type === 'read' ? true : (type === 'unread' ? false : (index % 2 === 0))
-      }));
+      // 调用真实API获取消息列表
+      const res = await getMessages({ current, size, type });
 
-      messages.value = mockMessages;
+      // 更新消息列表
+      messages.value = res.data.records || [];
+
+      // 更新分页信息
       pagination.value = {
-        current,
-        size,
-        total: 50 // 模拟总数
+        current: res.data.current || current,
+        size: res.data.size || size,
+        total: res.data.total || 0
       };
 
       // 计算未读消息数量
       unreadCount.value = messages.value.filter(m => !m.read).length;
 
-      return { data: { records: mockMessages, current, size, total: 50 } };
+      return res;
     } catch (error) {
       ElMessage.error(`获取消息列表失败: ${error.message}`);
       return Promise.reject(error);
@@ -86,8 +90,8 @@ export const useMessageStore = defineStore('backMessage', () => {
    */
   async function markAsRead(id) {
     try {
-      // 发送WebSocket消息标记已读
-      AdminWebSocketClient.sendMessage('markMessageRead', { id });
+      // 调用API标记消息为已读
+      await markMessageRead(id);
 
       // 更新本地数据
       const message = messages.value.find(m => m.id === id);
@@ -109,8 +113,8 @@ export const useMessageStore = defineStore('backMessage', () => {
    */
   async function markAllAsRead() {
     try {
-      // 发送WebSocket消息标记所有已读
-      AdminWebSocketClient.sendMessage('markAllMessagesRead', {});
+      // 调用API标记所有消息为已读
+      await markAllMessagesRead();
 
       // 更新本地数据
       messages.value.forEach(m => {
@@ -134,6 +138,10 @@ export const useMessageStore = defineStore('backMessage', () => {
    */
   async function sendUserMessage(message) {
     try {
+      // 调用API发送消息
+      await sendMessage(message);
+      
+      // 同时通过WebSocket发送消息，实现实时通信
       AdminWebSocketClient.sendMessage('chatMessage', message);
 
       ElMessage.success('消息已发送');
@@ -149,8 +157,8 @@ export const useMessageStore = defineStore('backMessage', () => {
    */
   async function clearAll() {
     try {
-      // 发送WebSocket消息清空所有消息
-      AdminWebSocketClient.sendMessage('clearAllMessages', {});
+      // 调用API清除所有消息
+      await clearAllMessages();
 
       // 更新本地数据
       messages.value = [];
@@ -173,8 +181,33 @@ export const useMessageStore = defineStore('backMessage', () => {
     // 延迟1秒初始化新连接
     setTimeout(() => {
       const token = sessionStorage.getItem('admin-access-token');
-      AdminWebSocketClient.init(token, true);
-      wsConnected.value = true;
+      try {
+        AdminWebSocketClient.init(token, true);
+        wsConnected.value = true;
+        
+        // 添加错误处理
+        AdminWebSocketClient.onError(() => {
+          wsConnected.value = false;
+          ElMessage.error('消息服务连接失败，将在十秒后重试');
+          // 10秒后自动重连
+          setTimeout(initWsConnection, 10000);
+        });
+        
+        // 添加断开连接处理
+        AdminWebSocketClient.onClose(() => {
+          wsConnected.value = false;
+          // 如果不是主动关闭，则尝试重连
+          if (wsConnected.value) {
+            ElMessage.warning('消息服务连接已断开，正在重连...');
+            setTimeout(initWsConnection, 3000);
+          }
+        });
+      } catch (error) {
+        ElMessage.error(`初始化WebSocket连接失败: ${error.message}`);
+        wsConnected.value = false;
+        // 5秒后重试
+        setTimeout(initWsConnection, 5000);
+      }
     }, 1000);
   }
 

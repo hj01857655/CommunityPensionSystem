@@ -988,7 +988,19 @@ export default {
   setMessageHandlers: setMessageHandlers,
   isConnected: isWebSocketConnected,
   testConnection: testSimpleConnection,
-  sendMessage: sendMessage
+  sendMessage: sendMessage,
+  // 添加错误处理回调
+  onError: function(callback) {
+    if (typeof callback === 'function') {
+      messageHandlers.onError = callback;
+    }
+  },
+  // 添加连接关闭回调
+  onClose: function(callback) {
+    if (typeof callback === 'function') {
+      messageHandlers.onDisconnected = callback;
+    }
+  }
 }
 
 /**

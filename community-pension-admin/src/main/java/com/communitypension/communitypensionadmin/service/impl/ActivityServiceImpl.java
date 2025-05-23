@@ -97,6 +97,9 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, Activity> i
             )
         );
 
+        // 设置当前参与人数
+        vo.setCurrentParticipants(baseMapper.getCurrentRegisters(activity.getId()));
+
         return vo;
     }
 
@@ -138,19 +141,15 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, Activity> i
         if (activity == null) {
             throw new BusinessException("活动不存在");
         }
+        
+        // 获取当前活动状态
+        Integer currentStatus = activity.getStatus();
+        
+        // 对于进行中或已结束的活动，不验证开始时间是否早于当前时间
+        boolean skipStartTimeValidation = currentStatus != null && (currentStatus == 2 || currentStatus == 3);
 
         // 验证活动时间
-        validateActivityTime(dto.getStartTime(), dto.getEndTime());
-
-        BeanUtils.copyProperties(dto, activity);
-        updateById(activity);
-    }
-
-    /**
-     * 验证活动时间
-     */
-    private void validateActivityTime(LocalDateTime startTime, LocalDateTime endTime) {
-        if (startTime.isAfter(endTime)) {
+        if (dto.getStartTime().isAfter(dto.getEndTime())) {
             throw new BusinessException("开始时间不能晚于结束时间");
         }
         if (startTime.isBefore(LocalDateTime.now())) {
@@ -296,7 +295,8 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, Activity> i
                 row.createCell(4).setCellValue(activity.getStartTime() != null ? activity.getStartTime().format(formatter) : "");
                 row.createCell(5).setCellValue(activity.getEndTime() != null ? activity.getEndTime().format(formatter) : "");
                 row.createCell(6).setCellValue(activity.getMaxParticipants() != null ? activity.getMaxParticipants() : 0);
-                row.createCell(7).setCellValue(activity.getCurrentParticipants() != null ? activity.getCurrentParticipants() : 0);
+                Integer participants = baseMapper.getCurrentRegisters(activity.getId());
+                row.createCell(7).setCellValue(participants != null ? participants : 0);
                 row.createCell(8).setCellValue(activity.getStatusName());
                 row.createCell(9).setCellValue(activity.getCreatedAt() != null ? activity.getCreatedAt().format(formatter) : "");
             }
@@ -394,7 +394,7 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, Activity> i
             map.put("id", activity.getId());
             map.put("name", activity.getTitle());
             map.put("date", activity.getStartTime() != null ? activity.getStartTime().format(formatter) : "");
-            map.put("participants", activity.getCurrentParticipants() != null ? activity.getCurrentParticipants() : 0);
+            map.put("participants", baseMapper.getCurrentRegisters(activity.getId()));
             map.put("status", statusMap.getOrDefault(activity.getStatus() != null ? activity.getStatus().toString() : "", "未知"));
             map.put("type", typeMap.getOrDefault(activity.getType(), "其他"));
             map.put("location", activity.getLocation());
