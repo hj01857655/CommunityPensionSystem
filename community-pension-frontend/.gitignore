@@ -24,3 +24,11 @@ pnpm-debug.log*
 *.sw?
 
 /node_modules/
+
+# Test related files
+/coverage/
+/tests/e2e/reports/
+/tests/unit/coverage/
+.nyc_output/
+*.lcov
+/src/tests/

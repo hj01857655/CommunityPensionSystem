@@ -31,3 +31,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Custom Test Files ###
+/src/test/java/com/communitypension/communitypensionadmin/test/

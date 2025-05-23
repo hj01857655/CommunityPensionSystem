@@ -355,10 +355,21 @@ async function getUsers() {
   try {
     const response = await getUserList({ pageSize: 100 });
     if (response && response.data && response.data.records) {
-      // 只筛选角色为"老人"的用户
-      const elderUsers = response.data.records.filter(user => 
-        user.roles && user.roles.includes('elder')
-      );
+      // 只筛选角色为“老人”的用户
+      // 同时支持单角色和多角色系统
+      const elderUsers = response.data.records.filter(user => {
+        // 检查多种可能的老人角色标识
+        return (
+          // 新的单角色字段
+          user.roleId === 1 || 
+          user.role === 'elder' || 
+          user.roleName === '老人' ||
+          // 兼容旧的多角色字段
+          (user.roleIds && user.roleIds.includes(1)) ||
+          (user.roles && user.roles.includes('elder')) ||
+          (user.roleNames && user.roleNames.includes('老人'))
+        );
+      });
       
       userOptions.value = elderUsers.map(user => ({
         value: user.userId,
