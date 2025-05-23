@@ -730,7 +730,8 @@ const submitBooking = async () => {
         }
         
         const timeStr = formatTime(timeObj);
-        const scheduleTime = `${dateStr}T${timeStr}`;
+        // 使用与后端@JsonFormat注解匹配的格式 (yyyy-MM-dd HH:mm:ss)
+        const scheduleTime = `${dateStr} ${timeStr}`;
         
         // 检查是否是未来时间
         const scheduleDateTime = new Date(scheduleTime);
@@ -790,14 +791,16 @@ const submitBooking = async () => {
   });
 };
 
-// 格式化时间为HH:MM:SS格式
+// 格式化时间为ISO-8601标准格式
 const formatTime = (time) => {
   if (!time) return '00:00:00';
   if (typeof time === 'string') return time;
   
   const hours = time.getHours().toString().padStart(2, '0');
   const minutes = time.getMinutes().toString().padStart(2, '0');
-  return `${hours}:${minutes}:00`;
+  const seconds = '00';
+  // 返回完整的ISO-8601格式时间部分
+  return `${hours}:${minutes}:${seconds}`;
 };
 
 // 取消预约
