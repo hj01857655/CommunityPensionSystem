@@ -1,6 +1,19 @@
 import axios from '@/utils/axios'
 
 /**
+ * 上传活动图片
+ * @param {FormData} formData - 包含文件的表单数据
+ * @returns {Promise<{code: number, data: string, msg: string}>} - 返回图片URL
+ */
+export const uploadImage = (formData) => {
+  return axios.post('/api/activity/upload/image', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  })
+}
+
+/**
  * 获取活动列表
  * @param {Object} params - 查询参数
  * @param {number} params.pageNum - 页码

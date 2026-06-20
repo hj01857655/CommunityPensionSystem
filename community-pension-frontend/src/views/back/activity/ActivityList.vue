@@ -204,9 +204,16 @@
         <el-form-item label="人数上限" prop="maxParticipants">
           <el-input-number v-model="formData.maxParticipants" :min="1" :max="1000" style="width: 100%" />
         </el-form-item>
-        <el-form-item label="活动图片" prop="image">
-          <el-upload class="avatar-uploader" action="/api/upload" :show-file-list="false" :on-success="handleImageChange" :before-upload="(file) => file.type.startsWith('image/')">
-            <img v-if="formData.image" :src="formData.image" class="avatar" />
+        <el-form-item label="活动图片" prop="coverImage">
+          <el-upload 
+            class="avatar-uploader" 
+            action="#"
+            :show-file-list="false" 
+            :auto-upload="false"
+            :on-change="handleImageChange"
+            :before-upload="beforeImageUpload"
+          >
+            <img v-if="formData.coverImage" :src="formData.coverImage" class="avatar" />
             <el-icon v-else class="avatar-uploader-icon"><component :is="Plus" /></el-icon>
           </el-upload>
         </el-form-item>
@@ -277,6 +284,13 @@ const dialogType = ref('add') // add, edit, view
 const dateRange = ref([])
 const selectedRows = ref([])
 const loading = ref(false)
+
+// 上传组件的请求头，添加认证信息
+const uploadHeaders = computed(() => {
+  return {
+    Authorization: 'Bearer ' + localStorage.getItem('token')
+  }
+})
 
 // 表格列控制
 const columns = ref([
@@ -396,7 +410,7 @@ const formData = reactive({
   endTime: '',
   location: '',
   maxParticipants: 50,
-  // 移除 currentParticipants 和 image 字段，因为后端不支持
+  coverImage: '', // 活动封面图片URL
   description: '',
   status: 0,
   organizerId: parseInt(sessionStorage.getItem('userId')) || 1 // 从会话存储中获取当前用户ID作为组织者ID
@@ -499,9 +513,9 @@ const loadActivityTypes = async () => {
       return false;
     }
   } catch (error) {
-    return false;
+      return false;
+    }
   }
-}
 
 // 新增活动
 const handleAdd = async () => {
@@ -687,13 +701,38 @@ const getStatusText = (status) => {
   return statusMap[status] || '未知'
 }
 
-// 处理图片上传成功
-const handleImageChange = (res) => {
-  if (res.code === 200) {
-    formData.image = res.data
-    ElMessage.success('上传成功')
-  } else {
-    ElMessage.error('上传失败')
+// 图片上传前的验证
+const beforeImageUpload = (file) => {
+  // 验证文件类型
+  const isImage = file.type.startsWith('image/');
+  if (!isImage) {
+    ElMessage.error('只能上传图片文件');
+    return false;
+  }
+  
+  // 验证文件大小
+  const isLt5M = file.size / 1024 / 1024 < 5;
+  if (!isLt5M) {
+    ElMessage.error('图片大小不能超过5MB');
+    return false;
+  }
+  
+  return true;
+}
+
+// 处理图片变更
+const handleImageChange = async (file) => {
+  if (file && file.raw) {
+    try {
+      // 使用store中的方法上传图片
+      const imageUrl = await activityStore.uploadActivityImage(file.raw);
+      // 更新表单数据
+      formData.coverImage = imageUrl;
+      ElMessage.success('图片上传成功');
+    } catch (error) {
+      // 错误已在store中处理
+      console.error('图片上传失败:', error);
+    }
   }
 }
 
@@ -734,6 +773,8 @@ const handleSubmit = () => {
           loading.value = false
         })
       } else if (dialogType.value === 'edit') {
+        // 使用store更新活动
+        // 后端会根据活动状态自动决定是否验证开始时间
         activityStore.updateActivity(submitData.id, submitData).then(() => {
           ElMessage.success('更新成功')
           dialogVisible.value = false

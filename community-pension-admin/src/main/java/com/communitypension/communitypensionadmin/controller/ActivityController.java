@@ -1,6 +1,7 @@
 package com.communitypension.communitypensionadmin.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.communitypension.communitypensionadmin.utils.FileUploadUtil;
 import com.communitypension.communitypensionadmin.utils.Result;
 import com.communitypension.communitypensionadmin.pojo.dto.ActivityDTO;
 import com.communitypension.communitypensionadmin.pojo.dto.ActivityQuery;
@@ -13,6 +14,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
@@ -27,6 +29,7 @@ public class ActivityController {
 
     private final ActivityService activityService;
     private final DictDataService dictDataService;
+    private final FileUploadUtil fileUploadUtil;
 
     /**
      * 分页查询活动列表
@@ -105,6 +108,37 @@ public class ActivityController {
             @RequestParam(required = false) String endTime,
             HttpServletResponse response) {
         activityService.exportActivityList(title, status, startTime, endTime, response);
+    }
+    
+    /**
+     * 上传活动图片
+     * 
+     * @param file 图片文件
+     * @return 图片URL
+     */
+    @PostMapping("/upload/image")
+    public Result<String> uploadImage(@RequestParam("file") MultipartFile file) {
+        try {
+            // 检查文件类型
+            String contentType = file.getContentType();
+            if (contentType == null || !contentType.startsWith("image/")) {
+                return Result.fail("只能上传图片文件");
+            }
+            
+            // 检查文件大小
+            long fileSize = file.getSize();
+            long maxFileSize = 5 * 1024 * 1024; // 5MB
+            
+            if (fileSize > maxFileSize) {
+                return Result.fail("文件大小超过限制，最大允许5MB");
+            }
+            
+            // 上传文件到activities文件夹
+            String fileUrl = fileUploadUtil.uploadFile(file, "activities");
+            return Result.success("上传成功", fileUrl);
+        } catch (Exception e) {
+            return Result.fail("文件上传失败: " + e.getMessage());
+        }
     }
 
     @GetMapping("/types")
