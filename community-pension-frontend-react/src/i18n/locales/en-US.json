@@ -1,0 +1,40 @@
+{
+  "common": {
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "search": "Search",
+    "reset": "Reset",
+    "submit": "Submit",
+    "back": "Back",
+    "loading": "Loading...",
+    "noData": "No Data"
+  },
+  "auth": {
+    "login": "Login",
+    "logout": "Logout",
+    "username": "Username",
+    "password": "Password",
+    "rememberMe": "Remember Me",
+    "forgotPassword": "Forgot Password",
+    "loginSuccess": "Login Successful",
+    "loginFailed": "Login Failed",
+    "logoutSuccess": "Logout Successful"
+  },
+  "menu": {
+    "home": "Home",
+    "dashboard": "Dashboard",
+    "users": "User Management",
+    "profile": "Profile",
+    "settings": "Settings"
+  },
+  "validation": {
+    "required": "This field is required",
+    "invalidEmail": "Invalid email format",
+    "invalidPhone": "Invalid phone format",
+    "passwordMinLength": "Password must be at least 6 characters",
+    "passwordMismatch": "Passwords do not match"
+  }
+}

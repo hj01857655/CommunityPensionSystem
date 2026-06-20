@@ -1,0 +1,25 @@
+/**
+ * Tailwind v4 入口
+ * 刻意只引入 theme + utilities 两层、跳过 base(preflight) 层，
+ * 避免 Tailwind 的全局 reset 覆盖 Ant Design 自带的样式重置。
+ * @config 加载根目录 tailwind.config.ts（设计令牌源自 src/theme/tokens.ts，保持单一数据源）。
+ */
+@layer theme, base, components, utilities;
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+@config '../tailwind.config.ts';
+
+/* 最小化全局样式，不与 Ant Design 冲突 */
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family:
+    system-ui, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
