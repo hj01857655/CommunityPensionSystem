@@ -7,6 +7,7 @@ import com.communitypension.communitypensionadmin.pojo.dto.LoginDTO;
 import com.communitypension.communitypensionadmin.service.TokenBlacklistService;
 import com.communitypension.communitypensionadmin.service.UserService;
 import com.communitypension.communitypensionadmin.utils.JwtTokenUtil;
+import com.communitypension.communitypensionadmin.utils.RefreshTokenCookieUtil;
 import com.communitypension.communitypensionadmin.utils.Result;
 import com.communitypension.communitypensionadmin.pojo.vo.UserVO;
 import io.jsonwebtoken.Claims;
@@ -19,6 +20,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.servlet.http.HttpServletResponse;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -41,6 +43,10 @@ public class AuthController {
      */
     private final TokenBlacklistService tokenBlacklistService;
     /**
+     * 注入RefreshTokenCookieUtil
+     */
+    private final RefreshTokenCookieUtil refreshTokenCookieUtil;
+    /**
      * 注入UserService
      */
     @Autowired
@@ -52,9 +58,11 @@ public class AuthController {
     private UserConverter userConverter;
 
     @Autowired
-    public AuthController(JwtTokenUtil jwtTokenUtil, TokenBlacklistService tokenBlacklistService) {
+    public AuthController(JwtTokenUtil jwtTokenUtil, TokenBlacklistService tokenBlacklistService,
+                         RefreshTokenCookieUtil refreshTokenCookieUtil) {
         this.jwtTokenUtil = jwtTokenUtil;
         this.tokenBlacklistService = tokenBlacklistService;
+        this.refreshTokenCookieUtil = refreshTokenCookieUtil;
     }
 
     /**
@@ -65,7 +73,8 @@ public class AuthController {
      */
     @Operation(summary = "用户登录")
     @PostMapping("/login")
-    public Result<Map<String, Object>> userLogin(@RequestBody @Validated LoginDTO loginDTO) {
+    public Result<Map<String, Object>> userLogin(@RequestBody @Validated LoginDTO loginDTO,
+                                                  HttpServletResponse httpResponse) {
         String username = loginDTO.getUsername();
         String password = loginDTO.getPassword();
         Long roleId = loginDTO.getRoleId();
@@ -112,8 +121,11 @@ public class AuthController {
 
             // 7. 生成令牌并返回
             JwtTokenUtil.TokenPair tokenPair = jwtTokenUtil.generateTokenPair(username, roleId);
+            // 将 refresh token 写入 HttpOnly cookie（React 端走 cookie，JS 不可读，防 XSS）
+            refreshTokenCookieUtil.write(httpResponse, tokenPair.refreshToken());
             Map<String, Object> response = new HashMap<>();
             response.put("accessToken", tokenPair.accessToken());
+            // body 仍返回 refreshToken 以兼容旧 Vue 前端（过渡期双轨，迁移完成后可移除）
             response.put("refreshToken", tokenPair.refreshToken());
 
             // 根据用户角色返回对应的VO对象
@@ -137,7 +149,8 @@ public class AuthController {
      */
     @Operation(summary = "管理员登录")
     @PostMapping("/adminLogin")
-    public ResponseEntity<Result<Map<String, Object>>> adminLogin(@RequestBody @Validated LoginDTO loginDTO) {
+    public ResponseEntity<Result<Map<String, Object>>> adminLogin(@RequestBody @Validated LoginDTO loginDTO,
+                                                                  HttpServletResponse httpResponse) {
         try {
             String username = loginDTO.getUsername();
             String password = loginDTO.getPassword();
@@ -178,8 +191,11 @@ public class AuthController {
 
             // 7. 生成令牌并返回
             JwtTokenUtil.TokenPair tokenPair = jwtTokenUtil.generateTokenPair(user.getUsername(), roleId);
+            // 将 refresh token 写入 HttpOnly cookie（React 端走 cookie）
+            refreshTokenCookieUtil.write(httpResponse, tokenPair.refreshToken());
             Map<String, Object> response = new HashMap<>();
             response.put("accessToken", tokenPair.accessToken());
+            // body 仍返回 refreshToken 以兼容旧 Vue 前端（过渡期双轨）
             response.put("refreshToken", tokenPair.refreshToken());
 
             // 根据用户角色返回对应的VO对象
@@ -222,8 +238,17 @@ public class AuthController {
 
     @Operation(summary = "刷新令牌")
     @PostMapping("/refresh")
-    public ResponseEntity<Result<Map<String, String>>> refreshToken(@RequestHeader("Refresh-Token") String refreshToken) {
+    public ResponseEntity<Result<Map<String, String>>> refreshToken(
+            @CookieValue(value = RefreshTokenCookieUtil.COOKIE_NAME, required = false) String cookieRefreshToken,
+            @RequestHeader(value = "Refresh-Token", required = false) String headerRefreshToken,
+            HttpServletResponse httpResponse) {
         try {
+            // 优先从 HttpOnly cookie 读取（React 端），回退到请求头（旧 Vue 端）
+            String refreshToken = (cookieRefreshToken != null && !cookieRefreshToken.isEmpty())
+                    ? cookieRefreshToken : headerRefreshToken;
+            if (refreshToken == null || refreshToken.isEmpty()) {
+                return ResponseEntity.status(401).body(Result.error("缺少刷新令牌"));
+            }
             // 验证刷新令牌
             JwtTokenUtil.TokenStatus status = jwtTokenUtil.validateRefreshToken(refreshToken);
             if (!status.valid()) {
@@ -249,6 +274,9 @@ public class AuthController {
             Date expiration = claims.getExpiration();
             tokenBlacklistService.addToBlacklist(refreshToken, expiration.getTime());
 
+            // 轮换：将新 refresh token 写入 HttpOnly cookie
+            refreshTokenCookieUtil.write(httpResponse, tokenPair.refreshToken());
+
             Map<String, String> response = new HashMap<>();
             response.put("accessToken", tokenPair.accessToken());
             response.put("refreshToken", tokenPair.refreshToken());
@@ -265,8 +293,14 @@ public class AuthController {
     @PostMapping("/invalidate")
     public ResponseEntity<Result<Object>> invalidateToken(
             @RequestHeader("Authorization") String accessToken,
-            @RequestHeader(value = "Refresh-Token", required = false) String refreshToken) {
+            @RequestHeader(value = "Refresh-Token", required = false) String refreshToken,
+            @CookieValue(value = RefreshTokenCookieUtil.COOKIE_NAME, required = false) String cookieRefreshToken,
+            HttpServletResponse httpResponse) {
         try {
+            // refresh token 优先取 cookie（React），回退请求头（旧 Vue）
+            if ((refreshToken == null || refreshToken.isEmpty()) && cookieRefreshToken != null) {
+                refreshToken = cookieRefreshToken;
+            }
             // 清理token前缀
             String cleanedAccessToken = jwtTokenUtil.cleanToken(accessToken);
 
@@ -285,6 +319,7 @@ public class AuthController {
                 tokenBlacklistService.addToBlacklist(cleanedRefreshToken, refreshExpiration.getTime());
             }
 
+            refreshTokenCookieUtil.clear(httpResponse);
             logger.info("令牌已成功失效");
             return ResponseEntity.ok(Result.success("令牌已成功失效"));
         } catch (Exception e) {
@@ -349,8 +384,14 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<Result<Object>> logout(
             @RequestHeader("Authorization") String accessToken,
-            @RequestHeader(value = "Refresh-Token", required = false) String refreshToken) {
+            @RequestHeader(value = "Refresh-Token", required = false) String refreshToken,
+            @CookieValue(value = RefreshTokenCookieUtil.COOKIE_NAME, required = false) String cookieRefreshToken,
+            HttpServletResponse httpResponse) {
         try {
+            // refresh token 优先取 cookie（React），回退请求头（旧 Vue）
+            if ((refreshToken == null || refreshToken.isEmpty()) && cookieRefreshToken != null) {
+                refreshToken = cookieRefreshToken;
+            }
             // 清理token前缀
             String cleanedAccessToken = jwtTokenUtil.cleanToken(accessToken);
 
@@ -370,6 +411,9 @@ public class AuthController {
                 Date refreshExpiration = refreshClaims.getExpiration();
                 tokenBlacklistService.addToBlacklist(cleanedRefreshToken, refreshExpiration.getTime());
             }
+
+            // 清除 refresh token cookie
+            refreshTokenCookieUtil.clear(httpResponse);
 
             logger.info("用户退出成功: 用户={}, 角色ID={}", username, roleId);
             return ResponseEntity.ok(Result.success("退出成功"));
