@@ -34,11 +34,7 @@ build/
 .vscode/
 
 ### Project Specific ###
-# 忽略所有 docs 目录
-docs/
-**/docs/
-
-# 忽略所有 Cursor 编辑器相关文件
+# 忽略 Cursor 编辑器相关文件
 .cursorrules
 .cursorignore
 **/.cursor/
